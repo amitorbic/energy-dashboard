@@ -1,0 +1,4 @@
+REVIEW NEEDED: db_info.php
+==================================================
+[VERIFY] How to handle JWT token and maintain user authentication state across different parts of the application.
+[VERIFY] Proper handling of sensitive information like usernames, passwords in production.

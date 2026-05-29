@@ -1,0 +1,253 @@
+# Contract Confirmation Module
+
+## Overview
+
+Post-sales confirmation management system for AmeriPower Energy. Handles contract confirmations sent to brokers after a deal is executed. Links to Broker Database, Commission Module, Custom Pricing, and Enrollment.
+
+## Tech Stack
+
+- **Backend:** FastAPI + SQLAlchemy async + MySQL (aiomysql) — `routers/contracts_confirm.py`
+- **Frontend:** Next.js + TypeScript + Tailwind — `pages/contracts/`
+- **Layout:** `components/ContractLayout.tsx` — sidebar with green active state
+
+---
+
+## Pages
+
+| Page                        | Route                          | Description                                   |
+| --------------------------- | ------------------------------ | --------------------------------------------- |
+| Home                        | `/contracts`                   | Navigation hub with grouped cards             |
+| Send Confirmation           | `/contracts/send`              | 3-step wizard — fill, preview, send           |
+| Send LMP Confirmation       | `/contracts/send-lmp`          | Same as send but for LMP contracts            |
+| Edit Confirmation           | `/contracts/edit`              | Redirects to send form pre-filled             |
+| View All                    | `/contracts/view`              | Paginated list, searchable, click to edit     |
+| User Log                    | `/contracts/log`               | Audit trail of all user actions               |
+| Future Contracts            | `/contracts/future-contracts`  | Contracts with future start dates, CSV export |
+| Upload Usage                | `/contracts/upload`            | Same upload as pricing module                 |
+| Custom Pricing Confirmation | `/contracts/custom-pricing`    | Select custom pricing → auto-fills form       |
+| Welcome Letter              | `/contracts/welcome-letter`    | Email-format letter from confirmation data    |
+| Enrollment Checks           | `/contracts/enrollment-checks` | Coming soon — links to enrollment module      |
+
+---
+
+## Database Tables
+
+### `confirmation_log` — Master confirmation records
+
+| Column           | Type    | Description                                       |
+| ---------------- | ------- | ------------------------------------------------- |
+| sid              | INT PK  | Auto increment                                    |
+| contract_no      | VARCHAR | Auto-generated: `YYMMDD0101` increments daily     |
+| type_of_contract | VARCHAR | `new` or `renewal`                                |
+| customer_name    | VARCHAR | Customer name                                     |
+| broker_code      | VARCHAR | FK to `broker_new.broker_code`                    |
+| broker_name      | VARCHAR | Broker company name                               |
+| term             | VARCHAR | Contract term in months or `Month to Month`       |
+| esiid            | VARCHAR | ESI ID(s) comma separated                         |
+| esid_count       | VARCHAR | Number of ESI IDs                                 |
+| contract_rate    | VARCHAR | Rate in ¢/kWh                                     |
+| ameripower_mill  | VARCHAR | Additional margin mills                           |
+| ap_quote         | VARCHAR | Company quote in ¢/kWh (calculated)               |
+| commission       | VARCHAR | Calculated commission                             |
+| comment          | VARCHAR | Internal comments                                 |
+| comment_mail     | VARCHAR | Notes shown in email                              |
+| start_date       | VARCHAR | Contract start date or ASAP                       |
+| lmp              | INT     | 1 = LMP contract                                  |
+| sent_by          | VARCHAR | Deal person name                                  |
+| volumes          | VARCHAR | JSON of profile→volume map                        |
+| total_volume     | VARCHAR | Total KWH                                         |
+| tax_exempt       | VARCHAR | `none`, `residential`, `certificate`              |
+| meter_fees       | VARCHAR | Meter fee amounts                                 |
+| customer_email   | VARCHAR | Customer email (saved only, not used for sending) |
+| enroll_check     | INT     | Enrollment status flag                            |
+| date_modified    | VARCHAR | Last modified date                                |
+| custom_sid       | VARCHAR | FK to custom pricing                              |
+| bne_sid          | VARCHAR | FK to blend & extend                              |
+| contract_no      | VARCHAR | Auto-generated contract number                    |
+
+### `confirmation_audit_log` — User activity log
+
+| Column      | Type     | Description                                       |
+| ----------- | -------- | ------------------------------------------------- |
+| log_id      | INT PK   | Auto increment                                    |
+| sid         | INT      | FK to confirmation_log.sid                        |
+| contract_no | VARCHAR  | Contract number                                   |
+| action      | ENUM     | `created`, `edited`, `sent`, `deleted`, `revised` |
+| action_by   | VARCHAR  | Username                                          |
+| action_at   | DATETIME | Timestamp                                         |
+| notes       | TEXT     | Optional notes                                    |
+
+---
+
+## API Endpoints
+
+| Method | Endpoint                       | Description                                        |
+| ------ | ------------------------------ | -------------------------------------------------- |
+| GET    | `/contracts/form-options`      | Returns contract_no, brokers, users for dropdowns  |
+| GET    | `/contracts/renewal-search?q=` | Search `contract_renewal` table by name or ESI ID  |
+| POST   | `/contracts/preview-html`      | Generate email HTML + auto-calculate company quote |
+| POST   | `/contracts/preview-lmp-html`  | Generate LMP email HTML with spread format         |
+| POST   | `/contracts/send-email`        | Save record + send email to broker                 |
+| GET    | `/contracts/list`              | Paginated list with search                         |
+| GET    | `/contracts/future`            | All confirmations with future start dates          |
+| GET    | `/contracts/user-log/list`     | Audit log paginated                                |
+| GET    | `/contracts/{sid}`             | Get single confirmation record                     |
+| DELETE | `/contracts/{sid}`             | Delete confirmation + audit log                    |
+
+---
+
+## Key Business Logic
+
+### Contract Number Generation
+
+Auto-generates daily sequential contract numbers:
+
+```
+Format: YYMMDD0101 → YYMMDD0102 → YYMMDD0103...
+Resets each day starting at YYMMDD0101
+```
+
+### Company Quote Calculation
+
+Triggered at preview time. If `ap_quote` is blank:
+
+1. Takes profiles + volumes from form
+2. Calls `calculate_custom_price()` from custom pricing controller
+3. Uses same weighted average formula: `Σ(volume × price) / total_volume`
+4. Supports `prior_day` flag — uses `prior_*` tables when checked
+5. Returns in $/kWh — stored as-is
+
+**Quote is cleared when user goes back to form** — always recalculates on preview.
+
+### Split Mills Calculation
+
+Applied at preview time when broker has a split threshold set in `broker_new.split`:
+
+```
+broker_mills = contract_rate - company_quote  (in mills)
+
+if broker_mills > split_threshold:
+    excess = broker_mills - split_threshold
+    company_keeps = excess / 2
+    company_quote = company_quote + company_keeps + ameripower_mills
+else:
+    company_quote = company_quote + ameripower_mills
+
+commission = contract_rate - company_quote
+```
+
+### LMP Contract Rates
+
+All values entered in mills (not ¢/kWh):
+
+```
+Contract rate: 4.0 mills → displays as LMP + 0.040
+Company quote: 3.0 mills → displays as LMP + 0.030
+Commission: 1.0 mills
+```
+
+Split calculation applies to LMP too.
+
+### Prior Day Pricing
+
+When `prior_day` checkbox is checked:
+
+- `calculate_matrix_for_start_date()` uses `prior_*` tables
+- Tables updated automatically: before each upload, current data is copied to prior table
+- Update sequence: copy current → prior, then upload new → current
+
+### Email Sending
+
+- Recipient auto-filled from `broker_new.confirmation_email`
+- Supports multiple emails (comma or semicolon separated)
+- No email sent to customers — customer email saved in DB only
+- Email only sent when **Send Email** is clicked in step 3 (not on preview)
+- Record saved to DB only at send time
+
+### Renewal Flow
+
+1. Select `Renewal` type → search box appears
+2. Searches `contract_renewal` table by name or ESI ID
+3. Results show individual ESI IDs with expiry dates
+4. User checks multiple ESI IDs across multiple customers
+5. Click **Apply to form** → fills ESIID box, sets start date to earliest expiry
+6. Preview calculates pricing → Send
+
+---
+
+## Email Format
+
+Both regular and LMP confirmations follow this order:
+
+```
+CONTRACT NO + type badge
+Customer Name
+Contract Received | Term
+Credit Approved   | Contract Rate ($/kWh)
+Executed          | Company Quote ($/kWh)
+Forwarded         | Commission
+AMERIPOWER LLC APPRECIATES YOUR BUSINESS
+ESI-IDs | Broker Name
+Tax Exempt
+Type of Contract | Enrollment Type
+Start Date
+Load Profiles | Paper Bill Required
+Customer Email (if present)
+AmeriPower Mills (if present)
+Comments (if present)
+Auto-generated footer
+```
+
+---
+
+## Prior Day Table Update Flow
+
+When admin uploads any pricing table:
+
+1. Current table data → copied to prior table (TRUNCATE prior + INSERT SELECT)
+2. New data → inserted into current table
+
+Tables covered:
+
+- `heat_rates` → `prior_heat_rates`
+- `consumption` → `prior_consumption`
+- `margin` → `prior_margin`
+- `tdsp` → `prior_tdsp`
+- `txu` → `prior_txu`
+- `gas_strip` → `prior_gas_strip`
+
+---
+
+## Files
+
+### Backend
+
+- `routers/contracts_confirm.py` — all API endpoints
+- `controllers/custom_pricing.py` — `calculate_custom_price()` used for quote calculation
+- `controllers/pricing_engine.py` — `calculate_matrix_for_start_date()` with `prior_day` flag
+
+### Frontend
+
+- `pages/contracts/index.tsx` — home
+- `pages/contracts/send.tsx` — 3-step confirmation wizard
+- `pages/contracts/send-lmp.tsx` — LMP confirmation wizard
+- `pages/contracts/edit.tsx` — edit redirect
+- `pages/contracts/view.tsx` — view all list
+- `pages/contracts/log.tsx` — user log
+- `pages/contracts/future-contracts.tsx` — future contracts
+- `components/ContractLayout.tsx` — sidebar layout
+
+---
+
+## Pending / Future
+
+## Completed — Additional Pages
+
+- Upload Usage (`/contracts/upload`) — parses usage file, pre-fills ESIIDs/profiles/volumes into send form
+- Custom Pricing Confirmation (`/contracts/custom-pricing`) — search customers_new, pre-fills all details into send form
+- Welcome letter pulls from `confirmation_log`
+
+## Pending / Future- Welcome Letter (`/contracts/welcome-letter`)
+
+- Download Enrollment Checks (`/contracts/enrollment-checks`) — pending enrollment module
+- Enrollment module integration — `enroll_check` column in `confirmation_log`

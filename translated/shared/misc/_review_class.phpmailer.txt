@@ -1,0 +1,5 @@
+REVIEW NEEDED: class.phpmailer.php
+==================================================
+[VERIFY] The actual implementation of the `useAuth` function is needed.
+[VERIFY] The `get_user` and `send_mail` functions need to be implemented based on your application's logic.
+[VERIFY] Error handling for database operations needs to be added.

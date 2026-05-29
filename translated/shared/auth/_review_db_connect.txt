@@ -1,0 +1,3 @@
+REVIEW NEEDED: db_connect.php
+==================================================
+[VERIFY] Replace with actual FastAPI endpoint for fetching database connection status

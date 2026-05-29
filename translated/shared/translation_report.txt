@@ -1,0 +1,16 @@
+AmeriPower Translation Report
+==================================================
+Date: 2026-03-31 19:42
+Model: qwen2.5-coder:14b
+Input: C:\Users\Amit\Desktop\Portal\php_project_1\shared
+Output: C:\AmeriPower\translated\shared
+
+Translated: 6
+Failed: 4
+Skipped: 0
+
+FAILED FILES:
+  - C:\Users\Amit\Desktop\Portal\php_project_1\shared\profiles.php
+  - C:\Users\Amit\Desktop\Portal\php_project_1\shared\profiles.php
+  - C:\Users\Amit\Desktop\Portal\php_project_1\shared\profiles.php
+  - C:\Users\Amit\Desktop\Portal\php_project_1\shared\profiles.php

@@ -1,0 +1,5 @@
+REVIEW NEEDED: db_connectAws.php
+==================================================
+[VERIFY] mysqli_connect and mysqli_connect_errno need to be replaced with SQLAlchemy or asyncpg calls.
+[VERIFY] Error handling needs refinement for a production environment.
+[VERIFY] The `redirect` function requires replacement with a proper routing mechanism in Next.js.

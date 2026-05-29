@@ -1,0 +1,5 @@
+REVIEW NEEDED: config.php
+==================================================
+[VERIFY] Replace `fake_db` with actual database logic.
+[VERIFY] Implement password verification logic in `verify_password`.
+[VERIFY] Replace the placeholder for fetching a user by username in `get_user_by_username`.

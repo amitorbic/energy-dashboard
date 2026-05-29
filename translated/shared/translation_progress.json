@@ -1,0 +1,18 @@
+{
+  "translated": [
+    "C:\\Users\\Amit\\Desktop\\Portal\\php_project_1\\shared\\config.php",
+    "C:\\Users\\Amit\\Desktop\\Portal\\php_project_1\\shared\\db_connect - Copy.php",
+    "C:\\Users\\Amit\\Desktop\\Portal\\php_project_1\\shared\\db_connect.php",
+    "C:\\Users\\Amit\\Desktop\\Portal\\php_project_1\\shared\\db_connectAws.php",
+    "C:\\Users\\Amit\\Desktop\\Portal\\php_project_1\\shared\\db_connect_anon.php",
+    "C:\\Users\\Amit\\Desktop\\Portal\\php_project_1\\shared\\db_info.php"
+  ],
+  "failed": [
+    "C:\\Users\\Amit\\Desktop\\Portal\\php_project_1\\shared\\profiles.php",
+    "C:\\Users\\Amit\\Desktop\\Portal\\php_project_1\\shared\\profiles.php",
+    "C:\\Users\\Amit\\Desktop\\Portal\\php_project_1\\shared\\profiles.php",
+    "C:\\Users\\Amit\\Desktop\\Portal\\php_project_1\\shared\\profiles.php"
+  ],
+  "skipped": [],
+  "started": "2026-03-31T13:15:44.410012"
+}
