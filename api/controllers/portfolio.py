@@ -1016,3 +1016,13 @@ async def get_forecast_data(criteria: dict, db: AsyncSession) -> dict:
         "zone_annual_mwh": zone_annual_mwh,  # for debug/display
         "active_contracts": len([r for r in contracts if True]),  # count
     }
+
+
+async def get_dna_forecast_data(criteria: dict, db: AsyncSession) -> dict:
+    """DNA Forecast — Layer 1 + Layer 2. Under construction."""
+    return {
+        "rows": [],
+        "hours": [],
+        "criteria": criteria,
+        "message": "DNA Forecast coming soon",
+    }
