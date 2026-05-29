@@ -2,7 +2,8 @@ import React, { useState } from "react";
 import Layout from "@/components/Layout";
 
 // 1. Define the API constant
-const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001/api";
+const API =
+  process.env.NEXT_PUBLIC_API_URL || "${process.env.NEXT_PUBLIC_API_URL}/api";
 
 export default function DeleteCommissionData() {
   const [month, setMonth] = useState("");

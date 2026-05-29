@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import Layout from "../../components/Layout"; // or wherever yours is
 
-const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001/api";
+const API =
+  process.env.NEXT_PUBLIC_API_URL || "${process.env.NEXT_PUBLIC_API_URL}/api";
 
 // 1. Defined Interfaces to replace 'any'
 interface SummaryRow {

@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from "react";
 //import Link from "next/link";
 
-const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001/api";
+const API =
+  process.env.NEXT_PUBLIC_API_URL || "${process.env.NEXT_PUBLIC_API_URL}/api";
 
 interface CommissionRow {
   sid: number;

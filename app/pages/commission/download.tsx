@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 
-const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001/api";
+const API =
+  process.env.NEXT_PUBLIC_API_URL || "${process.env.NEXT_PUBLIC_API_URL}/api";
 
 type BrokerOption = { vendor: string; company_name: string };
 type MonthOption = { label: string; value: string };

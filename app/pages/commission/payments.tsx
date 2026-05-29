@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
-const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001/api";
+const API =
+  process.env.NEXT_PUBLIC_API_URL || "${process.env.NEXT_PUBLIC_API_URL}/api";
 
 export default function InsertPayments() {
   const [file, setFile] = useState<File | null>(null);

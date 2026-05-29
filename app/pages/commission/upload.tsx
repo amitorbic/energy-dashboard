@@ -2,7 +2,8 @@ import { useState } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link"; // 1. Import Link
 
-const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001/api";
+const API =
+  process.env.NEXT_PUBLIC_API_URL || "${process.env.NEXT_PUBLIC_API_URL}/api";
 
 export default function UploadCommission() {
   const router = useRouter();
