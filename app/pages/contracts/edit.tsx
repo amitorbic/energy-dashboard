@@ -1,4 +1,3 @@
-"use client";
 import { useEffect } from "react";
 import { useRouter } from "next/router";
 import ContractLayout from "../../components/ContractLayout";
@@ -8,14 +7,12 @@ export default function EditConfirmation() {
   const { sid } = router.query;
 
   useEffect(() => {
-    if (sid) router.replace(`/contracts/send?sid=${sid}`);
-  }, [sid]);
-
-  if (!sid) {
-    // Show list if no sid provided
-    router.replace("/contracts/view");
-    return null;
-  }
+    if (sid) {
+      router.replace(`/contracts/send?sid=${sid}`);
+    } else if (router.isReady) {
+      router.replace("/contracts/view");
+    }
+  }, [sid, router.isReady, router]);
 
   return (
     <ContractLayout title="Edit Confirmation">
