@@ -2,7 +2,15 @@
 import ContractLayout from "../../components/ContractLayout";
 import { useRouter } from "next/router";
 
-const SECTIONS = [
+type SectionItem = {
+  label: string;
+  href: string;
+  desc: string;
+  badge?: string;
+  badgeColor?: string;
+  disabled?: boolean;
+};
+const SECTIONS: { title: string; items: SectionItem[] }[] = [
   {
     title: "Upload & Pricing",
     items: [
@@ -12,6 +20,7 @@ const SECTIONS = [
         desc: "Upload usage data that feeds into confirmation summaries.",
         badge: "Upload",
         badgeColor: "bg-blue-50 text-blue-700",
+        disabled: false,
       },
       {
         label: "Custom pricing confirmation",
@@ -19,6 +28,7 @@ const SECTIONS = [
         desc: "Select a custom pricing record and customer — auto-fills confirmation details.",
         badge: "Pricing",
         badgeColor: "bg-green-50 text-green-700",
+        disabled: false,
       },
     ],
   },
