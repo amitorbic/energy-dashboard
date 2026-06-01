@@ -107,8 +107,7 @@ async def parse_and_load(file: UploadFile, db: AsyncSession, uploaded_by: str) -
             return clean_money(v(col_name))
 
         await db.execute(
-            text(
-                """
+            text("""
             INSERT INTO billing_extract_raw (
                 bill_to_id, cust_type, cust_id, company_name,
                 cust_first_name, cust_last_name, bill_no, bill_date,
@@ -140,8 +139,7 @@ async def parse_and_load(file: UploadFile, db: AsyncSession, uploaded_by: str) -
                 :premise_county, :premise_city, :premise_state, :premise_zip,
                 :agent_code, :energy_rate, :passthrough_rate, :no_of_contracts_billed
             )
-        """
-            ),
+        """),
             {
                 "bill_to_id": v("Bill to ID"),
                 "cust_type": v("Cust Type"),
@@ -206,8 +204,7 @@ async def parse_and_load(file: UploadFile, db: AsyncSession, uploaded_by: str) -
     # Log the upload
     today = date.today()
     await db.execute(
-        text(
-            """
+        text("""
         INSERT INTO billing_upload_log (upload_date, filename, uploaded_by, total_rows, email_sent)
         VALUES (:upload_date, :filename, :uploaded_by, :total_rows, 0)
         ON DUPLICATE KEY UPDATE
@@ -215,8 +212,7 @@ async def parse_and_load(file: UploadFile, db: AsyncSession, uploaded_by: str) -
         uploaded_by = VALUES(uploaded_by),
         total_rows = VALUES(total_rows),
         email_sent = 0
-       """
-        ),
+       """),
         {
             "upload_date": today,
             "filename": file.filename,
@@ -809,8 +805,11 @@ async def _run_all_checks(db: AsyncSession) -> Dict[str, Optional[str]]:
         await db.execute(
             text(
                 "SELECT cust_id, bill_no, company_name, cust_first_name, cust_last_name, "
-                "energy_charge, kh_qty "
-                "FROM billing_extract_raw WHERE energy_charge <= 0 AND kh_qty <> 0"
+                "kh_qty, metered_usage "
+                "FROM billing_extract_raw "
+                "WHERE kh_qty != '' AND metered_usage != '' "
+                "AND kh_qty != '0' AND metered_usage != '0' "
+                "AND ROUND(CAST(kh_qty AS DECIMAL(15,2)), 2) <> ROUND(CAST(metered_usage AS DECIMAL(15,2)), 2)"
             )
         )
     ).fetchall()
@@ -826,8 +825,10 @@ async def _run_all_checks(db: AsyncSession) -> Dict[str, Optional[str]]:
         await db.execute(
             text(
                 "SELECT cust_id, bill_no, company_name, cust_first_name, cust_last_name, "
-                "kh_qty, metered_usage "
-                "FROM billing_extract_raw WHERE ROUND(kh_qty,2) <> ROUND(metered_usage,2)"
+                "kh_qty, metered_usage FROM billing_extract_raw "
+                "WHERE kh_qty != '' AND metered_usage != '' "
+                "AND kh_qty != '0' AND metered_usage != '0' "
+                "AND CAST(kh_qty AS DECIMAL(15,2)) <> CAST(metered_usage AS DECIMAL(15,2))"
             )
         )
     ).fetchall()
@@ -843,16 +844,18 @@ async def _run_all_checks(db: AsyncSession) -> Dict[str, Optional[str]]:
         await db.execute(
             text(
                 "SELECT cust_id, bill_no, company_name, cust_first_name, cust_last_name, "
-                "gros_tax, pugra_tax, city_tax "
-                "FROM billing_extract_raw "
-                "WHERE cust_type = 'Residential' "
-                "AND (gros_tax = 100 OR pugra_tax = 100 OR city_tax = 100)"
+                "gros_tax_exempt, pugra_tax_exempt FROM billing_extract_raw "
+                "WHERE gros_tax_exempt = '100'"
             )
         )
     ).fetchall()
     result["check_residential_puc_grt_city"] = _jdump(
         [
-            {**_row(r), "gros_tax": str(r.gros_tax), "pugra_tax": str(r.pugra_tax)}
+            {
+                **_row(r),
+                "gros_tax": str(r.gros_tax_exempt),
+                "pugra_tax": str(r.pugra_tax_exempt),
+            }
             for r in rows
         ]
     )
@@ -862,16 +865,18 @@ async def _run_all_checks(db: AsyncSession) -> Dict[str, Optional[str]]:
         await db.execute(
             text(
                 "SELECT cust_id, bill_no, company_name, cust_first_name, cust_last_name, "
-                "gros_tax, pugra_tax "
-                "FROM billing_extract_raw "
-                "WHERE cust_type = 'Residential' "
-                "AND gros_tax = 100 AND pugra_tax = 100"
+                "gros_tax_exempt, pugra_tax_exempt FROM billing_extract_raw "
+                "WHERE pugra_tax_exempt = '100'"
             )
         )
     ).fetchall()
     result["check_residential_tax_exempt"] = _jdump(
         [
-            {**_row(r), "gros_tax": str(r.gros_tax), "pugra_tax": str(r.pugra_tax)}
+            {
+                **_row(r),
+                "gros_tax": str(r.gros_tax_exempt),
+                "pugra_tax": str(r.pugra_tax_exempt),
+            }
             for r in rows
         ]
     )
@@ -881,8 +886,8 @@ async def _run_all_checks(db: AsyncSession) -> Dict[str, Optional[str]]:
         await db.execute(
             text(
                 "SELECT cust_id, bill_no, company_name, cust_first_name, cust_last_name, "
-                "service_start, service_end "
-                "FROM billing_extract_raw WHERE contract_type = 'MCPE'"
+                "contract_type FROM billing_extract_raw "
+                "WHERE contract_type = 'LMP Day-Ahead'"
             )
         )
     ).fetchall()
@@ -902,10 +907,11 @@ async def _run_all_checks(db: AsyncSession) -> Dict[str, Optional[str]]:
         await db.execute(
             text(
                 "SELECT cust_id, bill_no, company_name, cust_first_name, cust_last_name, "
-                "energy_charge, metered_usage "
-                "FROM billing_extract_raw "
-                "WHERE contract_type = 'LMP Day-Ahead' AND metered_usage > 0 "
-                "AND (energy_charge / metered_usage > 0.08 OR energy_charge / metered_usage < 0.04)"
+                "energy_charge, metered_usage FROM billing_extract_raw "
+                "WHERE contract_type = 'LMP Day-Ahead' "
+                "AND metered_usage != '' AND metered_usage != '0' "
+                "AND (CAST(energy_charge AS DECIMAL(15,4)) / CAST(metered_usage AS DECIMAL(15,4)) < 0.04 "
+                "OR CAST(energy_charge AS DECIMAL(15,4)) / CAST(metered_usage AS DECIMAL(15,4)) > 0.08)"
             )
         )
     ).fetchall()
@@ -935,10 +941,11 @@ async def _run_all_checks(db: AsyncSession) -> Dict[str, Optional[str]]:
         await db.execute(
             text(
                 "SELECT cust_id, bill_no, company_name, cust_first_name, cust_last_name, "
-                "energy_charge, passthru_charge "
-                "FROM billing_extract_raw "
-                "WHERE cust_type NOT IN ('Residential') AND energy_charge > 0 "
-                "AND passthru_charge < (energy_charge * 0.30)"
+                "energy_charge, metered_usage FROM billing_extract_raw "
+                "WHERE contract_type = 'LMP Day-Ahead' "
+                "AND metered_usage != '' AND metered_usage != '0' "
+                "AND (CAST(energy_charge AS DECIMAL(15,4)) / CAST(metered_usage AS DECIMAL(15,4)) < 0.04 "
+                "OR CAST(energy_charge AS DECIMAL(15,4)) / CAST(metered_usage AS DECIMAL(15,4)) > 0.08)"
             )
         )
     ).fetchall()
@@ -958,10 +965,11 @@ async def _run_all_checks(db: AsyncSession) -> Dict[str, Optional[str]]:
         await db.execute(
             text(
                 "SELECT cust_id, bill_no, company_name, cust_first_name, cust_last_name, "
-                "energy_charge, passthru_charge, metered_usage "
-                "FROM billing_extract_raw "
-                "WHERE cust_type = 'Residential' AND metered_usage > 0 "
-                "AND (energy_charge / metered_usage) < 0.075"
+                "energy_charge, passthru_charge, metered_usage FROM billing_extract_raw "
+                "WHERE cust_type = 'R1' "
+                "AND metered_usage != '' AND metered_usage != '0' "
+                "AND (CAST(energy_charge AS DECIMAL(15,4)) + CAST(passthru_charge AS DECIMAL(15,4))) "
+                "/ CAST(metered_usage AS DECIMAL(15,4)) < 0.075"
             )
         )
     ).fetchall()
@@ -969,7 +977,10 @@ async def _run_all_checks(db: AsyncSession) -> Dict[str, Optional[str]]:
         [
             {
                 **_row(r),
-                "computed_rate": _safe_rate(r.energy_charge, r.metered_usage),
+                "computed_rate": _safe_rate(
+                    float(r.energy_charge or 0) + float(r.passthru_charge or 0),
+                    r.metered_usage,
+                ),
             }
             for r in rows
         ]
@@ -980,10 +991,11 @@ async def _run_all_checks(db: AsyncSession) -> Dict[str, Optional[str]]:
         await db.execute(
             text(
                 "SELECT cust_id, bill_no, company_name, cust_first_name, cust_last_name, "
-                "energy_charge, passthru_charge, metered_usage "
-                "FROM billing_extract_raw "
-                "WHERE cust_type = 'Residential' AND metered_usage > 0 "
-                "AND (energy_charge / metered_usage) > 0.15"
+                "energy_charge, passthru_charge, metered_usage FROM billing_extract_raw "
+                "WHERE cust_type = 'R1' "
+                "AND metered_usage != '' AND metered_usage != '0' "
+                "AND (CAST(energy_charge AS DECIMAL(15,4)) + CAST(passthru_charge AS DECIMAL(15,4))) "
+                "/ CAST(metered_usage AS DECIMAL(15,4)) > 0.15"
             )
         )
     ).fetchall()
@@ -991,7 +1003,10 @@ async def _run_all_checks(db: AsyncSession) -> Dict[str, Optional[str]]:
         [
             {
                 **_row(r),
-                "computed_rate": _safe_rate(r.energy_charge, r.metered_usage),
+                "computed_rate": _safe_rate(
+                    float(r.energy_charge or 0) + float(r.passthru_charge or 0),
+                    r.metered_usage,
+                ),
             }
             for r in rows
         ]
@@ -1002,19 +1017,16 @@ async def _run_all_checks(db: AsyncSession) -> Dict[str, Optional[str]]:
         await db.execute(
             text(
                 "SELECT cust_id, bill_no, company_name, cust_first_name, cust_last_name, "
-                "energy_charge, kh_qty, metered_usage "
-                "FROM billing_extract_raw "
-                "WHERE cust_type NOT IN ('Residential') AND metered_usage > 0 "
-                "AND (energy_charge / metered_usage) > 0.13"
+                "energy_charge, kh_qty FROM billing_extract_raw "
+                "WHERE cust_type IN ('C1', 'C3') "
+                "AND kh_qty != '' AND kh_qty != '0' "
+                "AND CAST(energy_charge AS DECIMAL(15,4)) / CAST(kh_qty AS DECIMAL(15,4)) >= 0.13"
             )
         )
     ).fetchall()
     result["check_commercial_price_high"] = _jdump(
         [
-            {
-                **_row(r),
-                "computed_rate": _safe_rate(r.energy_charge, r.metered_usage),
-            }
+            {**_row(r), "computed_rate": _safe_rate(r.energy_charge, r.kh_qty)}
             for r in rows
         ]
     )
@@ -1024,19 +1036,16 @@ async def _run_all_checks(db: AsyncSession) -> Dict[str, Optional[str]]:
         await db.execute(
             text(
                 "SELECT cust_id, bill_no, company_name, cust_first_name, cust_last_name, "
-                "energy_charge, kh_qty, metered_usage "
-                "FROM billing_extract_raw "
-                "WHERE cust_type NOT IN ('Residential') AND metered_usage > 0 "
-                "AND (energy_charge / metered_usage) < 0.036"
+                "energy_charge, kh_qty FROM billing_extract_raw "
+                "WHERE cust_type IN ('C1', 'C3') "
+                "AND kh_qty != '' AND kh_qty != '0' "
+                "AND CAST(energy_charge AS DECIMAL(15,4)) / CAST(kh_qty AS DECIMAL(15,4)) < 0.036"
             )
         )
     ).fetchall()
     result["check_commercial_price_low"] = _jdump(
         [
-            {
-                **_row(r),
-                "computed_rate": _safe_rate(r.energy_charge, r.metered_usage),
-            }
+            {**_row(r), "computed_rate": _safe_rate(r.energy_charge, r.kh_qty)}
             for r in rows
         ]
     )
@@ -1045,10 +1054,12 @@ async def _run_all_checks(db: AsyncSession) -> Dict[str, Optional[str]]:
     rows = (
         await db.execute(
             text(
-                "SELECT r.cust_id, r.bill_no, r.company_name, r.cust_first_name, r.cust_last_name, "
-                "r.curr_amount, r.due_amount, r.bill_handling_code, r.bill_mode, r.auto_pay_type, r.cust_type "
-                "FROM billing_extract_raw r "
-                "WHERE r.due_amount < 0 OR r.due_amount < r.curr_amount"
+                "SELECT cust_id, bill_no, company_name, cust_first_name, cust_last_name, "
+                "energy_charge, passthru_charge, due_amount, curr_amount, bill_handling_code "
+                "FROM billing_extract_raw "
+                "WHERE curr_amount != '' AND due_amount != '' "
+                "AND CAST(curr_amount AS DECIMAL(15,4)) > CAST(due_amount AS DECIMAL(15,4)) "
+                "AND CAST(due_amount AS DECIMAL(15,4)) * 0.7 <= CAST(curr_amount AS DECIMAL(15,4))"
             )
         )
     ).fetchall()
@@ -1103,7 +1114,8 @@ async def _run_all_checks(db: AsyncSession) -> Dict[str, Optional[str]]:
         await db.execute(
             text(
                 "SELECT cust_id, bill_no, company_name, cust_first_name, cust_last_name "
-                "FROM billing_extract_raw WHERE other_charge = 0 OR other_charge IS NULL"
+                "FROM billing_extract_raw "
+                "WHERE other_charge = '0' OR other_charge = '' OR other_charge IS NULL"
             )
         )
     ).fetchall()
