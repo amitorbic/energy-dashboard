@@ -28,8 +28,7 @@ async def add_hedge(data: dict, db: AsyncSession):
         )
 
     await db.execute(
-        text(
-            """
+        text("""
         INSERT INTO hedge_book (
             deal_number, trade_date, delivery_start, delivery_end,
             block_type, location,zone, volume_mw, price,
@@ -41,8 +40,7 @@ async def add_hedge(data: dict, db: AsyncSession):
             :instrument_type, :hr_value, :gas_price,
             :counterparty, :source, :notes, :entered_by
         )
-    """
-        ),
+    """),
         {
             "deal_number": data["deal_number"],
             "trade_date": data.get("trade_date"),
@@ -90,8 +88,7 @@ async def get_hedges(
     where = "WHERE " + " AND ".join(conditions) if conditions else ""
 
     result = await db.execute(
-        text(
-            f"""
+        text(f"""
         SELECT
             id, deal_number, trade_date, delivery_start, delivery_end,
             block_type, location,zone, volume_mw, price, instrument_type,
@@ -106,8 +103,7 @@ async def get_hedges(
         FROM hedge_book
         {where}
         ORDER BY delivery_start, zone, block_type
-    """
-        ),
+    """),
         params,
     )
 
@@ -116,11 +112,9 @@ async def get_hedges(
 
 async def get_hedge(hedge_id: int, db: AsyncSession):
     result = await db.execute(
-        text(
-            """
+        text("""
         SELECT * FROM hedge_book WHERE id = :id
-    """
-        ),
+    """),
         {"id": hedge_id},
     )
     row = result.mappings().fetchone()
@@ -139,8 +133,7 @@ async def update_hedge(hedge_id: int, data: dict, db: AsyncSession):
         )
 
     await db.execute(
-        text(
-            """
+        text("""
         UPDATE hedge_book SET
             deal_number     = :deal_number,
             trade_date      = :trade_date,
@@ -158,8 +151,7 @@ async def update_hedge(hedge_id: int, data: dict, db: AsyncSession):
             source          = :source,
             notes           = :notes
         WHERE id = :id
-    """
-        ),
+    """),
         {
             "id": hedge_id,
             "deal_number": data["deal_number"],
@@ -193,8 +185,7 @@ async def get_hedge_summary(zone: str, db: AsyncSession):
 
     # Summary by zone + block type
     by_zone = await db.execute(
-        text(
-            f"""
+        text(f"""
         SELECT
             zone,
             block_type,
@@ -208,15 +199,13 @@ async def get_hedge_summary(zone: str, db: AsyncSession):
         WHERE 1=1 {zone_filter}
         GROUP BY zone, block_type, instrument_type
         ORDER BY zone, block_type
-    """
-        ),
+    """),
         params,
     )
 
     # Monthly breakdown
     monthly = await db.execute(
-        text(
-            f"""
+        text(f"""
         SELECT
             DATE_FORMAT(delivery_start, '%Y-%m') as month,
             zone,
@@ -228,15 +217,13 @@ async def get_hedge_summary(zone: str, db: AsyncSession):
         WHERE 1=1 {zone_filter}
         GROUP BY DATE_FORMAT(delivery_start, '%Y-%m'), zone, block_type
         ORDER BY month, zone
-    """
-        ),
+    """),
         params,
     )
 
     # Overall stats
     stats = await db.execute(
-        text(
-            f"""
+        text(f"""
         SELECT
             COUNT(*)                    as total_deals,
             SUM(volume_mw)              as total_mw,
@@ -258,8 +245,7 @@ async def get_hedge_summary(zone: str, db: AsyncSession):
             COUNT(DISTINCT deal_number) as unique_deals
         FROM hedge_book
         WHERE 1=1 {zone_filter}
-    """
-        ),
+    """),
         params,
     )
 

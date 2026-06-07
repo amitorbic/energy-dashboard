@@ -283,6 +283,7 @@ async def parse_and_load(file: UploadFile, db: AsyncSession, uploaded_by: str) -
     shutil.copy(tmp_path, os.path.join(save_dir, file.filename))
     os.remove(tmp_path)
     print(f"Saved billing extract to: {os.path.join(save_dir, file.filename)}")
+    await compare_with_php(os.path.join(save_dir, file.filename), upload_id, db)
     return upload_id
 
 
@@ -1897,3 +1898,25 @@ async def rerun_checks(db: AsyncSession):
     )
     await db.commit()
     return {"message": "Checks re-run successfully", "upload_id": log_row.id}
+
+
+import requests as req
+
+
+async def compare_with_php(file_path: str, upload_id: int, db: AsyncSession):
+    try:
+        with open(file_path, "rb") as f:
+            response = req.post(
+                "https://portal.enertsol.com/billing_extract_api.php",
+                data={"secret": "ameripower_billing_2026"},
+                files={"file": f},
+                timeout=120,
+            )
+        php_data = response.json()
+        if php_data.get("status") == "success":
+            # store PHP counts in a comparison table or log
+            print(f"PHP comparison: {php_data['counts']}")
+            return php_data["counts"]
+    except Exception as e:
+        print(f"PHP comparison failed: {e}")
+        return None
