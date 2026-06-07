@@ -230,21 +230,52 @@ async def parse_and_load(file: UploadFile, db: AsyncSession, uploaded_by: str) -
     upload_id = log_row.id
 
     # Insert exception row
-    exc_row = BillingExceptionLog(
-        upload_id=upload_id,
-        upload_date=today,
-        row_type="exception",
-        **exceptions,
+    await db.execute(
+        text("""
+    INSERT INTO billing_exception_log 
+    (upload_id, upload_date, row_type, check_tax_zero, check_kh_qty_energy_zero,
+    check_kh_qty_metered_mismatch, check_residential_puc_grt_city, check_residential_tax_exempt,
+    check_mcpe_bills, check_lmp_rate_range, check_sub_only_no_master, check_commercial_tdsp,
+    check_residential_price_low, check_residential_price_high, check_commercial_price_high,
+    check_commercial_price_low, check_negative_balance, check_zero_usage, check_partial_payment,
+    check_zero_meter_fee, check_first_bill, check_final_bill, check_master_sub_final,
+    check_state_tax_100, check_credit_card_final, check_autopay_balance, check_wrong_meter_fee,
+    check_renewal_energy_high, check_paid_amount_variance, check_single_bill_under_100,
+    check_multi_contract_invoice, check_old_autopay_balance, check_deposit_charges,
+    check_first_bill_going_final, check_potential_final, check_difference_one_day,
+    check_different_due_date, check_master_sub_autopay_type, check_master_sub_bill_mode)
+    VALUES (:upload_id, :upload_date, :row_type, :check_tax_zero, :check_kh_qty_energy_zero,
+    :check_kh_qty_metered_mismatch, :check_residential_puc_grt_city, :check_residential_tax_exempt,
+    :check_mcpe_bills, :check_lmp_rate_range, :check_sub_only_no_master, :check_commercial_tdsp,
+    :check_residential_price_low, :check_residential_price_high, :check_commercial_price_high,
+    :check_commercial_price_low, :check_negative_balance, :check_zero_usage, :check_partial_payment,
+    :check_zero_meter_fee, :check_first_bill, :check_final_bill, :check_master_sub_final,
+    :check_state_tax_100, :check_credit_card_final, :check_autopay_balance, :check_wrong_meter_fee,
+    :check_renewal_energy_high, :check_paid_amount_variance, :check_single_bill_under_100,
+    :check_multi_contract_invoice, :check_old_autopay_balance, :check_deposit_charges,
+    :check_first_bill_going_final, :check_potential_final, :check_difference_one_day,
+    :check_different_due_date, :check_master_sub_autopay_type, :check_master_sub_bill_mode)
+    """),
+        {
+            "upload_id": upload_id,
+            "upload_date": today,
+            "row_type": "exception",
+            **exceptions,
+        },
     )
-    db.add(exc_row)
 
-    # Insert blank comment row (user fills in later)
-    comment_row = BillingExceptionLog(
-        upload_id=upload_id,
-        upload_date=today,
-        row_type="comment",
+    await db.execute(
+        text("""
+      INSERT INTO billing_exception_log 
+       (upload_id, upload_date, row_type)
+      VALUES (:upload_id, :upload_date, :row_type)
+      """),
+        {
+            "upload_id": upload_id,
+            "upload_date": today,
+            "row_type": "comment",
+        },
     )
-    db.add(comment_row)
 
     await db.commit()
     save_dir = os.path.join(tempfile.gettempdir(), "billing_extracts")
