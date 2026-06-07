@@ -116,3 +116,11 @@ async def delete_recipient(
     user=Depends(require_auth),
 ):
     return await ctrl.delete_recipient(recipient_id, db)
+
+
+@router.post("/rerun-checks")
+async def rerun_checks(
+    db: AsyncSession = Depends(get_db),
+    user=Depends(require_auth),
+):
+    return await ctrl.rerun_checks(db)

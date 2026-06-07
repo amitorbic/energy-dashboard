@@ -158,10 +158,10 @@ async def parse_and_load(file: UploadFile, db: AsyncSession, uploaded_by: str) -
                 "pay_amount": vm("Pay Amount"),
                 "due_amount": vm("Due Amount"),
                 "energy_charge": vm("Energy Charge"),
-                "deposit_charges": vm("Deposit Charges"),
+                "deposit_charges": vm("Deposit Charge"),
                 "passthru_charge": vm("Passthru Charge"),
                 "other_charge": vm("Other Charge"),
-                "kh_qty": v("KH Qty"),
+                "kh_qty": v("Usage Qty"),
                 "metered_usage": v("Metered Usage"),
                 "city_tax": vm("City Tax"),
                 "county_tax": vm("County Tax"),
@@ -966,7 +966,7 @@ async def _run_all_checks(db: AsyncSession) -> Dict[str, Optional[str]]:
             text(
                 "SELECT cust_id, bill_no, company_name, cust_first_name, cust_last_name, "
                 "energy_charge, passthru_charge, metered_usage FROM billing_extract_raw "
-                "WHERE cust_type = 'R1' "
+                "WHERE plan_group = 'R1' "
                 "AND metered_usage != '' AND metered_usage != '0' "
                 "AND (CAST(energy_charge AS DECIMAL(15,4)) + CAST(passthru_charge AS DECIMAL(15,4))) "
                 "/ CAST(metered_usage AS DECIMAL(15,4)) < 0.075"
@@ -992,7 +992,7 @@ async def _run_all_checks(db: AsyncSession) -> Dict[str, Optional[str]]:
             text(
                 "SELECT cust_id, bill_no, company_name, cust_first_name, cust_last_name, "
                 "energy_charge, passthru_charge, metered_usage FROM billing_extract_raw "
-                "WHERE cust_type = 'R1' "
+                "WHERE plan_group = 'R1' "
                 "AND metered_usage != '' AND metered_usage != '0' "
                 "AND (CAST(energy_charge AS DECIMAL(15,4)) + CAST(passthru_charge AS DECIMAL(15,4))) "
                 "/ CAST(metered_usage AS DECIMAL(15,4)) > 0.15"
@@ -1018,7 +1018,7 @@ async def _run_all_checks(db: AsyncSession) -> Dict[str, Optional[str]]:
             text(
                 "SELECT cust_id, bill_no, company_name, cust_first_name, cust_last_name, "
                 "energy_charge, kh_qty FROM billing_extract_raw "
-                "WHERE cust_type IN ('C1', 'C3') "
+                "WHERE plan_group IN ('C1', 'C3') "
                 "AND kh_qty != '' AND kh_qty != '0' "
                 "AND CAST(energy_charge AS DECIMAL(15,4)) / CAST(kh_qty AS DECIMAL(15,4)) >= 0.13"
             )
@@ -1037,7 +1037,7 @@ async def _run_all_checks(db: AsyncSession) -> Dict[str, Optional[str]]:
             text(
                 "SELECT cust_id, bill_no, company_name, cust_first_name, cust_last_name, "
                 "energy_charge, kh_qty FROM billing_extract_raw "
-                "WHERE cust_type IN ('C1', 'C3') "
+                "WHERE plan_group IN ('C1', 'C3') "
                 "AND kh_qty != '' AND kh_qty != '0' "
                 "AND CAST(energy_charge AS DECIMAL(15,4)) / CAST(kh_qty AS DECIMAL(15,4)) < 0.036"
             )
@@ -1055,11 +1055,13 @@ async def _run_all_checks(db: AsyncSession) -> Dict[str, Optional[str]]:
         await db.execute(
             text(
                 "SELECT cust_id, bill_no, company_name, cust_first_name, cust_last_name, "
-                "energy_charge, passthru_charge, due_amount, curr_amount, bill_handling_code "
+                "energy_charge, passthru_charge, curr_amount, tax_amount, due_amount, bill_handling_code "
                 "FROM billing_extract_raw "
-                "WHERE curr_amount != '' AND due_amount != '' "
-                "AND CAST(curr_amount AS DECIMAL(15,4)) > CAST(due_amount AS DECIMAL(15,4)) "
-                "AND CAST(due_amount AS DECIMAL(15,4)) * 0.7 <= CAST(curr_amount AS DECIMAL(15,4))"
+                "WHERE curr_amount != '' AND tax_amount != '' AND due_amount != '' "
+                "AND ROUND(CAST(curr_amount AS DECIMAL(15,4)) + CAST(tax_amount AS DECIMAL(15,4)), 2) "
+                "!= CAST(due_amount AS DECIMAL(15,4)) "
+                "AND CAST(curr_amount AS DECIMAL(15,4)) + CAST(tax_amount AS DECIMAL(15,4)) "
+                "> CAST(due_amount AS DECIMAL(15,4))"
             )
         )
     ).fetchall()
@@ -1068,8 +1070,11 @@ async def _run_all_checks(db: AsyncSession) -> Dict[str, Optional[str]]:
             {
                 **_row(r),
                 "curr_amount": str(r.curr_amount),
+                "tax_amount": str(r.tax_amount),
                 "due_amount": str(r.due_amount),
-                "bill_handling_code": str(r.bill_handling_code),
+                "computed": str(
+                    round(float(r.curr_amount or 0) + float(r.tax_amount or 0), 2)
+                ),
             }
             for r in rows
         ]
@@ -1092,9 +1097,12 @@ async def _run_all_checks(db: AsyncSession) -> Dict[str, Optional[str]]:
         await db.execute(
             text(
                 "SELECT cust_id, bill_no, company_name, cust_first_name, cust_last_name, "
-                "curr_amount, pay_amount, due_amount "
+                "bal_fwd_amount, pay_amount, due_amount "
                 "FROM billing_extract_raw "
-                "WHERE pay_amount > 0 AND pay_amount < curr_amount"
+                "WHERE bal_fwd_amount != '' AND bal_fwd_amount != '0' "
+                "AND pay_amount != '' AND pay_amount != '0' "
+                "AND ROUND(CAST(pay_amount AS DECIMAL(15,4)) / CAST(bal_fwd_amount AS DECIMAL(15,4)), 2) > 0 "
+                "AND ROUND(CAST(pay_amount AS DECIMAL(15,4)) / CAST(bal_fwd_amount AS DECIMAL(15,4)), 2) <= 0.75"
             )
         )
     ).fetchall()
@@ -1102,8 +1110,11 @@ async def _run_all_checks(db: AsyncSession) -> Dict[str, Optional[str]]:
         [
             {
                 **_row(r),
-                "curr_amount": str(r.curr_amount),
+                "bal_fwd_amount": str(r.bal_fwd_amount),
                 "pay_amount": str(r.pay_amount),
+                "ratio": str(
+                    round(float(r.pay_amount or 0) / float(r.bal_fwd_amount or 1), 2)
+                ),
             }
             for r in rows
         ]
@@ -1163,12 +1174,21 @@ async def _run_all_checks(db: AsyncSession) -> Dict[str, Optional[str]]:
     rows = (
         await db.execute(
             text(
-                "SELECT cust_id, bill_no, company_name, cust_first_name, cust_last_name, state_tax "
-                "FROM billing_extract_raw WHERE state_tax = 100"
+                "SELECT cust_id, bill_no, company_name, cust_first_name, cust_last_name, state_tax, load_profile "
+                "FROM billing_extract_raw WHERE state_tax = '0' OR state_tax IS NULL OR state_tax = ''"
             )
         )
     ).fetchall()
-    result["check_state_tax_100"] = _jdump([_row(r) for r in rows])
+    result["check_state_tax_100"] = _jdump(
+        [
+            {
+                **_row(r),
+                "state_tax": str(r.state_tax),
+                "load_profile": str(r.load_profile),
+            }
+            for r in rows
+        ]
+    )
 
     # ── Check 22: Credit card final bill service fee ──────────────────────────
     rows = (
@@ -1188,9 +1208,12 @@ async def _run_all_checks(db: AsyncSession) -> Dict[str, Optional[str]]:
         await db.execute(
             text(
                 "SELECT cust_id, bill_no, company_name, cust_first_name, cust_last_name, "
-                "auto_pay_type, due_amount "
+                "auto_pay_type, curr_amount, tax_amount, due_amount "
                 "FROM billing_extract_raw "
-                "WHERE auto_pay_type IS NOT NULL AND auto_pay_type <> '' AND due_amount > 0"
+                "WHERE auto_pay_type IS NOT NULL AND auto_pay_type != '' "
+                "AND curr_amount != '' AND tax_amount != '' AND due_amount != '' "
+                "AND ROUND(CAST(curr_amount AS DECIMAL(15,4)) + CAST(tax_amount AS DECIMAL(15,4)), 2) "
+                "!= ROUND(CAST(due_amount AS DECIMAL(15,4)), 2)"
             )
         )
     ).fetchall()
@@ -1198,8 +1221,13 @@ async def _run_all_checks(db: AsyncSession) -> Dict[str, Optional[str]]:
         [
             {
                 **_row(r),
-                "due_amount": str(r.due_amount),
                 "auto_pay_type": str(r.auto_pay_type),
+                "curr_amount": str(r.curr_amount),
+                "tax_amount": str(r.tax_amount),
+                "due_amount": str(r.due_amount),
+                "computed": str(
+                    round(float(r.curr_amount or 0) + float(r.tax_amount or 0), 2)
+                ),
             }
             for r in rows
         ]
@@ -1219,21 +1247,22 @@ async def _run_all_checks(db: AsyncSession) -> Dict[str, Optional[str]]:
     )
 
     # ── Check 25: Renewal customer energy charge >= 0.13 ─────────────────────
-    rows = (
-        await db.execute(
-            text(
-                "SELECT cust_id, bill_no, company_name, cust_first_name, cust_last_name, "
-                "energy_charge, metered_usage "
-                "FROM billing_extract_raw "
-                "WHERE metered_usage > 0 AND (energy_charge / metered_usage) >= 0.13"
-            )
-        )
-    ).fetchall()
+    rows = (await db.execute(text("""
+    SELECT r.cust_id, r.bill_no, r.company_name, r.cust_first_name, r.cust_last_name,
+           r.energy_rate, r.premise_id, c.contract_rate
+    FROM billing_extract_raw r
+    JOIN confirmation_log c ON r.premise_id = c.esiid
+    WHERE c.type_of_contract IN ('Renewal', 'Renewal+Addition')
+    AND r.energy_rate != '' AND r.energy_rate != '0'
+    AND r.energy_rate != CAST(c.contract_rate / 100 AS DECIMAL(15,4))
+    """))).fetchall()
     result["check_renewal_energy_high"] = _jdump(
         [
             {
                 **_row(r),
-                "computed_rate": _safe_rate(r.energy_charge, r.metered_usage),
+                "energy_rate": str(r.energy_rate),
+                "contract_rate": str(r.contract_rate),
+                "premise_id": str(r.premise_id),
             }
             for r in rows
         ]
@@ -1244,10 +1273,12 @@ async def _run_all_checks(db: AsyncSession) -> Dict[str, Optional[str]]:
         await db.execute(
             text(
                 "SELECT cust_id, bill_no, company_name, cust_first_name, cust_last_name, "
-                "curr_amount, pay_amount "
+                "pay_amount, due_amount, curr_amount, tax_amount "
                 "FROM billing_extract_raw "
-                "WHERE curr_amount > 0 AND pay_amount > 0 "
-                "AND ABS(pay_amount - curr_amount) / curr_amount > 0.80"
+                "WHERE pay_amount != '' AND CAST(pay_amount AS DECIMAL(15,2)) >= 500 "
+                "AND curr_amount != '' AND tax_amount != '' "
+                "AND CAST(pay_amount AS DECIMAL(15,2)) >= "
+                "ROUND((CAST(curr_amount AS DECIMAL(15,2)) + CAST(tax_amount AS DECIMAL(15,2))) * 0.8, 2)"
             )
         )
     ).fetchall()
@@ -1255,8 +1286,15 @@ async def _run_all_checks(db: AsyncSession) -> Dict[str, Optional[str]]:
         [
             {
                 **_row(r),
-                "curr_amount": str(r.curr_amount),
                 "pay_amount": str(r.pay_amount),
+                "due_amount": str(r.due_amount),
+                "curr_amount": str(r.curr_amount),
+                "tax_amount": str(r.tax_amount),
+                "percent": str(
+                    round(
+                        (float(r.curr_amount or 0) + float(r.tax_amount or 0)) * 0.8, 2
+                    )
+                ),
             }
             for r in rows
         ]
@@ -1266,14 +1304,27 @@ async def _run_all_checks(db: AsyncSession) -> Dict[str, Optional[str]]:
     rows = (
         await db.execute(
             text(
-                "SELECT cust_id, bill_no, company_name, cust_first_name, cust_last_name, curr_amount "
+                "SELECT cust_id, bill_no, company_name, cust_first_name, cust_last_name, "
+                "bill_mode, cust_email, auto_pay_type, curr_amount "
                 "FROM billing_extract_raw "
-                "WHERE bill_mode NOT IN ('Master','Sub') AND curr_amount < 100 AND curr_amount > 0"
+                "WHERE (cust_type = '' OR cust_type = 'StandAlone') "
+                "AND bill_mode != 'Email' "
+                "AND curr_amount != '' "
+                "AND CAST(curr_amount AS DECIMAL(15,2)) <= 100"
             )
         )
     ).fetchall()
     result["check_single_bill_under_100"] = _jdump(
-        [{**_row(r), "curr_amount": str(r.curr_amount)} for r in rows]
+        [
+            {
+                **_row(r),
+                "bill_mode": str(r.bill_mode),
+                "cust_email": str(r.cust_email),
+                "auto_pay_type": str(r.auto_pay_type),
+                "curr_amount": str(r.curr_amount),
+            }
+            for r in rows
+        ]
     )
 
     # ── Check 28: Invoice billed with 2+ contracts ────────────────────────────
@@ -1298,30 +1349,48 @@ async def _run_all_checks(db: AsyncSession) -> Dict[str, Optional[str]]:
     rows = (
         await db.execute(
             text(
-                "SELECT cust_id, bill_no, company_name, cust_first_name, cust_last_name, "
-                "auto_pay_type, due_amount, last_paid_date "
+                "SELECT cust_id, bill_to_id, bill_no, cust_type, company_name, "
+                "cust_first_name, cust_last_name, bal_fwd_amount, pay_amount, auto_pay_type "
                 "FROM billing_extract_raw "
-                "WHERE auto_pay_type IS NOT NULL AND auto_pay_type <> '' "
-                "AND due_amount > 0 AND last_paid_date < :cutoff"
-            ),
-            {"cutoff": three_months_ago},
+                "WHERE (auto_pay_type = '6' OR auto_pay_type = 'C') "
+                "AND bal_fwd_amount != pay_amount"
+            )
         )
     ).fetchall()
     result["check_old_autopay_balance"] = _jdump(
-        [{**_row(r), "last_paid_date": str(r.last_paid_date)} for r in rows]
+        [
+            {
+                **_row(r),
+                "auto_pay_type": str(r.auto_pay_type),
+                "bal_fwd_amount": str(r.bal_fwd_amount),
+                "pay_amount": str(r.pay_amount),
+                "cust_type": str(r.cust_type),
+            }
+            for r in rows
+        ]
     )
 
     # ── Check 30: Deposit charges ─────────────────────────────────────────────
     rows = (
         await db.execute(
             text(
-                "SELECT cust_id, bill_no, company_name, cust_first_name, cust_last_name, deposit_charges "
-                "FROM billing_extract_raw WHERE deposit_charges > 0"
+                "SELECT cust_id, bill_to_id, bill_no, cust_type, company_name, "
+                "cust_first_name, cust_last_name, deposit_charges, bill_handling_code "
+                "FROM billing_extract_raw "
+                "WHERE deposit_charges != '' AND deposit_charges != '0'"
             )
         )
     ).fetchall()
     result["check_deposit_charges"] = _jdump(
-        [{**_row(r), "deposit_charges": str(r.deposit_charges)} for r in rows]
+        [
+            {
+                **_row(r),
+                "deposit_charges": str(r.deposit_charges),
+                "bill_handling_code": str(r.bill_handling_code),
+                "cust_type": str(r.cust_type),
+            }
+            for r in rows
+        ]
     )
 
     # ── Check 31: First bill going final ─────────────────────────────────────
@@ -1342,17 +1411,41 @@ async def _run_all_checks(db: AsyncSession) -> Dict[str, Optional[str]]:
     rows = (
         await db.execute(
             text(
-                "SELECT cust_id, bill_no, company_name, cust_first_name, cust_last_name, "
-                "service_end, bill_handling_code "
+                "SELECT cust_id, bill_to_id, bill_no, premise_id, company_name, "
+                "cust_first_name, cust_last_name, service_start, service_end, bill_handling_code "
                 "FROM billing_extract_raw "
-                "WHERE bill_handling_code NOT IN ('9999') "
-                "AND service_end <= :cutoff"
-            ),
-            {"cutoff": date.today().strftime("%Y-%m-%d")},
+                "WHERE bill_handling_code = '0' "
+                "AND service_start != '' AND service_end != '' "
+                "AND DATEDIFF(service_end, service_start) < 27"
+            )
         )
     ).fetchall()
     result["check_potential_final"] = _jdump(
-        [{**_row(r), "service_end": str(r.service_end)} for r in rows]
+        [
+            {
+                **_row(r),
+                "service_start": str(r.service_start),
+                "service_end": str(r.service_end),
+                "days": (
+                    str(
+                        (
+                            (
+                                __import__("datetime").datetime.strptime(
+                                    str(r.service_end)[:10], "%Y-%m-%d"
+                                )
+                                - __import__("datetime").datetime.strptime(
+                                    str(r.service_start)[:10], "%Y-%m-%d"
+                                )
+                            ).days
+                        )
+                    )
+                    if r.service_start and r.service_end
+                    else "0"
+                ),
+                "bill_handling_code": str(r.bill_handling_code),
+            }
+            for r in rows
+        ]
     )
 
     # ── Check 33: Difference 1 day ────────────────────────────────────────────
@@ -1379,22 +1472,38 @@ async def _run_all_checks(db: AsyncSession) -> Dict[str, Optional[str]]:
     )
 
     # ── Check 34: Different due date ─────────────────────────────────────────
-    rows = (
+    masters = (
         await db.execute(
             text(
-                "SELECT cust_id, bill_no, company_name, cust_first_name, cust_last_name, "
-                "bill_date, due_date "
-                "FROM billing_extract_raw "
-                "WHERE DATEDIFF(due_date, bill_date) NOT IN (21, 22, 23)"
+                "SELECT cust_id, due_date FROM billing_extract_raw WHERE cust_type = 'Master'"
             )
         )
     ).fetchall()
-    result["check_different_due_date"] = _jdump(
-        [
-            {**_row(r), "bill_date": str(r.bill_date), "due_date": str(r.due_date)}
-            for r in rows
-        ]
-    )
+
+    flagged_34 = []
+    for master in masters:
+        subs = (
+            await db.execute(
+                text(
+                    "SELECT cust_id, bill_to_id, bill_no, premise_id, company_name, "
+                    "cust_first_name, cust_last_name, due_date "
+                    "FROM billing_extract_raw "
+                    "WHERE bill_to_id = :master_id AND due_date != :due_date"
+                ),
+                {"master_id": master.cust_id, "due_date": master.due_date},
+            )
+        ).fetchall()
+        for s in subs:
+            flagged_34.append(
+                {
+                    **_row(s),
+                    "bill_to_id": str(s.bill_to_id),
+                    "premise_id": str(s.premise_id),
+                    "due_date": str(s.due_date),
+                    "master_due_date": str(master.due_date),
+                }
+            )
+    result["check_different_due_date"] = _jdump(flagged_34)
 
     # ── Check 35: Master/Sub different Auto Pay Type ──────────────────────────
     masters = (
@@ -1728,3 +1837,32 @@ async def delete_recipient(recipient_id: int, db: AsyncSession):
     )
     await db.commit()
     return {"message": "Recipient deleted"}
+
+
+async def rerun_checks(db: AsyncSession):
+    # get latest upload
+    log_row = (
+        await db.execute(
+            text(
+                "SELECT id, upload_date FROM billing_upload_log ORDER BY upload_date DESC LIMIT 1"
+            )
+        )
+    ).fetchone()
+    if not log_row:
+        raise HTTPException(status_code=404, detail="No uploads found")
+
+    # run all 36 checks
+    exceptions = await _run_all_checks(db)
+
+    # update exception row
+    set_clause = ", ".join([f"{k} = :{k}" for k in exceptions])
+    exceptions["upload_id"] = log_row.id
+    await db.execute(
+        text(
+            f"UPDATE billing_exception_log SET {set_clause} "
+            f"WHERE upload_id = :upload_id AND row_type = 'exception'"
+        ),
+        exceptions,
+    )
+    await db.commit()
+    return {"message": "Checks re-run successfully", "upload_id": log_row.id}

@@ -1018,11 +1018,307 @@ async def get_forecast_data(criteria: dict, db: AsyncSession) -> dict:
     }
 
 
+"""
+get_dna_forecast_data
+──────────────────────
+Add this function to controllers/portfolio.py
+
+DNA Forecast logic:
+  1. Get portfolio annual MWh from portfolio_load_annual for forecast year
+  2. Get ERCOT annual total from forecast_growth_factors for forecast year
+  3. customer_share = portfolio_annual_mwh / ercot_year_total
+  4. Get DNA avg_load from forecast_baseline_dna (weather zone/month/dow/hour)
+  5. Sum weather zones → load zone
+  6. hourly_mwh = dna_avg_load × customer_share
+  
+  Note: growth is already embedded in customer_share since both numerator
+  (portfolio_load_annual) and denominator (ercot year_total) are year-specific
+"""
+
+from datetime import date, timedelta
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
+from utils.zone_mapping import get_weather_zones_for_load, get_load_zones
+
+
 async def get_dna_forecast_data(criteria: dict, db: AsyncSession) -> dict:
-    """DNA Forecast — Layer 1 + Layer 2. Under construction."""
+    from_date = criteria.get("from_date", date.today().isoformat())
+    through_date = criteria.get("through_date", from_date)
+    from_he = int(criteria.get("from_he", 1))
+    through_he = int(criteria.get("through_he", 24))
+    zones = criteria.get("zones", ["HOUSTON", "NORTH", "SOUTH", "WEST"])
+    granularity = criteria.get("granularity", "hourly")
+
+    start = date.fromisoformat(from_date)
+    end = date.fromisoformat(through_date)
+
+    # ── Step 1: Build hour labels ─────────────────────────────────────────────
+    hours = []
+    d = start
+    while d <= end:
+        he_start = from_he if d == start else 1
+        he_end = through_he if d == end else 24
+
+        if granularity == "fifteen_min":
+            for he in range(he_start, he_end + 1):
+                for q in range(1, 5):
+                    hours.append(f"{d.strftime('%m/%d')} HE{str(he).zfill(2)} Q{q}")
+        elif granularity == "hourly":
+            for he in range(he_start, he_end + 1):
+                hours.append(f"{d.strftime('%m/%d')} HE{str(he).zfill(2)}")
+        elif granularity == "daily":
+            hours.append(d.strftime("%m/%d"))
+        elif granularity == "monthly":
+            label = d.strftime("%b %Y")
+            if label not in hours:
+                hours.append(label)
+        d += timedelta(days=1)
+
+    n = len(hours)
+    zone_load = {z: [0.0] * n for z in zones}
+
+    # ── Step 2: Fetch DNA avg_load for all dates in range ─────────────────────
+    # Fetch all 8 weather zones at once
+    dna_result = await db.execute(text("""
+        SELECT weather_zone, month, day_of_week, hour_ending, avg_load
+        FROM   forecast_baseline_dna
+        ORDER  BY weather_zone, month, day_of_week, hour_ending
+    """))
+    dna_rows = dna_result.fetchall()
+
+    # Build lookup: (weather_zone, month, day_of_week, hour_ending) → avg_load
+    dna_lookup: dict[tuple, float] = {}
+    for row in dna_rows:
+        key = (row[0], int(row[1]), int(row[2]), int(row[3]))
+        dna_lookup[key] = float(row[4] or 0)
+
+    # ── Step 3: Fetch portfolio annual MWh + ERCOT totals per year ───────────
+    # Get all years in the forecast range
+    forecast_years = list(set(range(start.year, end.year + 1)))
+
+    # Portfolio annual MWh per year per load zone
+    pla_result = await db.execute(
+        text("""
+        SELECT year, load_zone, annual_mwh
+        FROM   portfolio_load_annual
+        WHERE  year IN :years
+          AND  load_zone IN :zones
+    """),
+        {"years": tuple(forecast_years), "zones": tuple(zones)},
+    )
+
+    portfolio_annual: dict[tuple, float] = {}
+    for row in pla_result.fetchall():
+        portfolio_annual[(int(row[0]), row[1])] = float(row[2] or 0)
+
+    # ERCOT annual totals per year per load zone (from growth factors)
+    gf_result = await db.execute(
+        text("""
+        SELECT forecast_year, load_zone, year_total
+        FROM   forecast_growth_factors
+        WHERE  forecast_year IN :years
+          AND  load_zone IN :zones
+    """),
+        {"years": tuple(forecast_years), "zones": tuple(zones)},
+    )
+
+    ercot_annual: dict[tuple, float] = {}
+    for row in gf_result.fetchall():
+        ercot_annual[(int(row[0]), row[1])] = float(row[2] or 0)
+
+    # ── Step 4: Calculate customer_share per year per load zone ──────────────
+    # customer_share = portfolio_annual_mwh / ercot_year_total
+    customer_share: dict[tuple, float] = {}
+    for year in forecast_years:
+        for zone in zones:
+            portfolio = portfolio_annual.get((year, zone), 0.0)
+            ercot = ercot_annual.get((year, zone), 0.0)
+            if ercot > 0:
+                customer_share[(year, zone)] = portfolio / ercot
+            else:
+                customer_share[(year, zone)] = 0.0
+
+    # ── Step 5: Apply DNA + customer_share to each hour ──────────────────────
+    d = start
+    hour_offset = 0
+
+    while d <= end:
+        he_start = from_he if d == start else 1
+        he_end = through_he if d == end else 24
+        month = d.month
+        dow = d.weekday()  # 0=Monday, 6=Sunday
+        year = d.year
+
+        for zone in zones:
+            share = customer_share.get((year, zone), 0.0)
+            if share == 0:
+                continue
+
+            # Sum weather zones that map to this load zone
+            weather_zones = get_weather_zones_for_load(zone)
+
+            for he in range(he_start, he_end + 1):
+                # Sum DNA avg_load across all weather zones for this load zone
+                dna_total = 0.0
+                for wz in weather_zones:
+                    dna_key = (wz, month, dow, he)
+                    dna_total += dna_lookup.get(dna_key, 0.0)
+
+                hourly_mwh = dna_total * share
+
+                if granularity == "fifteen_min":
+                    for q in range(4):
+                        pos = hour_offset + (he - he_start) * 4 + q
+                        if pos < n:
+                            zone_load[zone][pos] += hourly_mwh / 4
+
+                elif granularity == "hourly":
+                    pos = hour_offset + (he - he_start)
+                    if pos < n:
+                        zone_load[zone][pos] += hourly_mwh
+
+                elif granularity == "daily":
+                    pos = hour_offset
+                    if pos < n:
+                        zone_load[zone][pos] += hourly_mwh
+
+                elif granularity == "monthly":
+                    label = d.strftime("%b %Y")
+                    if label in hours:
+                        pos = hours.index(label)
+                        zone_load[zone][pos] += hourly_mwh
+
+        if granularity == "fifteen_min":
+            hour_offset += (he_end - he_start + 1) * 4
+        elif granularity == "hourly":
+            hour_offset += he_end - he_start + 1
+        elif granularity == "daily":
+            hour_offset += 1
+
+        d += timedelta(days=1)
+
+    # ── Step 6: Hedged supply ─────────────────────────────────────────────────
+    hedge_result = await db.execute(
+        text("""
+        SELECT zone, location, block_type, volume_mw
+        FROM   hedge_book
+        WHERE  delivery_start <= :end_date
+          AND  delivery_end   >= :start_date
+    """),
+        {"start_date": from_date, "end_date": through_date},
+    )
+    hedges = [dict(r) for r in hedge_result.mappings()]
+
+    all_locations = [
+        "HB_HOUSTON",
+        "HB_NORTH",
+        "HB_SOUTH",
+        "HB_WEST",
+        "LZ_HOUSTON",
+        "LZ_NORTH",
+        "LZ_SOUTH",
+        "LZ_WEST",
+    ]
+
+    def hedge_mw_for_location(location, hour_idx):
+        he = (hour_idx % 24) + 1
+        total = 0.0
+        for h in hedges:
+            if h.get("location") != location:
+                continue
+            bt = h["block_type"]
+            if bt == "7x24":
+                total += float(h["volume_mw"])
+            elif bt in ("7x16", "5x16") and 7 <= he <= 22:
+                total += float(h["volume_mw"])
+            elif bt == "7x8" and (he <= 6 or he >= 23):
+                total += float(h["volume_mw"])
+        return total
+
+    loc_supply = {
+        loc: [hedge_mw_for_location(loc, i) for i in range(n)] for loc in all_locations
+    }
+    zone_supply = {
+        z: [loc_supply[f"HB_{z}"][i] + loc_supply[f"LZ_{z}"][i] for i in range(n)]
+        for z in zones
+    }
+    total_supply = [sum(zone_supply[z][i] for z in zones) for i in range(n)]
+    total_load = [sum(zone_load[z][i] for z in zones) for i in range(n)]
+
+    # ── Step 7: Build rows ────────────────────────────────────────────────────
+    rows = [
+        {
+            "name": "Net Position",
+            "total": round(sum(total_supply) - sum(total_load), 3),
+            "hours": [round(total_supply[i] - total_load[i], 3) for i in range(n)],
+            "type": "net",
+        },
+        {
+            "name": "Load (DNA Forecast)",
+            "total": round(sum(total_load), 3),
+            "hours": [round(v, 3) for v in total_load],
+            "type": "header",
+        },
+        *[
+            {
+                "name": z,
+                "total": round(sum(zone_load[z]), 3),
+                "hours": [round(v, 3) for v in zone_load[z]],
+                "type": "zone",
+            }
+            for z in zones
+        ],
+        {
+            "name": "Net Supply",
+            "total": round(sum(total_supply), 3),
+            "hours": [round(v, 3) for v in total_supply],
+            "type": "supply",
+        },
+        *[
+            {
+                "name": f"HB_{z} Net Supply",
+                "total": round(sum(loc_supply[f"HB_{z}"]), 3),
+                "hours": [round(v, 3) for v in loc_supply[f"HB_{z}"]],
+                "type": "supply",
+            }
+            for z in zones
+        ],
+        *[
+            {
+                "name": f"LZ_{z} Net Supply",
+                "total": round(sum(loc_supply[f"LZ_{z}"]), 3),
+                "hours": [round(v, 3) for v in loc_supply[f"LZ_{z}"]],
+                "type": "supply",
+            }
+            for z in zones
+        ],
+        {
+            "name": "Net by Zone",
+            "total": round(sum(total_supply) - sum(total_load), 3),
+            "hours": [round(total_supply[i] - total_load[i], 3) for i in range(n)],
+            "type": "net",
+        },
+        *[
+            {
+                "name": f"{z} Net",
+                "total": round(sum(zone_supply[z]) - sum(zone_load[z]), 3),
+                "hours": [
+                    round(zone_supply[z][i] - zone_load[z][i], 3) for i in range(n)
+                ],
+                "type": "net_zone",
+            }
+            for z in zones
+        ],
+    ]
+
     return {
-        "rows": [],
-        "hours": [],
+        "rows": rows,
+        "hours": hours,
         "criteria": criteria,
-        "message": "DNA Forecast coming soon",
+        "customer_share": {
+            f"{y}_{z}": round(v, 6) for (y, z), v in customer_share.items()
+        },
+        "zone_annual_mwh": {
+            z: portfolio_annual.get((start.year, z), 0.0) for z in zones
+        },
     }

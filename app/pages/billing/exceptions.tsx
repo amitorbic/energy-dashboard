@@ -67,7 +67,7 @@ const CHECKS = [
     key: "check_master_sub_final",
     label: "Check 20 — Master/Sub account final billed",
   },
-  { key: "check_state_tax_100", label: "Check 21 — State tax = 100" },
+  { key: "check_state_tax_100", label: "Check 21 — State Tax Exempted" },
   {
     key: "check_credit_card_final",
     label: "Check 22 — Credit card final bill service fee",
@@ -128,21 +128,49 @@ const EXTRA_COLS: Record<string, string[]> = {
   check_residential_price_high: ["computed_rate"],
   check_commercial_price_high: ["computed_rate"],
   check_commercial_price_low: ["computed_rate"],
-  check_negative_balance: ["curr_amount", "due_amount", "bill_handling_code"],
+  check_negative_balance: [
+    "curr_amount",
+    "tax_amount",
+    "due_amount",
+    "computed",
+    "bill_handling_code",
+  ],
   check_partial_payment: ["curr_amount", "pay_amount"],
   check_master_sub_final: ["cust_type"],
-  check_autopay_balance: ["due_amount", "auto_pay_type"],
+  check_autopay_balance: ["auto_pay_type", "bal_fwd_amount", "pay_amount"],
   check_wrong_meter_fee: ["other_charge"],
   check_renewal_energy_high: ["computed_rate"],
   check_paid_amount_variance: ["curr_amount", "pay_amount"],
-  check_single_bill_under_100: ["curr_amount"],
+  check_single_bill_under_100: [
+    "bill_mode",
+    "cust_email",
+    "auto_pay_type",
+    "curr_amount",
+  ],
   check_multi_contract_invoice: ["no_of_contracts_billed"],
-  check_old_autopay_balance: ["last_paid_date"],
-  check_deposit_charges: ["deposit_charges"],
+  check_old_autopay_balance: [
+    "auto_pay_type",
+    "bal_fwd_amount",
+    "pay_amount",
+    "cust_type",
+  ],
+  check_deposit_charges: ["deposit_charges", "bill_handling_code", "cust_type"],
   check_difference_one_day: ["service_start", "service_end"],
-  check_different_due_date: ["bill_date", "due_date"],
+  check_different_due_date: [
+    "bill_to_id",
+    "premise_id",
+    "due_date",
+    "master_due_date",
+  ],
   check_master_sub_autopay_type: ["master_auto_pay", "sub_auto_pay"],
   check_master_sub_bill_mode: ["master_bill_mode", "sub_bill_mode"],
+  check_state_tax_100: ["state_tax", "load_profile"],
+  check_potential_final: [
+    "service_start",
+    "service_end",
+    "days",
+    "bill_handling_code",
+  ],
 };
 
 function colLabel(col: string): string {
@@ -306,6 +334,17 @@ export default function BillingExceptionsPage() {
       setTimeout(() => setSendMsg(""), 4000);
     }
   };
+  const handleRerun = async () => {
+    setLoading(true);
+    try {
+      await api.post("/billing/rerun-checks");
+      fetchExceptions(
+        date ? `/billing/exceptions/${date}` : "/billing/exceptions/last",
+      );
+    } catch {
+      setLoading(false);
+    }
+  };
 
   const totalExceptions = Object.values(exceptions).reduce(
     (sum, arr) => sum + arr.length,
@@ -409,6 +448,12 @@ export default function BillingExceptionsPage() {
                 Send Email
               </>
             )}
+          </button>
+          <button
+            onClick={handleRerun}
+            className="px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors"
+          >
+            Re-run Checks
           </button>
         </div>
       </div>
