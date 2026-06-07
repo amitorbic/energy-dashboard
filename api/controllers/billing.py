@@ -1905,16 +1905,31 @@ import requests as req
 
 async def compare_with_php(file_path: str, upload_id: int, db: AsyncSession):
     try:
+        session = req.Session()
+
+        # Login first
+        login_resp = session.post(
+            "https://portal.enertsol.com/login.php",
+            data={
+                "login": "amit.kumar.jha20@gmail.com",
+                "pass": "123456",
+                "submit": "Submit",
+            },
+            timeout=30,
+        )
+        print(f"Login status: {login_resp.status_code}")
+
+        # Now call the API with session cookie
         with open(file_path, "rb") as f:
-            response = req.post(
+            response = session.post(
                 "https://portal.enertsol.com/billing_extract_api.php",
                 data={"secret": "ameripower_billing_2026"},
-                files={"file": f},
+                files={"file": ("billing.xls", f, "application/vnd.ms-excel")},
                 timeout=120,
             )
+        print(f"PHP API response: {response.text[:500]}")
         php_data = response.json()
         if php_data.get("status") == "success":
-            # store PHP counts in a comparison table or log
             print(f"PHP comparison: {php_data['counts']}")
             return php_data["counts"]
     except Exception as e:
