@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Depends, UploadFile, File, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-
+from sqlalchemy import text
 from utils.database import get_db
 from middleware.auth import require_auth
 import controllers.billing as ctrl
+import controllers.billing_test as ctrl_test
 from schemas.billing import BillingCommentSave, RecipientCreate, SendEmailRequest
 
 router = APIRouter(prefix="/billing", tags=["Billing"])
@@ -124,3 +125,36 @@ async def rerun_checks(
     user=Depends(require_auth),
 ):
     return await ctrl.rerun_checks(db)
+
+
+# ── php-style test (billing_test.py) ─────────────────────────────────────────
+
+
+@router.post("/test/run")
+async def run_php_style_test(
+    file: UploadFile = File(...),
+    db: AsyncSession = Depends(get_db),
+    user=Depends(require_auth),
+):
+    if not file.filename.endswith((".xls", ".xlsx")):
+        raise HTTPException(status_code=400, detail="Only .xls or .xlsx files accepted")
+    rows = await ctrl_test.run_php_checks(file, db)
+    counts = {k: len(v) for k, v in rows.items()}
+    return {"counts": counts, "rows": rows}
+
+
+@router.get("/php-comparison/{upload_id}")
+async def get_php_comparison(
+    upload_id: int,
+    db: AsyncSession = Depends(get_db),
+    user=Depends(require_auth),
+):
+    row = (
+        await db.execute(
+            text("SELECT * FROM billing_php_comparison WHERE upload_id = :uid"),
+            {"uid": upload_id},
+        )
+    ).fetchone()
+    if not row:
+        return {}
+    return dict(row._mapping)

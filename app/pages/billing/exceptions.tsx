@@ -253,6 +253,7 @@ export default function BillingExceptionsPage() {
   const [sending, setSending] = useState(false);
   const [saveMsg, setSaveMsg] = useState("");
   const [sendMsg, setSendMsg] = useState("");
+  const [phpCounts, setPhpCounts] = useState<Record<string, number>>({});
 
   // ── load data ───────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -284,6 +285,18 @@ export default function BillingExceptionsPage() {
           }
         });
         setExceptions(parsed);
+      }
+      if (excRow) {
+        // existing code...
+        // add this at the end:
+        try {
+          const phpRes = await api.get(
+            `/billing/php-comparison/${excRow.upload_id}`,
+          );
+          setPhpCounts(phpRes.data);
+        } catch {
+          // no PHP comparison available
+        }
       }
 
       if (comRow) {
@@ -492,6 +505,25 @@ export default function BillingExceptionsPage() {
               <div className="px-4 py-3">
                 {/* exception table */}
                 {hasExceptions && <ExceptionTable data={rows} />}
+                {phpCounts && phpCounts[key] !== undefined && (
+                  <div className="flex items-center gap-3 mt-2 px-1">
+                    <span className="text-xs text-gray-500">
+                      Our count: <strong>{rows.length}</strong>
+                    </span>
+                    <span className="text-xs text-gray-500">
+                      PHP count: <strong>{phpCounts[key]}</strong>
+                    </span>
+                    {rows.length === phpCounts[key] ? (
+                      <span className="text-xs text-green-600 font-medium">
+                        ✅ Match
+                      </span>
+                    ) : (
+                      <span className="text-xs text-red-500 font-medium">
+                        ⚠️ Diff: {Math.abs(rows.length - phpCounts[key])}
+                      </span>
+                    )}
+                  </div>
+                )}
 
                 {/* comment box */}
                 <div className="mt-3">

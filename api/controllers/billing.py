@@ -12,7 +12,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 import tempfile
 from models.billing import BillingUploadLog, BillingExceptionLog, BillingEmailRecipient
 from schemas.billing import BillingCommentSave, RecipientCreate
-
+import requests as req
+from bs4 import BeautifulSoup
+import re
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -283,7 +285,7 @@ async def parse_and_load(file: UploadFile, db: AsyncSession, uploaded_by: str) -
     shutil.copy(tmp_path, os.path.join(save_dir, file.filename))
     os.remove(tmp_path)
     print(f"Saved billing extract to: {os.path.join(save_dir, file.filename)}")
-    await compare_with_php(os.path.join(save_dir, file.filename), upload_id, db)
+    await compare_with_php(upload_id, today, db)
     return upload_id
 
 
@@ -876,8 +878,10 @@ async def _run_all_checks(db: AsyncSession) -> Dict[str, Optional[str]]:
         await db.execute(
             text(
                 "SELECT cust_id, bill_no, company_name, cust_first_name, cust_last_name, "
-                "gros_tax_exempt, pugra_tax_exempt FROM billing_extract_raw "
-                "WHERE gros_tax_exempt = '100'"
+                "gros_tax, pugra_tax, city_tax, plan_group "
+                "FROM billing_extract_raw "
+                "WHERE (gros_tax = '0' OR gros_tax = '' OR gros_tax IS NULL) "
+                "OR (pugra_tax = '0' OR pugra_tax = '' OR pugra_tax IS NULL)"
             )
         )
     ).fetchall()
@@ -885,8 +889,10 @@ async def _run_all_checks(db: AsyncSession) -> Dict[str, Optional[str]]:
         [
             {
                 **_row(r),
-                "gros_tax": str(r.gros_tax_exempt),
-                "pugra_tax": str(r.pugra_tax_exempt),
+                "gros_tax": str(r.gros_tax),
+                "pugra_tax": str(r.pugra_tax),
+                "city_tax": str(r.city_tax),
+                "plan_group": str(r.plan_group),
             }
             for r in rows
         ]
@@ -1900,38 +1906,137 @@ async def rerun_checks(db: AsyncSession):
     return {"message": "Checks re-run successfully", "upload_id": log_row.id}
 
 
-import requests as req
-
-
-async def compare_with_php(file_path: str, upload_id: int, db: AsyncSession):
+async def compare_with_php(upload_id: int, upload_date, db: AsyncSession):
     try:
+        print(
+            f"compare_with_php called: upload_id={upload_id}, upload_date={upload_date}, req={req}"
+        )
+        print(f"Step 1: starting")
         session = req.Session()
-
-        # Login first
-        login_resp = session.post(
+        print(f"Step 2: session created")
+        # Login
+        login = session.post(
             "https://portal.enertsol.com/login.php",
             data={
-                "login": "amit.kumar.jha20@gmail.com",
-                "pass": "123456",
+                "login": os.getenv("PHP_PORTAL_USER", ""),
+                "pass": os.getenv("PHP_PORTAL_PASS", ""),
                 "submit": "Submit",
             },
             timeout=30,
         )
-        print(f"Login status: {login_resp.status_code}")
+        print(f"Step 3: logged in {login.status_code}")
 
-        # Now call the API with session cookie
-        with open(file_path, "rb") as f:
-            response = session.post(
-                "https://portal.enertsol.com/billing_extract_api.php",
-                data={"secret": "ameripower_billing_2026"},
-                files={"file": ("billing.xls", f, "application/vnd.ms-excel")},
-                timeout=120,
-            )
-        print(f"PHP API response: {response.text[:500]}")
-        php_data = response.json()
-        if php_data.get("status") == "success":
-            print(f"PHP comparison: {php_data['counts']}")
-            return php_data["counts"]
+        # Fetch results page
+        response = session.get(
+            "https://portal.enertsol.com/billing_extract_result.php", timeout=60
+        )
+        print(f"Step 4: fetched page {response.status_code}")
+
+        soup = BeautifulSoup(response.text, "html.parser")
+
+        # PHP check number → our column name
+        PHP_MAP = {
+            "1": "check_tax_zero",
+            "2": "check_kh_qty_energy_zero",
+            "3": "check_kh_qty_metered_mismatch",
+            "4": "check_residential_puc_grt_city",
+            "5": "check_residential_tax_exempt",
+            "6": "check_mcpe_bills",
+            "7": "check_lmp_rate_range",
+            "8": "check_sub_only_no_master",
+            "9": "check_commercial_tdsp",
+            "10": "check_residential_price_low",
+            "11": "check_residential_price_high",
+            "12": "check_commercial_price_high",
+            "13": "check_commercial_price_low",
+            "14": "check_negative_balance",
+            "15": "check_zero_usage",
+            "16": "check_partial_payment",
+            "17": "check_zero_meter_fee",
+            "18": "check_first_bill",
+            "19": "check_final_bill",
+            "20": "check_master_sub_final",
+            "21": "check_state_tax_100",
+            "22": "check_credit_card_final",
+            "23": "check_autopay_balance",
+            "24": "check_wrong_meter_fee",
+            "25": "check_renewal_energy_high",
+            "26": "check_paid_amount_variance",
+            "27": "check_single_bill_under_100",
+            "28": "check_multi_contract_invoice",
+            "29": "check_old_autopay_balance",
+            "30": "check_deposit_charges",
+            "31": "check_first_bill_going_final",
+            "32": "check_potential_final",
+            "33": "check_difference_one_day",
+            "34": "check_different_due_date",
+            "35": "check_master_sub_autopay_type",
+            "36": "check_master_sub_bill_mode",
+        }
+
+        # Parse counts
+        php_counts = {}
+
+        print(f"Step 5: parsed HTML")
+        for tag in soup.find_all("td"):
+            td_text = tag.get_text(strip=True)
+            match = re.match(r"^Check\s*#\s*(\d+)\s*$", td_text)
+            if match:
+                print(f"Step 6: found check {match.group(1)}")
+                check_num = match.group(1)
+                col_name = PHP_MAP.get(check_num)
+                if not col_name:
+                    continue
+                parent_table = tag.find_parent("table")
+                if parent_table:
+                    rows = parent_table.find_all("tr")
+                    max_sr = 0
+                    for r in rows:
+                        if r.get("bgcolor"):
+                            continue
+                        if r.find("textarea") or r.find("input"):
+                            continue
+                        first_td = r.find("td")
+                        if first_td and first_td.get_text(strip=True).isdigit():
+                            sr_val = int(first_td.get_text(strip=True))
+                            if sr_val > max_sr:
+                                max_sr = sr_val
+                    php_counts[col_name] = max_sr
+
+        if not php_counts:
+            print("PHP comparison: no counts parsed")
+            return None
+
+        # Save to billing_php_comparison
+        set_clause = ", ".join([f"{k} = :{k}" for k in php_counts])
+        php_counts["upload_id"] = upload_id
+        php_counts["upload_date"] = upload_date
+        print(f"Step 7: php_counts = {php_counts}")
+        print(f"Step 8: about to insert")
+
+        # separate data columns from keys
+        data_cols = {
+            k: v for k, v in php_counts.items() if k not in ["upload_id", "upload_date"]
+        }
+        col_names = ", ".join(data_cols.keys())
+        col_params = ", ".join([f":{k}" for k in data_cols.keys()])
+        update_clause = ", ".join([f"{k} = :{k}" for k in data_cols.keys()])
+
+        params = {**data_cols, "upload_id": upload_id, "upload_date": upload_date}
+
+        await db.execute(
+            text(f"""
+            INSERT INTO billing_php_comparison (upload_id, upload_date, {col_names})
+            VALUES (:upload_id, :upload_date, {col_params})
+          ON DUPLICATE KEY UPDATE {update_clause}
+       """),
+            params,
+        )
+        await db.commit()
+
+        print(f"PHP comparison saved for upload_id {upload_id}")
+        return php_counts
+
     except Exception as e:
         print(f"PHP comparison failed: {e}")
         return None

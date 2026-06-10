@@ -7,6 +7,7 @@ const LINKS = [
   { label: "Upload Billing File", href: "/billing/upload" },
   { label: "View Billing Exceptions", href: "/billing/exceptions" },
   { label: "View Last Exceptions", href: "/billing/exceptions/last" },
+  { label: "PHP ↔ Python Test", href: "/billing/exception-test" },
   { label: "Email Recipients", href: "/billing/recipients" },
 ];
 
