@@ -1,0 +1,170 @@
+# 🖥️ EnergyApp Server Commands Cheat Sheet
+
+## SSH Access
+
+```bash
+ssh root@82.112.231.44
+```
+
+---
+
+## PM2 — App Management
+
+```bash
+pm2 list                                    # See all running apps
+pm2 restart energyapp-api                   # Restart backend
+pm2 restart energyapp-frontend              # Restart frontend
+pm2 logs energyapp-api --lines 30           # View backend logs
+pm2 logs energyapp-api --err --lines 30     # View errors only
+pm2 logs energyapp-frontend --lines 30      # View frontend logs
+pm2 save                                    # Save current PM2 state
+```
+
+---
+
+## Git — Code Updates
+
+```bash
+cd /var/www/energyapp
+git pull origin master                      # Pull latest code
+git stash                                   # Stash local changes before pull
+```
+
+---
+
+## After Code Changes
+
+### Backend change (api folder):
+
+```bash
+cd /var/www/energyapp
+git pull origin master
+pm2 restart energyapp-api
+```
+
+### Frontend change (app folder):
+
+```bash
+cd /var/www/energyapp
+git pull origin master
+cd /var/www/energyapp/app
+npm run build
+pm2 restart energyapp-frontend
+```
+
+### Both changed:
+
+```bash
+cd /var/www/energyapp
+git pull origin master
+cd /var/www/energyapp/app
+npm run build
+pm2 restart energyapp-api
+pm2 restart energyapp-frontend
+```
+
+---
+
+## Database
+
+```bash
+# Open MySQL
+mysql -u root -p
+
+# Run migrations (after fresh DB import)
+mysql -u root -p energyapp < /var/www/energyapp/migrations.sql
+
+# Drop and recreate database (fresh import)
+mysql -u root -p -e "DROP DATABASE energyapp; CREATE DATABASE energyapp;"
+mysql -u root -p energyapp < /root/u972964962_orbic.sql
+
+# Clear billing data (if re-upload needed)
+mysql -u root -p energyapp -e "DELETE FROM billing_exception_log; DELETE FROM billing_upload_log; DELETE FROM billing_extract_raw;"
+```
+
+---
+
+## Nginx
+
+```bash
+nginx -t                                              # Test config
+systemctl reload nginx                                # Reload nginx
+nano /etc/nginx/sites-available/portal2               # Edit portal2 config
+```
+
+---
+
+## Install Python Packages
+
+```bash
+pip install packagename
+```
+
+---
+
+## Common Issues & Fixes
+
+### API not starting (missing module):
+
+```bash
+pip install modulename
+pm2 restart energyapp-api
+```
+
+### Frontend showing broken/no CSS:
+
+```bash
+cd /var/www/energyapp/app
+npm run build
+pm2 restart energyapp-frontend
+```
+
+### 413 File too large error:
+
+```bash
+nano /etc/nginx/sites-available/portal2
+# Add inside server block: client_max_body_size 50M;
+nginx -t && systemctl reload nginx
+```
+
+### Database field errors after fresh import:
+
+```bash
+mysql -u root -p energyapp < /var/www/energyapp/migrations.sql
+```
+
+### Check what's running on a port:
+
+```bash
+lsof -i :8002
+```
+
+### Kill process on a port:
+
+```bash
+fuser -k 8002/tcp
+```
+
+---
+
+## App URLs
+
+- **Frontend:** https://portal2.enertsol.com
+- **API Docs:** http://82.112.231.44:8002/docs
+- **VPS IP:** 82.112.231.44
+
+## App Ports
+
+- **Frontend (Next.js):** 3001
+- **Backend (FastAPI):** 8002
+
+## File Locations
+
+- **Project:** /var/www/energyapp
+- **API:** /var/www/energyapp/api
+- **Frontend:** /var/www/energyapp/app
+- **API .env:** /var/www/energyapp/api/.env
+- **Frontend .env:** /var/www/energyapp/app/.env.local
+- **Migrations:** /var/www/energyapp/migrations.sql
+- **Nginx config:** /etc/nginx/sites-available/portal2
+- **PM2 logs:** /root/.pm2/logs/

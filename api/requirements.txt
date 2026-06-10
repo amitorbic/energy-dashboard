@@ -5,3 +5,4 @@ aiomysql
 python-jose[cryptography]
 python-dotenv
 pydantic
+phpserialize

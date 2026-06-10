@@ -101,3 +101,7 @@ app.include_router(hedging_router, prefix="/api")
 from routers.dam import router as dam_router
 
 app.include_router(dam_router, prefix="/api")
+
+from routers import enrollment
+
+app.include_router(enrollment.router, prefix="/api")

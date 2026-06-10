@@ -15,6 +15,7 @@ const NAV_MODULES = [
   { label: "Past Due Portal", href: "/past-due" },
   { label: "Commission Data", href: "/commission" },
   { label: "Portfolio", href: "/portfolio" },
+  { label: "Enrollment", href: "/enrollment" },
 ];
 
 interface LayoutProps {
