@@ -105,3 +105,7 @@ app.include_router(dam_router, prefix="/api")
 from routers import enrollment
 
 app.include_router(enrollment.router, prefix="/api")
+
+from routers import consumer as consumer_router
+
+app.include_router(consumer_router.router, prefix="/api")
