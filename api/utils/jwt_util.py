@@ -11,7 +11,13 @@ ALGORITHM  = "HS256"
 
 ROLE_EXPIRY = {"1": 8, "2": 24, "3": 24, "admin": 8, "manager": 24, "user": 24}
 
-def create_token(user_id: int, username: str, role: str, email: str) -> str:
+def create_token(
+    user_id: int,
+    username: str,
+    role: str,
+    email: str,
+    extra_claims: dict = None,
+) -> str:
     hours = ROLE_EXPIRY.get(str(role), 24)
     payload = {
         "user_id":  user_id,
@@ -21,6 +27,8 @@ def create_token(user_id: int, username: str, role: str, email: str) -> str:
         "exp":      datetime.utcnow() + timedelta(hours=hours),
         "iat":      datetime.utcnow()
     }
+    if extra_claims:
+        payload.update(extra_claims)
     return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 
 def verify_token(token: str) -> Optional[dict]:

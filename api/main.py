@@ -109,3 +109,21 @@ app.include_router(enrollment.router, prefix="/api")
 from routers import consumer as consumer_router
 
 app.include_router(consumer_router.router, prefix="/api")
+
+from routers import broker_auth as broker_auth_router
+from routers import broker_home as broker_home_router
+from routers import broker_pricing as broker_pricing_router
+from routers import broker_renewals as broker_renewals_router
+from routers import broker_forms as broker_forms_router
+from routers import broker_bill as broker_bill_router
+from routers import broker_esiid as broker_esiid_router
+from routers import broker_profile as broker_profile_router
+
+app.include_router(broker_auth_router.router, prefix="/api")
+app.include_router(broker_home_router.router, prefix="/api")
+app.include_router(broker_pricing_router.router, prefix="/api")
+app.include_router(broker_renewals_router.router, prefix="/api")
+app.include_router(broker_forms_router.router, prefix="/api")
+app.include_router(broker_bill_router.router, prefix="/api")
+app.include_router(broker_esiid_router.router, prefix="/api")
+app.include_router(broker_profile_router.router, prefix="/api")

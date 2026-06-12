@@ -7,3 +7,5 @@ python-dotenv
 pydantic
 phpserialize
 openpyxl
+reportlab
+python-docx

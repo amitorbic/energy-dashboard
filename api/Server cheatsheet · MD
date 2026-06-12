@@ -14,9 +14,12 @@ ssh root@82.112.231.44
 pm2 list                                    # See all running apps
 pm2 restart energyapp-api                   # Restart backend
 pm2 restart energyapp-frontend              # Restart frontend
+pm2 restart energyapp-consumer              # Restart consumer portal
 pm2 logs energyapp-api --lines 30           # View backend logs
 pm2 logs energyapp-api --err --lines 30     # View errors only
 pm2 logs energyapp-frontend --lines 30      # View frontend logs
+pm2 logs energyapp-consumer --lines 30      # View consumer portal logs
+pm2 logs energyapp-consumer --err --lines 30 # View consumer errors
 pm2 save                                    # Save current PM2 state
 ```
 
@@ -63,6 +66,16 @@ pm2 restart energyapp-api
 pm2 restart energyapp-frontend
 ```
 
+### Consumer portal change (consumer folder):
+
+```bash
+cd /var/www/energyapp
+git pull origin master
+cd /var/www/energyapp/consumer
+API_PORT=8002 npm run build
+pm2 restart energyapp-consumer
+```
+
 ---
 
 ## Database
@@ -70,6 +83,19 @@ pm2 restart energyapp-frontend
 ```bash
 # Open MySQL
 mysql -u root -p
+
+# Consumer portal DB — fresh import from local dump
+mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS consumer;"
+mysql -u root -p consumer < /root/consumer_db.sql
+
+# Consumer portal DB — reset all user emails (safety net)
+mysql -u root -p -e "UPDATE consumer.users SET email='amit@enertsol.com';"
+
+# Consumer portal DB — reset admin password to Portal@2024
+mysql -u root -p -e "UPDATE consumer.users SET password='40ba1e48d1147c5a02eb835724b1d819' WHERE uid=1;"
+```
+
+```bash
 
 # Run migrations (after fresh DB import)
 mysql -u root -p energyapp < /var/www/energyapp/migrations.sql
@@ -90,6 +116,7 @@ mysql -u root -p energyapp -e "DELETE FROM billing_exception_log; DELETE FROM bi
 nginx -t                                              # Test config
 systemctl reload nginx                                # Reload nginx
 nano /etc/nginx/sites-available/portal2               # Edit portal2 config
+nano /etc/nginx/sites-available/consumer              # Edit consumer portal config
 ```
 
 ---
@@ -150,12 +177,14 @@ fuser -k 8002/tcp
 ## App URLs
 
 - **Frontend:** https://portal2.enertsol.com
+- **Consumer Portal:** https://consumer.enertsol.com
 - **API Docs:** http://82.112.231.44:8002/docs
 - **VPS IP:** 82.112.231.44
 
 ## App Ports
 
 - **Frontend (Next.js):** 3001
+- **Consumer Portal (Next.js):** 3002
 - **Backend (FastAPI):** 8002
 
 ## File Locations
@@ -163,8 +192,10 @@ fuser -k 8002/tcp
 - **Project:** /var/www/energyapp
 - **API:** /var/www/energyapp/api
 - **Frontend:** /var/www/energyapp/app
+- **Consumer Portal:** /var/www/energyapp/consumer
 - **API .env:** /var/www/energyapp/api/.env
 - **Frontend .env:** /var/www/energyapp/app/.env.local
 - **Migrations:** /var/www/energyapp/migrations.sql
-- **Nginx config:** /etc/nginx/sites-available/portal2
+- **Nginx config (main):** /etc/nginx/sites-available/portal2
+- **Nginx config (consumer):** /etc/nginx/sites-available/consumer
 - **PM2 logs:** /root/.pm2/logs/

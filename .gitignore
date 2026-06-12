@@ -1,4 +1,15 @@
-.env 
-.env 
-u972964962_orbic.sql
+# Env files — never commit secrets
+.env
 .env.local
+.env*.local
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Database dumps
+*.sql
+
+# OS
+.DS_Store

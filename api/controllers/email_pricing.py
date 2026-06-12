@@ -1,9 +1,4 @@
-import smtplib
 import io
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
-from email.mime.base import MIMEBase
-from email import encoders
 from datetime import date
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -12,15 +7,7 @@ from controllers.pricing_engine import (
     calculate_matrix_for_start_date,
     generate_excel_matrix,
 )
-import os
-
-SMTP_HOST = os.getenv("SMTP_HOST", "smtp.gmail.com")
-SMTP_PORT = int(os.getenv("SMTP_PORT", 465))
-SMTP_USER = os.getenv("SMTP_USER", "")
-SMTP_PASS = os.getenv("SMTP_PASS", "")
-SMTP_FROM = os.getenv("SMTP_FROM", "AmeriPower Billing <billing@ameripower.com>")
-
-from datetime import date
+from utils.email import send_email, send_email_async
 
 
 def build_daily_matrix_html(
@@ -141,51 +128,6 @@ def build_email_html(quote_for: str, content_html: str) -> str:
     """
 
 
-def send_email(
-    to: str,
-    subject: str,
-    html: str,
-    attachment: bytes = None,
-    attachment_name: str = None,
-):
-    msg = MIMEMultipart("mixed")
-    msg["From"] = SMTP_FROM
-    msg["To"] = to
-    msg["Subject"] = subject
-    msg.attach(MIMEText(html, "html"))
-
-    if attachment:
-        part = MIMEBase("application", "octet-stream")
-        part.set_payload(attachment)
-        encoders.encode_base64(part)
-        part.add_header(
-            "Content-Disposition", f"attachment; filename={attachment_name}"
-        )
-        msg.attach(part)
-
-    # Use SMTP_SSL for port 465
-    with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT) as server:
-        server.login(SMTP_USER, SMTP_PASS)
-        server.sendmail(SMTP_FROM, to, msg.as_string())
-
-
-import asyncio
-
-
-async def send_email_async(
-    to: str,
-    subject: str,
-    html: str,
-    attachment: bytes = None,
-    attachment_name: str = None,
-):
-    emails = [e.strip() for e in to.split(";") if e.strip()]
-    loop = asyncio.get_event_loop()
-    for email in emails:
-        await loop.run_in_executor(
-            None,
-            lambda e=email: send_email(e, subject, html, attachment, attachment_name),
-        )
 
 
 async def send_daily_pricing_email(

@@ -227,31 +227,32 @@ Active state: **blue** (`bg-blue-600 text-white`), sidebar width: `w-56`.
 
 ---
 
-## 3. Frontend Pages Still to Write
+## 3. Frontend Pages — COMPLETE ✓
 
-All 16 enrollment pages remain to be created:
+All 16 enrollment pages written (2026-06-10):
 
-| File | Endpoint(s) Used | Complexity |
-|------|-----------------|-----------|
-| `app/pages/enrollment/index.tsx` | `GET /stats` | Low – stat cards |
-| `app/pages/enrollment/upload.tsx` | `POST /upload` | Low – file input |
-| `app/pages/enrollment/view.tsx` | `GET /view?sort=`, `PATCH /{esid}/edit`, `PATCH /{esid}/status`, `GET /{esid}/log` | **High** – 3 modals |
-| `app/pages/enrollment/completed.tsx` | `GET /completed?sort=`, same modals | High |
-| `app/pages/enrollment/canceled.tsx` | `GET /canceled` | Low |
-| `app/pages/enrollment/user-log.tsx` | `GET /user-log` | Low |
-| `app/pages/enrollment/reports/comparison.tsx` | `GET /reports/comparison?start=&end=` | **Very High** – most complex |
-| `app/pages/enrollment/reports/pending-confirmations.tsx` | `GET /reports/pending-confirmations?search=` | Medium |
-| `app/pages/enrollment/reports/no-confirmations.tsx` | `GET /reports/no-confirmations` | Medium |
-| `app/pages/enrollment/reports/template-comparison.tsx` | `GET /reports/template-comparison` | High |
-| `app/pages/enrollment/reports/checked.tsx` | `GET /reports/checked` | Low |
-| `app/pages/enrollment/reports/non-billed.tsx` | `GET /reports/non-billed` | Low |
-| `app/pages/enrollment/templates/index.tsx` | `GET /templates`, `PUT /templates/{sid}`, `DELETE /templates/{sid}` | Medium |
-| `app/pages/enrollment/templates/add.tsx` | `GET /brokers`, `POST /templates` | Low |
-| `app/pages/enrollment/reports/download-completed.tsx` | `GET /download/completed?start=&end=` | Low – date picker + download |
-| `app/pages/enrollment/reports/download-pending.tsx` | `GET /download/pending` | Low – button + download |
+| File | Endpoint(s) Used | Notes |
+|------|-----------------|-------|
+| `app/pages/enrollment/index.tsx` | `GET /stats` | 5 stat cards |
+| `app/pages/enrollment/upload.tsx` | `POST /upload` | File picker, new/updated/failed counts |
+| `app/pages/enrollment/view.tsx` | `GET /view?sort=`, edit/status/log/clear/action | Sort controls + Edit modal + Status modal + Log modal + Clear + Delete (admin) |
+| `app/pages/enrollment/completed.tsx` | `GET /completed?sort=`, status/log/approve | Same modals; Approve button (admin); last 8 months default |
+| `app/pages/enrollment/canceled.tsx` | `GET /canceled` | Read-only table |
+| `app/pages/enrollment/user-log.tsx` | `GET /user-log` | Read-only log table |
+| `app/pages/enrollment/reports/comparison.tsx` | `GET /reports/comparison?start=&end=` | Date range filter; green/orange/red row colors; Approve modal |
+| `app/pages/enrollment/reports/pending-confirmations.tsx` | `GET /reports/pending-confirmations?search=` | Search + Dismiss button |
+| `app/pages/enrollment/reports/no-confirmations.tsx` | `GET /reports/no-confirmations` | Read-only table |
+| `app/pages/enrollment/reports/template-comparison.tsx` | `GET /reports/template-comparison` | Color-coded; Approve against template |
+| `app/pages/enrollment/reports/checked.tsx` | `GET /reports/checked` | Read-only approved list |
+| `app/pages/enrollment/reports/non-billed.tsx` | `GET /reports/non-billed` | Days column; red rows >60 days |
+| `app/pages/enrollment/reports/download-completed.tsx` | `GET /download/completed?start=&end=` | Date pickers → XLSX download |
+| `app/pages/enrollment/reports/download-pending.tsx` | `GET /download/pending` | Single button → XLSX download |
+| `app/pages/enrollment/templates/index.tsx` | `GET /templates`, `PUT /{sid}`, `DELETE /{sid}` | Search + Edit modal + Delete |
+| `app/pages/enrollment/templates/add.tsx` | `GET /brokers`, `POST /templates` | Broker dropdown + form |
 
-Also pending:
-- Add **"Enrollment"** entry to `app/components/Layout.tsx` NAV_MODULES
+**Also done:**
+- `app/components/Layout.tsx` — "Enrollment" added to `NAV_MODULES` top nav bar
+- `app/components/EnrollmentLayout.tsx` — sidebar layout (written end of prior session)
 
 ---
 
@@ -296,13 +297,23 @@ function getDifferenceMonths(start: string, end: string): number {
 
 ---
 
-## 6. How to Resume
+## 6. Status as of 2026-06-10
 
-If starting a new conversation, key facts:
+**Enrollment module is fully built — backend and frontend.**
 
-1. **Backend is 100% complete.** All 26 controller functions, 30 routes, models, and schemas are written and registered in `main.py`.
-2. **Frontend: only `EnrollmentLayout.tsx` is done.** All 16 page TSX files + the Layout.tsx NAV_MODULES entry are still to be written.
-3. Start with `app/pages/enrollment/index.tsx` (stats dashboard), then `upload.tsx`, then `view.tsx` (most complex — has Edit, Status, and Log modals).
-4. Use `api` default export from `app/utils/api.ts` for all HTTP calls.
-5. Wrap every page in `<EnrollmentLayout>` (not `<Layout>`).
-6. Use `require_auth` JWT — token is stored in `localStorage` as `ap_token`. The `api.ts` interceptor attaches it automatically.
+- Backend (FastAPI): 100% complete
+- Frontend (Next.js): 100% complete — all 16 pages + layout + top nav
+- Entry point: `http://localhost:3000/enrollment`
+
+### Pending: Testing
+All pages need to be tested against the live database. Key things to verify:
+- Upload flow (new vs update)
+- View page sort modes
+- Edit / Status / Log modals
+- Comparison report color coding and Approve action
+- Template CRUD
+- XLSX downloads (completed + pending)
+
+### If bugs are found
+- Backend logic is in `api/controllers/enrollment.py` — each function has a comment citing the PHP source line numbers
+- All DB column exclusions (`archive`, `comment_active`) and known quirks (user-log bug, dead contract-expiry code) are documented in **Section 5** above
