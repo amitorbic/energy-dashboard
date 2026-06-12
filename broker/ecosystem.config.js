@@ -7,7 +7,7 @@ module.exports = {
       cwd: "/var/www/energyapp/broker",
       env: {
         NODE_ENV: "production",
-        API_PORT: "8001",
+        API_PORT: "8002",
       },
     },
   ],
