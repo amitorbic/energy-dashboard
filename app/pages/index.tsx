@@ -166,6 +166,28 @@ export default function Dashboard() {
           </p>
         </div>
 
+        {/* Orbi AI Agent */}
+        <Link
+          href="/agent"
+          className="group flex items-center gap-5 border border-blue-500/30 hover:border-blue-500 bg-blue-500/5 hover:bg-blue-500/10 rounded-xl p-5 mb-8 transition-all duration-200"
+        >
+          <div className="text-3xl shrink-0">✨</div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <h3 className="text-white font-semibold text-sm">Orbi — AI Agent</h3>
+              <span className="text-xs bg-blue-500/20 text-blue-400 border border-blue-500/30 px-2 py-0.5 rounded-full font-medium">
+                New
+              </span>
+            </div>
+            <p className="text-slate-400 text-xs leading-relaxed">
+              Ask Orbi about customers, contracts, pricing, portfolio data, past-due accounts, and more. Full-page chat with sortable tables and quick actions.
+            </p>
+          </div>
+          <div className="text-xs font-medium text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+            Open Orbi →
+          </div>
+        </Link>
+
         {/* Module grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {MODULES.map((mod) => (
