@@ -64,33 +64,35 @@ ORBIC advantages to check when populating what_is_missing:
   Online self-service portal, Dedicated ERCOT account management,
   ETF-free options, Transparent all-in pricing, No auto-renewal traps`;
 
-const BASE_PROMPT = `You are a document data extraction assistant for ORBIC, a Texas energy retailer operating in ERCOT.
+const DETECT_PROMPT = `Look at this document. Is it:
+A) A utility/energy bill (shows charges, usage, ESI ID, account number, due date)
+B) A contract or agreement (shows terms, conditions, rates, signatures)
 
-Analyze the provided document and extract structured data.
+Reply with only: BILL or CONTRACT`;
 
-Identify the document type:
-- "utility_bill": A utility / electric bill from a TDU (Oncor, AEP Texas, TNMP, CenterPoint, etc.)
-- "contract": An energy supply contract or service agreement from a competitor retailer
-- "unknown": Cannot determine from available content
-${BILL_SECTION}
-${CONTRACT_SECTION}
-
+const CONFIDENCE_GUIDE = `
 Confidence scoring:
 90–100: Field is explicitly labeled and clearly readable
 70–89: Field is present and you are reasonably certain
 50–69: Field is inferred or partially visible
 1–49: Guessed, context only, or barely legible
-0: Field not found in this document
+0: Field not found in this document`;
 
-Respond with ONLY valid JSON — no markdown fences, no explanation text:
-{
-  "doc_type": "utility_bill",
-  "fields": {
-    "field_name": { "value": "extracted value or empty string", "confidence": 0 }
-  }
+function buildExtractionPrompt(docType: "utility_bill" | "contract", templateHint: string): string {
+  const docLabel =
+    docType === "utility_bill" ? "utility electric bill" : "competitor energy contract";
+  const section = docType === "utility_bill" ? BILL_SECTION : CONTRACT_SECTION;
+  return (
+    `You are a document data extraction assistant for ORBIC, a Texas energy retailer operating in ERCOT.\n\n` +
+    `Extract structured data from this ${docLabel}.\n` +
+    `${section}\n` +
+    `${templateHint}` +
+    `${CONFIDENCE_GUIDE}\n\n` +
+    `Respond with ONLY valid JSON — no markdown fences, no explanation text:\n` +
+    `{\n  "fields": {\n    "field_name": { "value": "extracted value or empty string", "confidence": 0 }\n  }\n}\n\n` +
+    `If a field is not found: { "value": "", "confidence": 0 }`
+  );
 }
-
-If a field is not found: { "value": "", "confidence": 0 }`;
 
 // ── Template matching ─────────────────────────────────────────────────────────
 
@@ -132,6 +134,42 @@ async function fetchTemplates(token: string): Promise<BillTemplate[]> {
   }
 }
 
+// ── Scanned PDF renderer ─────────────────────────────────────────────────────
+// Uses pdf-parse v2's built-in getScreenshot(), which internally uses
+// pdfjs-dist 5.x + @napi-rs/canvas — both already installed as its deps.
+
+interface PageImage {
+  base64: string;
+  mimeType: "image/png";
+}
+
+async function renderScannedPdf(buffer: Buffer): Promise<PageImage[]> {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { PDFParse } = require("pdf-parse") as {
+    PDFParse: new (opts: { data: Uint8Array }) => {
+      getScreenshot(params: {
+        scale: number;
+        imageDataUrl: boolean;
+        imageBuffer: boolean;
+        first: number;
+      }): Promise<{ pages: Array<{ dataUrl: string }>; total: number }>;
+    };
+  };
+
+  const parser = new PDFParse({ data: new Uint8Array(buffer) });
+  const result = await parser.getScreenshot({
+    scale: 2,           // 2× for legible text when passed to vision
+    imageDataUrl: true,
+    imageBuffer: false,
+    first: 3,           // cap at 3 pages — enough for any utility bill
+  });
+
+  return result.pages.map((p) => ({
+    base64: p.dataUrl.includes(",") ? p.dataUrl.split(",")[1] : p.dataUrl,
+    mimeType: "image/png",
+  }));
+}
+
 // ── OpenAI provider ───────────────────────────────────────────────────────────
 
 async function parseWithOpenAI(
@@ -144,21 +182,14 @@ async function parseWithOpenAI(
   const ext = filename.split(".").pop()?.toLowerCase() ?? "";
   const isImage = ["jpg", "jpeg", "png", "webp", "gif"].includes(ext);
 
-  let content: OpenAI.Chat.ChatCompletionUserMessageParam["content"];
-  let matchedTemplate: BillTemplate | null = null;
+  // ── Prepare document content once ──────────────────────────────────────────
+  let docText = "";
+  let imageBase64 = "";
+  let scannedPages: PageImage[] | null = null; // set when PDF has no/sparse text
 
   if (isImage) {
-    const base64 = buffer.toString("base64");
-    content = [
-      { type: "text", text: BASE_PROMPT },
-      {
-        type: "image_url",
-        image_url: { url: `data:${mimeType};base64,${base64}`, detail: "high" },
-      },
-    ];
+    imageBase64 = buffer.toString("base64");
   } else {
-    let docText = "";
-
     if (ext === "pdf") {
       // pdf-parse v2 is class-based: new PDFParse({ data }) → .getText()
       // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -166,42 +197,97 @@ async function parseWithOpenAI(
         PDFParse: new (opts: { data: Uint8Array }) => { getText(): Promise<{ text: string }> };
       };
       const parser = new PDFParse({ data: new Uint8Array(buffer) });
-      const textResult = await parser.getText();
-      docText = textResult.text;
+      docText = (await parser.getText()).text;
+
+      // < 200 chars means the PDF has no real text layer (scanned / image-based).
+      // Render each page as a PNG and send to vision instead of the text path.
+      if (docText.trim().length < 200) {
+        scannedPages = await renderScannedPdf(buffer);
+        if (scannedPages.length === 0) {
+          throw new Error("Could not extract text or render this PDF. Try uploading as JPG or PNG.");
+        }
+      }
     } else if (ext === "docx") {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       const mammoth = require("mammoth") as {
         extractRawText: (opts: { buffer: Buffer }) => Promise<{ value: string }>;
       };
-      const { value } = await mammoth.extractRawText({ buffer });
-      docText = value;
+      docText = (await mammoth.extractRawText({ buffer })).value;
+
+      if (!docText.trim()) {
+        throw new Error("No text could be extracted from this DOCX file.");
+      }
     } else {
       docText = buffer.toString("utf-8");
+      if (!docText.trim()) {
+        throw new Error("No text could be extracted from this file.");
+      }
     }
-
-    if (!docText.trim()) {
-      throw new Error(
-        "No text could be extracted. " +
-          "If this is a scanned PDF, upload a JPG or PNG image instead."
-      );
-    }
-
-    matchedTemplate = findTemplate(docText, templates);
-    const hint = matchedTemplate ? buildTemplateHint(matchedTemplate) : "";
-    content =
-      `${BASE_PROMPT}${hint}\n\nDOCUMENT CONTENT:\n\`\`\`\n${docText.slice(0, 12000)}\n\`\`\``;
   }
 
-  const completion = await client.chat.completions.create({
+  // Builds the content block for a given prompt, reusing the prepared document data.
+  // Scanned pages are sent as multiple image_url entries (one per rendered page).
+  type MsgContent = OpenAI.Chat.ChatCompletionUserMessageParam["content"];
+  const buildContent = (prompt: string, textLimit = 12000): MsgContent => {
+    if (isImage) {
+      return [
+        { type: "text", text: prompt },
+        { type: "image_url", image_url: { url: `data:${mimeType};base64,${imageBase64}`, detail: "high" } },
+      ];
+    }
+    if (scannedPages) {
+      return [
+        { type: "text", text: prompt },
+        ...scannedPages.map((p) => ({
+          type: "image_url" as const,
+          image_url: { url: `data:${p.mimeType};base64,${p.base64}`, detail: "high" as const },
+        })),
+      ];
+    }
+    return `${prompt}\n\nDOCUMENT CONTENT:\n\`\`\`\n${docText.slice(0, textLimit)}\n\`\`\``;
+  };
+
+  // ── Step 1: Detect document type ────────────────────────────────────────────
+  // Cheap call — max_tokens:10, no JSON mode, expects only "BILL" or "CONTRACT".
+  const detectCompletion = await client.chat.completions.create({
     model: "gpt-4o-mini",
-    messages: [{ role: "user", content }],
+    messages: [{ role: "user", content: buildContent(DETECT_PROMPT, 4000) }],
+    temperature: 0,
+    max_tokens: 10,
+  });
+  const detectAnswer =
+    detectCompletion.choices[0]?.message?.content?.trim().toUpperCase() ?? "";
+
+  let docType: DocType;
+  if (detectAnswer.startsWith("BILL")) docType = "utility_bill";
+  else if (detectAnswer.startsWith("CONTRACT")) docType = "contract";
+  else return { doc_type: "unknown", fields: {} };
+
+  // ── Step 2: Template matching (text PDFs and DOCX only) ─────────────────────
+  // Scanned pages and raw images have no extractable text for provider name lookup.
+  let matchedTemplate: BillTemplate | null = null;
+  if (docType === "utility_bill" && !isImage && !scannedPages) {
+    matchedTemplate = findTemplate(docText, templates);
+  }
+  const templateHint = matchedTemplate ? buildTemplateHint(matchedTemplate) : "";
+
+  // ── Step 3: Extract fields for the detected type ────────────────────────────
+  const extractPrompt = buildExtractionPrompt(docType, templateHint);
+  const extractCompletion = await client.chat.completions.create({
+    model: "gpt-4o-mini",
+    messages: [{ role: "user", content: buildContent(extractPrompt) }],
     temperature: 0,
     max_tokens: 1024,
     response_format: { type: "json_object" },
   });
 
-  const raw = completion.choices[0]?.message?.content ?? "{}";
-  const result = JSON.parse(raw) as ParseResult;
+  const raw = extractCompletion.choices[0]?.message?.content ?? "{}";
+  const extracted = JSON.parse(raw) as { fields?: Record<string, ExtractedField> };
+
+  const result: ParseResult = {
+    doc_type: docType,
+    fields: extracted.fields ?? {},
+  };
 
   if (matchedTemplate) {
     result.template_id = matchedTemplate.id;
@@ -212,6 +298,10 @@ async function parseWithOpenAI(
 }
 
 // ── Claude provider (stub — swap in when ready) ───────────────────────────────
+// Follow the same two-step pattern as parseWithOpenAI:
+//   1. Send DETECT_PROMPT → expect "BILL" or "CONTRACT"
+//   2. Send buildExtractionPrompt(docType, templateHint) → parse { fields }
+// Install @anthropic-ai/sdk and set ANTHROPIC_API_KEY to activate.
 
 async function parseWithClaude(
   _buffer: Buffer,
@@ -219,13 +309,16 @@ async function parseWithClaude(
   _mimeType: string,
   _templates: BillTemplate[]
 ): Promise<ParseResult> {
-  // Install @anthropic-ai/sdk and set ANTHROPIC_API_KEY to activate.
   throw new Error(
     "Claude provider not yet configured. Set ANTHROPIC_API_KEY and install @anthropic-ai/sdk."
   );
 }
 
 // ── Gemini provider (stub — swap in when ready) ───────────────────────────────
+// Follow the same two-step pattern as parseWithOpenAI:
+//   1. Send DETECT_PROMPT → expect "BILL" or "CONTRACT"
+//   2. Send buildExtractionPrompt(docType, templateHint) → parse { fields }
+// Install @google/generative-ai and set GEMINI_API_KEY to activate.
 
 async function parseWithGemini(
   _buffer: Buffer,
@@ -233,7 +326,6 @@ async function parseWithGemini(
   _mimeType: string,
   _templates: BillTemplate[]
 ): Promise<ParseResult> {
-  // Install @google/generative-ai and set GEMINI_API_KEY to activate.
   throw new Error(
     "Gemini provider not yet configured. Set GEMINI_API_KEY and install @google/generative-ai."
   );

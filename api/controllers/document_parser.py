@@ -17,7 +17,7 @@ async def get_all_templates(db: AsyncSession) -> List[dict]:
     result = await db.execute(
         text("SELECT * FROM bill_templates ORDER BY times_used DESC")
     )
-    return [dict(r._mapping) for r in result.mappings()]
+    return [dict(r) for r in result.mappings()]
 
 
 async def get_template_by_provider(provider_name: str, db: AsyncSession) -> Optional[dict]:
@@ -230,7 +230,7 @@ async def list_bills(limit: int, offset: int, db: AsyncSession) -> List[dict]:
         ),
         {"limit": limit, "offset": offset},
     )
-    return [dict(r._mapping) for r in result.mappings()]
+    return [dict(r) for r in result.mappings()]
 
 
 async def list_contracts(limit: int, offset: int, db: AsyncSession) -> List[dict]:
@@ -240,7 +240,7 @@ async def list_contracts(limit: int, offset: int, db: AsyncSession) -> List[dict
         ),
         {"limit": limit, "offset": offset},
     )
-    return [dict(r._mapping) for r in result.mappings()]
+    return [dict(r) for r in result.mappings()]
 
 
 async def get_bill(record_id: int, db: AsyncSession) -> Optional[dict]:
