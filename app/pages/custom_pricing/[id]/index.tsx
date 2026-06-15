@@ -285,7 +285,7 @@ const CustomerPricingPage = () => {
                   },
                   { label: "Broker Fee", name: "broker_fee", type: "number" },
                   {
-                    label: "AmeriPower Mills",
+                    label: "ORBIC Mills",
                     name: "ameripower_mills",
                     type: "number",
                   },
@@ -658,7 +658,7 @@ const CustomerPricingPage = () => {
                 {[
                   ["Broker", form.broker_code],
                   ["Broker Fee", form.broker_fee],
-                  ["AmeriPower Mills", form.ameripower_mills],
+                  ["ORBIC Mills", form.ameripower_mills],
                   ["Credit Status", form.credit_status],
                   ["Nodal/RUC", form.nodal],
                   ["No. ESIDs", form.num_esids],

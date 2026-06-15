@@ -342,7 +342,7 @@ export default function SendLMPConfirmationPage() {
                 className={INPUT}
                 value={form.sent_by}
                 onChange={(e) => set("sent_by", e.target.value)}
-                placeholder="AmeriPower contract confirm..."
+                placeholder="ORBIC contract confirm..."
               />,
             )}
           </div>

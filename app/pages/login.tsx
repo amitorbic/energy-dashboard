@@ -112,7 +112,7 @@ export default function LoginPage() {
         </div>
 
         <p className="text-center text-slate-600 text-xs mt-6">
-          AmeriPower Internal Applications
+          ORBIC Internal Applications
         </p>
       </div>
     </div>

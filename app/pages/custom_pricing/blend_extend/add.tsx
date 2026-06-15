@@ -640,7 +640,7 @@ const BlendExtend = () => {
                     <div className="grid grid-cols-2 gap-3">
                       <div>
                         <label className="text-xs text-slate-400 mb-1 block">
-                          AmeriPower mills
+                          ORBIC mills
                         </label>
                         <input
                           type="number"

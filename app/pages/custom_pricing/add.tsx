@@ -289,7 +289,7 @@ const AddCustomer = () => {
               onChange={handleChange}
             />
             <Field
-              label="AmeriPower Mills"
+              label="ORBIC Mills"
               name="ameripower_mills"
               type="number"
               value={form.ameripower_mills}

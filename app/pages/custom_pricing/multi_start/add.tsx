@@ -444,7 +444,7 @@ const MultiStartAdd = () => {
                   </select>
                 </div>
                 <div>
-                  <label className={labelCls}>AmeriPower mills</label>
+                  <label className={labelCls}>ORBIC mills</label>
                   <input
                     type="number"
                     step="0.1"

@@ -221,7 +221,7 @@ export default function CommissionIndex() {
                   Commission Dashboard
                 </h1>
                 <p className="text-sm text-gray-500 mt-0.5">
-                  AmeriPower Portfolio Management
+                  ORBIC Portfolio Management
                 </p>
               </div>
               <span className="text-sm text-gray-400 font-mono">

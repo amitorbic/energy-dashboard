@@ -397,7 +397,7 @@ export default function ViewCommissionData() {
           <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
             {loading ? (
               <div className="p-20 text-center text-gray-400 font-bold animate-pulse">
-                Scanning AmeriPower Database...
+                Scanning ORBIC Database...
               </div>
             ) : rows.length === 0 ? (
               <div className="p-20 text-center text-gray-400">

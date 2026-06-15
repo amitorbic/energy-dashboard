@@ -110,6 +110,10 @@ from routers import consumer as consumer_router
 
 app.include_router(consumer_router.router, prefix="/api")
 
+from routers import document_parser as document_parser_router
+
+app.include_router(document_parser_router.router, prefix="/api")
+
 from routers import broker_auth as broker_auth_router
 from routers import broker_home as broker_home_router
 from routers import broker_pricing as broker_pricing_router

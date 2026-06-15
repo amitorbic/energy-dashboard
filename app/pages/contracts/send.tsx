@@ -571,7 +571,7 @@ export default function SendConfirmationPage() {
                 className={INPUT}
                 value={form.sent_by}
                 onChange={(e) => set("sent_by", e.target.value)}
-                placeholder="AmeriPower contract confirm..."
+                placeholder="ORBIC contract confirm..."
               />,
             )}
 
@@ -588,7 +588,7 @@ export default function SendConfirmationPage() {
             )}
 
             {row(
-              "AmeriPower Mills",
+              "ORBIC Mills",
               <div>
                 <input
                   className={INPUT}

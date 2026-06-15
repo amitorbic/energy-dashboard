@@ -67,6 +67,13 @@ const MODULES = [
     icon: "💰",
     color: "green",
   },
+  {
+    label: "Document Parser",
+    href: "/document-parser",
+    description: "Extract data from utility bills and contracts using AI Vision",
+    icon: "🔍",
+    color: "purple",
+  },
 ];
 
 const COLOR_MAP: Record<string, string> = {
@@ -84,6 +91,8 @@ const COLOR_MAP: Record<string, string> = {
   red: "border-red-500/30 hover:border-red-500 bg-red-500/5 hover:bg-red-500/10",
   green:
     "border-green-500/30 hover:border-green-500 bg-green-500/5 hover:bg-green-500/10",
+  purple:
+    "border-purple-500/30 hover:border-purple-500 bg-purple-500/5 hover:bg-purple-500/10",
 };
 
 const ICON_COLOR: Record<string, string> = {
@@ -96,6 +105,7 @@ const ICON_COLOR: Record<string, string> = {
   indigo: "text-indigo-400",
   red: "text-red-400",
   green: "text-green-400",
+  purple: "text-purple-400",
 };
 
 export default function Dashboard() {
@@ -126,7 +136,7 @@ export default function Dashboard() {
         <div className="max-w-screen-xl mx-auto px-6 h-14 flex items-center justify-between">
           <div className="flex items-center gap-2 font-bold text-lg text-white tracking-tight">
             <span className="text-sky-400">⚡</span>
-            Ameri<span className="text-sky-400">Power</span>
+            <span className="text-sky-400">ORBIC</span>
             <span className="text-slate-600 font-normal text-sm ml-1">
               Internal
             </span>
@@ -162,7 +172,7 @@ export default function Dashboard() {
             Welcome back{user ? `, ${user.username}` : ""}
           </h1>
           <p className="text-slate-400 text-sm">
-            AmeriPower Energy Intelligence Platform — Texas ERCOT Market
+            ORBIC Energy Intelligence Platform — Texas ERCOT Market
           </p>
         </div>
 
@@ -216,7 +226,7 @@ export default function Dashboard() {
 
         {/* Footer */}
         <div className="mt-16 pt-6 border-t border-slate-800 text-center text-slate-600 text-xs">
-          AmeriPower Internal Applications · ERCOT Texas Market
+          ORBIC Internal Applications · ERCOT Texas Market
         </div>
       </main>
     </div>
