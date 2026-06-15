@@ -42,11 +42,13 @@ class ParsedBill(Base):
     service_address = Column(String(500), nullable=True)
     usage_kwh = Column(Float, nullable=True)
     kw_demand = Column(Float, nullable=True)
-    energy_rate = Column(Float, nullable=True)
-    total_average_rate = Column(Float, nullable=True)
-    tdsp_charges = Column(Float, nullable=True)
+    energy_rate = Column(Float, nullable=True)         # $/kWh — REP supply rate
+    tdsp_rate = Column(Float, nullable=True)           # $/kWh — TDSP delivery rate
+    total_average_rate = Column(Float, nullable=True)  # $/kWh — total bill ÷ kWh
+    energy_charges = Column(Float, nullable=True)      # $ — REP supply subtotal
+    tdsp_charges = Column(Float, nullable=True)        # $ — TDSP delivery subtotal
     taxes = Column(Float, nullable=True)
-    extra_charges = Column(JSON, nullable=True)   # flagged non-standard line items
+    extra_charges = Column(JSON, nullable=True)        # non-standard line items
     bill_date = Column(Date, nullable=True)
     service_zip = Column(String(10), nullable=True)    # extracted from service address
     tdsp_name = Column(String(255), nullable=True)     # derived from ESI ID prefix or zip

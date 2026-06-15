@@ -44,16 +44,27 @@ interface FieldDef {
 }
 
 const UTILITY_BILL_FIELDS: FieldDef[] = [
-  { key: "esid", label: "ESI ID / Premise ID" },
+  // Identity
+  { key: "esid",           label: "ESI ID / Premise ID" },
   { key: "account_number", label: "Account Number" },
-  { key: "bill_amount", label: "Bill Amount" },
-  { key: "due_date", label: "Due Date" },
-  { key: "usage_kwh", label: "Usage (kWh)" },
-  { key: "provider_name", label: "Provider / TDU" },
+  // Billing summary
+  { key: "bill_amount",    label: "Total Bill Amount" },
+  { key: "due_date",       label: "Due Date" },
+  { key: "usage_kwh",      label: "Usage (kWh)" },
+  // Rates ($/kWh)
+  { key: "energy_rate",        label: "Energy Rate ($/kWh)" },
+  { key: "tdsp_rate",          label: "TDSP Delivery Rate ($/kWh)" },
+  { key: "total_average_rate", label: "Total Avg Rate ($/kWh)" },
+  // Charge subtotals ($)
+  { key: "energy_charges", label: "Energy Charges ($)" },
+  { key: "tdsp_charges",   label: "TDSP Charges ($)" },
+  { key: "extra_charges",  label: "Extra / Non-standard Charges", wide: true, multiline: true },
+  // Provider & location
+  { key: "provider_name",  label: "Retail Electric Provider (REP)" },
   { key: "service_address", label: "Service Address", wide: true },
-  { key: "service_zip", label: "Service ZIP" },
-  { key: "tdsp_name", label: "TDSP (Wire Company)" },
-  { key: "pricing_zone", label: "ERCOT Pricing Zone" },
+  { key: "service_zip",    label: "Service ZIP" },
+  { key: "tdsp_name",      label: "TDSP (Wire Company)" },
+  { key: "pricing_zone",   label: "ERCOT Pricing Zone" },
 ];
 
 const CONTRACT_FIELDS: FieldDef[] = [

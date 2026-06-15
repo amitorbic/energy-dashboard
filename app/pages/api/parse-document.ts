@@ -35,9 +35,16 @@ For UTILITY BILLS extract:
 - account_number: Customer account number
 - bill_amount: Total amount due (include $ sign, e.g. "$124.56")
 - due_date: Payment due date (YYYY-MM-DD)
-- usage_kwh: Electricity consumption in kWh (numeric string, e.g. "1234.5")
+- usage_kwh: Electricity consumption in kWh (numeric only, e.g. "1234.5")
+- energy_rate: Energy supply rate $/kWh from the REP/retailer charges section (numeric only, e.g. "0.0432"). Leave empty if not explicitly shown — it will be calculated.
+- tdsp_rate: Delivery rate $/kWh from the TDSP section (Oncor / AEP / CenterPoint / TNMP charges) (numeric only). Leave empty if not shown.
+- energy_charges: Total REP energy supply charges in dollars (numeric only, e.g. "54.32")
+- tdsp_charges: Total TDSP delivery charges in dollars (numeric only, e.g. "38.75")
+- extra_charges: JSON array of any charges that are NOT energy supply, TDSP delivery, or taxes (e.g. ["$2.50 Franchise Fee", "$1.00 Customer Charge"]). Use [] if none.
+- provider_name: Retail Electric Provider (REP) name shown on the bill header (e.g. "TXU Energy", "Reliant Energy")
 - service_address: Full service address (street, city, state, zip)
-- provider_name: Utility / TDU company name (e.g. "Oncor Electric Delivery")`;
+
+Do NOT include total_average_rate — it is calculated automatically.`;
 
 const CONTRACT_SECTION = `
 For COMPETITOR ENERGY CONTRACTS (competitive intelligence) extract:
@@ -153,10 +160,14 @@ async function parseWithOpenAI(
     let docText = "";
 
     if (ext === "pdf") {
+      // pdf-parse v2 is class-based: new PDFParse({ data }) → .getText()
       // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const pdfParse = require("pdf-parse") as (buf: Buffer) => Promise<{ text: string }>;
-      const parsed = await pdfParse(buffer);
-      docText = parsed.text;
+      const { PDFParse } = require("pdf-parse") as {
+        PDFParse: new (opts: { data: Uint8Array }) => { getText(): Promise<{ text: string }> };
+      };
+      const parser = new PDFParse({ data: new Uint8Array(buffer) });
+      const textResult = await parser.getText();
+      docText = textResult.text;
     } else if (ext === "docx") {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       const mammoth = require("mammoth") as {
@@ -329,6 +340,37 @@ function deriveFields(fields: Record<string, ExtractedField>): Record<string, Ex
     value: tdspEntry?.zone ?? "",
     confidence: tdspEntry?.zone ? (esiId ? 95 : 60) : 0,
   };
+
+  // ── Rate calculations ───────────────────────────────────────────────────────
+
+  const kwh = parseFloat(fields["usage_kwh"]?.value ?? "");
+
+  // total_average_rate — always computed from total bill ÷ kWh, never from AI
+  const billAmt = parseFloat((fields["bill_amount"]?.value ?? "").replace(/[$,\s]/g, ""));
+  if (!isNaN(billAmt) && !isNaN(kwh) && kwh > 0) {
+    derived["total_average_rate"] = {
+      value: (billAmt / kwh).toFixed(5),
+      confidence: 95,
+    };
+  }
+
+  // energy_rate — use AI value when confident; otherwise compute from energy_charges ÷ kWh
+  const aiEnergyConf = fields["energy_rate"]?.confidence ?? 0;
+  if ((!fields["energy_rate"]?.value || aiEnergyConf < 40) && !isNaN(kwh) && kwh > 0) {
+    const ec = parseFloat((fields["energy_charges"]?.value ?? "").replace(/[$,\s]/g, ""));
+    if (!isNaN(ec) && ec > 0) {
+      derived["energy_rate"] = { value: (ec / kwh).toFixed(5), confidence: 70 };
+    }
+  }
+
+  // tdsp_rate — same pattern
+  const aiTdspConf = fields["tdsp_rate"]?.confidence ?? 0;
+  if ((!fields["tdsp_rate"]?.value || aiTdspConf < 40) && !isNaN(kwh) && kwh > 0) {
+    const tc = parseFloat((fields["tdsp_charges"]?.value ?? "").replace(/[$,\s]/g, ""));
+    if (!isNaN(tc) && tc > 0) {
+      derived["tdsp_rate"] = { value: (tc / kwh).toFixed(5), confidence: 70 };
+    }
+  }
 
   return derived;
 }

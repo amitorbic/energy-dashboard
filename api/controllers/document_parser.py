@@ -127,14 +127,16 @@ async def save_bill(payload: SaveDocumentRequest, db: AsyncSession) -> dict:
             """
             INSERT INTO parsed_bills
                 (esi_id, provider_name, service_address,
-                 usage_kwh, kw_demand, energy_rate, total_average_rate,
-                 tdsp_charges, taxes, extra_charges,
+                 usage_kwh, kw_demand,
+                 energy_rate, tdsp_rate, total_average_rate,
+                 energy_charges, tdsp_charges, taxes, extra_charges,
                  bill_date, service_zip, tdsp_name, pricing_zone,
                  raw_extracted, template_id)
             VALUES
                 (:esi_id, :provider_name, :service_address,
-                 :usage_kwh, :kw_demand, :energy_rate, :total_average_rate,
-                 :tdsp_charges, :taxes, :extra_charges,
+                 :usage_kwh, :kw_demand,
+                 :energy_rate, :tdsp_rate, :total_average_rate,
+                 :energy_charges, :tdsp_charges, :taxes, :extra_charges,
                  :bill_date, :service_zip, :tdsp_name, :pricing_zone,
                  :raw_extracted, :template_id)
             """
@@ -146,10 +148,12 @@ async def save_bill(payload: SaveDocumentRequest, db: AsyncSession) -> dict:
             "usage_kwh": _float(f.get("usage_kwh")),
             "kw_demand": _float(f.get("kw_demand")),
             "energy_rate": _float(f.get("energy_rate")),
+            "tdsp_rate": _float(f.get("tdsp_rate")),
             "total_average_rate": _float(f.get("total_average_rate")),
+            "energy_charges": _float(f.get("energy_charges")),
             "tdsp_charges": _float(f.get("tdsp_charges")),
             "taxes": _float(f.get("taxes")),
-            "extra_charges": json.dumps(f["extra_charges"]) if f.get("extra_charges") else None,
+            "extra_charges": _json(f.get("extra_charges")),
             "bill_date": bill_date,
             "service_zip": _str(f.get("service_zip")),
             "tdsp_name": _str(f.get("tdsp_name")),
