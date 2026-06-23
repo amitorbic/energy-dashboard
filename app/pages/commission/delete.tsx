@@ -1,9 +1,6 @@
 import React, { useState } from "react";
 import Layout from "@/components/Layout";
-
-// 1. Define the API constant
-const API =
-  process.env.NEXT_PUBLIC_API_URL || "${process.env.NEXT_PUBLIC_API_URL}/api";
+import api from "../../utils/api";
 
 export default function DeleteCommissionData() {
   const [month, setMonth] = useState("");
@@ -46,25 +43,18 @@ export default function DeleteCommissionData() {
     setLoading(true);
     setMsg(null);
     try {
-      const res = await fetch(
-        `${API}/commission/data/month?month=${month}&uid=${uid}&user_name=${userName}`,
-        { method: "DELETE" },
+      const res = await api.delete(
+        `/commission/data/month?month=${month}&uid=${uid}&user_name=${userName}`,
       );
-
-      const json = await res.json();
-
-      if (res.ok) {
-        setMsg({
-          type: "success",
-          text: `All commission data for ${json.month || month} deleted successfully.`,
-        });
-        setMonth("");
-      } else {
-        setMsg({ type: "error", text: "Delete failed." });
-      }
+      const json = res.data;
+      setMsg({
+        type: "success",
+        text: `All commission data for ${json.month || month} deleted successfully.`,
+      });
+      setMonth("");
     } catch (err) {
       console.error("Delete request failed:", err);
-      setMsg({ type: "error", text: "Network error." });
+      setMsg({ type: "error", text: "Delete failed." });
     } finally {
       setLoading(false);
     }

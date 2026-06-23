@@ -1,7 +1,5 @@
 import { useState, useEffect } from "react";
-
-const API =
-  process.env.NEXT_PUBLIC_API_URL || "${process.env.NEXT_PUBLIC_API_URL}/api";
+import api from "../../utils/api";
 
 // 1. Defined strict interfaces to replace 'any'
 interface ExceptionRow {
@@ -89,12 +87,11 @@ export default function CommissionExceptions() {
   } | null>(null);
 
   useEffect(() => {
-    fetch(`${API}/commission/months`)
-      .then((r) => r.json())
-      .then((m: { label: string; value: string }[]) => {
-        setMonths(m);
-        if (m.length > 0) setSelectedMonth(m[0].value);
-      });
+    api.get('/commission/months').then(res => {
+      const m: { label: string; value: string }[] = res.data;
+      setMonths(m);
+      if (m.length > 0) setSelectedMonth(m[0].value);
+    });
   }, []);
 
   async function runExceptions() {
@@ -107,11 +104,8 @@ export default function CommissionExceptions() {
         parts.length === 3
           ? `${parts[2]}-${parts[0].padStart(2, "0")}`
           : selectedMonth;
-      const res = await fetch(
-        `${API}/commission/exceptions?month=${monthParam}`,
-      );
-      const json = await res.json();
-      setData(json);
+      const res = await api.get(`/commission/exceptions?month=${monthParam}`);
+      setData(res.data);
       setActiveFilter("all");
     } finally {
       setLoading(false);
@@ -131,34 +125,24 @@ export default function CommissionExceptions() {
     activeFilter === "all" ? allRows : data?.exceptions[activeFilter] || [];
 
   async function handleEdit(sid: number) {
-    const res = await fetch(
-      `${API}/commission/data/${sid}?uid=${uid}&user_name=${userName}`,
-      {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(editData),
-      },
-    );
-    if (res.ok) {
+    try {
+      await api.put(`/commission/data/${sid}?uid=${uid}&user_name=${userName}`, editData);
       setMsg({ type: "success", text: "Row updated." });
       setEditingSid(null);
       runExceptions();
-    } else {
+    } catch {
       setMsg({ type: "error", text: "Update failed." });
     }
   }
 
   async function handleDelete(sid: number) {
     if (!confirm("Delete this record from comm_bank?")) return;
-    const res = await fetch(
-      `${API}/commission/data/${sid}?uid=${uid}&user_name=${userName}`,
-      {
-        method: "DELETE",
-      },
-    );
-    if (res.ok) {
+    try {
+      await api.delete(`/commission/data/${sid}?uid=${uid}&user_name=${userName}`);
       setMsg({ type: "success", text: "Record deleted." });
       runExceptions();
+    } catch {
+      setMsg({ type: "error", text: "Delete failed." });
     }
   }
   const getBadgeStyle = (row: ExceptionRow) => {

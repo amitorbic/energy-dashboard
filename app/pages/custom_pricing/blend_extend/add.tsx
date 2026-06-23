@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import Layout from "../../../components/Layout";
 import api from "../../../utils/api";
 import { useRouter } from "next/router";
+import { getUser } from "../../../utils/auth";
 
 interface RenewalCustomer {
   cust_id: string;
@@ -38,6 +39,7 @@ const DEFAULT_TERMS = "6,12,18,24";
 const BlendExtend = () => {
   const router = useRouter();
   const { sid: urlSid } = router.query;
+  const millsLabel = `${getUser()?.company_name ?? ""} Mills`.trim();
   const searchRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [brokerList, setBrokerList] = useState<
@@ -65,7 +67,7 @@ const BlendExtend = () => {
   const [error, setError] = useState("");
   const [profilesEdited, setProfilesEdited] = useState(false);
   const [offerForm, setOfferForm] = useState({
-    ameripower_mills: "",
+    mills: "",
     broker_mills: "",
     message: "",
   });
@@ -218,7 +220,7 @@ const BlendExtend = () => {
           terms_left: result.remaining_months,
           total_volume: result.total_ann_usage,
           contract_end_date: selected[0]?.contract_end_date || "",
-          ameripower_mills: parseFloat(offerForm.ameripower_mills) || 0,
+          mills: parseFloat(offerForm.mills) || 0,
           broker_mills: parseFloat(offerForm.broker_mills) || 0,
           message: offerForm.message,
           quotes: result.quotes,
@@ -259,7 +261,7 @@ const BlendExtend = () => {
         extension_terms: extensionTerms,
         profiles: JSON.stringify(profiles),
         volume: JSON.stringify(profiles),
-        ameripower_mills: offerForm.ameripower_mills || "0",
+        mills: offerForm.mills || "0",
         broker_mill: offerForm.broker_mills || "0",
         start_date: startDate || null,
         comments: offerForm.message || "",
@@ -282,7 +284,7 @@ const BlendExtend = () => {
         setStartDate(r.start_date || "");
         setCurrentRateOverride(r.current_rate || "");
         setOfferForm({
-          ameripower_mills: r.ameripower_mills || "",
+          mills: r.mills || "",
           broker_mills: r.broker_mill || "",
           message: r.comments || "",
         });
@@ -640,16 +642,16 @@ const BlendExtend = () => {
                     <div className="grid grid-cols-2 gap-3">
                       <div>
                         <label className="text-xs text-slate-400 mb-1 block">
-                          ORBIC mills
+                          {millsLabel}
                         </label>
                         <input
                           type="number"
                           step="0.1"
-                          value={offerForm.ameripower_mills}
+                          value={offerForm.mills}
                           onChange={(e) =>
                             setOfferForm((p) => ({
                               ...p,
-                              ameripower_mills: e.target.value,
+                              mills: e.target.value,
                             }))
                           }
                           className="w-full bg-slate-700 text-white px-3 py-2 rounded-lg border border-slate-600 focus:outline-none focus:border-red-500 text-sm"

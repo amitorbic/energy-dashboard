@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import Layout from "../../../components/Layout";
 import api from "../../../utils/api";
 import { useRouter } from "next/router";
+import { getUser } from "../../../utils/auth";
 
 interface ProfileGroup {
   id: string;
@@ -34,6 +35,7 @@ const DEFAULT_TERMS = "6,12,18,24";
 const MultiStartAdd = () => {
   const router = useRouter();
   const { sid: urlSid } = router.query;
+  const millsLabel = `${getUser()?.company_name ?? ""} Mills`.trim();
   const fileRef = useRef<HTMLInputElement>(null);
 
   // Form state
@@ -106,7 +108,7 @@ const MultiStartAdd = () => {
         setCustomerName(r.customer_name || "");
         setBrokerCode(r.broker_code || "");
         setTerms(r.terms || DEFAULT_TERMS);
-        setAmeriMills(r.ameripower_mills || "");
+        setAmeriMills(r.mills || "");
         setBrokerMills(r.broker_mill || "");
         setComments(r.comments || "");
         setSavedSid(parseInt(urlSid as string));
@@ -341,7 +343,7 @@ const MultiStartAdd = () => {
           })),
         ),
         terms,
-        ameripower_mills: ameriMills,
+        mills: ameriMills,
         broker_mill: brokerMills,
         comments,
       });
@@ -444,7 +446,7 @@ const MultiStartAdd = () => {
                   </select>
                 </div>
                 <div>
-                  <label className={labelCls}>ORBIC mills</label>
+                  <label className={labelCls}>{millsLabel}</label>
                   <input
                     type="number"
                     step="0.1"

@@ -1,3 +1,4 @@
+import os
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from utils.database import get_db
@@ -7,19 +8,29 @@ from middleware.auth import require_auth
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
+
 @router.post("/login", response_model=LoginResponse)
-async def login(data: LoginRequest, db: AsyncSession = Depends(get_db)):
-    return await login_user(db, data)
+async def login(
+    data: LoginRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    rep_id       = int(os.getenv("TENANT_REP_ID", "0"))
+    company_name = os.getenv("TENANT_COMPANY_NAME", "")
+    return await login_user(db, data, rep_id, company_name)
+
 
 @router.post("/logout")
 async def logout(payload: dict = Depends(require_auth)):
     return {"success": True, "message": "Logged out"}
 
+
 @router.get("/me")
 async def get_me(payload: dict = Depends(require_auth)):
     return {
-        "user_id":  payload.get("user_id"),
-        "username": payload.get("username"),
-        "role":     payload.get("role"),
-        "email":    payload.get("email")
+        "user_id":      payload.get("user_id"),
+        "username":     payload.get("username"),
+        "role":         payload.get("role"),
+        "email":        payload.get("email"),
+        "rep_id":       payload.get("rep_id"),
+        "company_name": payload.get("company_name", ""),
     }

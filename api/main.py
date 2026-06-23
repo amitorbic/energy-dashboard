@@ -25,6 +25,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.on_event("startup")
+async def _startup():
+    import os, logging
+    logging.getLogger("uvicorn").info(
+        "Tenant DB: %s | company: %s | rep_id: %s",
+        os.getenv("DB_NAME", "?"),
+        os.getenv("TENANT_COMPANY_NAME", "?"),
+        os.getenv("TENANT_REP_ID", "?"),
+    )
+
+
 app.include_router(auth.router, prefix="/api")
 
 # Add module routers as you build them:

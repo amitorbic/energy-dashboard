@@ -1,3 +1,4 @@
+import os
 import re
 import requests
 from bs4 import BeautifulSoup
@@ -5,8 +6,8 @@ from bs4 import BeautifulSoup
 session = requests.Session()
 
 session.post(
-    "https://portal.enertsol.com/login.php",
-    data={"login": "amit.kumar.jha20@gmail.com", "pass": "123456", "submit": "Submit"},
+    os.getenv("PHP_PORTAL_URL", "https://portal.enertsol.com/login.php"),
+    data={"login": os.getenv("PHP_PORTAL_USER"), "pass": os.getenv("PHP_PORTAL_PASS"), "submit": "Submit"},
     timeout=30,
 )
 

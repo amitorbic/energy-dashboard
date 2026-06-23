@@ -33,15 +33,15 @@ const defaultForm: BrokerForm = {
   phone_number: "",
   pricing_email: "",
   daily_pricing_email1: "",
-  ameripower_mills1: "",
+  mills1: "",
   daily_pricing_email2: "",
-  ameripower_mills2: "",
+  mills2: "",
   daily_pricing_email3: "",
-  ameripower_mills3: "",
+  mills3: "",
   daily_pricing_email4: "",
-  ameripower_mills4: "",
+  mills4: "",
   daily_pricing_email5: "",
-  ameripower_mills5: "",
+  mills5: "",
   commission_email: "",
   confirmation_email: "",
   split: 0,
@@ -214,9 +214,9 @@ const AddBroker = () => {
               </div>
               <F
                 label={`Mills ${n}`}
-                name={`ameripower_mills${n}`}
+                name={`mills${n}`}
                 // REMOVED 'as any' here:
-                value={form[`ameripower_mills${n}`]}
+                value={form[`mills${n}`]}
                 onChange={handleChange}
               />
             </div>

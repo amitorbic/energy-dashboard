@@ -9,7 +9,7 @@ interface MspRecord {
   broker_code: string;
   esids: string;
   terms: string;
-  ameripower_mills: string;
+  mills: string;
   broker_mill: string;
   comments: string;
   updated_at: string;

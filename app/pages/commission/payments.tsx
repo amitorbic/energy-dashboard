@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-const API =
-  process.env.NEXT_PUBLIC_API_URL || "${process.env.NEXT_PUBLIC_API_URL}/api";
+import api from "../../utils/api";
 
 export default function InsertPayments() {
   const [file, setFile] = useState<File | null>(null);
@@ -18,12 +17,11 @@ export default function InsertPayments() {
   const uid = 1;
   const userName = "admin";
   useEffect(() => {
-    fetch(`${API}/commission/months`)
-      .then((r) => r.json())
-      .then((m: { label: string; value: string }[]) => {
-        setMonths(m);
-        if (m.length > 0) setSelectedMonth(m[0].value);
-      });
+    api.get('/commission/months').then(res => {
+      const m: { label: string; value: string }[] = res.data;
+      setMonths(m);
+      if (m.length > 0) setSelectedMonth(m[0].value);
+    });
   }, []);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -43,30 +41,20 @@ export default function InsertPayments() {
       form.append("user_name", userName);
       form.append("month", selectedMonth);
 
-      const res = await fetch(`${API}/commission/payments/upload`, {
-        method: "POST",
-        body: form,
+      const res = await api.post('/commission/payments/upload', form, {
+        headers: { 'Content-Type': 'multipart/form-data' },
       });
-      const json = await res.json();
-
-      if (res.ok) {
-        setMsg({
-          type: "success",
-          text: `Payment summary uploaded for ${json.month} — ${json.inserted} vendors processed.`,
-        });
-        setFile(null);
-        // Reset the physical input field
-        if (fileInputRef.current) fileInputRef.current.value = "";
-      } else {
-        setMsg({
-          type: "error",
-          text:
-            typeof json.detail === "string" ? json.detail : "Upload failed.",
-        });
-      }
-    } catch (err) {
+      const json = res.data;
+      setMsg({
+        type: "success",
+        text: `Payment summary uploaded for ${json.month} — ${json.inserted} vendors processed.`,
+      });
+      setFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    } catch (err: unknown) {
       console.error("Upload error:", err);
-      setMsg({ type: "error", text: "Network error." });
+      const detail = (err as { response?: { data?: { detail?: unknown } } })?.response?.data?.detail;
+      setMsg({ type: "error", text: typeof detail === 'string' ? detail : "Upload failed." });
     } finally {
       setLoading(false);
     }

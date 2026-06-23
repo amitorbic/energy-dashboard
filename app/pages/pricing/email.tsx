@@ -8,7 +8,7 @@ interface Broker {
   company_name: string;
   daily_pricing_email1: string;
   pricing_email: string;
-  ameripower_mills1: string;
+  mills1: string;
   customer_count?: number;
 }
 

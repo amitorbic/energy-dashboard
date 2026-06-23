@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import api from "../../utils/api";
 
 interface CommissionSummary {
   sid: number;
@@ -12,9 +13,6 @@ interface CommissionSummary {
   comments?: string;
 }
 
-const API =
-  process.env.NEXT_PUBLIC_API_URL || "${process.env.NEXT_PUBLIC_API_URL}/api";
-// Restored missing constants
 const uid = 1;
 const userName = "admin";
 
@@ -44,9 +42,7 @@ export default function ReviewSummary() {
   } | null>(null);
 
   useEffect(() => {
-    fetch(`${API}/commission/vendors`)
-      .then((r) => r.json())
-      .then(setVendors);
+    api.get('/commission/vendors').then(res => setVendors(res.data));
   }, []);
 
   async function loadSummary(vendor: string, history = false) {
@@ -55,11 +51,10 @@ export default function ReviewSummary() {
     setShowingHistory(history);
     try {
       const url = history
-        ? `${API}/commission/summary/history/${vendor}`
-        : `${API}/commission/summary?vendor=${vendor}`;
-      const res = await fetch(url);
-      const json = await res.json();
-      setRows(Array.isArray(json) ? json : []);
+        ? `/commission/summary/history/${vendor}`
+        : `/commission/summary?vendor=${vendor}`;
+      const res = await api.get(url);
+      setRows(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       console.error("Failed to load summary:", err);
     } finally {
@@ -72,33 +67,22 @@ export default function ReviewSummary() {
     setModalLoading(true);
     setMsg(null);
     try {
-      const res = await fetch(`${API}/commission/summary/payment`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          vendor: selectedVendor,
-          amount: parseFloat(modalAmount),
-          comments: modalComments,
-          entry_type: modalType,
-          uid,
-          user_name: userName,
-        }),
+      await api.post('/commission/summary/payment', {
+        vendor: selectedVendor,
+        amount: parseFloat(modalAmount),
+        comments: modalComments,
+        entry_type: modalType,
+        uid,
+        user_name: userName,
       });
-      if (res.ok) {
-        setMsg({ type: "success", text: `${modalType} added successfully.` });
-        setShowModal(false);
-        setModalAmount("");
-        setModalComments("");
-        loadSummary(selectedVendor, showingHistory);
-      } else {
-        const errJson = await res.json();
-        setMsg({
-          type: "error",
-          text: errJson.detail || "Failed to add entry.",
-        });
-      }
-    } catch {
-      setMsg({ type: "error", text: "Network error." });
+      setMsg({ type: "success", text: `${modalType} added successfully.` });
+      setShowModal(false);
+      setModalAmount("");
+      setModalComments("");
+      loadSummary(selectedVendor, showingHistory);
+    } catch (err: unknown) {
+      const detail = (err as { response?: { data?: { detail?: unknown } } })?.response?.data?.detail;
+      setMsg({ type: "error", text: typeof detail === 'string' ? detail : "Failed to add entry." });
     } finally {
       setModalLoading(false);
     }

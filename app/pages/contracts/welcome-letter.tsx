@@ -14,7 +14,7 @@ interface Confirmation {
   broker_name: string;
   contract_rate: string;
   commission: string;
-  ameripower_mill: string;
+  mill: string;
   ap_quote: string;
   term: string;
   start_date: string;
@@ -283,7 +283,7 @@ export default function WelcomeLetterPage() {
                       <td className="px-2 py-2">{r.broker_name}</td>
                       <td className="px-2 py-2">{r.contract_rate}</td>
                       <td className="px-2 py-2">{r.commission}</td>
-                      <td className="px-2 py-2">{r.ameripower_mill}</td>
+                      <td className="px-2 py-2">{r.mill}</td>
                       <td className="px-2 py-2">{r.ap_quote}</td>
                       <td className="px-2 py-2">{r.term}</td>
                       <td className="px-2 py-2 whitespace-nowrap">

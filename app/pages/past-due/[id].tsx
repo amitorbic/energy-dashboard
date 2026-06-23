@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import PastDueLayout from "../../components/PastDueLayout";
-
-const API = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8001";
+import api from "../../utils/api";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -143,18 +142,21 @@ function StageModal({
   const [newStage, setNewStage] = useState(account.stage);
   const [reason, setReason] = useState("");
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSave = async () => {
     if (!reason.trim()) return;
     setSaving(true);
-    await fetch(`${API}/api/collections/accounts/${account.id}/stage`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ new_stage: newStage, reason }),
-    });
-    setSaving(false);
-    onSave();
-    onClose();
+    setError(null);
+    try {
+      await api.post(`/collections/accounts/${account.id}/stage`, { new_stage: newStage, reason });
+      onSave();
+      onClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to save");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -189,6 +191,9 @@ function StageModal({
             className="w-full border border-gray-300 rounded px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-sky-500 resize-none"
           />
         </div>
+        {error && (
+          <p className="text-sm text-red-600">Failed to save: {error}</p>
+        )}
         <div className="flex gap-2">
           <button
             onClick={onClose}
@@ -222,18 +227,21 @@ function NoteModal({
 }) {
   const [note, setNote] = useState("");
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSave = async () => {
     if (!note.trim()) return;
     setSaving(true);
-    await fetch(`${API}/api/collections/accounts/${accountId}/notes`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ note, is_internal: true }),
-    });
-    setSaving(false);
-    onSave();
-    onClose();
+    setError(null);
+    try {
+      await api.post(`/collections/accounts/${accountId}/notes`, { note, is_internal: true });
+      onSave();
+      onClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to save");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -247,6 +255,9 @@ function NoteModal({
           placeholder="Enter note..."
           className="w-full border border-gray-300 rounded px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-sky-500 resize-none"
         />
+        {error && (
+          <p className="text-sm text-red-600">Failed to save: {error}</p>
+        )}
         <div className="flex gap-2">
           <button
             onClick={onClose}
@@ -276,22 +287,30 @@ export default function AccountDetailPage() {
   const [account, setAccount] = useState<Account | null>(null);
   const [timeline, setTimeline] = useState<TimelineEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [showStage, setShowStage] = useState(false);
   const [showNote, setShowNote] = useState(false);
   const [dnpReason, setDnpReason] = useState("");
   const [dnpLoading, setDnpLoading] = useState(false);
   const [dnpSent, setDnpSent] = useState(false);
+  const [dnpError, setDnpError] = useState<string | null>(null);
 
   const fetchData = async () => {
     if (!id) return;
     setLoading(true);
-    const [acctRes, tlRes] = await Promise.all([
-      fetch(`${API}/api/collections/accounts/${id}`),
-      fetch(`${API}/api/collections/accounts/${id}/timeline?limit=100`),
-    ]);
-    if (acctRes.ok) setAccount(await acctRes.json());
-    if (tlRes.ok) setTimeline(await tlRes.json());
-    setLoading(false);
+    setError(null);
+    try {
+      const [acctRes, tlRes] = await Promise.all([
+        api.get(`/collections/accounts/${id}`),
+        api.get(`/collections/accounts/${id}/timeline?limit=100`),
+      ]);
+      setAccount(acctRes.data);
+      setTimeline(tlRes.data ?? []);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unknown error");
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -301,20 +320,28 @@ export default function AccountDetailPage() {
   const handleDNPNotice = async () => {
     if (!dnpReason.trim() || !account) return;
     setDnpLoading(true);
-    await fetch(`${API}/api/collections/accounts/${account.id}/dnp-notice`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ reason: dnpReason }),
-    });
-    setDnpSent(true);
-    setDnpLoading(false);
-    fetchData();
+    setDnpError(null);
+    try {
+      await api.post(`/collections/accounts/${account.id}/dnp-notice`, { reason: dnpReason });
+      setDnpSent(true);
+      fetchData();
+    } catch (err) {
+      setDnpError(err instanceof Error ? err.message : "Failed to queue DNP notice");
+    } finally {
+      setDnpLoading(false);
+    }
   };
 
   if (loading)
     return (
       <PastDueLayout title="Account">
         <div className="py-20 text-center text-gray-400">Loading...</div>
+      </PastDueLayout>
+    );
+  if (error)
+    return (
+      <PastDueLayout title="Account">
+        <div className="py-20 text-center text-red-500">Failed to load account: {error}</div>
       </PastDueLayout>
     );
   if (!account)
@@ -547,6 +574,9 @@ export default function AccountDetailPage() {
                         placeholder="Reason for DNP..."
                         className="w-full border border-orange-300 rounded px-2 py-1.5 text-xs outline-none focus:ring-1 focus:ring-orange-400"
                       />
+                      {dnpError && (
+                        <p className="text-xs text-red-600">{dnpError}</p>
+                      )}
                       <button
                         onClick={handleDNPNotice}
                         disabled={!dnpReason.trim() || dnpLoading}

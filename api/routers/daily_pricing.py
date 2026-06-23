@@ -5,6 +5,7 @@ from sqlalchemy import text
 from utils.database import get_db
 from fastapi.responses import StreamingResponse
 from datetime import date
+from utils.email_routing import get_tenant_display_name, filename_safe
 
 # Import your controller function
 from controllers.pricing_engine import (
@@ -45,7 +46,8 @@ async def export_excel(
         start_date, term_list, num_months, price_type, db
     )
 
-    filename = f"AmeriPower_Matrix_{date.today().isoformat()}.xlsx"
+    _co = filename_safe(get_tenant_display_name())
+    filename = f"{_co}_Matrix_{date.today().isoformat()}.xlsx"
 
     # 2. The return statement must end cleanly
     return StreamingResponse(
@@ -63,7 +65,8 @@ async def export_pricing_matrix(
 
     excel_stream = await generate_excel_matrix(start_date, term_list, num_months, db)
 
-    filename = f"AmeriPower_Matrix_{date.today().isoformat()}.xlsx"
+    _co = filename_safe(get_tenant_display_name())
+    filename = f"{_co}_Matrix_{date.today().isoformat()}.xlsx"
 
     return StreamingResponse(
         excel_stream,

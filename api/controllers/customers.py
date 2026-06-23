@@ -9,13 +9,13 @@ async def create_customer(data: dict, db: AsyncSession):
         """
         INSERT INTO customers_new (
             company_name, esid, num_esids, nodal, broker_code,
-            broker_fee, ameripower_mills, credit_status,
+            broker_fee, mills, credit_status,
             contract_start_date, pricing_start_date, intermediate_months,
             contact_person, contact_number, contact_email,
             billing_address, comments, status
         ) VALUES (
             :company_name, :esid, :num_esids, :nodal, :broker_code,
-            :broker_fee, :ameripower_mills, :credit_status,
+            :broker_fee, :mills, :credit_status,
             :contract_start_date, :pricing_start_date, :intermediate_months,
             :contact_person, :contact_number, :contact_email,
             :billing_address, :comments, 1
@@ -50,7 +50,7 @@ async def update_customer(cid: int, data: dict, db: AsyncSession):
         UPDATE customers_new SET
             company_name=:company_name, esid=:esid, num_esids=:num_esids,
             nodal=:nodal, broker_code=:broker_code, broker_fee=:broker_fee,
-            ameripower_mills=:ameripower_mills, credit_status=:credit_status,
+            mills=:mills, credit_status=:credit_status,
             contract_start_date=:contract_start_date, pricing_start_date=:pricing_start_date,
             intermediate_months=:intermediate_months, contact_person=:contact_person,
             contact_number=:contact_number, contact_email=:contact_email,

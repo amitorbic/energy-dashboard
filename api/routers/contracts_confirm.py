@@ -10,6 +10,13 @@ from email.mime.text import MIMEText
 from utils.database import get_db
 from controllers.custom_pricing import calculate_custom_price
 import os
+from utils.email_routing import (
+    get_tenant_email,
+    get_tenant_display_name,
+    get_tenant_website,
+    get_tenant_address,
+    get_tenant_phone,
+)
 from fastapi import UploadFile, File as FastAPIFile
 import pandas as pd
 import io
@@ -48,7 +55,7 @@ def _generate_contract_no(existing_max: str | None) -> str:
     return str(base)
 
 
-def _build_confirmation_email_html(data: dict) -> str:
+def _build_confirmation_email_html(data: dict, company_name: str = "") -> str:
     today = date.today().strftime("%m/%d/%Y")
 
     # ── Rate conversions ¢/kWh → $/kWh ──────────────────────────────────────
@@ -65,7 +72,7 @@ def _build_confirmation_email_html(data: dict) -> str:
     if contract_rate_dollar is not None and company_quote_dollar is not None:
         broker_mills = contract_rate_dollar - company_quote_dollar
         split_val = data.get("broker_split")  # passed in from broker_new.split
-        ameri_mills = to_dollar(data.get("ameripower_mill")) or 0.0
+        ameri_mills = to_dollar(data.get("mill")) or 0.0
 
         if split_val and broker_mills > 0:
             try:
@@ -251,8 +258,8 @@ def _build_confirmation_email_html(data: dict) -> str:
   <!-- Customer Email -->
   {"<tr><td colspan='4' style='padding:8px 20px;border-top:1px solid #eee;'><strong>Email:</strong> " + data.get("customer_email","") + "</td></tr>" if data.get("customer_email") else ""}
 
-  <!-- AmeriPower Mills (internal note, shown only if present) -->
-  {"<tr style='background:#f9f9f9;'><td colspan='4' style='padding:8px 20px;'><strong>AmeriPower Mills:</strong> " + str(data.get("ameripower_mill","")) + "</td></tr>" if data.get("ameripower_mill") else ""}
+  <!-- Mills (internal note, shown only if present) -->
+  {"<tr style='background:#f9f9f9;'><td colspan='4' style='padding:8px 20px;'><strong>" + (company_name or "REP") + " Mills:</strong> " + str(data.get("mill","")) + "</td></tr>" if data.get("mill") else ""}
 
   <!-- Comments -->
   {"<tr><td colspan='4' style='padding:8px 20px;border-top:1px solid #eee;'><strong>Comments:</strong><br/><span style='font-size:12px;'>" + str(data.get("comment","")) + "</span></td></tr>" if data.get("comment") else ""}
@@ -261,7 +268,7 @@ def _build_confirmation_email_html(data: dict) -> str:
   <tr>
     <td colspan="4" style="padding:12px 20px;border-top:2px solid #eee;
         font-size:11px;color:#999;text-align:center;">
-      Auto-generated confirmation — {today} — AmeriPower Energy
+      Auto-generated confirmation — {today} — {get_tenant_display_name()}
     </td>
   </tr>
 
@@ -406,7 +413,7 @@ def _build_lmp_confirmation_email_html(data: dict) -> str:
   <tr>
     <td colspan="4" style="padding:12px 20px;border-top:2px solid #eee;
         font-size:11px;color:#999;text-align:center;">
-      Auto-generated LMP confirmation — {today} — AmeriPower Energy
+      Auto-generated LMP confirmation — {today} — {get_tenant_display_name()}
     </td>
   </tr>
 
@@ -537,7 +544,7 @@ async def welcome_letter_list(
         text(
             f"""
         SELECT sid, date_modified, customer_name, broker_name,
-               contract_rate, commission, ameripower_mill, ap_quote,
+               contract_rate, commission, mill, ap_quote,
                term, start_date, type_of_contract, esid_count,
                meter_fees, comment, sent_by, customer_email, esiid
         FROM confirmation_log {where}
@@ -635,16 +642,22 @@ async def generate_welcome_letter_pdf(
     story.append(Paragraph("Dear Customer,", styles["Normal"]))
     story.append(Spacer(1, 0.1 * inch))
 
+    # Fallback template data — replace with per-tenant custom template when that feature is built.
+    _name    = get_tenant_display_name()
+    _website = get_tenant_website()
+    _address = get_tenant_address()
+    _phone   = get_tenant_phone()
+
     story.append(
         Paragraph(
-            "Thank you for choosing AmeriPower as your new provider for electricity!",
+            f"Thank you for choosing {_name} as your new provider for electricity!",
             styles["Normal"],
         )
     )
     story.append(Spacer(1, 0.1 * inch))
     story.append(
         Paragraph(
-            "At AmeriPower, we pride ourselves on offering our customers responsive, competent and excellent service. "
+            f"At {_name}, we pride ourselves on offering our customers responsive, competent and excellent service. "
             "Our customers are the most important part of our business, and we work tirelessly to ensure your complete "
             "satisfaction, now and for as long as you are a customer.",
             styles["Normal"],
@@ -685,29 +698,28 @@ async def generate_welcome_letter_pdf(
     story.append(contract_table)
     story.append(Spacer(1, 0.15 * inch))
 
+    _ops_email = get_tenant_email("operations")
     story.append(
         Paragraph(
-            "If you have any questions regarding your account please feel free to contact your agent or our customer "
-            "service department at <a href='mailto:operations@AmeriPower.com'>operations@AmeriPower.com</a> or call "
-            "us at 281-240-0405.",
+            f"If you have any questions regarding your account please feel free to contact your agent or our customer "
+            f"service department at <a href='mailto:{_ops_email}'>{_ops_email}</a> or call "
+            f"us at {_phone}.",
             styles["Normal"],
         )
     )
     story.append(Spacer(1, 0.1 * inch))
     story.append(
         Paragraph(
-            "<a href='http://www.ameripower.com'>www.AmeriPower.com</a>",
+            f"<a href='http://{_website}'>{_website}</a>",
             styles["Normal"],
         )
     )
     story.append(Spacer(1, 0.2 * inch))
     story.append(Paragraph("Sincerely,", styles["Normal"]))
-    story.append(Paragraph("AmeriPower Operations Team", styles["Normal"]))
-    story.append(Paragraph("Phone 281 240 0405 | Fax 281 240 0455", styles["Normal"]))
-    story.append(Paragraph("Operations@ameripower.com", styles["Normal"]))
-    story.append(
-        Paragraph("1600 Highway 6 Ste. 440 - Sugar Land, TX 77478", styles["Normal"])
-    )
+    story.append(Paragraph(f"{_name} Operations Team", styles["Normal"]))
+    story.append(Paragraph(f"Phone {_phone} | Fax 281 240 0455", styles["Normal"]))
+    story.append(Paragraph(_ops_email, styles["Normal"]))
+    story.append(Paragraph(_address, styles["Normal"]))
 
     # ESI IDs table if present
     if esids:
@@ -799,19 +811,25 @@ async def send_welcome_letter_email(
     _build_welcome_pdf(payload, buffer)
     pdf_bytes = buffer.getvalue()
 
+    # Fallback template data — replace with per-tenant custom template when that feature is built.
+    _name  = get_tenant_display_name()
+    _phone = get_tenant_phone()
+
     html = f"""<html><body style="font-family:Arial;font-size:14px;">
     <p>Dear <b>{company_name}</b>,</p>
-    <p>Thank you for choosing AmeriPower as your new provider for electricity!</p>
+    <p>Thank you for choosing {_name} as your new provider for electricity!</p>
     <p>Please find your welcome letter attached.</p>
     <p><b>Contract Start:</b> {payload.get('start_date','')}<br/>
        <b>Term:</b> {payload.get('term','')} months</p>
-    <p>Questions? Contact us at operations@AmeriPower.com or 281-240-0405.</p>
-    <p>Sincerely,<br/>AmeriPower Operations Team</p>
+    <p>Questions? Contact us at {get_tenant_email("operations")} or {_phone}.</p>
+    <p>Sincerely,<br/>{_name} Operations Team</p>
     </body></html>"""
 
     msg = MIMEMultipart("mixed")
-    msg["Subject"] = f"Welcome to AmeriPower — {company_name}"
-    msg["From"] = os.getenv("SMTP_FROM", "AmeriPower <operations@ameripower.com>")
+    msg["Subject"] = f"Welcome to {_name} — {company_name}"
+    _from_addr = get_tenant_email("operations")
+    _display = os.getenv("TENANT_COMPANY_NAME", "")
+    msg["From"] = f"{_display} <{_from_addr}>" if _display else _from_addr
     msg["To"] = ", ".join(to_emails)
     msg.attach(MIMEText(html, "html"))
 
@@ -829,7 +847,7 @@ async def send_welcome_letter_email(
         os.getenv("SMTP_HOST"), int(os.getenv("SMTP_PORT"))
     ) as server:
         server.login(os.getenv("SMTP_USER", ""), os.getenv("SMTP_PASS", ""))
-        server.sendmail(msg["From"], to_emails, msg.as_string())
+        server.sendmail(_from_addr, to_emails, msg.as_string())
 
     # Log
     await db.execute(
@@ -917,10 +935,16 @@ def _build_welcome_pdf(payload: dict, buffer: io.BytesIO):
     story.append(Spacer(1, 0.2 * inch))
     story.append(Paragraph("Dear Customer,", styles["Normal"]))
     story.append(Spacer(1, 0.1 * inch))
+
+    # Fallback template data — replace with per-tenant custom template when that feature is built.
+    _name    = get_tenant_display_name()
+    _address = get_tenant_address()
+    _phone   = get_tenant_phone()
+
     story.append(
         Paragraph(
-            "Thank you for choosing AmeriPower as your new provider for electricity! "
-            "At AmeriPower, we pride ourselves on offering our customers responsive, competent and excellent service.",
+            f"Thank you for choosing {_name} as your new provider for electricity! "
+            f"At {_name}, we pride ourselves on offering our customers responsive, competent and excellent service.",
             styles["Normal"],
         )
     )
@@ -958,16 +982,14 @@ def _build_welcome_pdf(payload: dict, buffer: io.BytesIO):
     story.append(Spacer(1, 0.15 * inch))
     story.append(
         Paragraph(
-            "Questions? Contact us at operations@AmeriPower.com or 281-240-0405.",
+            f"Questions? Contact us at {get_tenant_email('operations')} or {_phone}.",
             styles["Normal"],
         )
     )
     story.append(Spacer(1, 0.2 * inch))
     story.append(Paragraph("Sincerely,", styles["Normal"]))
-    story.append(Paragraph("AmeriPower Operations Team", styles["Normal"]))
-    story.append(
-        Paragraph("1600 Highway 6 Ste. 440 - Sugar Land, TX 77478", styles["Normal"])
-    )
+    story.append(Paragraph(f"{_name} Operations Team", styles["Normal"]))
+    story.append(Paragraph(_address, styles["Normal"]))
 
     if esids:
         story.append(Spacer(1, 0.3 * inch))
@@ -1084,7 +1106,7 @@ async def preview_html_from_payload(
         except Exception as e:
             print(f"Auto-calculate skipped: {e}")
 
-    html = _build_confirmation_email_html(payload)
+    html = _build_confirmation_email_html(payload, os.getenv("TENANT_COMPANY_NAME", ""))
     return {"html": html, "ap_quote": payload.get("ap_quote", "")}
 
 
@@ -1105,7 +1127,7 @@ async def send_confirmation_email(request: Request, db: AsyncSession = Depends(g
             "esiid": payload.get("esiid", ""),
             "esid_count": payload.get("esid_count", ""),
             "contract_rate": payload.get("contract_rate", ""),
-            "ameripower_mill": payload.get("ameripower_mill", "0"),
+            "mill": payload.get("mill", "0"),
             "comment": payload.get("comment", ""),
             "comment_mail": payload.get("comment_mail", ""),
             "comment_enrollment": payload.get("comment_enrollment", ""),
@@ -1177,12 +1199,14 @@ async def send_confirmation_email(request: Request, db: AsyncSession = Depends(g
                 "message": "Record saved. No recipient email.",
             }
 
-        html = _build_confirmation_email_html(payload)
+        html = _build_confirmation_email_html(payload, os.getenv("TENANT_COMPANY_NAME", ""))
         msg = MIMEMultipart("alternative")
         msg["Subject"] = (
             f"Confirmation – {payload.get('customer_name','')} – #{payload.get('contract_no','')}"
         )
-        msg["From"] = os.getenv("SMTP_FROM", "AmeriPower <contracts@ameripower.com>")
+        _from_addr2 = get_tenant_email("operations")
+        _display2 = os.getenv("TENANT_COMPANY_NAME", "")
+        msg["From"] = f"{_display2} <{_from_addr2}>" if _display2 else _from_addr2
         msg["To"] = ", ".join(to_email)
         msg.attach(MIMEText(html, "html"))
 
@@ -1190,7 +1214,7 @@ async def send_confirmation_email(request: Request, db: AsyncSession = Depends(g
             os.getenv("SMTP_HOST"), int(os.getenv("SMTP_PORT"))
         ) as server:
             server.login(os.getenv("SMTP_USER", ""), os.getenv("SMTP_PASS", ""))
-            server.sendmail(msg["From"], to_email, msg.as_string())
+            server.sendmail(_from_addr2, to_email, msg.as_string())
 
         await db.execute(
             text(
@@ -1350,7 +1374,7 @@ async def preview_lmp_html(request: Request):
         cr = float(payload.get("contract_rate", 0)) * 10  # cents → mills
         aq = float(payload.get("ap_quote", 0)) * 10  # cents → mills
         split_val = payload.get("broker_split")
-        ameri = float(payload.get("ameripower_mill") or 0) * 10
+        ameri = float(payload.get("mill") or 0) * 10
 
         broker_mills = cr - aq
 
@@ -1376,7 +1400,7 @@ async def preview_lmp_html(request: Request):
     print("DEBUG LMP contract_rate:", payload.get("contract_rate"))
     print("DEBUG LMP ap_quote:", payload.get("ap_quote"))
     print("DEBUG LMP broker_split:", payload.get("broker_split"))
-    print("DEBUG LMP ameripower_mill:", payload.get("ameripower_mill"))
+    print("DEBUG LMP mill:", payload.get("mill"))
 
     # Override ap_quote/contract_rate display for LMP format
     lmp_payload = {
@@ -1487,7 +1511,7 @@ async def prefill_from_custom(cid: int, db: AsyncSession = Depends(get_db)):
         "esid_count": customer.get("num_esids") or len(esids),
         "esiid": ", ".join(esids) if esids else customer.get("esid", ""),
         "customer_email": customer.get("contact_email", ""),
-        "ameripower_mill": str(customer.get("ameripower_mills", "")),
+        "mill": str(customer.get("mills", "")),
         "start_date": str(customer.get("contract_start_date", "")),
         "volumes": profiles,
         "total_volume": total_volume,

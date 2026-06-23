@@ -44,13 +44,11 @@ from typing import Dict, List
 
 import pandas as pd
 from fastapi import UploadFile
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 _LETTERS  = re.compile(r'[$,()\s]')
 _LETTERS1 = re.compile(r"[&',]")
-
-# PHP valid meter fee values — rows NOT in this list are flagged as wrong
-_VALID_METER_FEES = {7.99, 2.99, 5.0, 4.99, 5.99, 7.95, 9.99, 10.0, 0.0, 8.0, 4.95}
 
 # PHP email body section order — drives the display in exception-test.tsx
 PHP_EMAIL_ORDER = [
@@ -168,6 +166,9 @@ async def run_php_checks(file: UploadFile, db: AsyncSession) -> dict:
     df = df.fillna('')
 
     sheet1: List[list] = [_build_sheet1(row) for _, row in df.iterrows()]
+
+    _fee_result = await db.execute(text("SELECT fee FROM meter_fee_schedule"))
+    valid_meter_fees = {float(row[0]) for row in _fee_result}
 
     rows: Dict[str, list] = {}
 
@@ -362,7 +363,7 @@ async def run_php_checks(file: UploadFile, db: AsyncSession) -> dict:
             val = float(s[12]) if s[12] not in ('', None) else 0.0
         except (ValueError, TypeError):
             val = None
-        if val is None or val not in _VALID_METER_FEES:
+        if val is None or val not in valid_meter_fees:
             _flag('wrong_meter_fee', s, {"other_charge": s[12]})
 
     # ── Status 555: Sub with no Master cust_id in the file ───────────────────────

@@ -19,10 +19,11 @@ export default function LoginPage() {
       const data = res.data;
       if (data.success && data.token) {
         setAuth(data.token, {
-          user_id:  data.user_id,
-          username: data.username,
-          role:     String(data.role),
-          email:    data.email
+          user_id:      data.user_id,
+          username:     data.username,
+          role:         String(data.role),
+          email:        data.email,
+          company_name: data.company_name ?? "",
         });
         router.push('/');
       } else {
@@ -45,7 +46,7 @@ export default function LoginPage() {
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 text-2xl font-bold text-white">
             <span className="text-sky-400 text-3xl">⚡</span>
-            Ameri<span className="text-sky-400">Power</span>
+            ORBIC
           </div>
           <p className="text-slate-400 text-sm mt-2">Energy Intelligence Platform</p>
         </div>

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import Layout from "../../../components/Layout";
 import api from "../../../utils/api";
 import { useRouter } from "next/router";
+import { getUser } from "../../../utils/auth";
 
 interface CustomerForm {
   company_name: string;
@@ -10,7 +11,7 @@ interface CustomerForm {
   nodal: string;
   broker_code: string;
   broker_fee: number;
-  ameripower_mills: number;
+  mills: number;
   credit_status: string;
   contract_start_date: string;
   pricing_start_date: string;
@@ -46,7 +47,7 @@ const defaultForm: CustomerForm = {
   nodal: "Included",
   broker_code: "",
   broker_fee: 0,
-  ameripower_mills: 0,
+  mills: 0,
   credit_status: "Pending",
   contract_start_date: "",
   pricing_start_date: "",
@@ -63,6 +64,7 @@ const sanitizeDate = (d: string) => (d === "0000-00-00" || !d ? "" : d);
 const CustomerPricingPage = () => {
   const router = useRouter();
   const { id } = router.query;
+  const millsLabel = `${getUser()?.company_name ?? ""} Mills`.trim();
 
   const [form, setForm] = useState<CustomerForm>(defaultForm);
   const [brokerList, setBrokerList] = useState<
@@ -285,8 +287,8 @@ const CustomerPricingPage = () => {
                   },
                   { label: "Broker Fee", name: "broker_fee", type: "number" },
                   {
-                    label: "ORBIC Mills",
-                    name: "ameripower_mills",
+                    label: millsLabel,
+                    name: "mills",
                     type: "number",
                   },
                 ].map(({ label, name, type = "text", span }) => (
@@ -658,7 +660,7 @@ const CustomerPricingPage = () => {
                 {[
                   ["Broker", form.broker_code],
                   ["Broker Fee", form.broker_fee],
-                  ["ORBIC Mills", form.ameripower_mills],
+                  [millsLabel, form.mills],
                   ["Credit Status", form.credit_status],
                   ["Nodal/RUC", form.nodal],
                   ["No. ESIDs", form.num_esids],

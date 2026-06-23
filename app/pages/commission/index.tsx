@@ -1,8 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import Layout from "../../components/Layout"; // or wherever yours is
-
-const API =
-  process.env.NEXT_PUBLIC_API_URL || "${process.env.NEXT_PUBLIC_API_URL}/api";
+import Layout from "../../components/Layout";
+import api from "../../utils/api";
 
 // 1. Defined Interfaces to replace 'any'
 interface SummaryRow {
@@ -144,11 +142,11 @@ export default function CommissionIndex() {
     setLoading(true);
     try {
       const [summaryRes, dataRes] = await Promise.all([
-        fetch(`${API}/commission/summary`),
-        fetch(`${API}/commission/data`),
+        api.get('/commission/summary'),
+        api.get('/commission/data'),
       ]);
-      const summary = await summaryRes.json();
-      const data = await dataRes.json();
+      const summary = summaryRes.data;
+      const data = dataRes.data;
 
       const rows: SummaryRow[] = Array.isArray(summary) ? summary : [];
       const commRows: CommissionDataRow[] = Array.isArray(data) ? data : [];

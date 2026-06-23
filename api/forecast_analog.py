@@ -22,8 +22,10 @@ load_dotenv()
 DB_HOST = os.getenv("DB_HOST", "localhost")
 DB_USER = os.getenv("DB_USER", "root")
 DB_PASSWORD = os.getenv("DB_PASSWORD", "")
-DB_NAME = os.getenv("DB_NAME", "u972964962_orbic")
+DB_NAME = os.getenv("DB_NAME")
 DB_PORT = int(os.getenv("DB_PORT", "3306"))
+if not DB_NAME:
+    raise SystemExit("ERROR: DB_NAME environment variable is not set. Set it before running this script.")
 
 # ── Inputs ─────────────────────────────────────────────────────────────────────
 BASE_DATE = date(2026, 4, 9)  # last Thursday — our anchor

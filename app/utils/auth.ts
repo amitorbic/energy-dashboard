@@ -3,6 +3,7 @@ export interface User {
   username: string;
   role: string;
   email: string;
+  company_name: string;
 }
 
 export function getToken(): string | null {

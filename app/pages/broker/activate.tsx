@@ -12,19 +12,19 @@ interface Broker {
   pricing_flag: number;
   daily_pricing_email1: string;
   daily_pricing_flag1: number;
-  ameripower_mills1: string;
+  mills1: string;
   daily_pricing_email2: string;
   daily_pricing_flag2: number;
-  ameripower_mills2: string;
+  mills2: string;
   daily_pricing_email3: string;
   daily_pricing_flag3: number;
-  ameripower_mills3: string;
+  mills3: string;
   daily_pricing_email4: string;
   daily_pricing_flag4: number;
-  ameripower_mills4: string;
+  mills4: string;
   daily_pricing_email5: string;
   daily_pricing_flag5: number;
-  ameripower_mills5: string;
+  mills5: string;
   commission_email: string;
   commission_flag: number;
   confirmation_email: string;
@@ -283,7 +283,7 @@ const BrokerActivatePage = () => {
                           label="Daily Email 1"
                           email={broker.daily_pricing_email1}
                           flagField="daily_pricing_flag1"
-                          millsField="ameripower_mills1"
+                          millsField="mills1"
                           broker={broker}
                           localFlags={localFlags}
                           onToggle={toggleFlag}
@@ -292,7 +292,7 @@ const BrokerActivatePage = () => {
                           label="Daily Email 2"
                           email={broker.daily_pricing_email2}
                           flagField="daily_pricing_flag2"
-                          millsField="ameripower_mills2"
+                          millsField="mills2"
                           broker={broker}
                           localFlags={localFlags}
                           onToggle={toggleFlag}
@@ -301,7 +301,7 @@ const BrokerActivatePage = () => {
                           label="Daily Email 3"
                           email={broker.daily_pricing_email3}
                           flagField="daily_pricing_flag3"
-                          millsField="ameripower_mills3"
+                          millsField="mills3"
                           broker={broker}
                           localFlags={localFlags}
                           onToggle={toggleFlag}
@@ -310,7 +310,7 @@ const BrokerActivatePage = () => {
                           label="Daily Email 4"
                           email={broker.daily_pricing_email4}
                           flagField="daily_pricing_flag4"
-                          millsField="ameripower_mills4"
+                          millsField="mills4"
                           broker={broker}
                           localFlags={localFlags}
                           onToggle={toggleFlag}
@@ -319,7 +319,7 @@ const BrokerActivatePage = () => {
                           label="Daily Email 5"
                           email={broker.daily_pricing_email5}
                           flagField="daily_pricing_flag5"
-                          millsField="ameripower_mills5"
+                          millsField="mills5"
                           broker={broker}
                           localFlags={localFlags}
                           onToggle={toggleFlag}

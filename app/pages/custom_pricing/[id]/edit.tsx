@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import Layout from "../../../components/Layout";
 import api from "../../../utils/api";
 import { useRouter } from "next/router";
+import { getUser } from "../../../utils/auth";
 
 // 1. Define a proper interface to avoid 'any'
 interface CustomerForm {
@@ -11,7 +12,7 @@ interface CustomerForm {
   nodal: string;
   broker_code: string;
   broker_fee: number;
-  ameripower_mills: number;
+  mills: number;
   credit_status: string;
   contract_start_date: string;
   pricing_start_date: string;
@@ -75,6 +76,7 @@ const Field = ({
 const EditCustomer = () => {
   const router = useRouter();
   const { id } = router.query;
+  const millsLabel = `${getUser()?.company_name ?? ""} Mills`.trim();
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -86,7 +88,7 @@ const EditCustomer = () => {
     nodal: "Included",
     broker_code: "",
     broker_fee: 0,
-    ameripower_mills: 0,
+    mills: 0,
     credit_status: "Pending",
     contract_start_date: "",
     pricing_start_date: "",
@@ -215,10 +217,10 @@ const EditCustomer = () => {
               onChange={handleChange}
             />
             <Field
-              label="ORBIC Mills"
-              name="ameripower_mills"
+              label={millsLabel}
+              name="mills"
               type="number"
-              value={form.ameripower_mills}
+              value={form.mills}
               onChange={handleChange}
             />
             <Field

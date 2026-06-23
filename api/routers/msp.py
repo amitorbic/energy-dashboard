@@ -45,7 +45,7 @@ class MspSaveRequest(BaseModel):
     esids: Optional[str] = None
     groups: str  # JSON string
     terms: Optional[str] = None
-    ameripower_mills: Optional[str] = None
+    mills: Optional[str] = None
     broker_mill: Optional[str] = None
     comments: Optional[str] = None
     created_by: Optional[str] = None
@@ -174,7 +174,7 @@ async def save_msp(payload: MspSaveRequest, db: AsyncSession = Depends(get_db)):
                     esids            = :esids,
                     groups           = :groups,
                     terms            = :terms,
-                    ameripower_mills = :ameripower_mills,
+                    mills = :mills,
                     broker_mill      = :broker_mill,
                     comments         = :comments
                 WHERE sid = :sid
@@ -190,10 +190,10 @@ async def save_msp(payload: MspSaveRequest, db: AsyncSession = Depends(get_db)):
                     """
                 INSERT INTO msp_log (
                     customer_name, broker_code, esids, groups,
-                    terms, ameripower_mills, broker_mill, comments, created_by
+                    terms, mills, broker_mill, comments, created_by
                 ) VALUES (
                     :customer_name, :broker_code, :esids, :groups,
-                    :terms, :ameripower_mills, :broker_mill, :comments, :created_by
+                    :terms, :mills, :broker_mill, :comments, :created_by
                 )
             """
                 ),
@@ -213,7 +213,7 @@ async def list_msp(db: AsyncSession = Depends(get_db)):
         text(
             """
         SELECT sid, customer_name, broker_code, esids,
-               terms, ameripower_mills, broker_mill, comments,
+               terms, mills, broker_mill, comments,
                created_at, updated_at
         FROM msp_log ORDER BY updated_at DESC LIMIT 200
     """

@@ -31,18 +31,18 @@ interface BillTemplate {
 
 const BILL_SECTION = `
 For UTILITY BILLS extract:
-- esid: ESI ID / Premise ID / Service Point Identifier (17–18 digit number starting with 1)
-- account_number: Customer account number
-- bill_amount: Total amount due (include $ sign, e.g. "$124.56")
-- due_date: Payment due date (YYYY-MM-DD)
-- usage_kwh: Electricity consumption in kWh (numeric only, e.g. "1234.5")
-- energy_rate: Energy supply rate $/kWh from the REP/retailer charges section (numeric only, e.g. "0.0432"). Leave empty if not explicitly shown — it will be calculated.
-- tdsp_rate: Delivery rate $/kWh from the TDSP section (Oncor / AEP / CenterPoint / TNMP charges) (numeric only). Leave empty if not shown.
-- energy_charges: Total REP energy supply charges in dollars (numeric only, e.g. "54.32")
-- tdsp_charges: Total TDSP delivery charges in dollars (numeric only, e.g. "38.75")
-- extra_charges: JSON array of any charges that are NOT energy supply, TDSP delivery, or taxes (e.g. ["$2.50 Franchise Fee", "$1.00 Customer Charge"]). Use [] if none.
-- provider_name: Retail Electric Provider (REP) name shown on the bill header (e.g. "TXU Energy", "Reliant Energy")
-- service_address: Full service address (street, city, state, zip)
+- esid: The PRINTED ESI ID / Service Point Identifier on the bill. Texas ESI IDs are ALWAYS exactly 17 digits and start with "10" (e.g. "10443720002302231"). Look for the "ESI ID:" label near the service address section. ONLY read the printed number — ignore any handwritten digits or annotations nearby. If what you find is not exactly 17 digits starting with "10", return empty string with confidence 0.
+- account_number: Customer account number from the account information box at the top of the bill.
+- bill_amount: Total amount due (include $ sign, e.g. "$209.88").
+- due_date: Payment due date (YYYY-MM-DD).
+- usage_kwh: The TOTAL billed electricity consumption for THIS billing period, in kWh — usually the LARGEST kWh number on the bill, found in the "Billing Summary" or "Current Charges" section, often labeled "kWh Usage", "Billed Usage", "kWh Billed", "kWh Multiplied", or "Total kWh". Do NOT use: prior/previous meter readings, numbers from a 12-month usage-history bar chart or graph, "Average Daily Usage"/"Average kWh" comparison panels, weather/degree-day tables, or a single tier's kWh from a tiered rate ladder (e.g. ignore the "1000" in a line like "1000 kWh @ $0.05000" — that is one tier, not the total). If several usage-like numbers appear, pick the FINAL total for the billing period, never an intermediate or component figure.
+- energy_rate: The blended/effective energy supply rate $/kWh for the whole bill (numeric only, e.g. "0.0432"). If the bill shows a tiered rate ladder (multiple "X kWh @ $Y" line items), do NOT return any single tier's rate — leave this empty so it gets calculated from the energy charges total instead.
+- tdsp_rate: The blended delivery rate $/kWh from the TDSP section (Oncor / AEP / CenterPoint / TNMP) (numeric only). Same rule as energy_rate — leave empty rather than returning one tier/line-item's rate.
+- energy_charges: The FINAL SUBTOTAL of REP energy supply charges in dollars — the line typically labeled "Total Energy Charges" (after all tiers/line-items are summed). Do NOT return a single tier's dollar amount.
+- tdsp_charges: The FINAL SUBTOTAL of TDSP delivery charges in dollars — the line typically labeled "Total TDU Delivery Charges" (after all tiers/line-items are summed). Do NOT return a single tier's dollar amount.
+- extra_charges: JSON array of any charges that are NOT energy supply, TDSP delivery, or taxes (e.g. ["$2.50 Franchise Fee"]). Use [] if none.
+- provider_name: The Retail Electric Provider (REP) company name — the brand shown at the top/header of the bill (e.g. "Reliant Energy", "TXU Energy", "Gexa Energy"). CRITICAL: Oncor, AEP Texas, CenterPoint Energy, and TNMP are wire/delivery companies (TDSPs), NOT the REP. Never return a TDSP name here.
+- service_address: The address explicitly labeled "Service Address:" on the bill (usually on the left side of the page). Do NOT use the billing/mailing/envelope address at the bottom of the bill.
 
 Do NOT include total_average_rate — it is calculated automatically.`;
 
@@ -141,6 +141,9 @@ async function fetchTemplates(token: string): Promise<BillTemplate[]> {
 interface PageImage {
   base64: string;
   mimeType: "image/png";
+  width: number;
+  height: number;
+  scale: number;
 }
 
 async function renderScannedPdf(buffer: Buffer): Promise<PageImage[]> {
@@ -152,7 +155,10 @@ async function renderScannedPdf(buffer: Buffer): Promise<PageImage[]> {
         imageDataUrl: boolean;
         imageBuffer: boolean;
         first: number;
-      }): Promise<{ pages: Array<{ dataUrl: string }>; total: number }>;
+      }): Promise<{
+        pages: Array<{ dataUrl: string; width: number; height: number; scale: number }>;
+        total: number;
+      }>;
     };
   };
 
@@ -167,7 +173,45 @@ async function renderScannedPdf(buffer: Buffer): Promise<PageImage[]> {
   return result.pages.map((p) => ({
     base64: p.dataUrl.includes(",") ? p.dataUrl.split(",")[1] : p.dataUrl,
     mimeType: "image/png",
+    width: p.width,
+    height: p.height,
+    scale: p.scale,
   }));
+}
+
+// ── Dependency-free pixel-dimension readers ──────────────────────────────────
+// No image library is installed in this project; these parse just enough of
+// the file header to report what's actually being sent to the vision API.
+
+function pngDimensions(buf: Buffer): { width: number; height: number } | null {
+  if (buf.length < 24) return null;
+  if (buf[0] !== 0x89 || buf[1] !== 0x50 || buf[2] !== 0x4e || buf[3] !== 0x47) return null;
+  return { width: buf.readUInt32BE(16), height: buf.readUInt32BE(20) };
+}
+
+function jpegDimensions(buf: Buffer): { width: number; height: number } | null {
+  if (buf.length < 4 || buf.readUInt16BE(0) !== 0xffd8) return null;
+  let offset = 2;
+  while (offset + 9 < buf.length) {
+    if (buf[offset] !== 0xff) { offset++; continue; }
+    const marker = buf[offset + 1];
+    // SOF0–SOF15, excluding DHT(C4)/JPG(C8)/DAC(CC) which share the range but aren't frame headers
+    if (marker >= 0xc0 && marker <= 0xcf && marker !== 0xc4 && marker !== 0xc8 && marker !== 0xcc) {
+      return { height: buf.readUInt16BE(offset + 5), width: buf.readUInt16BE(offset + 7) };
+    }
+    offset += 2 + buf.readUInt16BE(offset + 2);
+  }
+  return null;
+}
+
+function gifDimensions(buf: Buffer): { width: number; height: number } | null {
+  if (buf.length < 10) return null;
+  if (buf[0] !== 0x47 || buf[1] !== 0x49 || buf[2] !== 0x46) return null;
+  return { width: buf.readUInt16LE(6), height: buf.readUInt16LE(8) };
+}
+
+function getImageDimensions(buf: Buffer): { width: number; height: number } | null {
+  return pngDimensions(buf) ?? jpegDimensions(buf) ?? gifDimensions(buf);
 }
 
 // ── OpenAI provider ───────────────────────────────────────────────────────────
@@ -227,17 +271,24 @@ async function parseWithOpenAI(
 
   // Builds the content block for a given prompt, reusing the prepared document data.
   // Scanned pages are sent as multiple image_url entries (one per rendered page).
+  // Vision calls get a handwriting-ignore prefix since annotated bills are common.
+  const HANDWRITING_NOTE =
+    "IMPORTANT: This document may contain handwritten stamps, initials, pen marks, " +
+    "or annotations overlaid on the printed page. Ignore ALL handwritten content. " +
+    "Extract data only from the typeset, printed text.\n\n";
+
   type MsgContent = OpenAI.Chat.ChatCompletionUserMessageParam["content"];
   const buildContent = (prompt: string, textLimit = 12000): MsgContent => {
+    const visionPrompt = HANDWRITING_NOTE + prompt;
     if (isImage) {
       return [
-        { type: "text", text: prompt },
+        { type: "text", text: visionPrompt },
         { type: "image_url", image_url: { url: `data:${mimeType};base64,${imageBase64}`, detail: "high" } },
       ];
     }
     if (scannedPages) {
       return [
-        { type: "text", text: prompt },
+        { type: "text", text: visionPrompt },
         ...scannedPages.map((p) => ({
           type: "image_url" as const,
           image_url: { url: `data:${p.mimeType};base64,${p.base64}`, detail: "high" as const },
@@ -247,6 +298,30 @@ async function parseWithOpenAI(
     return `${prompt}\n\nDOCUMENT CONTENT:\n\`\`\`\n${docText.slice(0, textLimit)}\n\`\`\``;
   };
 
+  // ── Diagnostic logging: exactly what's being sent to the vision API ────────
+  // Added to investigate reports of degraded image quality reaching GPT-4o.
+  if (isImage) {
+    const dims = getImageDimensions(buffer);
+    console.log("[parse-document] vision input (native image)", {
+      filename,
+      mimeType,
+      sourceFileBytes: buffer.length,
+      base64Chars: imageBase64.length,
+      dimensions: dims ? `${dims.width}x${dims.height}` : "unknown (unsupported header)",
+    });
+  } else if (scannedPages) {
+    console.log("[parse-document] vision input (rendered PDF pages)", {
+      filename,
+      pageCount: scannedPages.length,
+      pages: scannedPages.map((p, i) => ({
+        page: i + 1,
+        dimensions: `${p.width}x${p.height}`,
+        renderScale: p.scale,
+        base64Chars: p.base64.length,
+      })),
+    });
+  }
+
   // ── Step 1: Detect document type ────────────────────────────────────────────
   // Cheap call — max_tokens:10, no JSON mode, expects only "BILL" or "CONTRACT".
   const detectCompletion = await client.chat.completions.create({
@@ -255,8 +330,9 @@ async function parseWithOpenAI(
     temperature: 0,
     max_tokens: 10,
   });
-  const detectAnswer =
-    detectCompletion.choices[0]?.message?.content?.trim().toUpperCase() ?? "";
+  const detectRawContent = detectCompletion.choices[0]?.message?.content ?? "";
+  console.log(`[parse-document] RAW detect response (${filename}):`, JSON.stringify(detectRawContent));
+  const detectAnswer = detectRawContent.trim().toUpperCase();
 
   let docType: DocType;
   if (detectAnswer.startsWith("BILL")) docType = "utility_bill";
@@ -282,6 +358,7 @@ async function parseWithOpenAI(
   });
 
   const raw = extractCompletion.choices[0]?.message?.content ?? "{}";
+  console.log(`[parse-document] RAW extract response (${filename}):`, raw);
   const extracted = JSON.parse(raw) as { fields?: Record<string, ExtractedField> };
 
   const result: ParseResult = {
@@ -393,7 +470,19 @@ function tnmpZoneFromZip(zip: string): string {
 function deriveFields(fields: Record<string, ExtractedField>): Record<string, ExtractedField> {
   const derived: Record<string, ExtractedField> = {};
 
-  // 1. service_zip — last 5-digit block in the service address
+  // 1. ESI ID validation — Texas ESI IDs are ALWAYS exactly 17 digits starting with "10".
+  //    Strip non-digits (handles spaces/dashes the AI might include), then validate.
+  //    If the AI extracted something invalid (e.g. a handwritten number), clear it so
+  //    the UI shows red / "not found" rather than a wrong value.
+  const rawEsid = (fields["esid"]?.value ?? "").replace(/\D/g, "");
+  const isValidEsid = rawEsid.length === 17 && rawEsid.startsWith("10");
+  if (fields["esid"]?.value && !isValidEsid) {
+    derived["esid"] = { value: "", confidence: 0 };
+  }
+  // Use the validated clean ESI for all downstream lookups; empty string if invalid/absent
+  const esiId = isValidEsid ? rawEsid : "";
+
+  // 2. service_zip — last 5-digit block in the service address
   const address = fields["service_address"]?.value ?? "";
   const zipMatches = address.match(/\b\d{5}(?:-\d{4})?\b/g);
   const serviceZip = zipMatches ? zipMatches[zipMatches.length - 1].slice(0, 5) : "";
@@ -402,8 +491,8 @@ function deriveFields(fields: Record<string, ExtractedField>): Record<string, Ex
     confidence: serviceZip ? 90 : 0,
   };
 
-  // 2. TDSP / zone from ESI ID prefix
-  const esiId = (fields["esid"]?.value ?? "").replace(/\s/g, "");
+  // 3. TDSP / zone — ESI ID prefix is authoritative; zip is fallback only.
+  //    A valid ESI always overrides anything printed on the bill.
   let tdspEntry: TdspEntry | null = null;
 
   if (esiId) {
@@ -413,13 +502,13 @@ function deriveFields(fields: Record<string, ExtractedField>): Record<string, Ex
         break;
       }
     }
-    // If TNMP and zone is blank, resolve via zip
+    // TNMP zone is ambiguous — resolve via zip
     if (tdspEntry && tdspEntry.tdsp === "TNMP" && !tdspEntry.zone) {
       tdspEntry = { tdsp: "TNMP", zone: tnmpZoneFromZip(serviceZip) };
     }
   }
 
-  // 3. Fallback to zip-based lookup when ESI not available or unrecognized
+  // 4. Zip fallback when ESI ID is absent or unrecognized
   if (!tdspEntry && serviceZip) {
     tdspEntry = tdspFromZip(serviceZip);
   }
@@ -461,6 +550,45 @@ function deriveFields(fields: Record<string, ExtractedField>): Record<string, Ex
     const tc = parseFloat((fields["tdsp_charges"]?.value ?? "").replace(/[$,\s]/g, ""));
     if (!isNaN(tc) && tc > 0) {
       derived["tdsp_rate"] = { value: (tc / kwh).toFixed(5), confidence: 70 };
+    }
+  }
+
+  // ── Reconciliation check ────────────────────────────────────────────────────
+  // energy_charges + tdsp_charges + taxes + extra_charges should sum to ~bill_amount.
+  // A large mismatch usually means the AI picked up one tier of a tiered rate
+  // ladder (or a previous-period figure) instead of the section's final subtotal.
+  // We can't know which field is wrong from code alone, so instead of trusting
+  // the AI's own confidence score, downgrade the suspect fields so the UI shows
+  // red/amber and the user double-checks against the source document.
+  const energyCharges = parseFloat((fields["energy_charges"]?.value ?? "").replace(/[$,\s]/g, ""));
+  const tdspCharges = parseFloat((fields["tdsp_charges"]?.value ?? "").replace(/[$,\s]/g, ""));
+  const taxesAmt = parseFloat((fields["taxes"]?.value ?? "").replace(/[$,\s]/g, ""));
+  let extraTotal = 0;
+  try {
+    const extras = JSON.parse(fields["extra_charges"]?.value || "[]") as unknown[];
+    if (Array.isArray(extras)) {
+      for (const e of extras) {
+        const m = String(e).match(/[\d.]+/);
+        if (m) extraTotal += parseFloat(m[0]);
+      }
+    }
+  } catch {
+    // extra_charges wasn't valid JSON — skip it in the reconciliation total
+  }
+
+  const knownParts = [energyCharges, tdspCharges, taxesAmt, extraTotal].filter((n) => !isNaN(n));
+  const reconciledTotal = knownParts.reduce((a, b) => a + b, 0);
+
+  if (!isNaN(billAmt) && billAmt > 0 && reconciledTotal > 0) {
+    const offBy = Math.abs(reconciledTotal - billAmt) / billAmt;
+    if (offBy > 0.15) {
+      const flag = (key: string, cap: number) => {
+        const f = fields[key] ?? derived[key];
+        if (f?.value) derived[key] = { value: f.value, confidence: Math.min(f.confidence, cap) };
+      };
+      flag("usage_kwh", 35);
+      flag("energy_charges", 35);
+      flag("tdsp_charges", 35);
     }
   }
 

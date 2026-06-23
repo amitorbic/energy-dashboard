@@ -16,6 +16,7 @@ def create_token(
     username: str,
     role: str,
     email: str,
+    rep_id: Optional[int] = None,
     extra_claims: dict = None,
 ) -> str:
     hours = ROLE_EXPIRY.get(str(role), 24)
@@ -27,6 +28,8 @@ def create_token(
         "exp":      datetime.utcnow() + timedelta(hours=hours),
         "iat":      datetime.utcnow()
     }
+    if rep_id is not None:
+        payload["rep_id"] = rep_id
     if extra_claims:
         payload.update(extra_claims)
     return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)

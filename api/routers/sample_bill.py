@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from typing import Optional
+from utils.email_routing import get_tenant_email
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import (
     SimpleDocTemplate,
@@ -113,6 +114,10 @@ async def generate_sample_bill(payload: SampleBillRequest):
         # ── Header info boxes ──────────────────────────────────────
         header_data = [
             [
+                # ORBIC-specific: legal entity name, mailing address, and PUC license number
+                # all differ per REP. When onboarding a second tenant, replace with
+                # env vars (TENANT_LEGAL_NAME, TENANT_MAILING_ADDRESS, TENANT_PUC_LICENSE)
+                # or a custom template. For now this block is ORBIC-only.
                 Paragraph(
                     "<b>AmeriPower, LLC</b><br/>P.O. Box 16206<br/>Sugar Land, TX 77496<br/>PUC License # 10076",
                     s_small,
@@ -122,7 +127,7 @@ async def generate_sample_bill(payload: SampleBillRequest):
                     s_small,
                 ),
                 Paragraph(
-                    "<b>Email:</b> operations@ameripower.com<br/><b>Web:</b> www.ameripower.com",
+                    f"<b>Email:</b> {get_tenant_email('operations')}<br/><b>Web:</b> www.ameripower.com",
                     s_small,
                 ),
                 Paragraph(
@@ -393,6 +398,9 @@ async def generate_sample_bill(payload: SampleBillRequest):
         story.append(Spacer(1, 6))
 
         # ── General Information ───────────────────────────────────
+        # ORBIC-specific: year of registration (2003), PUCT license (10076), and legal
+        # entity name (AmeriPower, LLC) are all tenant-specific facts, not template text.
+        # When onboarding a second tenant, replace this block with per-tenant values.
         story.append(
             Paragraph(
                 "<b><u>General Information:</u></b> AmeriPower, LLC was registered as a Texas REP in 2003 "

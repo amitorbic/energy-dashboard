@@ -1,8 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-//import Link from "next/link";
-
-const API =
-  process.env.NEXT_PUBLIC_API_URL || "${process.env.NEXT_PUBLIC_API_URL}/api";
+import api from "../../utils/api";
 
 interface CommissionRow {
   sid: number;
@@ -92,9 +89,8 @@ export default function ViewCommissionData() {
       else if (checkCompare) params.set("audit_mode", "compare");
       else if (checkInactive) params.set("audit_mode", "inactive");
 
-      const res = await fetch(`${API}/commission/data?${params}`);
-      const json = await res.json();
-      setRows(Array.isArray(json) ? json : []);
+      const res = await api.get(`/commission/data?${params}`);
+      setRows(Array.isArray(res.data) ? res.data : []);
     } finally {
       setLoading(false);
     }
@@ -110,15 +106,12 @@ export default function ViewCommissionData() {
   ]);
 
   useEffect(() => {
-    fetch(`${API}/commission/vendors`)
-      .then((r) => r.json())
-      .then((data) => setBrokers(data));
-    fetch(`${API}/commission/months`)
-      .then((r) => r.json())
-      .then((m: MonthOption[]) => {
-        setMonths(m);
-        if (m.length > 0) setFromMonth(m[0].value);
-      });
+    api.get('/commission/vendors').then(res => setBrokers(res.data));
+    api.get('/commission/months').then(res => {
+      const m: MonthOption[] = res.data;
+      setMonths(m);
+      if (m.length > 0) setFromMonth(m[0].value);
+    });
   }, []);
 
   function startEdit(row: CommissionRow) {
@@ -133,32 +126,24 @@ export default function ViewCommissionData() {
   }
 
   async function saveEdit(sid: number) {
-    const res = await fetch(
-      `${API}/commission/data/${sid}?uid=${uid}&user_name=${userName}`,
-      {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(editData),
-      },
-    );
-    if (res.ok) {
+    try {
+      await api.put(`/commission/data/${sid}?uid=${uid}&user_name=${userName}`, editData);
       setMsg({ type: "success", text: "Row updated successfully." });
       setEditingSid(null);
       fetchData();
-    } else {
+    } catch {
       setMsg({ type: "error", text: "Update failed." });
     }
   }
 
   async function deleteRow(sid: number) {
     if (!confirm("Delete this row?")) return;
-    const res = await fetch(
-      `${API}/commission/data/${sid}?uid=${uid}&user_name=${userName}`,
-      { method: "DELETE" },
-    );
-    if (res.ok) {
+    try {
+      await api.delete(`/commission/data/${sid}?uid=${uid}&user_name=${userName}`);
       setMsg({ type: "success", text: "Row deleted." });
       fetchData();
+    } catch {
+      setMsg({ type: "error", text: "Delete failed." });
     }
   }
 

@@ -18,12 +18,17 @@ from datetime import datetime, timedelta
 load_dotenv()
 
 # ── Config ────────────────────────────────────────────────────────────────────
-LOAD_FOLDER = r"C:/Users/Amit/Desktop/LFC_weather/Native_load/native load"
+LOAD_FOLDER = os.getenv("LOAD_FOLDER", r"C:/Users/Amit/Desktop/LFC_weather/Native_load/native load")
+if not Path(LOAD_FOLDER).exists():
+    raise SystemExit(f"ERROR: LOAD_FOLDER '{LOAD_FOLDER}' does not exist. "
+                     f"Set the LOAD_FOLDER env var to the correct path.")
 DB_HOST = os.getenv("DB_HOST", "localhost")
 DB_USER = os.getenv("DB_USER", "root")
 DB_PASSWORD = os.getenv("DB_PASSWORD", "")
-DB_NAME = os.getenv("DB_NAME", "u972964962_orbic")
+DB_NAME = os.getenv("DB_NAME")
 DB_PORT = int(os.getenv("DB_PORT", "3306"))
+if not DB_NAME:
+    raise SystemExit("ERROR: DB_NAME environment variable is not set. Set it before running this script.")
 BATCH_SIZE = 500
 
 # ── Column mapping ─────────────────────────────────────────────────────────────

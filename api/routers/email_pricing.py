@@ -9,6 +9,7 @@ from controllers.email_pricing import (
     build_email_html,
     send_email_async,
 )
+from utils.email_routing import get_tenant_display_name
 from sqlalchemy import text
 
 router = APIRouter(prefix="/email", tags=["Email Pricing"])
@@ -42,8 +43,8 @@ async def get_regular_brokers(db: AsyncSession = Depends(get_db)):
             """
         SELECT sid, broker_code, company_name, 
                daily_pricing_email1, daily_pricing_flag1,
-               ameripower_mills1
-        FROM broker_new 
+               mills1
+        FROM broker_new
         WHERE regular_status IN ('active', 'partial')
         AND (daily_pricing_flag1=1 OR daily_pricing_flag2=1 OR 
              daily_pricing_flag3=1 OR daily_pricing_flag4=1 OR daily_pricing_flag5=1)
@@ -63,7 +64,7 @@ async def get_irregular_brokers(db: AsyncSession = Depends(get_db)):
             """
         SELECT sid, broker_code, company_name,
                daily_pricing_email1, daily_pricing_flag1,
-               ameripower_mills1
+               mills1
         FROM broker_new
         ORDER BY company_name
     """
@@ -109,7 +110,7 @@ async def preview_email(data: dict, db: AsyncSession = Depends(get_db)):
         start_date = data.get("start_date")
         terms = data.get("terms", [6, 12, 18, 24])
         price_type = data.get("price_type", "commercial")
-        mills = float(broker.get("ameripower_mills1") or 0)
+        mills = float(broker.get("mills1") or 0)
 
         matrix_result = await calculate_matrix_for_start_date(
             start_date, terms, db, price_type
@@ -173,7 +174,7 @@ async def preview_data(data: dict, db: AsyncSession = Depends(get_db)):
 
         preview = []
         for broker in brokers:
-            mills = float(broker.get("ameripower_mills1") or 0)
+            mills = float(broker.get("mills1") or 0)
             adjusted = []
             for row in matrix:
                 adj_row = {"zone": row["zone"]}
@@ -316,7 +317,7 @@ async def send_single_custom(data: dict, db: AsyncSession = Depends(get_db)):
             <td style='padding:6px 10px;border:1px solid #ddd;font-weight:bold'>{customer['company_name']}</td>
             <td style='padding:6px 10px;border:1px solid #ddd'>{start_date}</td>
             <td style='padding:6px 10px;border:1px solid #ddd;text-align:center'>{customer.get('num_esids', 1)}</td>
-            <td style='padding:6px 10px;border:1px solid #ddd;text-align:center'>{customer.get('ameripower_mills', 0)}</td>
+            <td style='padding:6px 10px;border:1px solid #ddd;text-align:center'>{customer.get('mills', 0)}</td>
             <td style='padding:6px 10px;border:1px solid #ddd'>{customer.get('credit_status', 'Pending')}</td>
             {price_cells}
         </tr></tbody>
@@ -325,7 +326,7 @@ async def send_single_custom(data: dict, db: AsyncSession = Depends(get_db)):
     """
 
     html = build_email_html(broker["company_name"], content_html)
-    subject = f"Pricing from AmeriPower - {customer['company_name']}"
-    await send_email_async(broker["pricing_email"], subject, html)
+    subject = f"Pricing from {get_tenant_display_name()} - {customer['company_name']}"
+    await send_email_async(broker["pricing_email"], subject, html, purpose="pricing")
 
     return {"sent": True, "to": broker["pricing_email"]}

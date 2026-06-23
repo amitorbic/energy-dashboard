@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
+import api from "../../utils/api";
 
-const API =
-  process.env.NEXT_PUBLIC_API_URL || "${process.env.NEXT_PUBLIC_API_URL}/api";
 const uid = 1;
 const userName = "admin";
 
@@ -20,15 +19,12 @@ export default function EmailCommission() {
   } | null>(null);
 
   useEffect(() => {
-    fetch(`${API}/commission/vendors`)
-      .then((r) => r.json())
-      .then(setBrokers);
-    fetch(`${API}/commission/months`)
-      .then((r) => r.json())
-      .then((m: MonthOption[]) => {
-        setMonths(m);
-        if (m.length > 0) setSelectedMonth(m[0].value);
-      });
+    api.get('/commission/vendors').then(res => setBrokers(res.data));
+    api.get('/commission/months').then(res => {
+      const m: MonthOption[] = res.data;
+      setMonths(m);
+      if (m.length > 0) setSelectedMonth(m[0].value);
+    });
   }, []);
 
   async function handleSend() {
@@ -44,18 +40,13 @@ export default function EmailCommission() {
     setLoading(true);
     setResult(null);
     try {
-      const res = await fetch(`${API}/commission/email`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          vendor_ids: selectedVendors,
-          month: selectedMonth,
-          uid,
-          user_name: userName,
-        }),
+      const res = await api.post('/commission/email', {
+        vendor_ids: selectedVendors,
+        month: selectedMonth,
+        uid,
+        user_name: userName,
       });
-      const json = await res.json();
-      setResult(json);
+      setResult(res.data);
     } finally {
       setLoading(false);
     }

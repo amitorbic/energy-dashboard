@@ -24,12 +24,12 @@ from openpyxl.styles import PatternFill, Font, Alignment
 from io import BytesIO
 from email import encoders
 import os
+from utils.email_routing import get_tenant_email
 
 SMTP_HOST = os.getenv("SMTP_HOST", "smtp.gmail.com")
 SMTP_PORT = int(os.getenv("SMTP_PORT", 465))
 SMTP_USER = os.getenv("SMTP_USER", "")
 SMTP_PASS = os.getenv("SMTP_PASS", "")
-SMTP_FROM = os.getenv("SMTP_FROM", "AmeriPower Billing <billing@ameripower.com>")
 
 # ── helpers ───────────────────────────────────────────────────────────────────
 
@@ -709,10 +709,11 @@ def _build_email_body(exc: dict, com: dict, upload_date) -> str:
         "Sub Bill Mode": "sub_bill_mode",
     }
 
+    _billing_co = os.getenv("TENANT_COMPANY_NAME", "AmeriPower")
     html = f"""
     <html><body style="font-family:Arial,sans-serif;font-size:13px;color:#222;max-width:900px;margin:0 auto;">
     <div style="background:#1F4E79;padding:16px 24px;border-radius:6px 6px 0 0;">
-      <h2 style="color:#fff;margin:0;font-size:18px;">AmeriPower — Billing Exception Report</h2>
+      <h2 style="color:#fff;margin:0;font-size:18px;">{_billing_co} — Billing Exception Report</h2>
       <p style="color:#B8D4F0;margin:4px 0 0;font-size:13px;">Upload date: {upload_date}</p>
     </div>
     <div style="padding:16px 0;">
@@ -763,10 +764,10 @@ def _build_email_body(exc: dict, com: dict, upload_date) -> str:
 
         html += "</div>"
 
-    html += """
+    html += f"""
     </div>
     <div style="background:#F0F4FA;padding:12px 24px;border-top:2px solid #2E6DA4;font-size:12px;color:#888;border-radius:0 0 6px 6px;">
-      AmeriPower Automated Billing System — This is a system generated email.
+      {_billing_co} Automated Billing System — This is a system generated email.
     </div>
     </body></html>
     """
@@ -774,8 +775,12 @@ def _build_email_body(exc: dict, com: dict, upload_date) -> str:
 
 
 def _send_smtp(to: str, subject: str, body: str, attachments: list = []):
+    from_addr = get_tenant_email("operations")
+    display = os.getenv("TENANT_COMPANY_NAME", "")
+    from_header = f"{display} <{from_addr}>" if display else from_addr
+
     msg = MIMEMultipart("mixed")
-    msg["From"] = SMTP_FROM
+    msg["From"] = from_header
     msg["To"] = to
     msg["Subject"] = subject
     msg.attach(MIMEText(body, "html"))
@@ -789,7 +794,7 @@ def _send_smtp(to: str, subject: str, body: str, attachments: list = []):
 
     with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT) as server:
         server.login(SMTP_USER, SMTP_PASS)
-        server.sendmail(SMTP_FROM, to.split(", "), msg.as_string())
+        server.sendmail(from_addr, to.split(", "), msg.as_string())
     print("SMTP sendmail completed successfully")
 
 

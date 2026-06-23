@@ -51,7 +51,7 @@ export default function CustomPricingConfirmation() {
         esid_count: String(data.esid_count || ""),
         esiid: data.esiid || "",
         customer_email: data.customer_email || "",
-        ameripower_mill: data.ameripower_mill || "",
+        mill: data.mill || "",
         start_date: data.start_date || "",
         volumes: JSON.stringify(data.volumes || {}),
         total_volume: String(data.total_volume || ""),

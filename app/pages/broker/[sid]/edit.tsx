@@ -203,8 +203,8 @@ const EditBroker = () => {
               </div>
               <F
                 label={`Mills ${n}`}
-                name={`ameripower_mills${n}`}
-                value={form[`ameripower_mills${n}`]}
+                name={`mills${n}`}
+                value={form[`mills${n}`]}
                 onChange={handleChange}
               />
             </div>

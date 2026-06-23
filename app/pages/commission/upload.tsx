@@ -1,9 +1,7 @@
 import { useState } from "react";
 import { useRouter } from "next/router";
-import Link from "next/link"; // 1. Import Link
-
-const API =
-  process.env.NEXT_PUBLIC_API_URL || "${process.env.NEXT_PUBLIC_API_URL}/api";
+import Link from "next/link";
+import api from "../../utils/api";
 
 export default function UploadCommission() {
   const router = useRouter();
@@ -20,19 +18,18 @@ export default function UploadCommission() {
   const uid = 1;
   const userName = "admin";
   async function handleDownloadPaymentSheet(month: string) {
-    const res = await fetch(
-      `${API}/commission/payment-sheet/download?month=${month}`,
-    );
-    if (!res.ok) return;
-    const blob = await res.blob();
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    const cd = res.headers.get("content-disposition") || "";
-    const match = cd.match(/filename=(.+)/);
-    a.download = match ? match[1] : `payment_sheet_${month}.xlsx`;
-    a.click();
-    URL.revokeObjectURL(url);
+    try {
+      const res = await api.get(`/commission/payment-sheet/download?month=${month}`, { responseType: 'blob' });
+      const blob: Blob = res.data;
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      const cd = (res.headers['content-disposition'] as string) || "";
+      const match = cd.match(/filename=(.+)/);
+      a.download = match ? match[1] : `payment_sheet_${month}.xlsx`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch { return; }
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -60,35 +57,27 @@ export default function UploadCommission() {
       form.append("uid", String(uid));
       form.append("user_name", userName);
 
-      const res = await fetch(`${API}/commission/upload`, {
-        method: "POST",
-        body: form,
+      const res = await api.post('/commission/upload', form, {
+        headers: { 'Content-Type': 'multipart/form-data' },
       });
-
-      const json = await res.json();
-
-      if (!res.ok) {
-        if (res.status === 422 && json.detail?.message) {
-          setMissingBrokers(json.detail.missing_brokers || []);
-          setNoCommissionId(json.detail.no_commission_id || []);
-          setError(json.detail.message);
-        } else {
-          setError(
-            typeof json.detail === "string" ? json.detail : "Upload failed.",
-          );
-        }
-        return;
-      }
-
+      const json = res.data;
       setSuccess(
         `Successfully uploaded ${json.inserted} rows for ${json.month} ${json.year}. Commission calculated automatically.`,
       );
       setUploadedMonth(
         `${json.year}-${String(new Date().getMonth() + 1).padStart(2, "0")}`,
       );
-      //setTimeout(() => router.push("/commission/view"), 1500);
-    } catch {
-      setError("Network error. Please try again.");
+    } catch (err: unknown) {
+      const errRes = (err as { response?: { status?: number; data?: { detail?: unknown } } })?.response;
+      const detail = errRes?.data?.detail;
+      if (errRes?.status === 422 && detail && typeof detail === 'object') {
+        const d = detail as { message?: string; missing_brokers?: string[]; no_commission_id?: string[] };
+        setMissingBrokers(d.missing_brokers || []);
+        setNoCommissionId(d.no_commission_id || []);
+        setError(d.message || 'Validation error.');
+      } else {
+        setError(typeof detail === 'string' ? detail : "Network error. Please try again.");
+      }
     } finally {
       setLoading(false);
     }

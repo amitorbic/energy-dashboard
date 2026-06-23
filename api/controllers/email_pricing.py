@@ -1,4 +1,5 @@
 import io
+import os
 from datetime import date
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -8,6 +9,7 @@ from controllers.pricing_engine import (
     generate_excel_matrix,
 )
 from utils.email import send_email, send_email_async
+from utils.email_routing import get_tenant_display_name, filename_safe
 
 
 def build_daily_matrix_html(
@@ -139,6 +141,9 @@ async def send_daily_pricing_email(
     db: AsyncSession,
 ) -> dict:
     from dateutil.relativedelta import relativedelta
+    from utils.email_routing import get_tenant_email
+
+    get_tenant_email("pricing")  # fail fast before touching any brokers
 
     results = {"sent": [], "failed": []}
 
@@ -180,7 +185,7 @@ async def send_daily_pricing_email(
 
     for broker in brokers:
         try:
-            mills = float(broker.get("ameripower_mills1") or 0)
+            mills = float(broker.get("mills1") or 0)
 
             # Build combined HTML for all months
             all_months_html = ""
@@ -206,14 +211,15 @@ async def send_daily_pricing_email(
             all_months_html += "<p style='font-size:11px;margin-top:10px'>Refer to the spreadsheet for additional pricing terms</p>"
 
             html = build_email_html(broker["company_name"], all_months_html)
-            subject = f"Pricing from AmeriPower - {broker['company_name']}"
+            subject = f"Pricing from {get_tenant_display_name()} - {broker['company_name']}"
 
             # Generate Excel
             excel_stream = await generate_excel_matrix(
                 start_date, terms, num_months, price_type, db
             )
             excel_bytes = excel_stream.read()
-            filename = f"AmeriPower_Matrix_{date.today().isoformat()}.xlsx"
+            _co = filename_safe(get_tenant_display_name())
+            filename = f"{_co}_Matrix_{date.today().isoformat()}.xlsx"
 
             # Send to all active daily pricing emails
             sent_to = []
@@ -221,7 +227,12 @@ async def send_daily_pricing_email(
                 email = broker.get(f"daily_pricing_email{n}")
                 flag = broker.get(f"daily_pricing_flag{n}")
                 if email and (flag == 1 or flag == "1"):
-                    await send_email_async(email, subject, html, excel_bytes, filename)
+                    await send_email_async(
+                        email, subject, html,
+                        purpose="pricing",
+                        attachment=excel_bytes,
+                        attachment_name=filename,
+                    )
                     sent_to.append(email)
 
             if sent_to:
@@ -264,6 +275,9 @@ async def send_custom_pricing_email(
     import json
     from datetime import date, datetime
     from routers.msp import calculate_msp, MspCalcRequest, MspGroup
+    from utils.email_routing import get_tenant_email
+
+    get_tenant_email("pricing")  # fail fast before touching any brokers
 
     results = {"sent": [], "failed": []}
 
@@ -355,7 +369,7 @@ async def send_custom_pricing_email(
                         <td style='padding:6px 10px;border:1px solid #ddd;font-weight:bold'>{customer['company_name']}</td>
                         <td style='padding:6px 10px;border:1px solid #ddd'>{start_date}</td>
                         <td style='padding:6px 10px;border:1px solid #ddd;text-align:center'>{customer.get('num_esids', 1)}</td>
-                        <td style='padding:6px 10px;border:1px solid #ddd;text-align:center'>{customer.get('ameripower_mills', 0)}</td>
+                        <td style='padding:6px 10px;border:1px solid #ddd;text-align:center'>{customer.get('mills', 0)}</td>
                         <td style='padding:6px 10px;border:1px solid #ddd'>{customer.get('credit_status', 'Pending')}</td>
                         {price_cells}
                     </tr></tbody>
@@ -521,9 +535,9 @@ async def send_custom_pricing_email(
                 continue
 
             html = build_email_html(broker["company_name"], content_html)
-            subject = f"Pricing from AmeriPower - {broker['company_name']}"
+            subject = f"Pricing from {get_tenant_display_name()} - {broker['company_name']}"
 
-            await send_email_async(broker["pricing_email"], subject, html)
+            await send_email_async(broker["pricing_email"], subject, html, purpose="pricing")
 
             await db.execute(
                 text(

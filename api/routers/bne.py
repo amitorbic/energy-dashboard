@@ -297,7 +297,7 @@ async def list_bne(db: AsyncSession = Depends(get_db)):
             """
         SELECT sid, customer_name, broker_code, esid,
                current_rate, terms_left, extension_terms,
-               ameripower_mills, broker_mill, comments,
+               mills, broker_mill, comments,
                start_date, created_at, updated_at
         FROM bne_log
         ORDER BY updated_at DESC
@@ -406,7 +406,7 @@ class BneOfferRequest(BaseModel):
     terms_left: int  # remaining months
     total_volume: float  # annual kWh
     contract_end_date: str
-    ameripower_mills: Optional[float] = 0
+    mills: Optional[float] = 0
     broker_mills: Optional[float] = 0
     message: Optional[str] = ""
     quotes: List[dict]  # [{ext_term, total_term, new_rate, blended_rate}]
@@ -485,8 +485,8 @@ async def generate_offer_pdf(payload: BneOfferRequest):
                 adj_quotes.append({**q, "adj_rate": None})
                 continue
             adj = q["blended_rate"]
-            if payload.ameripower_mills:
-                adj += payload.ameripower_mills / 10
+            if payload.mills:
+                adj += payload.mills / 10
             if payload.broker_mills and not for_broker:
                 adj += payload.broker_mills / 10
             adj_quotes.append({**q, "adj_rate": round(adj, 4)})
@@ -813,7 +813,7 @@ class BneSaveRequest(BaseModel):
     extension_terms: Optional[str] = None  # e.g. "6,12,18,24"
     profiles: Optional[str] = None  # JSON string
     volume: Optional[str] = None  # JSON string
-    ameripower_mills: Optional[str] = None
+    mills: Optional[str] = None
     broker_mill: Optional[str] = None
     start_date: Optional[str] = None
     comments: Optional[str] = None
@@ -841,7 +841,7 @@ async def save_bne(payload: BneSaveRequest, db: AsyncSession = Depends(get_db)):
                     extension_terms  = :extension_terms,
                     profiles         = :profiles,
                     volume           = :volume,
-                    ameripower_mills = :ameripower_mills,
+                    mills = :mills,
                     broker_mill      = :broker_mill,
                     start_date       = :start_date,
                     comments         = :comments
@@ -860,12 +860,12 @@ async def save_bne(payload: BneSaveRequest, db: AsyncSession = Depends(get_db)):
                 INSERT INTO bne_log (
                     customer_name, broker_code, esid, cust_ids,
                     current_rate, terms_left, extension_terms,
-                    profiles, volume, ameripower_mills, broker_mill,
+                    profiles, volume, mills, broker_mill,
                     start_date, comments, created_by
                 ) VALUES (
                     :customer_name, :broker_code, :esid, :cust_ids,
                     :current_rate, :terms_left, :extension_terms,
-                    :profiles, :volume, :ameripower_mills, :broker_mill,
+                    :profiles, :volume, :mills, :broker_mill,
                     :start_date, :comments, :created_by
                 )
             """

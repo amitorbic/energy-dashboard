@@ -1,14 +1,11 @@
 import { useState } from "react";
-//import Layout from "../../components/Layout";
+import api from "../../utils/api";
 
-// 1. Define the interface for the API response
 interface CalcResult {
   month: string;
   vendors_updated: number;
 }
 
-const API =
-  process.env.NEXT_PUBLIC_API_URL || "${process.env.NEXT_PUBLIC_API_URL}/api";
 const uid = 1;
 const userName = "admin";
 
@@ -31,22 +28,11 @@ export default function CalculateCommission() {
     setResult(null);
 
     try {
-      const res = await fetch(`${API}/commission/calculate`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ uid, user_name: userName }),
-      });
-      const json = await res.json();
-
-      if (!res.ok) {
-        setError(
-          typeof json.detail === "string" ? json.detail : "Calculation failed.",
-        );
-      } else {
-        setResult(json);
-      }
-    } catch {
-      setError("Network error.");
+      const res = await api.post('/commission/calculate', { uid, user_name: userName });
+      setResult(res.data);
+    } catch (err: unknown) {
+      const detail = (err as { response?: { data?: { detail?: unknown } } })?.response?.data?.detail;
+      setError(typeof detail === 'string' ? detail : 'Calculation failed.');
     } finally {
       setLoading(false);
     }

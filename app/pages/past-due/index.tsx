@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/router";
 import PastDueLayout from "../../components/PastDueLayout";
-
-const API = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8001";
+import api from "../../utils/api";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -106,6 +105,7 @@ export default function PastDueDashboard() {
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"ALL" | "ACTIVE" | "INACTIVE">(
     "ALL",
   );
@@ -120,12 +120,17 @@ export default function PastDueDashboard() {
   const PAGE_SIZE = 50;
 
   const fetchSummary = async () => {
-    const res = await fetch(`${API}/api/collections/dashboard`);
-    if (res.ok) setSummary(await res.json());
+    try {
+      const res = await api.get('/collections/dashboard');
+      setSummary(res.data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load summary");
+    }
   };
 
   const fetchAccounts = useCallback(async () => {
     setLoading(true);
+    setError(null);
     const params = new URLSearchParams({
       page: String(page),
       page_size: String(PAGE_SIZE),
@@ -138,10 +143,13 @@ export default function PastDueDashboard() {
     if (legalOnly) params.set("is_legal", "true");
 
     try {
-      const res = await fetch(`${API}/api/collections/accounts?${params}`);
-      const data: ListResponse = await res.json();
+      const res = await api.get(`/collections/accounts?${params}`);
+      const data: ListResponse = res.data;
       setAccounts(data.results ?? []);
       setTotal(data.total ?? 0);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unknown error");
+      setAccounts([]);
     } finally {
       setLoading(false);
     }
@@ -158,6 +166,12 @@ export default function PastDueDashboard() {
 
   return (
     <PastDueLayout title="Past Due Portal">
+      {error && (
+        <div className="mb-4 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+          Failed to load: {error}
+        </div>
+      )}
+
       {/* ── Summary cards ── */}
       {summary && (
         <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 mb-6">

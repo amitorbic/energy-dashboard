@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/router";
 import PastDueLayout from "../../components/PastDueLayout";
-
-const API = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8001";
+import api from "../../utils/api";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -79,6 +78,7 @@ function ReviewPanel({
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
   const [confirm, setConfirm] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const isIrreversible = IRREVERSIBLE.includes(approval.action_type);
 
   const handleDecision = async (decision: "APPROVED" | "DENIED") => {
@@ -87,14 +87,16 @@ function ReviewPanel({
       return;
     }
     setLoading(true);
-    await fetch(`${API}/api/collections/approvals/${approval.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ decision, reviewer_notes: notes }),
-    });
-    setLoading(false);
-    onReview();
-    onClose();
+    setError(null);
+    try {
+      await api.patch(`/collections/approvals/${approval.id}`, { decision, reviewer_notes: notes });
+      onReview();
+      onClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to submit decision");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -186,6 +188,10 @@ function ReviewPanel({
             />
           </div>
 
+          {error && (
+            <p className="text-sm text-red-600">Failed to submit: {error}</p>
+          )}
+
           {/* Irreversible warning */}
           {isIrreversible && confirm && (
             <div className="bg-red-50 border border-red-300 rounded p-3">
@@ -259,23 +265,29 @@ export default function ApprovalsPage() {
   const [approvals, setApprovals] = useState<Approval[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<Approval | null>(null);
   const [riskFilter, setRiskFilter] = useState("");
   const [actionFilter, setActionFilter] = useState("");
 
   const fetchApprovals = useCallback(async () => {
     setLoading(true);
+    setError(null);
     const params = new URLSearchParams({ page: "1", page_size: "50" });
     if (riskFilter) params.set("risk_level", riskFilter);
     if (actionFilter) params.set("action_type", actionFilter);
 
-    const res = await fetch(`${API}/api/collections/approvals?${params}`);
-    if (res.ok) {
-      const data = await res.json();
+    try {
+      const res = await api.get(`/collections/approvals?${params}`);
+      const data = res.data;
       setApprovals(data.results ?? []);
       setTotal(data.total ?? 0);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unknown error");
+      setApprovals([]);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }, [riskFilter, actionFilter]);
 
   useEffect(() => {
@@ -299,6 +311,12 @@ export default function ApprovalsPage() {
           onClose={() => setSelected(null)}
           onReview={fetchApprovals}
         />
+      )}
+
+      {error && (
+        <div className="mb-4 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+          Failed to load approvals: {error}
+        </div>
       )}
 
       <div className="flex items-center justify-between mb-5">

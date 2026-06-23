@@ -56,9 +56,7 @@ export default function Layout({ children, title }: LayoutProps) {
               className="flex items-center gap-2 font-bold text-lg tracking-tight"
             >
               <span className="text-sky-400">⚡</span>
-              <span>
-                Ameri<span className="text-sky-400">Power</span>
-              </span>
+              <span>ORBIC</span>
             </Link>
 
             {/* Desktop Nav */}

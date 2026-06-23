@@ -1,7 +1,6 @@
-//import Layout from "@/components/Layout";
 import React, { useState, useEffect, useCallback } from "react";
+import api from "../../utils/api";
 
-// 1. Defined Interface for Adjustments
 interface Adjustment {
   sid: number;
   vendor: string;
@@ -10,9 +9,6 @@ interface Adjustment {
   comments: string;
 }
 
-// 2. Define the API constant (or import it)
-const API =
-  process.env.NEXT_PUBLIC_API_URL || "${process.env.NEXT_PUBLIC_API_URL}/api";
 
 export default function Adjustments() {
   // 3. Proper Types for State
@@ -40,9 +36,8 @@ export default function Adjustments() {
   // 4. Wrap loadAdjustments in useCallback to fix hoisting and dependency issues
   const loadAdjustments = useCallback(async () => {
     try {
-      const res = await fetch(`${API}/commission/adjustments`);
-      const json = await res.json();
-      setRows(Array.isArray(json) ? json : []);
+      const res = await api.get('/commission/adjustments');
+      setRows(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       console.error("Load failed", err);
     }
@@ -52,10 +47,8 @@ export default function Adjustments() {
     // We create an internal async function to handle the "cascading render" warning
     const initData = async () => {
       try {
-        // Fetch vendors
-        const vendorRes = await fetch(`${API}/commission/vendors`);
-        const vendorJson = await vendorRes.json();
-        setVendors(vendorJson);
+        const vendorRes = await api.get('/commission/vendors');
+        setVendors(vendorRes.data);
 
         // Fetch adjustments
         await loadAdjustments();
@@ -69,32 +62,24 @@ export default function Adjustments() {
 
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault();
-    const res = await fetch(
-      `${API}/commission/adjustments?uid=${uid}&user_name=${userName}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      },
-    );
-    if (res.ok) {
+    try {
+      await api.post(`/commission/adjustments?uid=${uid}&user_name=${userName}`, form);
       setMsg({ type: "success", text: "Adjustment added." });
       setForm({ vendor: "", month: "", owed: "", comments: "" });
       loadAdjustments();
-    } else {
+    } catch {
       setMsg({ type: "error", text: "Failed to add adjustment." });
     }
   }
 
   async function handleDelete(sid: number) {
     if (!confirm("Delete this adjustment?")) return;
-    const res = await fetch(
-      `${API}/commission/adjustments/${sid}?uid=${uid}&user_name=${userName}`,
-      { method: "DELETE" },
-    );
-    if (res.ok) {
+    try {
+      await api.delete(`/commission/adjustments/${sid}?uid=${uid}&user_name=${userName}`);
       setMsg({ type: "success", text: "Adjustment deleted." });
       loadAdjustments();
+    } catch {
+      setMsg({ type: "error", text: "Delete failed." });
     }
   }
 

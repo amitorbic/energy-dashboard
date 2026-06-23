@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import ContractLayout from "../../components/ContractLayout";
 import api from "../../utils/api";
 import { useRouter } from "next/router";
+import { getUser } from "../../utils/auth";
 
 interface RenewalCustomer {
   id: number;
@@ -70,6 +71,7 @@ type Step = 1 | 2 | 3;
 type ProfileVolumes = Record<string, string>;
 
 export default function SendConfirmationPage() {
+  const millsLabel = `${getUser()?.company_name ?? ""} Mills`.trim();
   const [step, setStep] = useState<Step>(1);
   const [opts, setOpts] = useState<FormOptions | null>(null);
   const [form, setForm] = useState<Record<string, any>>({
@@ -83,7 +85,7 @@ export default function SendConfirmationPage() {
     esiid: "",
     esid_count: "",
     contract_rate: "",
-    ameripower_mill: "",
+    mill: "",
     comment: "",
     comment_mail: "",
     comment_enrollment: "",
@@ -149,7 +151,7 @@ export default function SendConfirmationPage() {
     if (q.esid_count) set("esid_count", q.esid_count as string);
     if (q.esiid) set("esiid", q.esiid as string);
     if (q.customer_email) set("customer_email", q.customer_email as string);
-    if (q.ameripower_mill) set("ameripower_mill", q.ameripower_mill as string);
+    if (q.mill) set("mill", q.mill as string);
     if (q.start_date) set("start_date", q.start_date as string);
     if (q.broker_split) set("broker_split", q.broker_split as string);
 
@@ -588,14 +590,14 @@ export default function SendConfirmationPage() {
             )}
 
             {row(
-              "ORBIC Mills",
+              millsLabel,
               <div>
                 <input
                   className={INPUT}
                   type="number"
                   step="0.01"
-                  value={form.ameripower_mill}
-                  onChange={(e) => set("ameripower_mill", e.target.value)}
+                  value={form.mill}
+                  onChange={(e) => set("mill", e.target.value)}
                 />
                 <p className="text-xs text-gray-400 mt-0.5">
                   NOTE: This is a required field if there is a discount.

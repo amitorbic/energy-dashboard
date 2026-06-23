@@ -6,13 +6,15 @@ class LoginRequest(BaseModel):
     password: str
 
 class LoginResponse(BaseModel):
-    success: bool
-    token:    Optional[str] = None
-    user_id:  Optional[int] = None
-    username: Optional[str] = None
-    role:     Optional[int] = None
-    email:    Optional[str] = None
-    message:  Optional[str] = None
+    success:      bool
+    token:        Optional[str] = None
+    user_id:      Optional[int] = None
+    username:     Optional[str] = None
+    role:         Optional[int] = None
+    email:        Optional[str] = None
+    rep_id:       Optional[int] = None
+    company_name: Optional[str] = None
+    message:      Optional[str] = None
 
 class UserResponse(BaseModel):
     uid:   int

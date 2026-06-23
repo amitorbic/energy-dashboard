@@ -44,10 +44,12 @@ DB_CONFIG = dict(
     port=int(os.getenv("DB_PORT", 3306)),
     user=os.getenv("DB_USER"),
     password=os.getenv("DB_PASSWORD"),
-    db=os.getenv("DB_NAME", "u972964962_orbic"),
+    db=os.getenv("DB_NAME"),
     charset="utf8mb4",
     autocommit=False,
 )
+if not DB_CONFIG["db"]:
+    raise SystemExit("ERROR: DB_NAME environment variable is not set. Set it before running this script.")
 
 
 # ── Zone mappings ─────────────────────────────────────────────────────────────

@@ -5,23 +5,28 @@ from email import encoders
 from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from utils.email_routing import get_tenant_email
 
 SMTP_HOST = os.getenv("SMTP_HOST", "smtp.gmail.com")
 SMTP_PORT = int(os.getenv("SMTP_PORT", 465))
 SMTP_USER = os.getenv("SMTP_USER", "")
 SMTP_PASS = os.getenv("SMTP_PASS", "")
-SMTP_FROM = os.getenv("SMTP_FROM", "AmeriPower <info@ameripower.com>")
 
 
 def send_email(
     to: str,
     subject: str,
     html: str,
+    purpose: str = "default",
     attachment: bytes = None,
     attachment_name: str = None,
 ):
+    from_addr = get_tenant_email(purpose)
+    display = os.getenv("TENANT_COMPANY_NAME", "")
+    from_header = f"{display} <{from_addr}>" if display else from_addr
+
     msg = MIMEMultipart("mixed")
-    msg["From"] = SMTP_FROM
+    msg["From"] = from_header
     msg["To"] = to
     msg["Subject"] = subject
     msg.attach(MIMEText(html, "html"))
@@ -37,13 +42,14 @@ def send_email(
 
     with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT) as server:
         server.login(SMTP_USER, SMTP_PASS)
-        server.sendmail(SMTP_FROM, to, msg.as_string())
+        server.sendmail(from_addr, to, msg.as_string())
 
 
 async def send_email_async(
     to: str,
     subject: str,
     html: str,
+    purpose: str = "default",
     attachment: bytes = None,
     attachment_name: str = None,
 ):
@@ -52,5 +58,5 @@ async def send_email_async(
     for email in emails:
         await loop.run_in_executor(
             None,
-            lambda e=email: send_email(e, subject, html, attachment, attachment_name),
+            lambda e=email: send_email(e, subject, html, purpose, attachment, attachment_name),
         )

@@ -10,8 +10,7 @@
 
 import { useState, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
-
-const API = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8001";
+import api from "../utils/api";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -78,20 +77,18 @@ export default function ColumnMapper({
       form.append("file", file);
 
       try {
-        const res = await fetch(
-          `${API}/api/imports/detect-columns?file_type=${fileType}`,
-          { method: "POST", body: form },
+        const res = await api.post(
+          `/imports/detect-columns?file_type=${fileType}`,
+          form,
+          { headers: { 'Content-Type': 'multipart/form-data' } },
         );
-        if (!res.ok) {
-          const err = await res.json();
-          throw new Error(err.detail || "Upload failed");
-        }
-        const data: DetectResponse = await res.json();
+        const data: DetectResponse = res.data;
         setDetected(data);
         setMapping(data.suggested_mapping);
         setStep("map");
-      } catch (e: any) {
-        setError(e.message);
+      } catch (e: unknown) {
+        const detail = (e as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+        setError(detail || (e instanceof Error ? e.message : "Upload failed"));
       } finally {
         setUploading(false);
       }
@@ -135,25 +132,18 @@ export default function ColumnMapper({
     setError(null);
 
     try {
-      const res = await fetch(`${API}/api/imports/commit`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          file_key: detected.file_key,
-          file_type: fileType,
-          filename: detected.filename,
-          mapping,
-          save_mapping: saveMapping,
-        }),
+      const res = await api.post('/imports/commit', {
+        file_key: detected.file_key,
+        file_type: fileType,
+        filename: detected.filename,
+        mapping,
+        save_mapping: saveMapping,
       });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.detail || "Import failed");
-      }
-      const result: ImportResult = await res.json();
+      const result: ImportResult = res.data;
       onComplete(result);
-    } catch (e: any) {
-      setError(e.message);
+    } catch (e: unknown) {
+      const detail = (e as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+      setError(detail || (e instanceof Error ? e.message : "Import failed"));
       setStep("map");
     } finally {
       setCommitting(false);

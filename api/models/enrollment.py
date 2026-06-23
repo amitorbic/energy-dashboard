@@ -67,7 +67,7 @@ class ConfirmationLog(Base):
     esid_count         = Column(String(255), nullable=False)
     contract_rate      = Column(String(255), nullable=False)
     commission         = Column(String(255), nullable=False)
-    ameripower_mill    = Column(String(255), nullable=False)
+    mill               = Column(String(255), nullable=False)
     comment            = Column(String(5000), nullable=False)
     date_modified      = Column(String(10), nullable=False)               # Unix timestamp stored as varchar
     type_of_contract   = Column(String(255), nullable=False)

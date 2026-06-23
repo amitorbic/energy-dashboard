@@ -10,6 +10,7 @@ from fastapi import HTTPException
 import openpyxl
 import xlrd
 import io
+import os
 from datetime import datetime
 from typing import Optional
 
@@ -44,21 +45,6 @@ def _load_workbook_rows(file_bytes: bytes, filename: str = "") -> list:
         wb = openpyxl.load_workbook(io.BytesIO(file_bytes), data_only=True)
         ws = wb.active
         return list(ws.iter_rows(values_only=True))
-
-
-# ---------------------------------------------------------------------------
-# Vendor map: vendor_id (broker_code) -> short vendor label
-# Kept as DB-driven lookup now (see _get_vendor_map) but this static fallback
-# covers legacy codes not yet in broker_new
-# ---------------------------------------------------------------------------
-
-# Roll-up rules: these vendor labels aggregate sub-brokers
-VENDOR_ROLLUP = {
-    "V91": ["V90", "V92", "V101", "V105", "V130"],
-    "V79": ["V114", "V115", "V116"],
-    "V117": ["V119", "V118"],
-    "V56": ["V0403", "V0409"],
-}
 
 
 # ---------------------------------------------------------------------------
@@ -703,19 +689,6 @@ async def _recalculate_vendor_summary(
     row = result.fetchone()
     owed = round(float(row[0] or 0), 2)
 
-    # Apply roll-up if this vendor is a parent
-    if vendor.upper() in VENDOR_ROLLUP:
-        for child in VENDOR_ROLLUP[vendor.upper()]:
-            child_result = await db.execute(
-                text(
-                    "SELECT SUM(commission_amount) as total FROM comm_bank "
-                    "WHERE vendor = :vendor AND end_date LIKE :pat AND broker_status = 1"
-                ),
-                {"vendor": child, "pat": end_pattern},
-            )
-            child_row = child_result.fetchone()
-            owed += round(float(child_row[0] or 0), 2)
-
     # Get current month row in summary_payments
     curr_row_result = await db.execute(
         text(
@@ -1054,12 +1027,6 @@ async def calculate_commission(
         sum_commission[str(row[0]).upper()] = round(float(row[1] or 0), 2)
     # After sum_commission built:
     print(f"DEBUG sum_commission: {sum_commission}")
-    # Apply roll-up rules
-    for parent, children in VENDOR_ROLLUP.items():
-        for child in children:
-            sum_commission[parent] = round(
-                sum_commission.get(parent, 0) + sum_commission.get(child, 0), 2
-            )
     # Add vendors in summary_payments but not in comm_bank (owed=0)
     sp_vendors_result = await db.execute(
         text("SELECT DISTINCT vendor FROM summary_payments WHERE month = :month"),
@@ -1856,6 +1823,10 @@ async def send_commission_emails(
     where commission_flag = 1
     """
     from controllers.email_pricing import send_email_async, build_email_html
+    from utils.email_routing import get_tenant_email, get_tenant_display_name
+
+    commission_contact = get_tenant_email("commission")  # fail fast before touching any brokers
+    _tenant_name = get_tenant_display_name()
 
     results = {"sent": [], "failed": []}
     curr_month_full = _month_short_to_full(month_label)
@@ -1929,11 +1900,11 @@ async def send_commission_emails(
                     <li><strong>Commission Analysis</strong> — Month-by-month commission grid per premise</li>
                 </ul>
                 <p style='color:#666;font-size:12px'>
-                    If you have any questions regarding your commission statement, 
-                    please contact us at <a href='mailto:commission@ameripower.com'>commission@ameripower.com</a>
+                    If you have any questions regarding your commission statement,
+                    please contact us at <a href='mailto:{commission_contact}'>{commission_contact}</a>
                 </p>
                 <p>Thank you for your business.</p>
-                <p><strong>AmeriPower Team</strong></p>
+                <p><strong>{_tenant_name} Team</strong></p>
             </td>
         </tr>
     </table>
@@ -1945,7 +1916,10 @@ async def send_commission_emails(
 
             # Send email
             await send_email_async(
-                commission_email, subject, html, excel_bytes, filename
+                commission_email, subject, html,
+                purpose="commission",
+                attachment=excel_bytes,
+                attachment_name=filename,
             )
 
             # Log to broker_logs

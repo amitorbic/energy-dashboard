@@ -1,7 +1,5 @@
 import { useState, useEffect } from "react";
-
-const API =
-  process.env.NEXT_PUBLIC_API_URL || "${process.env.NEXT_PUBLIC_API_URL}/api";
+import api from "../../utils/api";
 
 type BrokerOption = { vendor: string; company_name: string };
 type MonthOption = { label: string; value: string };
@@ -13,29 +11,26 @@ export default function DownloadCommissionFiles() {
   const [downloading, setDownloading] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch(`${API}/commission/vendors`)
-      .then((r) => r.json())
-      .then(setBrokers);
-    fetch(`${API}/commission/months`)
-      .then((r) => r.json())
-      .then((m: MonthOption[]) => {
-        setMonths(m);
-        if (m.length > 0) setSelectedMonth(m[0].value);
-      });
+    api.get('/commission/vendors').then(res => setBrokers(res.data));
+    api.get('/commission/months').then(res => {
+      const m: MonthOption[] = res.data;
+      setMonths(m);
+      if (m.length > 0) setSelectedMonth(m[0].value);
+    });
   }, []);
 
   async function handleDownload(vendor: string, companyName: string) {
     setDownloading(vendor);
     try {
-      const res = await fetch(
-        `${API}/commission/download/${vendor}?month=${selectedMonth}`,
+      const res = await api.get(
+        `/commission/download/${vendor}?month=${selectedMonth}`,
+        { responseType: 'blob' },
       );
-      if (!res.ok) throw new Error("Download failed");
-      const blob = await res.blob();
+      const blob: Blob = res.data;
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      const cd = res.headers.get("content-disposition") || "";
+      const cd = (res.headers['content-disposition'] as string) || "";
       const match = cd.match(/filename=(.+)/);
       a.download = match ? match[1] : `${companyName}_commission.xlsx`;
       a.click();

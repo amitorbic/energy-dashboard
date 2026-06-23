@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
+import api from "../../utils/api";
 
-// 1. Defined the interface for User Logs
 interface UserLogEntry {
   sid: number;
   user_name: string;
@@ -8,9 +8,6 @@ interface UserLogEntry {
   action: string;
   date: string; // Timestamp from backend
 }
-
-const API =
-  process.env.NEXT_PUBLIC_API_URL || "${process.env.NEXT_PUBLIC_API_URL}/api";
 
 export default function UserLog() {
   const [logs, setLogs] = useState<UserLogEntry[]>([]);
@@ -20,9 +17,8 @@ export default function UserLog() {
   const loadLogs = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${API}/commission/logs/user`);
-      const json = await res.json();
-      setLogs(Array.isArray(json) ? json : []);
+      const res = await api.get('/commission/logs/user');
+      setLogs(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       console.error("Failed to fetch logs:", err);
       setLogs([]);

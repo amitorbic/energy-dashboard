@@ -11,7 +11,7 @@ interface BneRecord {
   current_rate: string;
   terms_left: string;
   extension_terms: string;
-  ameripower_mills: string;
+  mills: string;
   broker_mill: string;
   comments: string;
   updated_at: string;

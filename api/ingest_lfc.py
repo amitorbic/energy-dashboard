@@ -19,12 +19,17 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # ── Config ────────────────────────────────────────────────────────────────────
-LFC_FOLDER = r"C:/Users/Amit/Desktop/LFC_weather"
+LFC_FOLDER = os.getenv("LFC_FOLDER", r"C:/Users/Amit/Desktop/LFC_weather")
+if not Path(LFC_FOLDER).exists():
+    raise SystemExit(f"ERROR: LFC_FOLDER '{LFC_FOLDER}' does not exist. "
+                     f"Set the LFC_FOLDER env var to the correct path.")
 DB_HOST = os.getenv("DB_HOST", "localhost")
 DB_USER = os.getenv("DB_USER", "root")
 DB_PASSWORD = os.getenv("DB_PASSWORD", "")
-DB_NAME = os.getenv("DB_NAME", "u972964962_orbic")
+DB_NAME = os.getenv("DB_NAME")
 DB_PORT = int(os.getenv("DB_PORT", "3306"))
+if not DB_NAME:
+    raise SystemExit("ERROR: DB_NAME environment variable is not set. Set it before running this script.")
 BATCH_SIZE = 500  # rows per insert batch
 
 # ── Filename parser ────────────────────────────────────────────────────────────

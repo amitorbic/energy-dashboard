@@ -6,10 +6,11 @@ stored in ercot_load_history table
 Run: python forecast_vs_actual.py
 """
 
+import argparse
 import os
 import asyncio
 import math
-from datetime import date
+from datetime import date, timedelta
 from dotenv import load_dotenv
 import aiomysql
 
@@ -18,11 +19,10 @@ load_dotenv()
 DB_HOST     = os.getenv("DB_HOST", "localhost")
 DB_USER     = os.getenv("DB_USER", "root")
 DB_PASSWORD = os.getenv("DB_PASSWORD", "")
-DB_NAME     = os.getenv("DB_NAME", "u972964962_orbic")
+DB_NAME     = os.getenv("DB_NAME")
 DB_PORT     = int(os.getenv("DB_PORT", "3306"))
-
-# ── Config — change date here ──────────────────────────────────────────────────
-FORECAST_DATE = date(2026, 4, 16)  # Thursday
+if not DB_NAME:
+    raise SystemExit("ERROR: DB_NAME environment variable is not set. Set it before running this script.")
 
 ZONES = ["COAST", "EAST", "FWEST", "NORTH", "NCENT", "SOUTH", "SCENT", "WEST"]
 
@@ -49,27 +49,38 @@ def get_growth(zone, hour):
     else:
         return g["evening"]
 
-async def main():
+async def main(forecast_date: date):
     conn = await aiomysql.connect(
         host=DB_HOST, port=DB_PORT,
         user=DB_USER, password=DB_PASSWORD,
         db=DB_NAME, autocommit=False
     )
 
+    # ── Guard: check requested date is within loaded data range ───────────────
+    async with conn.cursor() as cur:
+        await cur.execute("SELECT MAX(oper_date) FROM ercot_load_history")
+        max_date = (await cur.fetchone())[0]
+    if max_date is None or forecast_date > max_date:
+        print(f"\n  ⚠️  No data found for {forecast_date}.")
+        print(f"  Latest available date in ercot_load_history is {max_date}.")
+        print(f"  Run ingest_ercot_settlement.py to bring data current.")
+        conn.close()
+        return
+
     # ── Day type ───────────────────────────────────────────────────────────────
-    day_type = WEEKDAY_NAMES[FORECAST_DATE.weekday()]
+    day_type = WEEKDAY_NAMES[forecast_date.weekday()]
 
     async with conn.cursor() as cur:
         await cur.execute("""
             SELECT holiday_type FROM ercot_holidays
             WHERE observed_date = %s
-        """, (FORECAST_DATE,))
+        """, (forecast_date,))
         hrow = await cur.fetchone()
     if hrow:
         day_type = f"Holiday_{hrow[0].capitalize()}"
 
     print(f"\n{'='*75}")
-    print(f"  Forecast vs Actual — {FORECAST_DATE} ({day_type})")
+    print(f"  Forecast vs Actual — {forecast_date} ({day_type})")
     print(f"{'='*75}")
 
     # ── Pull patterns ──────────────────────────────────────────────────────────
@@ -80,7 +91,7 @@ async def main():
             FROM ercot_load_patterns
             WHERE month_num = %s AND day_type = %s
             ORDER BY zone, hour_ending
-        """, (FORECAST_DATE.month, day_type))
+        """, (forecast_date.month, day_type))
         patterns = await cur.fetchall()
 
     pat = {}
@@ -104,7 +115,7 @@ async def main():
             FROM weather_history
             WHERE weather_date = %s
             ORDER BY zone, hour_ending
-        """, (FORECAST_DATE,))
+        """, (forecast_date,))
         wrows = await cur.fetchall()
 
     weather = {}
@@ -124,7 +135,7 @@ async def main():
             FROM ercot_load_history
             WHERE oper_date = %s
             ORDER BY hour_ending
-        """, (FORECAST_DATE,))
+        """, (forecast_date,))
         actuals = await cur.fetchall()
 
     actual_data = {}
@@ -159,8 +170,9 @@ async def main():
         }
 
     if not actual_data:
-        print(f"\n  ⚠️  No actual data found for {FORECAST_DATE} in ercot_load_history")
-        print(f"  This date may be beyond our loaded data range (2015-2026 Mar)")
+        print(f"\n  ⚠️  No actual data found for {forecast_date} in ercot_load_history")
+        print(f"  Latest available date in ercot_load_history is {max_date}.")
+        print(f"  Run ingest_ercot_settlement.py to bring data current.")
         conn.close()
         return
 
@@ -248,4 +260,10 @@ async def main():
     conn.close()
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    parser = argparse.ArgumentParser(description="Compare ERCOT load forecast vs actual for a given date.")
+    parser.add_argument("--date", help="Date to evaluate (YYYY-MM-DD). Default: yesterday.")
+    args = parser.parse_args()
+
+    forecast_date = date.fromisoformat(args.date) if args.date else date.today() - timedelta(days=1)
+
+    asyncio.run(main(forecast_date))

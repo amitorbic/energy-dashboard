@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/router";
 import Layout from "../../components/Layout";
-
-const API = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8001";
+import api from "../../utils/api";
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 interface Payment {
@@ -140,6 +139,7 @@ export default function PaymentsPage() {
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [summary, setSummary] = useState<DailySummary | null>(null);
   const [bounceTarget, setBounceTarget] = useState<Payment | null>(null);
 
@@ -157,11 +157,11 @@ export default function PaymentsPage() {
 
   const fetchPayments = useCallback(async () => {
     setLoading(true);
+    setError(null);
     const params = new URLSearchParams({
       page: String(page),
       page_size: String(PAGE_SIZE),
     });
-    const res = await fetch(`${API}/api/payments?${params}`);
     if (search) params.set("customer_name", search);
     if (statusFilter) params.set("status", statusFilter);
     if (methodFilter) params.set("method", methodFilter);
@@ -172,10 +172,13 @@ export default function PaymentsPage() {
     if (etfOnly) params.set("etf_flag_only", "true");
 
     try {
-      const res = await fetch(`${API}/api/payments?${params}`);
-      const data: ListResponse = await res.json();
-      setPayments(data.results);
-      setTotal(data.total);
+      const res = await api.get(`/payments?${params}`);
+      const data: ListResponse = res.data;
+      setPayments(data.results ?? []);
+      setTotal(data.total ?? 0);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unknown error");
+      setPayments([]);
     } finally {
       setLoading(false);
     }
@@ -196,19 +199,14 @@ export default function PaymentsPage() {
   }, [fetchPayments]);
 
   useEffect(() => {
-    fetch(`${API}/api/payments/summary/today`)
-      .then((r) => r.json())
-      .then(setSummary)
+    api.get('/payments/summary/today')
+      .then((res) => setSummary(res.data))
       .catch(() => {});
   }, []);
 
   const handleBounce = async (reason: string) => {
     if (!bounceTarget) return;
-    await fetch(`/api/payments/${bounceTarget.id}/bounce`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ bounce_reason: reason }),
-    });
+    await api.patch(`/payments/${bounceTarget.id}/bounce`, { bounce_reason: reason });
     setBounceTarget(null);
     fetchPayments();
   };
@@ -223,6 +221,12 @@ export default function PaymentsPage() {
           onClose={() => setBounceTarget(null)}
           onConfirm={handleBounce}
         />
+      )}
+
+      {error && (
+        <div className="mb-4 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+          Failed to load payments: {error}
+        </div>
       )}
 
       {/* Today's summary bar */}
