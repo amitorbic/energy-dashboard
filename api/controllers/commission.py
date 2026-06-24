@@ -14,6 +14,9 @@ import os
 from datetime import datetime
 from typing import Optional
 
+TENANT_LOGO_URL = os.getenv("TENANT_LOGO_URL", "")
+TENANT_DISPLAY_NAME = os.getenv("TENANT_DISPLAY_NAME", "Logo")
+
 
 def _load_workbook_rows(file_bytes: bytes, filename: str = "") -> list:
     """
@@ -1870,13 +1873,13 @@ async def send_commission_emails(
                 vendor, month_label, db
             )
 
+            logo_html = f'<img src="{TENANT_LOGO_URL}" style="height:60px" alt="{TENANT_DISPLAY_NAME}"/>' if TENANT_LOGO_URL else ""
             html = f"""
 <html><body style='font-family:Arial,sans-serif;color:#333'>
     <table width='100%' style='max-width:800px;margin:auto'>
         <tr>
             <td style='padding:20px 0'>
-                <img src='https://ameripowerpricing.com/images/AmeriPower%20new_logo.jpg' 
-                     style='height:60px' alt='AmeriPower'/>
+                {logo_html}
             </td>
             <td style='text-align:right;font-size:18px;font-weight:bold;color:#DC2626'>
                 Commission Statement

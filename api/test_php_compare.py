@@ -1,3 +1,7 @@
+# TEMPORARY DEV TOOL - REMOVE BEFORE FINAL PRODUCTION
+# This file is used for online testing comparison only.
+# Remove from repo with: git rm --cached api/test_php_compare.py
+# Then add to .gitignore when testing is complete.
 import os
 import re
 import requests

@@ -3,15 +3,21 @@ import Layout from "./Layout";
 import { useRouter } from "next/router";
 import Link from "next/link";
 
-const LINKS = [
+interface NavLink {
+  label: string;
+  href: string;
+  comingSoon?: boolean;
+}
+
+const LINKS: NavLink[] = [
   { label: "Dashboard", href: "/past-due" },
   { label: "Active Accounts", href: "/past-due?track=ACTIVE" },
   { label: "Inactive / Collections", href: "/past-due?track=INACTIVE" },
   { label: "Approval Queue", href: "/past-due/approvals" },
   { label: "Import AR Sheet", href: "/past-due/upload" },
-  { label: "ARR Exposure", href: "/past-due/reports/arr" },
-  { label: "Aging Report", href: "/past-due/reports/aging" },
-  { label: "ETF Open", href: "/past-due/reports/etf" },
+  { label: "ARR Exposure",  href: "/past-due/reports/arr",   comingSoon: true },
+  { label: "Aging Report",  href: "/past-due/reports/aging", comingSoon: true },
+  { label: "ETF Open",      href: "/past-due/reports/etf",   comingSoon: true },
 ];
 
 interface Props {
@@ -43,6 +49,19 @@ export default function PastDueLayout({ children, title }: Props) {
             Past Due Portal
           </p>
           {LINKS.map((item) => {
+            if (item.comingSoon) {
+              // href preserved in LINKS above — swap <div> for <Link href={item.href}> when page is built
+              return (
+                <div
+                  key={item.href}
+                  className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-400 cursor-not-allowed"
+                >
+                  <span className="w-2 h-2 rounded-full flex-shrink-0 bg-gray-200" />
+                  <span>{item.label}</span>
+                  <span className="ml-auto text-[9px] font-semibold bg-gray-100 px-1.5 py-0.5 rounded">SOON</span>
+                </div>
+              );
+            }
             const active = isActive(item.href);
             return (
               <Link key={item.href} href={item.href}>

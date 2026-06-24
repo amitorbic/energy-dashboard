@@ -79,6 +79,7 @@ const NAV_MODULES = [
     desc: "Push commission files to individual brokers",
     color: "#0284c7",
     bg: "#f0f9ff",
+    comingSoon: true,
   },
   {
     label: "Upfront History",
@@ -87,6 +88,7 @@ const NAV_MODULES = [
     desc: "Track brokers paid on upfront mills terms",
     color: "#b45309",
     bg: "#fefce8",
+    comingSoon: true,
   },
   {
     label: "Modify Email List",
@@ -95,6 +97,7 @@ const NAV_MODULES = [
     desc: "Update broker commission email addresses",
     color: "#4f46e5",
     bg: "#eef2ff",
+    comingSoon: true,
   },
   {
     label: "Email Log",
@@ -103,6 +106,7 @@ const NAV_MODULES = [
     desc: "History of commission emails sent to brokers",
     color: "#0369a1",
     bg: "#f0f9ff",
+    comingSoon: true,
   },
   {
     label: "User Log",
@@ -335,28 +339,55 @@ export default function CommissionIndex() {
               Operations & Tools
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {NAV_MODULES.map((mod) => (
-                <a
-                  key={mod.href}
-                  href={mod.href}
-                  className="group bg-white border border-gray-200 rounded-xl p-4 hover:border-blue-400 hover:shadow-md transition-all flex items-center gap-4"
-                >
-                  <div
-                    className="w-12 h-12 rounded-xl flex items-center justify-center text-xl flex-shrink-0 font-bold transition-transform group-hover:rotate-6"
-                    style={{ background: mod.bg, color: mod.color }}
+              {NAV_MODULES.map((mod) => {
+                if (mod.comingSoon) {
+                  // href preserved in NAV_MODULES above — swap <div> for <a href={mod.href}> when page is built
+                  return (
+                    <div
+                      key={mod.href}
+                      className="bg-gray-50 border border-gray-100 rounded-xl p-4 flex items-center gap-4 cursor-not-allowed"
+                    >
+                      <div
+                        className="w-12 h-12 rounded-xl flex items-center justify-center text-xl flex-shrink-0 font-bold opacity-30"
+                        style={{ background: mod.bg, color: mod.color }}
+                      >
+                        {mod.icon}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-bold text-gray-400 uppercase truncate">
+                          {mod.label}
+                        </p>
+                        <p className="text-[11px] text-gray-300 mt-0.5 leading-tight line-clamp-2">
+                          {mod.desc}
+                        </p>
+                      </div>
+                      <span className="text-[9px] font-semibold text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded flex-shrink-0">SOON</span>
+                    </div>
+                  );
+                }
+                return (
+                  <a
+                    key={mod.href}
+                    href={mod.href}
+                    className="group bg-white border border-gray-200 rounded-xl p-4 hover:border-blue-400 hover:shadow-md transition-all flex items-center gap-4"
                   >
-                    {mod.icon}
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-bold text-gray-800 group-hover:text-blue-600 transition-colors uppercase truncate">
-                      {mod.label}
-                    </p>
-                    <p className="text-[11px] text-gray-400 mt-0.5 leading-tight line-clamp-2">
-                      {mod.desc}
-                    </p>
-                  </div>
-                </a>
-              ))}
+                    <div
+                      className="w-12 h-12 rounded-xl flex items-center justify-center text-xl flex-shrink-0 font-bold transition-transform group-hover:rotate-6"
+                      style={{ background: mod.bg, color: mod.color }}
+                    >
+                      {mod.icon}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold text-gray-800 group-hover:text-blue-600 transition-colors uppercase truncate">
+                        {mod.label}
+                      </p>
+                      <p className="text-[11px] text-gray-400 mt-0.5 leading-tight line-clamp-2">
+                        {mod.desc}
+                      </p>
+                    </div>
+                  </a>
+                );
+              })}
             </div>
           </div>
         </div>

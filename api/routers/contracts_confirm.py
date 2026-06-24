@@ -38,6 +38,9 @@ from reportlab.lib import colors as rl_colors
 
 router = APIRouter(prefix="/contracts", tags=["Contract Confirmation"])
 
+TENANT_LOGO_URL = os.getenv("TENANT_LOGO_URL", "")
+TENANT_DISPLAY_NAME = os.getenv("TENANT_DISPLAY_NAME", "Logo")
+
 
 # ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -130,6 +133,7 @@ def _build_confirmation_email_html(data: dict, company_name: str = "") -> str:
 
     lmp_suffix = " (LMP)" if data.get("lmp") else ""
 
+    logo_html = f'<img src="{TENANT_LOGO_URL}" style="height:50px;vertical-align:middle;" alt="{TENANT_DISPLAY_NAME}" />' if TENANT_LOGO_URL else ""
     return f"""
 <html>
 <body style="font-family:Arial,sans-serif;font-size:13px;color:#222;margin:0;padding:0;">
@@ -139,8 +143,7 @@ def _build_confirmation_email_html(data: dict, company_name: str = "") -> str:
   <!-- Logo + title -->
   <tr>
     <td colspan="4" style="padding:16px 20px;border-bottom:2px solid #cc0000;">
-      <img src="https://ameripowerpricing.com/images/AmeriPower%20new_logo.jpg"
-           style="height:50px;vertical-align:middle;" alt="AmeriPower" />
+      {logo_html}
       <span style="float:right;font-size:16px;font-weight:bold;
                    color:#cc0000;line-height:50px;">CONTRACT CONFIRMATION</span>
     </td>
@@ -293,6 +296,7 @@ def _build_lmp_confirmation_email_html(data: dict) -> str:
         enrollment_parts.append("MVI")
     enrollment_type = ", ".join(enrollment_parts) if enrollment_parts else "—"
 
+    logo_html = f'<img src="{TENANT_LOGO_URL}" style="height:50px;vertical-align:middle;" alt="{TENANT_DISPLAY_NAME}" />' if TENANT_LOGO_URL else ""
     return f"""
 <html>
 <body style="font-family:Arial,sans-serif;font-size:13px;color:#222;margin:0;padding:0;">
@@ -301,8 +305,7 @@ def _build_lmp_confirmation_email_html(data: dict) -> str:
 
   <tr>
     <td colspan="4" style="padding:16px 20px;border-bottom:2px solid #cc0000;">
-      <img src="https://ameripowerpricing.com/images/AmeriPower%20new_logo.jpg"
-           style="height:50px;vertical-align:middle;" alt="AmeriPower" />
+      {logo_html}
       <span style="float:right;font-size:16px;font-weight:bold;
                    color:#cc0000;line-height:50px;">CONTRACT CONFIRMATION</span>
     </td>
