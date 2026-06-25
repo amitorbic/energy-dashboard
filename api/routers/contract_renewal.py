@@ -5,6 +5,7 @@ from sqlalchemy import text
 from utils.database import get_db
 from pydantic import BaseModel
 from typing import Optional
+from middleware.auth import require_auth
 import io
 import numpy as np
 
@@ -81,6 +82,75 @@ class ContactUpdate(BaseModel):
     billing_zip: Optional[str] = None
     premise_address: Optional[str] = None
     attn: Optional[str] = None
+
+
+class AdminUpdate(ContactUpdate):
+    # Contract terms
+    energy_rate: Optional[str] = None
+    contract_end_date: Optional[str] = None
+    contract_start_date: Optional[str] = None
+    load_profile: Optional[str] = None
+    contract_type: Optional[str] = None
+    plan_group: Optional[str] = None
+    annual_usage_kwh: Optional[str] = None
+    other_charge: Optional[str] = None
+    broker_id: Optional[str] = None
+    broker_name: Optional[str] = None
+    comm_rate: Optional[str] = None
+    # Tax exemptions
+    city_tax_exempt: Optional[str] = None
+    county_tax_exempt: Optional[str] = None
+    state_tax_exempt: Optional[str] = None
+    grt_tax_exempt: Optional[int] = None
+    puc_tax_exempt: Optional[int] = None
+    mtacda_tax_exempt: Optional[str] = None
+    spdt_tax_exempt: Optional[str] = None
+    spdt2_tax_exempt: Optional[str] = None
+
+
+# Fields only admins may set — used to detect privilege escalation attempts
+_ADMIN_ONLY_FIELDS = {
+    "energy_rate", "contract_end_date", "contract_start_date", "load_profile",
+    "contract_type", "plan_group", "annual_usage_kwh", "other_charge",
+    "broker_id", "broker_name", "comm_rate",
+    "city_tax_exempt", "county_tax_exempt", "state_tax_exempt",
+    "grt_tax_exempt", "puc_tax_exempt", "mtacda_tax_exempt",
+    "spdt_tax_exempt", "spdt2_tax_exempt",
+}
+
+# Maps aliased request field names → DB column names
+_FIELD_TO_COL = {
+    "customer_email":    "cust_email",
+    "customer_phone":    "cust_phone1",
+    "customer_first_name": "cust_first_name",
+    "customer_last_name":  "cust_last_name",
+    "billing_address":  "billing_address",
+    "billing_city":     "billing_city",
+    "billing_state":    "billing_state",
+    "billing_zip":      "billing_zip",
+    "premise_address":  "premise_address",
+    "attn":             "attn",
+    # admin-only
+    "energy_rate":      "contract_rate",
+    "contract_end_date": "contract_end_date",
+    "contract_start_date": "contract_start_date",
+    "load_profile":     "load_profile",
+    "contract_type":    "contract_type",
+    "plan_group":       "plan_group",
+    "annual_usage_kwh": "contract_renewal_usage",
+    "other_charge":     "other_charge",
+    "broker_id":        "broker_code",
+    "broker_name":      "broker_name",
+    "comm_rate":        "comm_rate",
+    "city_tax_exempt":  "city_tax_exempt",
+    "county_tax_exempt": "county_tax_exempt",
+    "state_tax_exempt": "state_tax_exempt",
+    "grt_tax_exempt":   "grt_tax_exempt",
+    "puc_tax_exempt":   "puc_tax_exempt",
+    "mtacda_tax_exempt": "mtacda_tax_exempt",
+    "spdt_tax_exempt":  "spdt_tax_exempt",
+    "spdt2_tax_exempt": "spdt2_tax_exempt",
+}
 
 
 COLUMN_MAP = {
@@ -251,45 +321,83 @@ async def get_renewal(id: int, db: AsyncSession = Depends(get_db)):
 
 @router.put("/{id}")
 async def update_renewal_contact(
-    id: int, body: ContactUpdate, db: AsyncSession = Depends(get_db)
+    id: int,
+    body: AdminUpdate,
+    db: AsyncSession = Depends(get_db),
+    payload: dict = Depends(require_auth),
 ):
-    exists = await db.execute(
-        text("SELECT serial FROM contract_renewal WHERE serial = :id"), {"id": id}
-    )
-    if not exists.fetchone():
-        raise HTTPException(status_code=404, detail=f"Record {id} not found")
+    is_admin = str(payload.get("role")) == "1"
+    changed_by = payload.get("username") or payload.get("email") or "unknown"
 
+    # 1 — Confirm record exists and snapshot old values
+    old_result = await db.execute(
+        text("SELECT * FROM contract_renewal WHERE serial = :id"), {"id": id}
+    )
+    old_row = old_result.mappings().first()
+    if not old_row:
+        raise HTTPException(status_code=404, detail=f"Record {id} not found")
+    old = dict(old_row)
+
+    # 2 — Determine which request fields are actually set (non-None)
+    raw = body.__dict__
+    submitted = {k: v for k, v in raw.items() if v is not None}
+
+    # 3 — Role guard: non-admins may not submit admin-only fields
+    if not is_admin:
+        attempted_admin = set(submitted) & _ADMIN_ONLY_FIELDS
+        if attempted_admin:
+            raise HTTPException(
+                status_code=403,
+                detail=f"Admin role required to update: {', '.join(sorted(attempted_admin))}",
+            )
+        # Restrict to contact fields only
+        allowed = set(_FIELD_TO_COL) - _ADMIN_ONLY_FIELDS
+        submitted = {k: v for k, v in submitted.items() if k in allowed}
+
+    if not submitted:
+        # Nothing to update — return current record
+        return _alias_row(old)
+
+    # 4 — Build UPDATE dynamically from submitted fields
+    set_clauses = ", ".join(
+        f"{_FIELD_TO_COL[f]} = :{f}" for f in submitted if f in _FIELD_TO_COL
+    )
+    params = {**submitted, "id": id}
     await db.execute(
-        text("""
-            UPDATE contract_renewal SET
-                cust_email      = :customer_email,
-                cust_phone1     = :customer_phone,
-                cust_first_name = :customer_first_name,
-                cust_last_name  = :customer_last_name,
-                billing_address = :billing_address,
-                billing_city    = :billing_city,
-                billing_state   = :billing_state,
-                billing_zip     = :billing_zip,
-                premise_address = :premise_address,
-                attn            = :attn
-            WHERE serial = :id
-        """),
-        {
-            "customer_email": body.customer_email,
-            "customer_phone": body.customer_phone,
-            "customer_first_name": body.customer_first_name,
-            "customer_last_name": body.customer_last_name,
-            "billing_address": body.billing_address,
-            "billing_city": body.billing_city,
-            "billing_state": body.billing_state,
-            "billing_zip": body.billing_zip,
-            "premise_address": body.premise_address,
-            "attn": body.attn,
-            "id": id,
-        },
+        text(f"UPDATE contract_renewal SET {set_clauses} WHERE serial = :id"),
+        params,
     )
     await db.commit()
 
+    # 5 — Audit log: one row per field that actually changed
+    log_rows = []
+    for field, new_val in submitted.items():
+        col = _FIELD_TO_COL.get(field)
+        if not col:
+            continue
+        old_val = old.get(col)
+        if str(old_val or "") != str(new_val or ""):
+            log_rows.append({
+                "contract_serial": id,
+                "field_name": field,
+                "old_value": str(old_val) if old_val is not None else None,
+                "new_value": str(new_val) if new_val is not None else None,
+                "changed_by": changed_by,
+            })
+
+    if log_rows:
+        await db.execute(
+            text("""
+                INSERT INTO customer_edit_log
+                    (contract_serial, field_name, old_value, new_value, changed_by)
+                VALUES
+                    (:contract_serial, :field_name, :old_value, :new_value, :changed_by)
+            """),
+            log_rows,
+        )
+        await db.commit()
+
+    # 6 — Return updated record
     result = await db.execute(
         text("SELECT * FROM contract_renewal WHERE serial = :id"), {"id": id}
     )
