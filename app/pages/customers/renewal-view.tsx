@@ -24,6 +24,12 @@ const RenewalView = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [total, setTotal] = useState(0);
+  const [expiryFilter, setExpiryFilter] = useState<"" | "expiring" | "expired">("");
+
+  useEffect(() => {
+    const f = router.query.filter as string | undefined;
+    if (f === "expiring" || f === "expired") setExpiryFilter(f);
+  }, [router.query.filter]);
 
   useEffect(() => {
     api
@@ -36,20 +42,28 @@ const RenewalView = () => {
       .catch(() => setLoading(false));
   }, []);
 
-  const filtered = rows.filter(
-    (r) =>
-      r.company_name?.toLowerCase().includes(search.toLowerCase()) ||
-      r.premise_id?.includes(search) ||
-      r.broker_code?.toLowerCase().includes(search.toLowerCase()),
-  );
-
   const daysUntilExpiry = (dateStr: string) => {
     if (!dateStr) return null;
-    const diff = Math.round(
-      (new Date(dateStr).getTime() - Date.now()) / 86400000,
-    );
-    return diff;
+    return Math.round((new Date(dateStr).getTime() - Date.now()) / 86400000);
   };
+
+  const filtered = rows.filter((r) => {
+    if (search) {
+      const q = search.toLowerCase();
+      const matchesSearch =
+        r.company_name?.toLowerCase().includes(q) ||
+        r.premise_id?.includes(search) ||
+        r.broker_code?.toLowerCase().includes(q);
+      if (!matchesSearch) return false;
+    }
+    if (expiryFilter) {
+      const days = daysUntilExpiry(r.contract_end_date);
+      if (days === null) return false;
+      if (expiryFilter === "expired") return days < 0;
+      if (expiryFilter === "expiring") return days >= 0 && days <= 60;
+    }
+    return true;
+  });
 
   const expiryBadge = (dateStr: string) => {
     const days = daysUntilExpiry(dateStr);
@@ -90,8 +104,16 @@ const RenewalView = () => {
             </h1>
             {!loading && (
               <span className="bg-slate-700 text-slate-300 text-xs px-2 py-1 rounded font-mono">
-                {total} records
+                {filtered.length}{expiryFilter ? ` / ${total}` : ""} records
               </span>
+            )}
+            {expiryFilter && (
+              <button
+                onClick={() => { setExpiryFilter(""); router.replace("/customers/renewal-view", undefined, { shallow: true }); }}
+                className={`text-xs px-2 py-1 rounded font-semibold flex items-center gap-1 ${expiryFilter === "expired" ? "bg-red-900/50 text-red-400" : "bg-yellow-900/50 text-yellow-400"}`}
+              >
+                {expiryFilter === "expired" ? "Expired" : "Expiring ≤60d"} ✕
+              </button>
             )}
           </div>
           <button
@@ -139,7 +161,8 @@ const RenewalView = () => {
                 {filtered.map((r) => (
                   <tr
                     key={r.serial}
-                    className="border-t border-slate-800 hover:bg-slate-800/40 transition-colors"
+                    onClick={() => router.push(`/customers/${r.serial}`)}
+                    className="border-t border-slate-800 hover:bg-slate-800/40 transition-colors cursor-pointer"
                   >
                     <td className="p-3 font-semibold text-white">
                       {r.company_name}
