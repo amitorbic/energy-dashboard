@@ -117,6 +117,10 @@ from routers import enrollment
 
 app.include_router(enrollment.router, prefix="/api")
 
+from routers import enrollment_engine as enrollment_engine_router
+
+app.include_router(enrollment_engine_router.router, prefix="/api")
+
 from routers import consumer as consumer_router
 
 app.include_router(consumer_router.router, prefix="/api")

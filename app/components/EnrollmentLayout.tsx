@@ -6,45 +6,45 @@ import { useRouter } from "next/router";
 const SECTIONS = [
   {
     heading: null,
-    links: [{ label: "Enrollment Home", href: "/enrollment" }],
+    links: [{ label: "Enrollment Home", href: "/enrollment-audit" }],
   },
   {
     heading: "Process",
     links: [
-      { label: "Upload Spreadsheet",   href: "/enrollment/upload" },
-      { label: "View Enrollments",     href: "/enrollment/view" },
-      { label: "Completed",            href: "/enrollment/completed" },
-      { label: "Canceled",             href: "/enrollment/canceled" },
+      { label: "Upload Spreadsheet",   href: "/enrollment-audit/upload" },
+      { label: "View Enrollments",     href: "/enrollment-audit/view" },
+      { label: "Completed",            href: "/enrollment-audit/completed" },
+      { label: "Canceled",             href: "/enrollment-audit/canceled" },
     ],
   },
   {
     heading: "Reports",
     links: [
-      { label: "Enrl / Confirmation",  href: "/enrollment/reports/comparison" },
-      { label: "Pending Confirmations",href: "/enrollment/reports/pending-confirmations" },
-      { label: "No Confirmations",     href: "/enrollment/reports/no-confirmations" },
-      { label: "Template Comparison",  href: "/enrollment/reports/template-comparison" },
-      { label: "Check List",           href: "/enrollment/reports/checked" },
-      { label: "Non Billed >35d",      href: "/enrollment/reports/non-billed" },
+      { label: "Enrl / Confirmation",  href: "/enrollment-audit/reports/comparison" },
+      { label: "Pending Confirmations",href: "/enrollment-audit/reports/pending-confirmations" },
+      { label: "No Confirmations",     href: "/enrollment-audit/reports/no-confirmations" },
+      { label: "Template Comparison",  href: "/enrollment-audit/reports/template-comparison" },
+      { label: "Check List",           href: "/enrollment-audit/reports/checked" },
+      { label: "Non Billed >35d",      href: "/enrollment-audit/reports/non-billed" },
     ],
   },
   {
     heading: "Downloads",
     links: [
-      { label: "Download Completed",  href: "/enrollment/reports/download-completed" },
-      { label: "Download Pending",    href: "/enrollment/reports/download-pending" },
+      { label: "Download Completed",  href: "/enrollment-audit/reports/download-completed" },
+      { label: "Download Pending",    href: "/enrollment-audit/reports/download-pending" },
     ],
   },
   {
     heading: "Templates",
     links: [
-      { label: "Template List",  href: "/enrollment/templates" },
-      { label: "Add Template",   href: "/enrollment/templates/add" },
+      { label: "Template List",  href: "/enrollment-audit/templates" },
+      { label: "Add Template",   href: "/enrollment-audit/templates/add" },
     ],
   },
   {
     heading: null,
-    links: [{ label: "User Log", href: "/enrollment/user-log" }],
+    links: [{ label: "User Log", href: "/enrollment-audit/user-log" }],
   },
 ];
 
