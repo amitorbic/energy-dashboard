@@ -109,6 +109,14 @@ export default function SendConfirmationPage() {
     ap_quote: "",
     sent_by: "",
     send_to_email: "",
+    cust_first_name: "",
+    cust_last_name: "",
+    billing_address: "",
+    billing_city: "",
+    billing_state: "",
+    billing_zip: "",
+    plan_group: "",
+    plan_id: "",
   });
   const [profiles, setProfiles] = useState<ProfileVolumes>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -806,6 +814,88 @@ export default function SendConfirmationPage() {
                 rows={3}
                 value={form.comment_mail}
                 onChange={(e) => set("comment_mail", e.target.value)}
+              />,
+            )}
+          </div>
+
+          {/* Customer Details (auto-populated on upload) */}
+          <div className="bg-white border border-gray-200 rounded-lg p-5 mb-4">
+            <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1">
+              Customer Details
+            </h2>
+            <p className="text-xs text-gray-400 mb-4">Auto-populated on upload — staff may fill manually</p>
+
+            {row(
+              "First Name",
+              <input
+                className={INPUT}
+                value={form.cust_first_name}
+                onChange={(e) => set("cust_first_name", e.target.value)}
+                placeholder="First name"
+              />,
+            )}
+
+            {row(
+              "Last Name",
+              <input
+                className={INPUT}
+                value={form.cust_last_name}
+                onChange={(e) => set("cust_last_name", e.target.value)}
+                placeholder="Last name"
+              />,
+            )}
+
+            {row(
+              "Billing Address",
+              <input
+                className={INPUT}
+                value={form.billing_address}
+                onChange={(e) => set("billing_address", e.target.value)}
+                placeholder="Street address"
+              />,
+            )}
+
+            {row(
+              "City / State / ZIP",
+              <div className="flex gap-2">
+                <input
+                  className={INPUT}
+                  value={form.billing_city}
+                  onChange={(e) => set("billing_city", e.target.value)}
+                  placeholder="City"
+                />
+                <input
+                  className="w-20 border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-sky-400"
+                  value={form.billing_state}
+                  onChange={(e) => set("billing_state", e.target.value)}
+                  placeholder="State"
+                />
+                <input
+                  className="w-28 border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-sky-400"
+                  value={form.billing_zip}
+                  onChange={(e) => set("billing_zip", e.target.value)}
+                  placeholder="ZIP"
+                />
+              </div>,
+            )}
+
+            {row(
+              "Plan Group",
+              <input
+                className={INPUT}
+                value={form.plan_group}
+                onChange={(e) => set("plan_group", e.target.value)}
+                placeholder="e.g. C1"
+              />,
+            )}
+
+            {row(
+              "Plan ID",
+              <input
+                className={INPUT}
+                value={form.plan_id}
+                onChange={(e) => set("plan_id", e.target.value)}
+                placeholder="e.g. PNCPOSTPAY"
               />,
             )}
           </div>

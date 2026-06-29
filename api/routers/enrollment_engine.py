@@ -14,7 +14,6 @@ import openpyxl
 router = APIRouter(prefix="/enrollment-engine", tags=["enrollment-engine"])
 
 # ── Plan code lookup ──────────────────────────────────────────────────────────
-# Mirrors PHP $fee_arr in conf_enroll_start_end.php
 
 _PR_LMP0 = {
     "0.00": "PR1503060001",  "2.99": "PR1503090001",
@@ -47,6 +46,18 @@ def _fee_to_pr(meter_fees, lmp) -> str:
     if lmp_int == 2:
         return _PR_LMP2.get(fee, "")
     return _PR_LMP0.get(fee, "")
+
+
+def _parse_enrollment_date(d) -> Optional[str]:
+    """Convert MM/DD/YYYY or YYYY-MM-DD to YYYY-MM-DD for MySQL DATE."""
+    if not d:
+        return None
+    for fmt in ("%m/%d/%Y", "%Y-%m-%d", "%Y/%m/%d"):
+        try:
+            return datetime.strptime(str(d).strip(), fmt).strftime("%Y-%m-%d")
+        except ValueError:
+            pass
+    return None
 
 
 # ── MasterRoll 2016 column layout (128 cols, A–DX) ───────────────────────────
@@ -86,35 +97,34 @@ _HEADERS = [
     "enroll_product", "flow_status", "current_rate", "current_rate_json",
 ]
 
-# 1-based column positions for fields we actually populate
 _COL = {
-    "batch_no":        1,    # A
-    "batch_file_name": 2,    # B
-    "source":          3,    # C
-    "serial_no":       5,    # E
-    "agent_code":      17,   # Q
-    "premise_id":      18,   # R
-    "plan_group":      19,   # S
-    "request_date":    20,   # T
-    "enrol_type":      21,   # U
-    "offcycle_switch": 22,   # V
-    "company_name":    23,   # W
-    "email_address":   36,   # AJ
-    "life_support":    40,   # AN
-    "waiver_notice":   41,   # AO
-    "cust_status":     42,   # AP
-    "plan_id1":        43,   # AQ
-    "cust_bill_mode":  51,   # AY
-    "contract_ind":   103,   # CY
-    "contract_no":    104,   # CZ
-    "contract_date":  106,   # DB
-    "contract_start": 107,   # DC
-    "contract_term":  109,   # DE
-    "contract_type":  110,   # DF
-    "agent_comm":     120,   # DP
-    "enroll_product": 125,   # DU
-    "flow_status":    126,   # DV
-    "current_rate":   127,   # DW
+    "batch_no":        1,
+    "batch_file_name": 2,
+    "source":          3,
+    "serial_no":       5,
+    "agent_code":      17,
+    "premise_id":      18,
+    "plan_group":      19,
+    "request_date":    20,
+    "enrol_type":      21,
+    "offcycle_switch": 22,
+    "company_name":    23,
+    "email_address":   36,
+    "life_support":    40,
+    "waiver_notice":   41,
+    "cust_status":     42,
+    "plan_id1":        43,
+    "cust_bill_mode":  51,
+    "contract_ind":   103,
+    "contract_no":    104,
+    "contract_date":  106,
+    "contract_start": 107,
+    "contract_term":  109,
+    "contract_type":  110,
+    "agent_comm":     120,
+    "enroll_product": 125,
+    "flow_status":    126,
+    "current_rate":   127,
 }
 
 
@@ -122,7 +132,7 @@ def _build_row(rec: dict, batch_no: int, serial: int) -> list:
     row = [""] * 128
 
     try:
-        rate = float(str(rec.get("contract_rate") or "0")) / 100
+        rate = round(float(str(rec.get("contract_rate") or "0")) / 100, 6)
     except (ValueError, TypeError):
         rate = ""
 
@@ -181,13 +191,15 @@ def _expand_esiids(rows: list, plan_group_map: dict) -> list:
     return expanded
 
 
-# ── Endpoints ─────────────────────────────────────────────────────────────────
+# ── Request models ────────────────────────────────────────────────────────────
 
 class GenerateRequest(BaseModel):
     record_sids: list[int]
     date_from: Optional[str] = None
     date_to: Optional[str] = None
 
+
+# ── Endpoints ─────────────────────────────────────────────────────────────────
 
 @router.get("/pending")
 async def get_pending(
@@ -227,14 +239,11 @@ async def get_pending(
     )
     rows = [dict(r) for r in result.mappings().all()]
 
-    # Load plan_group for individual ESIIDs (JOIN on multi-ESID strings doesn't work)
     pg_result = await db.execute(text(_load_plan_group_map_query()))
     plan_group_map = {r[0]: r[1] for r in pg_result.fetchall()}
 
-    # Expand comma-separated esiid fields into one record per ESIID
     expanded = _expand_esiids(rows, plan_group_map)
 
-    # Python-level plan lookup (plan_codes is tiny — 27 rows)
     plan_result = await db.execute(
         text("SELECT id, base_fee, plan_id, plan_name, paired_with FROM plan_codes WHERE active = 1 ORDER BY id")
     )
@@ -295,9 +304,11 @@ async def generate_masterroll(
     result = await db.execute(
         text(f"""
             SELECT
-                cl.sid, cl.esiid, cl.customer_name, cl.broker_code,
+                cl.sid, cl.esiid, cl.customer_name, cl.broker_code, cl.broker_name,
                 cl.start_date, cl.term, cl.contract_rate, cl.meter_fees, cl.lmp,
-                cl.customer_email, cl.contract_no, cl.commission
+                cl.customer_email, cl.contract_no, cl.commission,
+                cl.billing_address, cl.billing_city, cl.billing_state, cl.billing_zip,
+                cl.plan_group, cl.plan_id, cl.cust_first_name, cl.cust_last_name
             FROM confirmation_log cl
             WHERE cl.sid IN ({sid_list})
             ORDER BY cl.customer_name
@@ -307,11 +318,9 @@ async def generate_masterroll(
     if not records:
         raise HTTPException(status_code=404, detail="No matching records found")
 
-    # Load plan_group for individual ESIIDs
     pg_result = await db.execute(text(_load_plan_group_map_query()))
     plan_group_map = {r[0]: r[1] for r in pg_result.fetchall()}
 
-    # Expand comma-separated esiid into one XLSX row per ESIID
     expanded = _expand_esiids(records, plan_group_map)
 
     batch_r = await db.execute(text("SELECT COALESCE(MAX(id), 0) + 1 FROM enrollment_batches"))
@@ -321,9 +330,7 @@ async def generate_masterroll(
     wb = openpyxl.Workbook()
     ws = wb.active
     ws.title = "MasterRoll"
-
     ws.cell(row=1, column=1, value="enrolment_queue")
-
     for col_idx, header in enumerate(_HEADERS, start=1):
         ws.cell(row=2, column=col_idx, value=header)
 
@@ -332,6 +339,53 @@ async def generate_masterroll(
         for col_idx, value in enumerate(row_data, start=1):
             if value != "":
                 ws.cell(row=serial + 2, column=col_idx, value=value)
+
+    # Generate customer_ids and insert into customers table
+    date_prefix = datetime.now().strftime("%y%m%d")
+    seq_r = await db.execute(
+        text("SELECT COUNT(*) FROM customers WHERE customer_id LIKE :prefix"),
+        {"prefix": f"{date_prefix}%"},
+    )
+    base_seq = seq_r.scalar() or 0
+
+    for i, rec in enumerate(expanded):
+        customer_id = f"{date_prefix}{base_seq + i + 1:04d}"
+        await db.execute(
+            text("""
+                INSERT INTO customers (
+                    customer_id, esi_id, status, batch_no, enrollment_date,
+                    company_name, customer_email,
+                    customer_first_name, customer_last_name,
+                    billing_address, billing_city, billing_state, billing_zip,
+                    broker_id, broker_name, plan_group, plan_id, meter_fee
+                ) VALUES (
+                    :customer_id, :esi_id, 'pending', :batch_no, :enrollment_date,
+                    :company_name, :customer_email,
+                    :customer_first_name, :customer_last_name,
+                    :billing_address, :billing_city, :billing_state, :billing_zip,
+                    :broker_id, :broker_name, :plan_group, :plan_id, :meter_fee
+                )
+            """),
+            {
+                "customer_id":          customer_id,
+                "esi_id":               rec.get("esiid") or "",
+                "batch_no":             f"B{batch_no}",
+                "enrollment_date":      _parse_enrollment_date(rec.get("start_date")),
+                "company_name":         rec.get("customer_name") or "",
+                "customer_email":       rec.get("customer_email") or None,
+                "customer_first_name":  rec.get("cust_first_name") or None,
+                "customer_last_name":   rec.get("cust_last_name") or None,
+                "billing_address":      rec.get("billing_address") or None,
+                "billing_city":         rec.get("billing_city") or None,
+                "billing_state":        rec.get("billing_state") or None,
+                "billing_zip":          rec.get("billing_zip") or None,
+                "broker_id":            rec.get("broker_code") or None,
+                "broker_name":          rec.get("broker_name") or None,
+                "plan_group":           rec.get("plan_group") or "C1",
+                "plan_id":              rec.get("plan_id") or None,
+                "meter_fee":            float(_clean_fee(rec.get("meter_fees"))),
+            },
+        )
 
     # Mark original records enrolled and log batch
     await db.execute(
@@ -343,11 +397,11 @@ async def generate_masterroll(
             VALUES (:batch_no, :generated_by, :record_count, :date_from, :date_to)
         """),
         {
-            "batch_no": str(batch_no),
-            "generated_by": payload.get("username") or payload.get("email") or "unknown",
-            "record_count": len(expanded),
-            "date_from": body.date_from or None,
-            "date_to": body.date_to or None,
+            "batch_no":      str(batch_no),
+            "generated_by":  payload.get("username") or payload.get("email") or "unknown",
+            "record_count":  len(expanded),
+            "date_from":     body.date_from or None,
+            "date_to":       body.date_to or None,
         },
     )
     await db.commit()
@@ -362,3 +416,264 @@ async def generate_masterroll(
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
+
+
+# ── Step 3: Batch management ──────────────────────────────────────────────────
+
+@router.get("/batches")
+async def list_batches(
+    db: AsyncSession = Depends(get_db),
+    payload: dict = Depends(require_auth),
+):
+    result = await db.execute(
+        text("""
+            SELECT id, batch_no, generated_by, generated_at,
+                   record_count, date_from, date_to, status, submitted_at
+            FROM enrollment_batches
+            ORDER BY generated_at DESC
+        """)
+    )
+    rows = [dict(r) for r in result.mappings().all()]
+
+    # Coerce non-serialisable types
+    for row in rows:
+        if row.get("generated_at") and not isinstance(row["generated_at"], str):
+            row["generated_at"] = row["generated_at"].isoformat()
+        if row.get("submitted_at") and not isinstance(row["submitted_at"], str):
+            row["submitted_at"] = row["submitted_at"].isoformat()
+
+    return {"batches": rows}
+
+
+@router.post("/batches/{batch_no}/submit")
+async def submit_batch(
+    batch_no: str,
+    db: AsyncSession = Depends(get_db),
+    payload: dict = Depends(require_auth),
+):
+    result = await db.execute(
+        text("SELECT id FROM enrollment_batches WHERE batch_no = :batch_no"),
+        {"batch_no": batch_no},
+    )
+    if not result.fetchone():
+        raise HTTPException(status_code=404, detail="Batch not found")
+
+    await db.execute(
+        text("""
+            UPDATE enrollment_batches
+            SET status = 'submitted', submitted_at = NOW()
+            WHERE batch_no = :batch_no
+        """),
+        {"batch_no": batch_no},
+    )
+    await db.commit()
+    return {"ok": True, "batch_no": batch_no, "status": "submitted"}
+
+
+# ── Step 4: Per-batch customer view ──────────────────────────────────────────
+
+@router.get("/batches/{batch_no}")
+async def get_batch_customers(
+    batch_no: str,
+    db: AsyncSession = Depends(get_db),
+    payload: dict = Depends(require_auth),
+):
+    batch_r = await db.execute(
+        text("""
+            SELECT id, batch_no, generated_by, generated_at,
+                   record_count, date_from, date_to, status, submitted_at
+            FROM enrollment_batches WHERE batch_no = :batch_no
+        """),
+        {"batch_no": batch_no},
+    )
+    batch_row = batch_r.mappings().fetchone()
+    if not batch_row:
+        raise HTTPException(status_code=404, detail="Batch not found")
+
+    batch = dict(batch_row)
+    if batch.get("generated_at") and not isinstance(batch["generated_at"], str):
+        batch["generated_at"] = batch["generated_at"].isoformat()
+    if batch.get("submitted_at") and not isinstance(batch["submitted_at"], str):
+        batch["submitted_at"] = batch["submitted_at"].isoformat()
+
+    cust_r = await db.execute(
+        text("""
+            SELECT customer_id, esi_id, company_name, status,
+                   broker_id, broker_name, plan_group, meter_fee,
+                   enrollment_date, created_at
+            FROM customers
+            WHERE batch_no = :batch_no
+            ORDER BY customer_id
+        """),
+        {"batch_no": batch_no},
+    )
+    customers = [dict(r) for r in cust_r.mappings().all()]
+    for c in customers:
+        if c.get("enrollment_date") and not isinstance(c["enrollment_date"], str):
+            c["enrollment_date"] = str(c["enrollment_date"])
+        if c.get("created_at") and not isinstance(c["created_at"], str):
+            c["created_at"] = c["created_at"].isoformat()
+
+    return {"batch": batch, "customers": customers}
+
+
+# ── Step 5: Activate / cancel customer ───────────────────────────────────────
+
+@router.post("/activate/{customer_id}")
+async def activate_customer(
+    customer_id: str,
+    db: AsyncSession = Depends(get_db),
+    payload: dict = Depends(require_auth),
+):
+    # 1. Fetch customer record
+    cust_r = await db.execute(
+        text("SELECT * FROM customers WHERE customer_id = :cid"),
+        {"cid": customer_id},
+    )
+    cust = cust_r.mappings().fetchone()
+    if not cust:
+        raise HTTPException(status_code=404, detail="Customer not found")
+    cust = dict(cust)
+
+    esi_id = cust["esi_id"]
+
+    # 2. Pull contract_rate from confirmation_log (stored as ¢/kWh → convert to $/kWh)
+    rate_r = await db.execute(
+        text("""
+            SELECT contract_rate FROM confirmation_log
+            WHERE esiid = :esi
+               OR esiid LIKE CONCAT(:esi, ',%')
+               OR esiid LIKE CONCAT('%, ', :esi)
+               OR esiid LIKE CONCAT('%, ', :esi, ',%')
+            ORDER BY date_modified DESC
+            LIMIT 1
+        """),
+        {"esi": esi_id},
+    )
+    rate_row = rate_r.fetchone()
+    energy_rate = None
+    if rate_row and rate_row[0]:
+        try:
+            energy_rate = round(float(str(rate_row[0])) / 100, 6)
+        except (ValueError, TypeError):
+            energy_rate = None
+
+    # 3. Check if ESI ID exists in contract_renewal
+    exist_r = await db.execute(
+        text("SELECT id FROM contract_renewal WHERE premise_id = :esi"),
+        {"esi": esi_id},
+    )
+    existing = exist_r.fetchone()
+
+    enrollment_date = cust.get("enrollment_date")
+    if enrollment_date and not isinstance(enrollment_date, str):
+        enrollment_date = str(enrollment_date)
+
+    if not existing:
+        await db.execute(
+            text("""
+                INSERT INTO contract_renewal (
+                    premise_id, company_name,
+                    cust_first_name, cust_last_name, cust_email, cust_phone1,
+                    billing_address, billing_city, billing_state, billing_zip,
+                    broker_code, broker_name, plan_group, other_charge,
+                    contract_start_date, energy_rate
+                ) VALUES (
+                    :premise_id, :company_name,
+                    :cust_first_name, :cust_last_name, :cust_email, :cust_phone1,
+                    :billing_address, :billing_city, :billing_state, :billing_zip,
+                    :broker_code, :broker_name, :plan_group, :other_charge,
+                    :contract_start_date, :energy_rate
+                )
+            """),
+            {
+                "premise_id":         esi_id,
+                "company_name":       cust.get("company_name"),
+                "cust_first_name":    cust.get("customer_first_name"),
+                "cust_last_name":     cust.get("customer_last_name"),
+                "cust_email":         cust.get("customer_email"),
+                "cust_phone1":        cust.get("customer_phone"),
+                "billing_address":    cust.get("billing_address"),
+                "billing_city":       cust.get("billing_city"),
+                "billing_state":      cust.get("billing_state"),
+                "billing_zip":        cust.get("billing_zip"),
+                "broker_code":        cust.get("broker_id"),
+                "broker_name":        cust.get("broker_name"),
+                "plan_group":         cust.get("plan_group"),
+                "other_charge":       str(cust.get("meter_fee") or ""),
+                "contract_start_date": enrollment_date,
+                "energy_rate":        energy_rate,
+            },
+        )
+        action = "inserted"
+    else:
+        await db.execute(
+            text("""
+                UPDATE contract_renewal SET
+                    company_name       = :company_name,
+                    cust_first_name    = :cust_first_name,
+                    cust_last_name     = :cust_last_name,
+                    cust_email         = :cust_email,
+                    cust_phone1        = :cust_phone1,
+                    billing_address    = :billing_address,
+                    billing_city       = :billing_city,
+                    billing_state      = :billing_state,
+                    billing_zip        = :billing_zip,
+                    broker_code        = :broker_code,
+                    broker_name        = :broker_name,
+                    plan_group         = :plan_group,
+                    other_charge       = :other_charge,
+                    contract_start_date = :contract_start_date,
+                    energy_rate        = COALESCE(:energy_rate, energy_rate)
+                WHERE premise_id = :premise_id
+            """),
+            {
+                "premise_id":         esi_id,
+                "company_name":       cust.get("company_name"),
+                "cust_first_name":    cust.get("customer_first_name"),
+                "cust_last_name":     cust.get("customer_last_name"),
+                "cust_email":         cust.get("customer_email"),
+                "cust_phone1":        cust.get("customer_phone"),
+                "billing_address":    cust.get("billing_address"),
+                "billing_city":       cust.get("billing_city"),
+                "billing_state":      cust.get("billing_state"),
+                "billing_zip":        cust.get("billing_zip"),
+                "broker_code":        cust.get("broker_id"),
+                "broker_name":        cust.get("broker_name"),
+                "plan_group":         cust.get("plan_group"),
+                "other_charge":       str(cust.get("meter_fee") or ""),
+                "contract_start_date": enrollment_date,
+                "energy_rate":        energy_rate,
+            },
+        )
+        action = "updated"
+
+    # 4. Mark customer active
+    await db.execute(
+        text("UPDATE customers SET status = 'active' WHERE customer_id = :cid"),
+        {"cid": customer_id},
+    )
+    await db.commit()
+
+    return {"ok": True, "customer_id": customer_id, "esi_id": esi_id, "action": action}
+
+
+@router.post("/cancel/{customer_id}")
+async def cancel_customer(
+    customer_id: str,
+    db: AsyncSession = Depends(get_db),
+    payload: dict = Depends(require_auth),
+):
+    result = await db.execute(
+        text("SELECT customer_id FROM customers WHERE customer_id = :cid"),
+        {"cid": customer_id},
+    )
+    if not result.fetchone():
+        raise HTTPException(status_code=404, detail="Customer not found")
+
+    await db.execute(
+        text("UPDATE customers SET status = 'cancelled' WHERE customer_id = :cid"),
+        {"cid": customer_id},
+    )
+    await db.commit()
+    return {"ok": True, "customer_id": customer_id, "status": "cancelled"}

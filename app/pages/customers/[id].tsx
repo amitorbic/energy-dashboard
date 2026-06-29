@@ -204,10 +204,22 @@ const TaxField = ({
   );
 };
 
+const TABS = [
+  "Overview",
+  "Contracts",
+  "Bills",
+  "Payments",
+  "Services",
+  "Deposits",
+  "TDSP Transactions",
+] as const;
+type Tab = (typeof TABS)[number];
+
 const CustomerDetailPage = () => {
   const router = useRouter();
   const { id } = router.query;
 
+  const [activeTab, setActiveTab] = useState<Tab>("Overview");
   const [customer, setCustomer] = useState<CustomerDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -386,6 +398,34 @@ const CustomerDetailPage = () => {
           </div>
         </div>
 
+        {/* Tab bar */}
+        <div className="flex gap-1 border-b border-slate-800 mt-4">
+          {TABS.map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`px-4 py-2 text-sm font-medium rounded-t transition-colors whitespace-nowrap ${
+                activeTab === tab
+                  ? "bg-slate-900 border border-b-slate-900 border-slate-800 text-red-400 -mb-px"
+                  : "text-slate-500 hover:text-slate-300"
+              }`}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+
+        {/* Non-overview placeholder */}
+        {activeTab !== "Overview" && (
+          <div className="bg-slate-900 border border-slate-800 rounded-xl p-10 text-center">
+            <h2 className="text-slate-300 text-lg font-semibold mb-2">{activeTab}</h2>
+            <p className="text-slate-500 text-sm">This section is under construction — coming soon.</p>
+          </div>
+        )}
+
+        {/* Overview tab content */}
+        {activeTab === "Overview" && <>
+
         {/* Contract Details */}
         <section className="bg-slate-900 border border-slate-800 rounded-xl p-5">
           <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">
@@ -525,21 +565,25 @@ const CustomerDetailPage = () => {
           )}
         </section>
 
-        {/* Save */}
-        <div className="flex items-center gap-4 pb-2">
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className="bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white px-6 py-2 rounded text-sm font-bold uppercase transition"
-          >
-            {saving ? "Saving…" : "Save changes"}
-          </button>
-          {saveMsg && (
-            <span className={`text-sm ${saveError ? "text-red-400" : "text-green-400"}`}>
-              {saveMsg}
-            </span>
-          )}
-        </div>
+        </>}
+
+        {/* Save — only shown on Overview */}
+        {activeTab === "Overview" && (
+          <div className="flex items-center gap-4 pb-2">
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white px-6 py-2 rounded text-sm font-bold uppercase transition"
+            >
+              {saving ? "Saving…" : "Save changes"}
+            </button>
+            {saveMsg && (
+              <span className={`text-sm ${saveError ? "text-red-400" : "text-green-400"}`}>
+                {saveMsg}
+              </span>
+            )}
+          </div>
+        )}
 
       </div>
     </Layout>

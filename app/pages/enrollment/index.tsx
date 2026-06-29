@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/router";
 import Layout from "../../components/Layout";
 import api from "../../utils/api";
 
@@ -29,6 +31,31 @@ function todayMinus(days: number): string {
   const d = new Date();
   d.setDate(d.getDate() - days);
   return d.toISOString().slice(0, 10);
+}
+
+function EnrollmentNav() {
+  const router = useRouter();
+  const links = [
+    { label: "Pending Enrollment", href: "/enrollment" },
+    { label: "Batch History", href: "/enrollment/batches" },
+  ];
+  return (
+    <div className="flex gap-1 border-b border-gray-200 mb-5">
+      {links.map((l) => (
+        <Link
+          key={l.href}
+          href={l.href}
+          className={`px-4 py-2 text-sm font-medium rounded-t transition-colors ${
+            router.pathname === l.href
+              ? "bg-white border border-b-white border-gray-200 text-sky-700 -mb-px"
+              : "text-gray-500 hover:text-gray-800"
+          }`}
+        >
+          {l.label}
+        </Link>
+      ))}
+    </div>
+  );
 }
 
 export default function EnrollmentEngine() {
@@ -166,6 +193,7 @@ export default function EnrollmentEngine() {
   return (
     <Layout title="Enrollment">
       <div className="space-y-4">
+        <EnrollmentNav />
         {/* Filter bar */}
         <div className="bg-white border border-gray-200 rounded-lg p-4 flex flex-wrap gap-3 items-end">
           <div>
