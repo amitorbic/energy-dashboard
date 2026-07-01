@@ -109,6 +109,7 @@ export default function SendConfirmationPage() {
     ap_quote: "",
     sent_by: "",
     send_to_email: "",
+    sid: "",
     cust_first_name: "",
     cust_last_name: "",
     billing_address: "",
@@ -177,9 +178,15 @@ export default function SendConfirmationPage() {
     if (!sid || !opts) return;
     api.get(`/contracts/${sid}`).then((r) => {
       const d = r.data;
+      const revMatch = (d.customer_name || "").match(/^(.*) - R(\d+)$/);
+      const revisedName = revMatch
+        ? `${revMatch[1]} - R${parseInt(revMatch[2], 10) + 1}`
+        : `${d.customer_name || ""} - R1`;
+
       setForm((f) => ({
         ...f,
         ...d,
+        customer_name: revisedName,
         asap: d.start_date === "ASAP" || !d.start_date,
         credit_status: !!d.credit_status,
         contract_received: !!d.contract_received,
@@ -188,6 +195,13 @@ export default function SendConfirmationPage() {
         lmp: !!d.lmp,
         paper_bill: !!d.paper_bill,
       }));
+      // Re-derive send_to_email and broker_split from broker_new.
+      // d.send_to_email is the persisted address (preferred); fall back
+      // to the live broker lookup if the column was empty on older records.
+      if (d.broker_code) {
+        if (!d.send_to_email) handleBrokerChange(d.broker_code);
+        else set("send_to_email", d.send_to_email);
+      }
       try {
         const vols = JSON.parse(d.volumes || "{}");
         setProfiles(vols);
@@ -250,7 +264,7 @@ export default function SendConfirmationPage() {
     start_date: form.asap
       ? new Date().toISOString().split("T")[0]
       : form.start_date,
-    sid: router.query.sid || undefined,
+    sid: form.sid || router.query.sid || undefined,
     volumes: JSON.stringify(profiles),
     total_volume: Object.values(profiles)
       .reduce((s, v) => s + (parseFloat(v) || 0), 0)
@@ -285,10 +299,15 @@ export default function SendConfirmationPage() {
     setSending(true);
     try {
       const r = await api.post("/contracts/send-email", buildPayload());
-      setSentResult({ contract_no: form.contract_no, sid: r.data.sid });
-      setStep(3);
-    } catch {
-      setErrors({ _general: "Send failed. Please try again." });
+      if (r.data.sid) set("sid", String(r.data.sid));
+      if (r.data.status === "sent") {
+        setSentResult({ contract_no: form.contract_no, sid: r.data.sid });
+        setStep(3);
+      } else {
+        setErrors({ _general: r.data.message || "Record saved. No email was sent." });
+      }
+    } catch (e: any) {
+      setErrors({ _general: e?.response?.data?.detail || "Send failed. Please try again." });
     } finally {
       setSending(false);
     }
@@ -1076,9 +1095,15 @@ export default function SendConfirmationPage() {
             <span className="font-medium text-gray-700">
               #{sentResult?.contract_no}
             </span>{" "}
-            has been sent to{" "}
+            confirmation saved.
+          </p>
+          <p className="text-sm text-gray-500 mb-1">
+            Email sent to:{" "}
             <span className="font-medium text-gray-700">
-              {form.send_to_email}
+              {form.broker_name}
+            </span>{" "}
+            <span className="text-gray-400">
+              &lt;{form.send_to_email}&gt;
             </span>
           </p>
           <p className="text-xs text-gray-400 mb-6">

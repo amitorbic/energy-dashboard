@@ -1119,6 +1119,28 @@ async def preview_html_from_payload(
 @router.post("/send-email")
 async def send_confirmation_email(request: Request, db: AsyncSession = Depends(get_db)):
     payload = await request.json()
+
+    # Block new enrollments where any ESI ID already has an active/pending contract
+    _incoming_sid = payload.get("sid")
+    if not _incoming_sid or str(_incoming_sid) in ("undefined", "null", ""):
+        _raw_esiid = (payload.get("esiid") or "").replace("\n", ",").replace(";", ",")
+        _esi_ids = [e.strip() for e in _raw_esiid.split(",") if e.strip()]
+        for _esi_id in _esi_ids:
+            _dup = await db.execute(
+                text(
+                    "SELECT cust_id FROM contract_renewal"
+                    " WHERE premise_id = :esi"
+                    " AND status IN ('active', 'pending', 'going_final') LIMIT 1"
+                ),
+                {"esi": _esi_id},
+            )
+            if _dup.fetchone():
+                raise HTTPException(
+                    status_code=422,
+                    detail=f"ESI ID {_esi_id} already has an active contract."
+                           " Cancel the existing contract before enrolling again.",
+                )
+
     try:
         fields = {
             "contract_no": payload.get("contract_no"),
@@ -1145,6 +1167,7 @@ async def send_confirmation_email(request: Request, db: AsyncSession = Depends(g
             "volumes": payload.get("volumes", ""),
             "total_volume": payload.get("total_volume", ""),
             "commission": payload.get("commission", ""),
+            "send_to_email":    payload.get("send_to_email", ""),
             "billing_address":  payload.get("billing_address", ""),
             "billing_city":     payload.get("billing_city", ""),
             "billing_state":    payload.get("billing_state", ""),
@@ -1221,11 +1244,19 @@ async def send_confirmation_email(request: Request, db: AsyncSession = Depends(g
         msg["To"] = ", ".join(to_email)
         msg.attach(MIMEText(html, "html"))
 
-        with smtplib.SMTP_SSL(
-            os.getenv("SMTP_HOST"), int(os.getenv("SMTP_PORT"))
-        ) as server:
-            server.login(os.getenv("SMTP_USER", ""), os.getenv("SMTP_PASS", ""))
-            server.sendmail(_from_addr2, to_email, msg.as_string())
+        try:
+            with smtplib.SMTP_SSL(
+                os.getenv("SMTP_HOST"), int(os.getenv("SMTP_PORT"))
+            ) as server:
+                server.login(os.getenv("SMTP_USER", ""), os.getenv("SMTP_PASS", ""))
+                server.sendmail(_from_addr2, to_email, msg.as_string())
+        except Exception as smtp_err:
+            print(f"SMTP error (record already saved, sid={sid}): {smtp_err}")
+            return {
+                "sid": sid,
+                "status": "saved_no_email",
+                "message": "Record saved but email failed to send. You can retry sending the email.",
+            }
 
         await db.execute(
             text(

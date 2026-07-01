@@ -16,6 +16,7 @@ interface RenewalRow {
   load_profile: string;
   cust_email: string;
   cust_phone1: string;
+  status: string;
 }
 
 const RenewalView = () => {
@@ -25,6 +26,7 @@ const RenewalView = () => {
   const [search, setSearch] = useState("");
   const [total, setTotal] = useState(0);
   const [expiryFilter, setExpiryFilter] = useState<"" | "expiring" | "expired">("");
+  const [statusFilter, setStatusFilter] = useState<"" | "active" | "pending" | "cancelled">("active");
 
   useEffect(() => {
     const f = router.query.filter as string | undefined;
@@ -32,15 +34,17 @@ const RenewalView = () => {
   }, [router.query.filter]);
 
   useEffect(() => {
+    setLoading(true);
+    const params = statusFilter ? `?status=${statusFilter}` : "";
     api
-      .get("/contract-renewal/list")
+      .get(`/contract-renewal/list${params}`)
       .then((res) => {
         setRows(res.data.rows || res.data);
         setTotal(res.data.total || res.data.length);
         setLoading(false);
       })
       .catch(() => setLoading(false));
-  }, []);
+  }, [statusFilter]);
 
   const daysUntilExpiry = (dateStr: string) => {
     if (!dateStr) return null;
@@ -64,6 +68,13 @@ const RenewalView = () => {
     }
     return true;
   });
+
+  const statusBadge = (s: string) => {
+    if (s === "active")    return <span className="text-xs bg-green-900/50 text-green-400 px-2 py-0.5 rounded">active</span>;
+    if (s === "pending")   return <span className="text-xs bg-yellow-900/50 text-yellow-400 px-2 py-0.5 rounded">pending</span>;
+    if (s === "cancelled") return <span className="text-xs bg-slate-700 text-red-400/70 px-2 py-0.5 rounded">cancelled</span>;
+    return <span className="text-xs bg-slate-800 text-slate-500 px-2 py-0.5 rounded">{s || "—"}</span>;
+  };
 
   const expiryBadge = (dateStr: string) => {
     const days = daysUntilExpiry(dateStr);
@@ -124,6 +135,23 @@ const RenewalView = () => {
           </button>
         </div>
 
+        {/* Status filter */}
+        <div className="flex gap-2">
+          {(["active", "pending", "cancelled", ""] as const).map((s) => (
+            <button
+              key={s}
+              onClick={() => setStatusFilter(s)}
+              className={`text-xs px-3 py-1.5 rounded font-semibold uppercase transition ${
+                statusFilter === s
+                  ? "bg-red-600 text-white"
+                  : "bg-slate-800 text-slate-400 hover:text-white"
+              }`}
+            >
+              {s === "" ? "All" : s}
+            </button>
+          ))}
+        </div>
+
         {/* Search */}
         <input
           type="text"
@@ -148,10 +176,12 @@ const RenewalView = () => {
               <thead>
                 <tr className="bg-slate-800 text-slate-400 uppercase text-xs">
                   <th className="p-3 text-left">Company</th>
+                  <th className="p-3 text-left font-mono">Cust ID</th>
                   <th className="p-3 text-left">ESI ID</th>
+                  <th className="p-3 text-left">Status</th>
                   <th className="p-3 text-left">Broker</th>
                   <th className="p-3 text-left">End date</th>
-                  <th className="p-3 text-right">Rate (¢)</th>
+                  <th className="p-3 text-right">Rate ($)</th>
                   <th className="p-3 text-right">Usage (kWh/yr)</th>
                   <th className="p-3 text-left">Load profile</th>
                   <th className="p-3 text-left">Contact</th>
@@ -167,8 +197,14 @@ const RenewalView = () => {
                     <td className="p-3 font-semibold text-white">
                       {r.company_name}
                     </td>
+                    <td className="p-3 font-mono text-xs text-slate-500">
+                      {r.cust_id || "—"}
+                    </td>
                     <td className="p-3 font-mono text-xs text-slate-400">
                       {r.premise_id}
+                    </td>
+                    <td className="p-3">
+                      {statusBadge(r.status)}
                     </td>
                     <td className="p-3 text-slate-400">{r.broker_code}</td>
                     <td className="p-3">

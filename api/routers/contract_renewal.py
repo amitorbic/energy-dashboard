@@ -291,17 +291,22 @@ async def upload_contract_renewal(
 
 
 @router.get("/list")
-async def list_renewal(db: AsyncSession = Depends(get_db)):
+async def list_renewal(
+    status: str | None = None,
+    db: AsyncSession = Depends(get_db),
+):
+    where = "WHERE status = :status" if status else ""
+    params = {"status": status} if status else {}
     result = await db.execute(
-        text(
-            """
-        SELECT serial, cust_id, company_name, premise_id, broker_code, broker_name,
-               contract_end_date, contract_rate, contract_renewal_usage,
-               load_profile, cust_email, cust_phone1
-        FROM contract_renewal
-        ORDER BY company_name ASC
-    """
-        )
+        text(f"""
+            SELECT serial, cust_id, company_name, premise_id, broker_code, broker_name,
+                   contract_end_date, contract_rate, contract_renewal_usage,
+                   load_profile, cust_email, cust_phone1, status
+            FROM contract_renewal
+            {where}
+            ORDER BY company_name ASC
+        """),
+        params,
     )
     rows = [dict(r) for r in result.mappings().all()]
     return {"rows": rows, "total": len(rows)}

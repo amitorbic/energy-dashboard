@@ -230,7 +230,7 @@ async def get_pending(
                 cl.sid, cl.esiid, cl.customer_name, cl.broker_code, cl.broker_name,
                 cl.start_date, cl.term, cl.contract_rate, cl.meter_fees, cl.lmp,
                 cl.tax_exempt, cl.customer_email, cl.contract_no, cl.date_modified,
-                cl.commission
+                cl.commission, cl.type_of_contract
             FROM confirmation_log cl
             WHERE {where}
             ORDER BY cl.date_modified DESC
@@ -340,50 +340,81 @@ async def generate_masterroll(
             if value != "":
                 ws.cell(row=serial + 2, column=col_idx, value=value)
 
-    # Generate customer_ids and insert into customers table
+    # Generate cust_ids and insert into contract_renewal
     date_prefix = datetime.now().strftime("%y%m%d")
     seq_r = await db.execute(
-        text("SELECT COUNT(*) FROM customers WHERE customer_id LIKE :prefix"),
+        text("SELECT COUNT(*) FROM contract_renewal WHERE cust_id LIKE :prefix"),
         {"prefix": f"{date_prefix}%"},
     )
     base_seq = seq_r.scalar() or 0
 
-    for i, rec in enumerate(expanded):
-        customer_id = f"{date_prefix}{base_seq + i + 1:04d}"
+    skipped = []
+    inserted_count = 0
+    for rec in expanded:
+        esi_id = rec.get("esiid") or ""
+        if esi_id:
+            dup_r = await db.execute(
+                text(
+                    "SELECT cust_id FROM contract_renewal"
+                    " WHERE premise_id = :esi"
+                    " AND status IN ('active', 'pending', 'going_final') LIMIT 1"
+                ),
+                {"esi": esi_id},
+            )
+            if dup_r.fetchone():
+                skipped.append({
+                    "esi_id": esi_id,
+                    "customer_name": rec.get("customer_name", ""),
+                    "reason": "Active contract exists",
+                })
+                continue
+
+        cust_id = f"{date_prefix}{base_seq + inserted_count + 1:04d}"
+        inserted_count += 1
+        raw_rate = rec.get("contract_rate")
+        contract_rate = None
+        if raw_rate:
+            try:
+                contract_rate = round(float(str(raw_rate)) / 100, 6)
+            except (ValueError, TypeError):
+                contract_rate = None
         await db.execute(
             text("""
-                INSERT INTO customers (
-                    customer_id, esi_id, status, batch_no, enrollment_date,
-                    company_name, customer_email,
-                    customer_first_name, customer_last_name,
+                INSERT INTO contract_renewal (
+                    premise_id, cust_id, status, batch_no, account_type,
+                    contract_start_date, company_name,
+                    cust_first_name, cust_last_name, cust_email,
                     billing_address, billing_city, billing_state, billing_zip,
-                    broker_id, broker_name, plan_group, plan_id, meter_fee
+                    broker_code, broker_name, plan_group, plan_id, other_charge,
+                    contract_rate
                 ) VALUES (
-                    :customer_id, :esi_id, 'pending', :batch_no, :enrollment_date,
-                    :company_name, :customer_email,
-                    :customer_first_name, :customer_last_name,
+                    :premise_id, :cust_id, 'pending', :batch_no, 'standalone',
+                    :contract_start_date, :company_name,
+                    :cust_first_name, :cust_last_name, :cust_email,
                     :billing_address, :billing_city, :billing_state, :billing_zip,
-                    :broker_id, :broker_name, :plan_group, :plan_id, :meter_fee
+                    :broker_code, :broker_name, :plan_group, :plan_id, :other_charge,
+                    :contract_rate
                 )
             """),
             {
-                "customer_id":          customer_id,
-                "esi_id":               rec.get("esiid") or "",
-                "batch_no":             f"B{batch_no}",
-                "enrollment_date":      _parse_enrollment_date(rec.get("start_date")),
-                "company_name":         rec.get("customer_name") or "",
-                "customer_email":       rec.get("customer_email") or None,
-                "customer_first_name":  rec.get("cust_first_name") or None,
-                "customer_last_name":   rec.get("cust_last_name") or None,
-                "billing_address":      rec.get("billing_address") or None,
-                "billing_city":         rec.get("billing_city") or None,
-                "billing_state":        rec.get("billing_state") or None,
-                "billing_zip":          rec.get("billing_zip") or None,
-                "broker_id":            rec.get("broker_code") or None,
-                "broker_name":          rec.get("broker_name") or None,
-                "plan_group":           rec.get("plan_group") or "C1",
-                "plan_id":              rec.get("plan_id") or None,
-                "meter_fee":            float(_clean_fee(rec.get("meter_fees"))),
+                "premise_id":          esi_id,
+                "cust_id":             cust_id,
+                "batch_no":            str(batch_no),
+                "contract_start_date": _parse_enrollment_date(rec.get("start_date")),
+                "company_name":        rec.get("customer_name") or "",
+                "cust_first_name":     rec.get("cust_first_name") or None,
+                "cust_last_name":      rec.get("cust_last_name") or None,
+                "cust_email":          rec.get("customer_email") or None,
+                "billing_address":     rec.get("billing_address") or None,
+                "billing_city":        rec.get("billing_city") or None,
+                "billing_state":       rec.get("billing_state") or None,
+                "billing_zip":         rec.get("billing_zip") or None,
+                "broker_code":         rec.get("broker_code") or None,
+                "broker_name":         rec.get("broker_name") or None,
+                "plan_group":          rec.get("plan_group") or "C1",
+                "plan_id":             rec.get("plan_id") or None,
+                "other_charge":        str(float(_clean_fee(rec.get("meter_fees")))),
+                "contract_rate":       contract_rate,
             },
         )
 
@@ -399,7 +430,7 @@ async def generate_masterroll(
         {
             "batch_no":      str(batch_no),
             "generated_by":  payload.get("username") or payload.get("email") or "unknown",
-            "record_count":  len(expanded),
+            "record_count":  inserted_count,
             "date_from":     body.date_from or None,
             "date_to":       body.date_to or None,
         },
@@ -410,11 +441,15 @@ async def generate_masterroll(
     wb.save(buffer)
     buffer.seek(0)
 
+    import json as _json
     filename = f"MasterRoll {datetime.now().strftime('%Y-%m-%d')}.xlsx"
     return StreamingResponse(
         buffer,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "X-Enrollment-Skipped": _json.dumps(skipped),
+        },
     )
 
 
@@ -498,12 +533,12 @@ async def get_batch_customers(
 
     cust_r = await db.execute(
         text("""
-            SELECT customer_id, esi_id, company_name, status,
-                   broker_id, broker_name, plan_group, meter_fee,
-                   enrollment_date, created_at
-            FROM customers
+            SELECT cust_id AS customer_id, premise_id AS esi_id, company_name, status,
+                   broker_code AS broker_id, broker_name, plan_group,
+                   other_charge AS meter_fee, contract_start_date AS enrollment_date
+            FROM contract_renewal
             WHERE batch_no = :batch_no
-            ORDER BY customer_id
+            ORDER BY cust_id
         """),
         {"batch_no": batch_no},
     )
@@ -511,8 +546,6 @@ async def get_batch_customers(
     for c in customers:
         if c.get("enrollment_date") and not isinstance(c["enrollment_date"], str):
             c["enrollment_date"] = str(c["enrollment_date"])
-        if c.get("created_at") and not isinstance(c["created_at"], str):
-            c["created_at"] = c["created_at"].isoformat()
 
     return {"batch": batch, "customers": customers}
 
@@ -525,19 +558,17 @@ async def activate_customer(
     db: AsyncSession = Depends(get_db),
     payload: dict = Depends(require_auth),
 ):
-    # 1. Fetch customer record
     cust_r = await db.execute(
-        text("SELECT * FROM customers WHERE customer_id = :cid"),
+        text("SELECT cust_id, premise_id FROM contract_renewal WHERE cust_id = :cid"),
         {"cid": customer_id},
     )
-    cust = cust_r.mappings().fetchone()
-    if not cust:
+    row = cust_r.mappings().fetchone()
+    if not row:
         raise HTTPException(status_code=404, detail="Customer not found")
-    cust = dict(cust)
 
-    esi_id = cust["esi_id"]
+    esi_id = row["premise_id"]
 
-    # 2. Pull contract_rate from confirmation_log (stored as ¢/kWh → convert to $/kWh)
+    # Pull rate from confirmation_log (¢/kWh → $/kWh) and refresh contract_rate
     rate_r = await db.execute(
         text("""
             SELECT contract_rate FROM confirmation_log
@@ -551,111 +582,24 @@ async def activate_customer(
         {"esi": esi_id},
     )
     rate_row = rate_r.fetchone()
-    energy_rate = None
+    contract_rate = None
     if rate_row and rate_row[0]:
         try:
-            energy_rate = round(float(str(rate_row[0])) / 100, 6)
+            contract_rate = round(float(str(rate_row[0])) / 100, 6)
         except (ValueError, TypeError):
-            energy_rate = None
+            contract_rate = None
 
-    # 3. Check if ESI ID exists in contract_renewal
-    exist_r = await db.execute(
-        text("SELECT id FROM contract_renewal WHERE premise_id = :esi"),
-        {"esi": esi_id},
-    )
-    existing = exist_r.fetchone()
-
-    enrollment_date = cust.get("enrollment_date")
-    if enrollment_date and not isinstance(enrollment_date, str):
-        enrollment_date = str(enrollment_date)
-
-    if not existing:
-        await db.execute(
-            text("""
-                INSERT INTO contract_renewal (
-                    premise_id, company_name,
-                    cust_first_name, cust_last_name, cust_email, cust_phone1,
-                    billing_address, billing_city, billing_state, billing_zip,
-                    broker_code, broker_name, plan_group, other_charge,
-                    contract_start_date, energy_rate
-                ) VALUES (
-                    :premise_id, :company_name,
-                    :cust_first_name, :cust_last_name, :cust_email, :cust_phone1,
-                    :billing_address, :billing_city, :billing_state, :billing_zip,
-                    :broker_code, :broker_name, :plan_group, :other_charge,
-                    :contract_start_date, :energy_rate
-                )
-            """),
-            {
-                "premise_id":         esi_id,
-                "company_name":       cust.get("company_name"),
-                "cust_first_name":    cust.get("customer_first_name"),
-                "cust_last_name":     cust.get("customer_last_name"),
-                "cust_email":         cust.get("customer_email"),
-                "cust_phone1":        cust.get("customer_phone"),
-                "billing_address":    cust.get("billing_address"),
-                "billing_city":       cust.get("billing_city"),
-                "billing_state":      cust.get("billing_state"),
-                "billing_zip":        cust.get("billing_zip"),
-                "broker_code":        cust.get("broker_id"),
-                "broker_name":        cust.get("broker_name"),
-                "plan_group":         cust.get("plan_group"),
-                "other_charge":       str(cust.get("meter_fee") or ""),
-                "contract_start_date": enrollment_date,
-                "energy_rate":        energy_rate,
-            },
-        )
-        action = "inserted"
-    else:
-        await db.execute(
-            text("""
-                UPDATE contract_renewal SET
-                    company_name       = :company_name,
-                    cust_first_name    = :cust_first_name,
-                    cust_last_name     = :cust_last_name,
-                    cust_email         = :cust_email,
-                    cust_phone1        = :cust_phone1,
-                    billing_address    = :billing_address,
-                    billing_city       = :billing_city,
-                    billing_state      = :billing_state,
-                    billing_zip        = :billing_zip,
-                    broker_code        = :broker_code,
-                    broker_name        = :broker_name,
-                    plan_group         = :plan_group,
-                    other_charge       = :other_charge,
-                    contract_start_date = :contract_start_date,
-                    energy_rate        = COALESCE(:energy_rate, energy_rate)
-                WHERE premise_id = :premise_id
-            """),
-            {
-                "premise_id":         esi_id,
-                "company_name":       cust.get("company_name"),
-                "cust_first_name":    cust.get("customer_first_name"),
-                "cust_last_name":     cust.get("customer_last_name"),
-                "cust_email":         cust.get("customer_email"),
-                "cust_phone1":        cust.get("customer_phone"),
-                "billing_address":    cust.get("billing_address"),
-                "billing_city":       cust.get("billing_city"),
-                "billing_state":      cust.get("billing_state"),
-                "billing_zip":        cust.get("billing_zip"),
-                "broker_code":        cust.get("broker_id"),
-                "broker_name":        cust.get("broker_name"),
-                "plan_group":         cust.get("plan_group"),
-                "other_charge":       str(cust.get("meter_fee") or ""),
-                "contract_start_date": enrollment_date,
-                "energy_rate":        energy_rate,
-            },
-        )
-        action = "updated"
-
-    # 4. Mark customer active
     await db.execute(
-        text("UPDATE customers SET status = 'active' WHERE customer_id = :cid"),
-        {"cid": customer_id},
+        text("""
+            UPDATE contract_renewal
+            SET status = 'active',
+                contract_rate = COALESCE(:contract_rate, contract_rate)
+            WHERE cust_id = :cid
+        """),
+        {"cid": customer_id, "contract_rate": contract_rate},
     )
     await db.commit()
-
-    return {"ok": True, "customer_id": customer_id, "esi_id": esi_id, "action": action}
+    return {"ok": True, "customer_id": customer_id, "esi_id": esi_id}
 
 
 @router.post("/cancel/{customer_id}")
@@ -665,15 +609,153 @@ async def cancel_customer(
     payload: dict = Depends(require_auth),
 ):
     result = await db.execute(
-        text("SELECT customer_id FROM customers WHERE customer_id = :cid"),
+        text("SELECT cust_id FROM contract_renewal WHERE cust_id = :cid"),
         {"cid": customer_id},
     )
     if not result.fetchone():
         raise HTTPException(status_code=404, detail="Customer not found")
 
     await db.execute(
-        text("UPDATE customers SET status = 'cancelled' WHERE customer_id = :cid"),
+        text("UPDATE contract_renewal SET status = 'cancelled' WHERE cust_id = :cid"),
         {"cid": customer_id},
     )
     await db.commit()
     return {"ok": True, "customer_id": customer_id, "status": "cancelled"}
+
+
+# ── Create Internal Batch (no Excel — Renewals / Assignments / B&E) ───────────
+
+class InternalBatchRequest(BaseModel):
+    record_sids: list[int]
+
+
+@router.post("/create-internal-batch")
+async def create_internal_batch(
+    body: InternalBatchRequest,
+    db: AsyncSession = Depends(get_db),
+    payload: dict = Depends(require_auth),
+):
+    if not body.record_sids:
+        raise HTTPException(status_code=400, detail="No record sids provided")
+
+    sid_list = ",".join(str(s) for s in body.record_sids)
+
+    result = await db.execute(
+        text(f"""
+            SELECT
+                cl.sid, cl.esiid, cl.customer_name, cl.broker_code, cl.broker_name,
+                cl.start_date, cl.term, cl.contract_rate, cl.meter_fees,
+                cl.customer_email, cl.commission,
+                cl.billing_address, cl.billing_city, cl.billing_state, cl.billing_zip,
+                cl.plan_group, cl.plan_id, cl.cust_first_name, cl.cust_last_name
+            FROM confirmation_log cl
+            WHERE cl.sid IN ({sid_list})
+            ORDER BY cl.customer_name
+        """)
+    )
+    records = [dict(r) for r in result.mappings().all()]
+    if not records:
+        raise HTTPException(status_code=404, detail="No matching records found")
+
+    pg_result = await db.execute(text(_load_plan_group_map_query()))
+    plan_group_map = {r[0]: r[1] for r in pg_result.fetchall()}
+
+    expanded = _expand_esiids(records, plan_group_map)
+
+    batch_r = await db.execute(text("SELECT COALESCE(MAX(id), 0) + 1 FROM enrollment_batches"))
+    batch_no = batch_r.scalar()
+
+    date_prefix = datetime.now().strftime("%y%m%d")
+    seq_r = await db.execute(
+        text("SELECT COUNT(*) FROM contract_renewal WHERE cust_id LIKE :prefix"),
+        {"prefix": f"{date_prefix}%"},
+    )
+    base_seq = seq_r.scalar() or 0
+
+    skipped = []
+    inserted_count = 0
+    for rec in expanded:
+        esi_id = rec.get("esiid") or ""
+        if esi_id:
+            dup_r = await db.execute(
+                text(
+                    "SELECT cust_id FROM contract_renewal"
+                    " WHERE premise_id = :esi"
+                    " AND status IN ('active', 'pending', 'going_final') LIMIT 1"
+                ),
+                {"esi": esi_id},
+            )
+            if dup_r.fetchone():
+                skipped.append({
+                    "esi_id": esi_id,
+                    "customer_name": rec.get("customer_name", ""),
+                    "reason": "Active contract exists",
+                })
+                continue
+
+        cust_id = f"{date_prefix}{base_seq + inserted_count + 1:04d}"
+        inserted_count += 1
+        raw_rate = rec.get("contract_rate")
+        contract_rate = None
+        if raw_rate:
+            try:
+                contract_rate = round(float(str(raw_rate)) / 100, 6)
+            except (ValueError, TypeError):
+                contract_rate = None
+        await db.execute(
+            text("""
+                INSERT INTO contract_renewal (
+                    premise_id, cust_id, status, batch_no, account_type,
+                    contract_start_date, company_name,
+                    cust_first_name, cust_last_name, cust_email,
+                    billing_address, billing_city, billing_state, billing_zip,
+                    broker_code, broker_name, plan_group, plan_id, other_charge,
+                    contract_rate
+                ) VALUES (
+                    :premise_id, :cust_id, 'pending', :batch_no, 'standalone',
+                    :contract_start_date, :company_name,
+                    :cust_first_name, :cust_last_name, :cust_email,
+                    :billing_address, :billing_city, :billing_state, :billing_zip,
+                    :broker_code, :broker_name, :plan_group, :plan_id, :other_charge,
+                    :contract_rate
+                )
+            """),
+            {
+                "premise_id":          esi_id,
+                "cust_id":             cust_id,
+                "batch_no":            str(batch_no),
+                "contract_start_date": _parse_enrollment_date(rec.get("start_date")),
+                "company_name":        rec.get("customer_name") or "",
+                "cust_first_name":     rec.get("cust_first_name") or None,
+                "cust_last_name":      rec.get("cust_last_name") or None,
+                "cust_email":          rec.get("customer_email") or None,
+                "billing_address":     rec.get("billing_address") or None,
+                "billing_city":        rec.get("billing_city") or None,
+                "billing_state":       rec.get("billing_state") or None,
+                "billing_zip":         rec.get("billing_zip") or None,
+                "broker_code":         rec.get("broker_code") or None,
+                "broker_name":         rec.get("broker_name") or None,
+                "plan_group":          rec.get("plan_group") or "C1",
+                "plan_id":             rec.get("plan_id") or None,
+                "other_charge":        str(float(_clean_fee(rec.get("meter_fees")))),
+                "contract_rate":       contract_rate,
+            },
+        )
+
+    await db.execute(
+        text(f"UPDATE confirmation_log SET enroll_check = 1 WHERE sid IN ({sid_list})")
+    )
+    await db.execute(
+        text("""
+            INSERT INTO enrollment_batches (batch_no, generated_by, record_count, status)
+            VALUES (:batch_no, :generated_by, :record_count, 'internal')
+        """),
+        {
+            "batch_no":      str(batch_no),
+            "generated_by":  payload.get("username") or payload.get("email") or "unknown",
+            "record_count":  inserted_count,
+        },
+    )
+    await db.commit()
+
+    return {"batch_no": batch_no, "inserted": inserted_count, "skipped": skipped}
