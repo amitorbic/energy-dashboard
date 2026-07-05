@@ -312,6 +312,30 @@ async def list_renewal(
     return {"rows": rows, "total": len(rows)}
 
 
+@router.get("/contracts/{premise_id}")
+async def get_contracts_by_premise(premise_id: str, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(
+        text("""
+            SELECT serial, cust_id, status, contract_type, contract_rate,
+                   contract_end_date, contract_start_date,
+                   contract_renewal_usage AS term,
+                   broker_code, broker_name, batch_no, plan_group, plan_id,
+                   other_charge, created_at
+            FROM contract_renewal
+            WHERE premise_id = :premise_id
+            ORDER BY created_at DESC
+        """),
+        {"premise_id": premise_id},
+    )
+    rows = []
+    for r in result.mappings().all():
+        row = dict(r)
+        if row.get("created_at") and not isinstance(row["created_at"], str):
+            row["created_at"] = row["created_at"].isoformat()
+        rows.append(row)
+    return {"contracts": rows, "total": len(rows)}
+
+
 @router.get("/{id}")
 async def get_renewal(id: int, db: AsyncSession = Depends(get_db)):
     result = await db.execute(

@@ -204,6 +204,24 @@ const TaxField = ({
   );
 };
 
+interface ContractRow {
+  serial: number;
+  cust_id: string | null;
+  status: string;
+  contract_type: string | null;
+  contract_rate: string | null;
+  contract_end_date: string | null;
+  contract_start_date: string | null;
+  term: string | null;
+  broker_code: string | null;
+  broker_name: string | null;
+  batch_no: string | null;
+  plan_group: string | null;
+  plan_id: string | null;
+  other_charge: string | null;
+  created_at: string | null;
+}
+
 const TABS = [
   "Overview",
   "Contracts",
@@ -220,6 +238,9 @@ const CustomerDetailPage = () => {
   const { id } = router.query;
 
   const [activeTab, setActiveTab] = useState<Tab>("Overview");
+  const [contracts, setContracts] = useState<ContractRow[]>([]);
+  const [contractsLoading, setContractsLoading] = useState(false);
+  const [contractsLoaded, setContractsLoaded] = useState(false);
   const [customer, setCustomer] = useState<CustomerDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -290,6 +311,16 @@ const CustomerDetailPage = () => {
         setLoading(false);
       });
   }, [id]);
+
+  useEffect(() => {
+    if (activeTab !== "Contracts" || contractsLoaded || !customer?.esi_id) return;
+    setContractsLoading(true);
+    api
+      .get(`/contract-renewal/contracts/${customer.esi_id}`)
+      .then((r) => { setContracts(r.data.contracts || []); setContractsLoaded(true); })
+      .catch(() => setContractsLoaded(true))
+      .finally(() => setContractsLoading(false));
+  }, [activeTab, contractsLoaded, customer?.esi_id]);
 
   const set = (field: keyof EditForm) => (v: string) =>
     setForm((prev) => ({ ...prev, [field]: v }));
@@ -415,8 +446,72 @@ const CustomerDetailPage = () => {
           ))}
         </div>
 
-        {/* Non-overview placeholder */}
-        {activeTab !== "Overview" && (
+        {/* Contracts tab */}
+        {activeTab === "Contracts" && (
+          <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
+            <h2 className="text-white font-bold uppercase tracking-tight text-sm mb-4">Contract History</h2>
+            {contractsLoading ? (
+              <p className="text-slate-500 text-sm animate-pulse">Loading…</p>
+            ) : contracts.length === 0 ? (
+              <p className="text-slate-500 text-sm">No contract history found for this ESI ID.</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs text-slate-300">
+                  <thead>
+                    <tr className="bg-slate-800 text-slate-400 uppercase text-xs">
+                      <th className="px-3 py-2 text-left">Status</th>
+                      <th className="px-3 py-2 text-left">Type</th>
+                      <th className="px-3 py-2 text-right">Rate ($)</th>
+                      <th className="px-3 py-2 text-left">Start</th>
+                      <th className="px-3 py-2 text-left">End</th>
+                      <th className="px-3 py-2 text-left">Term</th>
+                      <th className="px-3 py-2 text-left">Broker</th>
+                      <th className="px-3 py-2 text-left">Batch</th>
+                      <th className="px-3 py-2 text-left">Cust ID</th>
+                      <th className="px-3 py-2 text-left">Created</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {contracts.map((c) => {
+                      const statusColors: Record<string, string> = {
+                        active:      "bg-green-900/50 text-green-400",
+                        pending:     "bg-yellow-900/50 text-yellow-400",
+                        going_final: "bg-blue-900/50 text-blue-400",
+                        cancelled:   "bg-slate-700 text-slate-400",
+                      };
+                      const badgeCls = statusColors[c.status] ?? "bg-slate-700 text-slate-400";
+                      return (
+                        <tr key={c.serial} className="border-t border-slate-800 hover:bg-slate-800/40">
+                          <td className="px-3 py-2">
+                            <span className={`text-xs px-2 py-0.5 rounded ${badgeCls}`}>{c.status}</span>
+                          </td>
+                          <td className="px-3 py-2">{c.contract_type || "—"}</td>
+                          <td className="px-3 py-2 text-right font-mono">
+                            {c.contract_rate ? parseFloat(c.contract_rate).toFixed(4) : "—"}
+                          </td>
+                          <td className="px-3 py-2 font-mono whitespace-nowrap">{c.contract_start_date || "—"}</td>
+                          <td className="px-3 py-2 font-mono whitespace-nowrap">{c.contract_end_date || "—"}</td>
+                          <td className="px-3 py-2">{c.term || "—"}</td>
+                          <td className="px-3 py-2 whitespace-nowrap">
+                            {c.broker_code ? `${c.broker_code}${c.broker_name ? ` · ${c.broker_name}` : ""}` : "—"}
+                          </td>
+                          <td className="px-3 py-2 font-mono">{c.batch_no || "—"}</td>
+                          <td className="px-3 py-2 font-mono text-slate-500">{c.cust_id || "—"}</td>
+                          <td className="px-3 py-2 font-mono text-slate-500 whitespace-nowrap">
+                            {c.created_at ? c.created_at.slice(0, 10) : "—"}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Coming soon placeholder for unbuilt tabs */}
+        {activeTab !== "Overview" && activeTab !== "Contracts" && (
           <div className="bg-slate-900 border border-slate-800 rounded-xl p-10 text-center">
             <h2 className="text-slate-300 text-lg font-semibold mb-2">{activeTab}</h2>
             <p className="text-slate-500 text-sm">This section is under construction — coming soon.</p>
