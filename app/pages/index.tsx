@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
-import { getUser, isLoggedIn, User } from "../utils/auth";
+import { getUser, isAdmin, isLoggedIn, User } from "../utils/auth";
 
 const MODULES = [
   {
@@ -223,6 +223,31 @@ export default function Dashboard() {
             </Link>
           ))}
         </div>
+
+        {/* Admin section — visible to role=1 only */}
+        {user && isAdmin() && (
+          <div className="mt-6">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-[10px] font-semibold text-red-400 uppercase tracking-widest">Admin</span>
+              <div className="flex-1 h-px bg-red-500/20" />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              <Link
+                href="/admin/addon-charge-types"
+                className="group block border border-red-500/20 hover:border-red-500/50 bg-red-500/5 hover:bg-red-500/10 rounded-xl p-5 transition-all duration-200"
+              >
+                <div className="text-2xl mb-3 text-red-400">⚙</div>
+                <h3 className="text-white font-semibold text-sm mb-1">Addon Charge Types</h3>
+                <p className="text-slate-400 text-xs leading-relaxed">
+                  Manage supplier addon charge definitions and effective-dated rate history (ANCSVC, LINELOSS, etc.)
+                </p>
+                <div className="mt-4 text-xs font-medium text-red-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                  Open admin →
+                </div>
+              </Link>
+            </div>
+          </div>
+        )}
 
         {/* Footer */}
         <div className="mt-16 pt-6 border-t border-slate-800 text-center text-slate-600 text-xs">

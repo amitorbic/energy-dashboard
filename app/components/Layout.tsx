@@ -10,6 +10,7 @@ const NAV_MODULES = [
   { label: "Customer Database", href: "/customers" },
   { label: "Daily Pricing", href: "/daily-pricing" },
   { label: "Contract Confirmation", href: "/contracts" },
+  { label: "Billing Audit", href: "/billing-audit" },
   { label: "Billing", href: "/billing" },
   { label: "Payments", href: "/payments" },
   { label: "Past Due Portal", href: "/past-due" },

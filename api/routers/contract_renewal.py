@@ -2,6 +2,7 @@ import pandas as pd
 from fastapi import APIRouter, UploadFile, File, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
+from sqlalchemy.exc import IntegrityError
 from utils.database import get_db
 from pydantic import BaseModel
 from typing import Optional
@@ -109,13 +110,11 @@ class AdminUpdate(ContactUpdate):
 
 
 # Fields only admins may set — used to detect privilege escalation attempts
+# Tax exemption fields are intentionally excluded: editable by any logged-in user.
 _ADMIN_ONLY_FIELDS = {
     "energy_rate", "contract_end_date", "contract_start_date", "load_profile",
     "contract_type", "plan_group", "annual_usage_kwh", "other_charge",
     "broker_id", "broker_name", "comm_rate",
-    "city_tax_exempt", "county_tax_exempt", "state_tax_exempt",
-    "grt_tax_exempt", "puc_tax_exempt", "mtacda_tax_exempt",
-    "spdt_tax_exempt", "spdt2_tax_exempt",
 }
 
 # Maps aliased request field names → DB column names
@@ -292,19 +291,60 @@ async def upload_contract_renewal(
 
 @router.get("/list")
 async def list_renewal(
+    search: str | None = None,
     status: str | None = None,
+    broker_code: str | None = None,
+    expiry_filter: str | None = None,
     db: AsyncSession = Depends(get_db),
 ):
-    where = "WHERE status = :status" if status else ""
-    params = {"status": status} if status else {}
+    q = (search or "").strip()
+    has_search = len(q) >= 3
+    has_expiry = expiry_filter in ("expiring", "expired")
+
+    if not has_search and not has_expiry:
+        return {"rows": [], "total": 0}
+
+    conditions = ["(cr.account_type != 'default' OR cr.account_type IS NULL)"]
+    params: dict = {}
+
+    if has_search:
+        conditions.append(
+            "(cr.company_name LIKE :q OR cr.premise_id LIKE :q"
+            " OR cr.cust_id LIKE :q OR cr.cust_email LIKE :q OR cr.broker_code LIKE :q)"
+        )
+        params["q"] = f"%{q}%"
+
+    if status:
+        conditions.append("cr.status = :status")
+        params["status"] = status
+
+    if broker_code:
+        conditions.append("cr.broker_code = :broker_code")
+        params["broker_code"] = broker_code
+
+    if expiry_filter == "expired":
+        conditions.append("DATEDIFF(cr.contract_end_date, CURDATE()) < 0")
+    elif expiry_filter == "expiring":
+        conditions.append("DATEDIFF(cr.contract_end_date, CURDATE()) BETWEEN 0 AND 60")
+
+    where = " AND ".join(conditions)
+
     result = await db.execute(
         text(f"""
-            SELECT serial, cust_id, company_name, premise_id, broker_code, broker_name,
-                   contract_end_date, contract_rate, contract_renewal_usage,
-                   load_profile, cust_email, cust_phone1, status
-            FROM contract_renewal
-            {where}
-            ORDER BY company_name ASC
+            SELECT cr.serial, cr.cust_id, cr.company_name, cr.premise_id,
+                   cr.broker_code, cr.broker_name, cr.contract_end_date,
+                   cr.contract_rate, cr.contract_renewal_usage,
+                   cr.load_profile, cr.cust_email, cr.cust_phone1, cr.status
+            FROM contract_renewal cr
+            INNER JOIN (
+                SELECT premise_id, MAX(serial) AS max_serial
+                FROM contract_renewal
+                WHERE (account_type != 'default' OR account_type IS NULL)
+                GROUP BY premise_id
+            ) latest ON cr.premise_id = latest.premise_id
+                    AND cr.serial = latest.max_serial
+            WHERE {where}
+            ORDER BY cr.company_name ASC
         """),
         params,
     )
@@ -312,11 +352,39 @@ async def list_renewal(
     return {"rows": rows, "total": len(rows)}
 
 
+@router.get("/counts")
+async def get_renewal_counts(db: AsyncSession = Depends(get_db)):
+    result = await db.execute(text("""
+        SELECT
+            COUNT(CASE WHEN DATEDIFF(contract_end_date, CURDATE()) BETWEEN 0 AND 60 THEN 1 END) AS expiring_soon,
+            COUNT(CASE WHEN DATEDIFF(contract_end_date, CURDATE()) < 0 THEN 1 END) AS expired,
+            COUNT(*) AS total
+        FROM (
+            SELECT cr.contract_end_date
+            FROM contract_renewal cr
+            INNER JOIN (
+                SELECT premise_id, MAX(serial) AS max_serial
+                FROM contract_renewal
+                WHERE (account_type != 'default' OR account_type IS NULL)
+                GROUP BY premise_id
+            ) latest ON cr.premise_id = latest.premise_id
+                    AND cr.serial = latest.max_serial
+            WHERE (cr.account_type != 'default' OR cr.account_type IS NULL)
+        ) deduped
+    """))
+    row = dict(result.mappings().fetchone() or {})
+    return {
+        "expiring_soon": row.get("expiring_soon") or 0,
+        "expired": row.get("expired") or 0,
+        "total": row.get("total") or 0,
+    }
+
+
 @router.get("/contracts/{premise_id}")
 async def get_contracts_by_premise(premise_id: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(
         text("""
-            SELECT serial, cust_id, status, contract_type, contract_rate,
+            SELECT serial, cust_id, status, account_type, contract_type, contract_rate,
                    contract_end_date, contract_start_date,
                    contract_renewal_usage AS term,
                    broker_code, broker_name, batch_no, plan_group, plan_id,
@@ -431,3 +499,152 @@ async def update_renewal_contact(
         text("SELECT * FROM contract_renewal WHERE serial = :id"), {"id": id}
     )
     return _alias_row(dict(result.mappings().first()))
+
+
+# ── Addon charge attachment endpoints ─────────────────────────────────────────
+
+@router.get("/addon-types")
+async def list_active_addon_types(
+    _: dict = Depends(require_auth),
+    db: AsyncSession = Depends(get_db),
+):
+    """Return all active addon charge types with their current rate — used to
+    populate the attach dropdown on the contract edit page."""
+    r = await db.execute(text("""
+        SELECT t.id, t.code, t.description, t.calculation_basis, t.is_taxable,
+               r.rate, r.effective_from
+        FROM addon_charge_types t
+        LEFT JOIN addon_charge_type_rates r
+               ON r.addon_type_id = t.id AND r.effective_to IS NULL
+        WHERE t.is_active = 1
+        ORDER BY t.code
+    """))
+    return [
+        {
+            "id":                  row[0],
+            "code":                row[1],
+            "description":         row[2],
+            "calculation_basis":   row[3],
+            "is_taxable":          bool(row[4]),
+            "current_rate":        float(row[5]) if row[5] is not None else None,
+            "rate_effective_from": str(row[6]) if row[6] is not None else None,
+        }
+        for row in r.fetchall()
+    ]
+
+
+@router.get("/{serial}/addon-charges")
+async def list_contract_addon_charges(
+    serial: int,
+    _: dict = Depends(require_auth),
+    db: AsyncSession = Depends(get_db),
+):
+    """List addon types attached to a contract, including any that have since
+    been deactivated (shown flagged, not auto-removed)."""
+    exists = await db.execute(
+        text("SELECT serial FROM contract_renewal WHERE serial = :s"), {"s": serial}
+    )
+    if not exists.fetchone():
+        raise HTTPException(status_code=404, detail=f"Contract {serial} not found")
+
+    r = await db.execute(text("""
+        SELECT t.id, t.code, t.description, t.calculation_basis,
+               t.is_taxable, t.is_active,
+               rate.rate, rate.effective_from
+        FROM contract_addon_charges ca
+        JOIN addon_charge_types t ON ca.addon_type_id = t.id
+        LEFT JOIN addon_charge_type_rates rate
+               ON rate.addon_type_id = t.id AND rate.effective_to IS NULL
+        WHERE ca.contract_serial = :serial
+        ORDER BY t.code
+    """), {"serial": serial})
+    return [
+        {
+            "addon_type_id":       row[0],
+            "code":                row[1],
+            "description":         row[2],
+            "calculation_basis":   row[3],
+            "is_taxable":          bool(row[4]),
+            "is_active":           bool(row[5]),
+            "current_rate":        float(row[6]) if row[6] is not None else None,
+            "rate_effective_from": str(row[7]) if row[7] is not None else None,
+        }
+        for row in r.fetchall()
+    ]
+
+
+@router.post("/{serial}/addon-charges", status_code=201)
+async def attach_addon_charge(
+    serial: int,
+    body: dict,
+    payload: dict = Depends(require_auth),
+    db: AsyncSession = Depends(get_db),
+):
+    exists = await db.execute(
+        text("SELECT serial FROM contract_renewal WHERE serial = :s"), {"s": serial}
+    )
+    if not exists.fetchone():
+        raise HTTPException(status_code=404, detail=f"Contract {serial} not found")
+
+    addon_type_id = body.get("addon_type_id")
+    if addon_type_id is None:
+        raise HTTPException(status_code=400, detail="addon_type_id is required")
+    try:
+        addon_type_id = int(addon_type_id)
+    except (TypeError, ValueError):
+        raise HTTPException(status_code=400, detail="addon_type_id must be an integer")
+
+    type_r = await db.execute(
+        text("SELECT id, code, is_active FROM addon_charge_types WHERE id = :id"),
+        {"id": addon_type_id},
+    )
+    type_row = type_r.fetchone()
+    if not type_row:
+        raise HTTPException(status_code=404, detail=f"Addon type {addon_type_id} not found")
+    if not type_row[2]:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Addon type '{type_row[1]}' is inactive and cannot be attached",
+        )
+
+    try:
+        await db.execute(text("""
+            INSERT INTO contract_addon_charges (contract_serial, addon_type_id)
+            VALUES (:serial, :addon_type_id)
+        """), {"serial": serial, "addon_type_id": addon_type_id})
+        await db.commit()
+    except IntegrityError as e:
+        await db.rollback()
+        if "1062" in str(e.orig) or "Duplicate entry" in str(e.orig):
+            raise HTTPException(
+                status_code=409,
+                detail=f"'{type_row[1]}' is already attached to this contract",
+            )
+        raise
+
+    return await list_contract_addon_charges(serial=serial, _=payload, db=db)
+
+
+@router.delete("/{serial}/addon-charges/{addon_type_id}", status_code=200)
+async def detach_addon_charge(
+    serial: int,
+    addon_type_id: int,
+    payload: dict = Depends(require_auth),
+    db: AsyncSession = Depends(get_db),
+):
+    exists = await db.execute(
+        text("SELECT serial FROM contract_renewal WHERE serial = :s"), {"s": serial}
+    )
+    if not exists.fetchone():
+        raise HTTPException(status_code=404, detail=f"Contract {serial} not found")
+
+    r = await db.execute(text("""
+        DELETE FROM contract_addon_charges
+        WHERE contract_serial = :serial AND addon_type_id = :addon_type_id
+    """), {"serial": serial, "addon_type_id": addon_type_id})
+    await db.commit()
+
+    if r.rowcount == 0:
+        raise HTTPException(status_code=404, detail="This addon type is not attached to this contract")
+
+    return await list_contract_addon_charges(serial=serial, _=payload, db=db)

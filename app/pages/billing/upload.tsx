@@ -1,378 +1,430 @@
-import { useState, useRef, useCallback } from "react";
-import { useRouter } from "next/router";
-import BillingLayout from "../../components/BillingLayout";
+import { useCallback, useEffect, useRef, useState } from "react";
+import BillingEngineLayout from "../../components/BillingEngineLayout";
 import api from "../../utils/api";
 
-type UploadState = "idle" | "uploading" | "success" | "error";
+// ── types ─────────────────────────────────────────────────────────────────────
+
+type FileStatus = "pending" | "uploading" | "success" | "duplicate" | "error";
+
+interface QueueItem {
+  file: File;
+  status: FileStatus;
+  found?: number;
+  matched?: number;
+  interchange?: string;
+  error?: string;
+}
+
+interface EdiFile {
+  id: number;
+  interchange_control: string;
+  edi_type: string;
+  tdsp_name: string | null;
+  tdsp_duns: string | null;
+  file_date: string | null;
+  original_filename: string | null;
+  uploaded_by: string | null;
+  status: string;
+  records_found: number | null;
+  records_matched: number | null;
+  created_at: string;
+}
+
+// ── helpers ───────────────────────────────────────────────────────────────────
+
+function Spinner() {
+  return (
+    <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+    </svg>
+  );
+}
+
+function StatusBadge({ item }: { item: QueueItem }) {
+  if (item.status === "pending") {
+    return <span className="text-xs text-gray-400">pending</span>;
+  }
+  if (item.status === "uploading") {
+    return (
+      <span className="flex items-center gap-1 text-xs text-blue-500">
+        <Spinner /> uploading
+      </span>
+    );
+  }
+  if (item.status === "success") {
+    return (
+      <span className="text-xs text-green-600 font-medium">
+        {item.matched}/{item.found} matched
+        {item.interchange ? ` · ${item.interchange}` : ""}
+      </span>
+    );
+  }
+  if (item.status === "duplicate") {
+    return (
+      <span className="text-xs text-yellow-600 font-medium" title={item.error}>
+        duplicate
+      </span>
+    );
+  }
+  return (
+    <span className="text-xs text-red-500 font-medium" title={item.error}>
+      error
+    </span>
+  );
+}
+
+function statusIcon(status: FileStatus) {
+  if (status === "pending")   return <span className="text-gray-300 text-base leading-none">○</span>;
+  if (status === "uploading") return <span className="text-blue-400 text-base leading-none">◑</span>;
+  if (status === "success")   return <span className="text-green-500 text-base leading-none">✓</span>;
+  if (status === "duplicate") return <span className="text-yellow-500 text-base leading-none">⊘</span>;
+  return                             <span className="text-red-400 text-base leading-none">✗</span>;
+}
+
+// ── drop zone panel ───────────────────────────────────────────────────────────
+
+interface PanelProps {
+  label: string;
+  accept?: string;
+  queue: QueueItem[];
+  onAddFiles: (files: File[]) => void;
+  onUpload: () => void;
+  onClear: () => void;
+  uploading: boolean;
+}
+
+function UploadPanel({
+  label, accept = ".txt,.dat,*", queue, onAddFiles, onUpload, onClear, uploading,
+}: PanelProps) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [dragOver, setDragOver] = useState(false);
+
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      setDragOver(false);
+      const files = Array.from(e.dataTransfer.files);
+      if (files.length) onAddFiles(files);
+    },
+    [onAddFiles],
+  );
+
+  const pending = queue.filter((q) => q.status === "pending").length;
+  const done    = queue.filter((q) => q.status === "success" || q.status === "duplicate").length;
+  const errors  = queue.filter((q) => q.status === "error").length;
+
+  return (
+    <div className="flex-1 bg-white border border-gray-200 rounded-lg overflow-hidden min-w-0">
+      {/* header */}
+      <div className="px-4 py-3 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
+        <span className="text-sm font-semibold text-gray-700">{label}</span>
+        {queue.length > 0 && (
+          <span className="text-xs text-gray-400">
+            {queue.length} file{queue.length !== 1 ? "s" : ""}
+            {done > 0 && <> · <span className="text-green-600">{done} ok</span></>}
+            {errors > 0 && <> · <span className="text-red-500">{errors} failed</span></>}
+          </span>
+        )}
+      </div>
+
+      {/* drop zone */}
+      <div className="px-4 pt-4">
+        <div
+          onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+          onDragLeave={() => setDragOver(false)}
+          onDrop={handleDrop}
+          onClick={() => inputRef.current?.click()}
+          className={`flex flex-col items-center justify-center gap-1.5 rounded-lg border-2 border-dashed py-6 cursor-pointer transition-colors ${
+            dragOver
+              ? "border-green-400 bg-green-50"
+              : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+          }`}
+        >
+          <svg className="w-8 h-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+              d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+          </svg>
+          <p className="text-xs text-gray-400">
+            Drag files here or <span className="text-green-600 font-medium">click to browse</span>
+          </p>
+          <p className="text-xs text-gray-300">Multiple files supported</p>
+        </div>
+        <input
+          ref={inputRef}
+          type="file"
+          multiple
+          accept={accept}
+          className="hidden"
+          onChange={(e) => {
+            const files = Array.from(e.target.files ?? []);
+            if (files.length) onAddFiles(files);
+            e.target.value = "";
+          }}
+        />
+      </div>
+
+      {/* file list */}
+      {queue.length > 0 && (
+        <ul className="px-4 pt-3 space-y-1 max-h-56 overflow-y-auto">
+          {queue.map((item, i) => (
+            <li key={i} className="flex items-center gap-2 py-1">
+              {statusIcon(item.status)}
+              <span className="flex-1 text-xs text-gray-600 truncate min-w-0" title={item.file.name}>
+                {item.file.name}
+              </span>
+              <StatusBadge item={item} />
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {/* actions */}
+      <div className="px-4 py-3 mt-3 flex items-center gap-2">
+        <button
+          onClick={onClear}
+          disabled={queue.length === 0 || uploading}
+          className="px-3 py-1.5 text-xs text-gray-500 border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-40 transition-colors"
+        >
+          Clear
+        </button>
+        <div className="flex-1" />
+        <button
+          onClick={onUpload}
+          disabled={pending === 0 || uploading}
+          className="flex items-center gap-2 px-4 py-1.5 bg-green-600 text-white text-xs font-medium rounded hover:bg-green-700 disabled:opacity-40 transition-colors"
+        >
+          {uploading && <Spinner />}
+          {uploading ? "Uploading…" : `Upload ${pending > 0 ? pending : ""} File${pending !== 1 ? "s" : ""}`}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ── history table ─────────────────────────────────────────────────────────────
+
+function HistoryTable({ rows, loading, onRefresh }: {
+  rows: EdiFile[];
+  loading: boolean;
+  onRefresh: () => void;
+}) {
+  return (
+    <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+      <div className="px-4 py-3 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
+        <span className="text-sm font-semibold text-gray-700">Upload History</span>
+        <button
+          onClick={onRefresh}
+          disabled={loading}
+          className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-700 disabled:opacity-40"
+        >
+          {loading ? <Spinner /> : (
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+          )}
+          Refresh
+        </button>
+      </div>
+
+      {loading && rows.length === 0 ? (
+        <div className="px-4 py-8 text-center text-sm text-gray-400">Loading…</div>
+      ) : rows.length === 0 ? (
+        <div className="px-4 py-8 text-center text-sm text-gray-400">No uploads yet.</div>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs">
+            <thead className="bg-gray-50 border-b border-gray-100">
+              <tr>
+                <th className="px-3 py-2 text-left text-gray-500 font-medium whitespace-nowrap">Filename</th>
+                <th className="px-3 py-2 text-left text-gray-500 font-medium">Type</th>
+                <th className="px-3 py-2 text-left text-gray-500 font-medium">TDSP</th>
+                <th className="px-3 py-2 text-left text-gray-500 font-medium">File Date</th>
+                <th className="px-3 py-2 text-right text-gray-500 font-medium">Found</th>
+                <th className="px-3 py-2 text-right text-gray-500 font-medium">Matched</th>
+                <th className="px-3 py-2 text-left text-gray-500 font-medium">Status</th>
+                <th className="px-3 py-2 text-left text-gray-500 font-medium whitespace-nowrap">Uploaded At</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-50">
+              {rows.map((r) => (
+                <tr key={r.id} className="hover:bg-gray-50">
+                  <td className="px-3 py-2 text-gray-700 max-w-xs truncate" title={r.original_filename ?? ""}>
+                    {r.original_filename ?? "—"}
+                  </td>
+                  <td className="px-3 py-2">
+                    <span className={`inline-flex px-1.5 py-0.5 rounded text-xs font-medium ${
+                      r.edi_type === "867_03"
+                        ? "bg-blue-50 text-blue-700"
+                        : "bg-purple-50 text-purple-700"
+                    }`}>
+                      {r.edi_type}
+                    </span>
+                  </td>
+                  <td className="px-3 py-2 text-gray-600">{r.tdsp_name ?? "—"}</td>
+                  <td className="px-3 py-2 text-gray-600 whitespace-nowrap">{r.file_date ?? "—"}</td>
+                  <td className="px-3 py-2 text-gray-700 text-right">{r.records_found ?? "—"}</td>
+                  <td className="px-3 py-2 text-right">
+                    <span className={r.records_matched === r.records_found && r.records_found !== null
+                      ? "text-green-600 font-medium"
+                      : "text-orange-500 font-medium"
+                    }>
+                      {r.records_matched ?? "—"}
+                    </span>
+                  </td>
+                  <td className="px-3 py-2">
+                    <span className={`inline-flex px-1.5 py-0.5 rounded text-xs font-medium ${
+                      r.status === "matched"   ? "bg-green-50 text-green-700"  :
+                      r.status === "duplicate" ? "bg-yellow-50 text-yellow-700" :
+                      r.status === "partial"   ? "bg-orange-50 text-orange-700" :
+                      "bg-gray-100 text-gray-500"
+                    }`}>
+                      {r.status}
+                    </span>
+                  </td>
+                  <td className="px-3 py-2 text-gray-400 whitespace-nowrap">
+                    {r.created_at ? new Date(r.created_at).toLocaleString() : "—"}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── page ──────────────────────────────────────────────────────────────────────
 
 export default function BillingUploadPage() {
-  const router = useRouter();
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [queue867, setQueue867] = useState<QueueItem[]>([]);
+  const [queue810, setQueue810] = useState<QueueItem[]>([]);
+  const [uploading867, setUploading867] = useState(false);
+  const [uploading810, setUploading810] = useState(false);
 
-  const [file, setFile] = useState<File | null>(null);
-  const [dragOver, setDragOver] = useState(false);
-  const [uploadState, setUploadState] = useState<UploadState>("idle");
-  const [uploadId, setUploadId] = useState<number | null>(null);
-  const [errorMsg, setErrorMsg] = useState("");
-  const [history, setHistory] = useState<any[]>([]);
-  const [showHistory, setShowHistory] = useState(false);
-  const [loadingHistory, setLoadingHistory] = useState(false);
+  const [history, setHistory]         = useState<EdiFile[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(true);
 
-  // ── drag & drop ────────────────────────────────────────────────────────────
-  const onDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setDragOver(true);
-  }, []);
-
-  const onDragLeave = useCallback(() => setDragOver(false), []);
-
-  const onDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setDragOver(false);
-    const dropped = e.dataTransfer.files[0];
-    if (dropped) validateAndSet(dropped);
-  }, []);
-
-  const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const picked = e.target.files?.[0];
-    if (picked) validateAndSet(picked);
-  };
-
-  const validateAndSet = (f: File) => {
-    const ext = f.name.split(".").pop()?.toLowerCase();
-    if (ext !== "xls" && ext !== "xlsx") {
-      setErrorMsg("Only .xls or .xlsx files are accepted.");
-      setFile(null);
-      return;
-    }
-    setErrorMsg("");
-    setFile(f);
-    setUploadState("idle");
-  };
-
-  // ── submit ─────────────────────────────────────────────────────────────────
-  const handleSubmit = async () => {
-    if (!file) return;
-    setUploadState("uploading");
-    setErrorMsg("");
-
-    const formData = new FormData();
-    formData.append("file", file);
-
+  // ── history loader ─────────────────────────────────────────────────────────
+  const loadHistory = useCallback(async () => {
+    setHistoryLoading(true);
     try {
-      const res = await api.post("/billing/upload", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      setUploadId(res.data.upload_id);
-      setUploadState("success");
-    } catch (err: any) {
-      setErrorMsg(
-        err?.response?.data?.detail || "Upload failed. Please try again.",
-      );
-      setUploadState("error");
-    }
-  };
-
-  // ── history ────────────────────────────────────────────────────────────────
-  const loadHistory = async () => {
-    if (showHistory) {
-      setShowHistory(false);
-      return;
-    }
-    setLoadingHistory(true);
-    try {
-      const res = await api.get("/billing/history");
+      const res = await api.get("/billing-engine/files?limit=100");
       setHistory(res.data);
-      setShowHistory(true);
     } catch {
-      setErrorMsg("Could not load history.");
+      // silently ignore — table shows "No uploads yet"
     } finally {
-      setLoadingHistory(false);
+      setHistoryLoading(false);
     }
+  }, []);
+
+  useEffect(() => { loadHistory(); }, [loadHistory]);
+
+  // ── add files helpers ──────────────────────────────────────────────────────
+  const addFiles = (
+    files: File[],
+    setQueue: React.Dispatch<React.SetStateAction<QueueItem[]>>,
+  ) => {
+    setQueue((prev) => {
+      const existingNames = new Set(prev.map((q) => q.file.name));
+      const fresh = files
+        .filter((f) => !existingNames.has(f.name))
+        .map((f): QueueItem => ({ file: f, status: "pending" }));
+      return [...prev, ...fresh];
+    });
   };
 
-  const reset = () => {
-    setFile(null);
-    setUploadState("idle");
-    setUploadId(null);
-    setErrorMsg("");
-    if (fileInputRef.current) fileInputRef.current.value = "";
+  // ── sequential upload ──────────────────────────────────────────────────────
+  const runUpload = async (
+    endpoint: string,
+    snapshot: QueueItem[],
+    setQueue: React.Dispatch<React.SetStateAction<QueueItem[]>>,
+    setUploading: React.Dispatch<React.SetStateAction<boolean>>,
+  ) => {
+    setUploading(true);
+    for (let i = 0; i < snapshot.length; i++) {
+      if (snapshot[i].status !== "pending") continue;
+
+      setQueue((q) => q.map((item, j) =>
+        j === i ? { ...item, status: "uploading" } : item,
+      ));
+
+      const fd = new FormData();
+      fd.append("file", snapshot[i].file);
+
+      try {
+        const res = await api.post(endpoint, fd, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        setQueue((q) => q.map((item, j) =>
+          j === i
+            ? {
+                ...item,
+                status: "success",
+                found: res.data.records_found,
+                matched: res.data.records_matched,
+                interchange: res.data.interchange_control,
+              }
+            : item,
+        ));
+      } catch (err: any) {
+        const status = err?.response?.status;
+        const detail = err?.response?.data?.detail ?? "Upload failed";
+        setQueue((q) => q.map((item, j) =>
+          j === i
+            ? { ...item, status: status === 409 ? "duplicate" : "error", error: detail }
+            : item,
+        ));
+      }
+    }
+    setUploading(false);
+    loadHistory();
+  };
+
+  const handle867Upload = () => {
+    const snapshot = [...queue867];
+    runUpload("/billing-engine/upload/867", snapshot, setQueue867, setUploading867);
+  };
+
+  const handle810Upload = () => {
+    const snapshot = [...queue810];
+    runUpload("/billing-engine/upload/810", snapshot, setQueue810, setUploading810);
   };
 
   return (
-    <BillingLayout title="Billing Module">
-      <div className="max-w-xl">
-        <h2 className="text-base font-semibold text-gray-800 mb-6">
-          Upload Billing File
-        </h2>
-
-        {/* ── success state ── */}
-        {uploadState === "success" ? (
-          <div className="rounded-lg border border-green-200 bg-green-50 p-6 text-center space-y-4">
-            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-green-100 mx-auto">
-              <svg
-                className="w-6 h-6 text-green-600"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M5 13l4 4L19 7"
-                />
-              </svg>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-green-800">
-                File uploaded successfully
-              </p>
-              <p className="text-xs text-green-600 mt-1">
-                {file?.name} — Upload ID #{uploadId}
-              </p>
-            </div>
-            <div className="flex gap-3 justify-center pt-2">
-              <button
-                onClick={() => router.push("/billing/exceptions/last")}
-                className="px-4 py-2 bg-green-600 text-white text-sm rounded hover:bg-green-700 transition-colors"
-              >
-                View Exceptions
-              </button>
-              <button
-                onClick={reset}
-                className="px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm rounded hover:bg-gray-50 transition-colors"
-              >
-                Upload Another
-              </button>
-            </div>
-          </div>
-        ) : (
-          <>
-            {/* ── drop zone ── */}
-            <div
-              onDragOver={onDragOver}
-              onDragLeave={onDragLeave}
-              onDrop={onDrop}
-              onClick={() => fileInputRef.current?.click()}
-              className={`relative border-2 border-dashed rounded-lg p-10 text-center cursor-pointer transition-colors ${
-                dragOver
-                  ? "border-green-400 bg-green-50"
-                  : file
-                    ? "border-green-300 bg-green-50"
-                    : "border-gray-300 bg-white hover:border-gray-400 hover:bg-gray-50"
-              }`}
-            >
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".xls,.xlsx"
-                onChange={onFileChange}
-                className="hidden"
-              />
-
-              {file ? (
-                <div className="space-y-1">
-                  <div className="flex items-center justify-center gap-2">
-                    <svg
-                      className="w-5 h-5 text-green-500"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                      />
-                    </svg>
-                    <span className="text-sm font-medium text-gray-800">
-                      {file.name}
-                    </span>
-                  </div>
-                  <p className="text-xs text-gray-500">
-                    {(file.size / 1024).toFixed(1)} KB — click to change
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  <svg
-                    className="w-10 h-10 text-gray-300 mx-auto"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={1.5}
-                      d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
-                    />
-                  </svg>
-                  <p className="text-sm text-gray-600">
-                    Drag & drop your billing extract here
-                  </p>
-                  <p className="text-xs text-gray-400">or click to browse</p>
-                  <p className="text-xs text-gray-400">.xls or .xlsx only</p>
-                </div>
-              )}
-            </div>
-
-            {/* ── error ── */}
-            {errorMsg && (
-              <p className="mt-3 text-sm text-red-600">{errorMsg}</p>
-            )}
-
-            {/* ── submit ── */}
-            <div className="mt-4 flex gap-3">
-              <button
-                onClick={handleSubmit}
-                disabled={!file || uploadState === "uploading"}
-                className="px-5 py-2 bg-green-600 text-white text-sm rounded hover:bg-green-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
-              >
-                {uploadState === "uploading" ? (
-                  <>
-                    <svg
-                      className="w-4 h-4 animate-spin"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      />
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                      />
-                    </svg>
-                    Processing...
-                  </>
-                ) : (
-                  "Upload & Run Checks"
-                )}
-              </button>
-
-              {file && uploadState === "idle" && (
-                <button
-                  onClick={reset}
-                  className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700 transition-colors"
-                >
-                  Clear
-                </button>
-              )}
-            </div>
-          </>
-        )}
-
-        {/* ── upload history toggle ── */}
-        <div className="mt-8 border-t border-gray-200 pt-6">
-          <button
-            onClick={loadHistory}
-            className="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1 transition-colors"
-          >
-            <svg
-              className={`w-4 h-4 transition-transform ${showHistory ? "rotate-90" : ""}`}
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 5l7 7-7 7"
-              />
-            </svg>
-            {loadingHistory
-              ? "Loading..."
-              : showHistory
-                ? "Hide upload history"
-                : "View upload history"}
-          </button>
-
-          {showHistory && history.length > 0 && (
-            <div className="mt-4 rounded-lg border border-gray-200 overflow-hidden">
-              <table className="w-full text-sm">
-                <thead className="bg-gray-50 border-b border-gray-200">
-                  <tr>
-                    <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500">
-                      Date
-                    </th>
-                    <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500">
-                      File
-                    </th>
-                    <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500">
-                      Uploaded by
-                    </th>
-                    <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500">
-                      Rows
-                    </th>
-                    <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500">
-                      Email
-                    </th>
-                    <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500"></th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100 bg-white">
-                  {history.map((h: any) => (
-                    <tr key={h.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-2.5 text-gray-800 whitespace-nowrap">
-                        {h.upload_date}
-                      </td>
-                      <td
-                        className="px-4 py-2.5 text-gray-600 max-w-[160px] truncate"
-                        title={h.filename}
-                      >
-                        {h.filename}
-                      </td>
-                      <td className="px-4 py-2.5 text-gray-600">
-                        {h.uploaded_by}
-                      </td>
-                      <td className="px-4 py-2.5 text-gray-600">
-                        {h.total_rows}
-                      </td>
-                      <td className="px-4 py-2.5">
-                        <span
-                          className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                            h.email_sent
-                              ? "bg-green-100 text-green-700"
-                              : "bg-gray-100 text-gray-500"
-                          }`}
-                        >
-                          {h.email_sent ? "Sent" : "Pending"}
-                        </span>
-                      </td>
-                      <td className="px-4 py-2.5">
-                        <button
-                          onClick={() =>
-                            router.push(
-                              `/billing/exceptions?date=${h.upload_date}`,
-                            )
-                          }
-                          className="text-xs text-green-600 hover:text-green-800 font-medium"
-                        >
-                          View
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          {showHistory && history.length === 0 && (
-            <p className="mt-4 text-sm text-gray-400">No uploads found.</p>
-          )}
-        </div>
+    <BillingEngineLayout title="EDI Upload">
+      {/* page header */}
+      <div className="mb-6">
+        <h2 className="text-base font-semibold text-gray-800">EDI File Upload</h2>
+        <p className="text-xs text-gray-400 mt-0.5">
+          Upload ERCOT 867 usage files and 810 TDSP invoice files. Multiple files can be queued and uploaded in batch.
+        </p>
       </div>
-    </BillingLayout>
+
+      {/* two-panel upload row */}
+      <div className="flex gap-4 mb-6">
+        <UploadPanel
+          label="867 Usage Files"
+          queue={queue867}
+          onAddFiles={(files) => addFiles(files, setQueue867)}
+          onUpload={handle867Upload}
+          onClear={() => setQueue867([])}
+          uploading={uploading867}
+        />
+        <UploadPanel
+          label="810 TDSP Invoice Files"
+          queue={queue810}
+          onAddFiles={(files) => addFiles(files, setQueue810)}
+          onUpload={handle810Upload}
+          onClear={() => setQueue810([])}
+          uploading={uploading810}
+        />
+      </div>
+
+      {/* history */}
+      <HistoryTable rows={history} loading={historyLoading} onRefresh={loadHistory} />
+    </BillingEngineLayout>
   );
 }

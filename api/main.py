@@ -117,9 +117,23 @@ from routers import enrollment
 
 app.include_router(enrollment.router, prefix="/api")
 
+from routers import billing_engine as billing_engine_router
 from routers import enrollment_engine as enrollment_engine_router
+from routers import invoice_engine as invoice_engine_router
 
+app.include_router(billing_engine_router.router, prefix="/api")
 app.include_router(enrollment_engine_router.router, prefix="/api")
+app.include_router(invoice_engine_router.router, prefix="/api")
+
+from routers import esi_master as esi_master_router
+
+app.include_router(esi_master_router.router, prefix="/api")
+
+from routers import admin_addon_types as admin_addon_types_router
+from routers import admin_test_data as admin_test_data_router
+
+app.include_router(admin_addon_types_router.router, prefix="/api")
+app.include_router(admin_test_data_router.router, prefix="/api")
 
 from routers import consumer as consumer_router
 

@@ -4,11 +4,11 @@ import { useRouter } from "next/router";
 import Link from "next/link";
 
 const LINKS = [
-  { label: "Upload Billing File", href: "/billing-audit/upload" },
-  { label: "View Billing Exceptions", href: "/billing-audit/exceptions" },
-  { label: "View Last Exceptions", href: "/billing-audit/exceptions/last" },
-  { label: "PHP ↔ Python Test", href: "/billing-audit/exception-test" },
-  { label: "Email Recipients", href: "/billing-audit/recipients" },
+  { label: "Upload EDI Files", href: "/billing/upload" },
+  { label: "Review",           href: "/billing/review" },
+  { label: "Billing Periods",  href: "/billing/periods" },
+  { label: "Charge Mappings",  href: "/billing/charge-mappings" },
+  { label: "Invoices",         href: "/billing/invoices" },
 ];
 
 interface Props {
@@ -16,7 +16,7 @@ interface Props {
   title?: string;
 }
 
-export default function BillingLayout({ children, title }: Props) {
+export default function BillingEngineLayout({ children, title }: Props) {
   const router = useRouter();
 
   return (
@@ -25,7 +25,10 @@ export default function BillingLayout({ children, title }: Props) {
         {/* Sidebar */}
         <aside className="w-52 min-h-screen bg-white border-r border-gray-200 pt-4 flex-shrink-0">
           {LINKS.map((item) => {
-            const active = router.pathname === item.href;
+            const active =
+              router.pathname === item.href ||
+              (item.href !== "/billing/upload" &&
+                router.pathname.startsWith(item.href));
             return (
               <Link key={item.href} href={item.href}>
                 <div

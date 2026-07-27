@@ -7,7 +7,7 @@ from middleware.auth import require_auth
 from pydantic import BaseModel
 from typing import Optional
 from decimal import Decimal, InvalidOperation
-from datetime import datetime
+from datetime import datetime, date
 import io
 import openpyxl
 
@@ -306,7 +306,8 @@ async def generate_masterroll(
             SELECT
                 cl.sid, cl.esiid, cl.customer_name, cl.broker_code, cl.broker_name,
                 cl.start_date, cl.term, cl.contract_rate, cl.meter_fees, cl.lmp,
-                cl.customer_email, cl.contract_no, cl.commission,
+                cl.customer_email, cl.contract_no, cl.commission, cl.mill,
+                cl.type_of_contract,
                 cl.billing_address, cl.billing_city, cl.billing_state, cl.billing_zip,
                 cl.plan_group, cl.plan_id, cl.cust_first_name, cl.cust_last_name
             FROM confirmation_log cl
@@ -340,10 +341,18 @@ async def generate_masterroll(
             if value != "":
                 ws.cell(row=serial + 2, column=col_idx, value=value)
 
-    # Generate cust_ids and insert into contract_renewal
+    # Generate customer_ids and insert into enrollment_masterroll (staging —
+    # contract_renewal is only written on Mark Active).
+    # Counter spans both contract_renewal and enrollment_masterroll so this
+    # flow and create-internal-batch (which still assigns cust_id from
+    # contract_renewal alone) never hand out the same id on the same day.
     date_prefix = datetime.now().strftime("%y%m%d")
     seq_r = await db.execute(
-        text("SELECT COUNT(*) FROM contract_renewal WHERE cust_id LIKE :prefix"),
+        text("""
+            SELECT
+                (SELECT COUNT(*) FROM contract_renewal WHERE cust_id LIKE :prefix) +
+                (SELECT COUNT(*) FROM enrollment_masterroll WHERE customer_id LIKE :prefix)
+        """),
         {"prefix": f"{date_prefix}%"},
     )
     base_seq = seq_r.scalar() or 0
@@ -356,8 +365,11 @@ async def generate_masterroll(
             dup_r = await db.execute(
                 text(
                     "SELECT cust_id FROM contract_renewal"
-                    " WHERE premise_id = :esi"
-                    " AND status IN ('active', 'pending', 'going_final') LIMIT 1"
+                    " WHERE premise_id = :esi AND status IN ('active', 'going_final')"
+                    " UNION ALL "
+                    "SELECT customer_id FROM enrollment_masterroll"
+                    " WHERE esi_id = :esi AND status IN ('pending', 'submitted')"
+                    " LIMIT 1"
                 ),
                 {"esi": esi_id},
             )
@@ -380,41 +392,49 @@ async def generate_masterroll(
                 contract_rate = None
         await db.execute(
             text("""
-                INSERT INTO contract_renewal (
-                    premise_id, cust_id, status, batch_no, account_type,
-                    contract_start_date, company_name,
-                    cust_first_name, cust_last_name, cust_email,
+                INSERT INTO enrollment_masterroll (
+                    batch_no, esi_id, customer_id, status,
+                    enrol_type, contract_type, contract_rate, contract_term,
+                    contract_start_date, plan_id1, plan_group,
+                    company_name, cust_first_name, cust_last_name, customer_email,
                     billing_address, billing_city, billing_state, billing_zip,
-                    broker_code, broker_name, plan_group, plan_id, other_charge,
-                    contract_rate
+                    broker_code, broker_name, agent_commission_rate, mills,
+                    meter_fee, lmp, confirmation_sid
                 ) VALUES (
-                    :premise_id, :cust_id, 'pending', :batch_no, 'standalone',
-                    :contract_start_date, :company_name,
-                    :cust_first_name, :cust_last_name, :cust_email,
+                    :batch_no, :esi_id, :customer_id, 'pending',
+                    'S', :contract_type, :contract_rate, :contract_term,
+                    :contract_start_date, :plan_id1, :plan_group,
+                    :company_name, :cust_first_name, :cust_last_name, :customer_email,
                     :billing_address, :billing_city, :billing_state, :billing_zip,
-                    :broker_code, :broker_name, :plan_group, :plan_id, :other_charge,
-                    :contract_rate
+                    :broker_code, :broker_name, :agent_commission_rate, :mills,
+                    :meter_fee, :lmp, :confirmation_sid
                 )
             """),
             {
-                "premise_id":          esi_id,
-                "cust_id":             cust_id,
-                "batch_no":            str(batch_no),
-                "contract_start_date": _parse_enrollment_date(rec.get("start_date")),
-                "company_name":        rec.get("customer_name") or "",
-                "cust_first_name":     rec.get("cust_first_name") or None,
-                "cust_last_name":      rec.get("cust_last_name") or None,
-                "cust_email":          rec.get("customer_email") or None,
-                "billing_address":     rec.get("billing_address") or None,
-                "billing_city":        rec.get("billing_city") or None,
-                "billing_state":       rec.get("billing_state") or None,
-                "billing_zip":         rec.get("billing_zip") or None,
-                "broker_code":         rec.get("broker_code") or None,
-                "broker_name":         rec.get("broker_name") or None,
-                "plan_group":          rec.get("plan_group") or "C1",
-                "plan_id":             rec.get("plan_id") or None,
-                "other_charge":        str(float(_clean_fee(rec.get("meter_fees")))),
-                "contract_rate":       contract_rate,
+                "batch_no":              str(batch_no),
+                "esi_id":                esi_id,
+                "customer_id":           cust_id,
+                "contract_type":         rec.get("type_of_contract") or None,
+                "contract_rate":         contract_rate,
+                "contract_term":         rec.get("term") or None,
+                "contract_start_date":   _parse_enrollment_date(rec.get("start_date")),
+                "plan_id1":              rec.get("plan_id") or None,
+                "plan_group":            rec.get("plan_group") or "C1",
+                "company_name":          rec.get("customer_name") or "",
+                "cust_first_name":       rec.get("cust_first_name") or None,
+                "cust_last_name":        rec.get("cust_last_name") or None,
+                "customer_email":        rec.get("customer_email") or None,
+                "billing_address":       rec.get("billing_address") or None,
+                "billing_city":          rec.get("billing_city") or None,
+                "billing_state":         rec.get("billing_state") or None,
+                "billing_zip":           rec.get("billing_zip") or None,
+                "broker_code":           rec.get("broker_code") or None,
+                "broker_name":           rec.get("broker_name") or None,
+                "agent_commission_rate": rec.get("commission") or None,
+                "mills":                 rec.get("mill") or None,
+                "meter_fee":             _clean_fee(rec.get("meter_fees")),
+                "lmp":                   int(rec.get("lmp") or 0),
+                "confirmation_sid":      rec.get("sid"),
             },
         )
 
@@ -533,12 +553,20 @@ async def get_batch_customers(
 
     cust_r = await db.execute(
         text("""
-            SELECT cust_id AS customer_id, premise_id AS esi_id, company_name, status,
+            SELECT customer_id, esi_id, company_name, status,
                    broker_code AS broker_id, broker_name, plan_group,
-                   other_charge AS meter_fee, contract_start_date AS enrollment_date
-            FROM contract_renewal
+                   meter_fee, contract_start_date AS enrollment_date, contract_end_date,
+                   enrol_type, contract_type, contract_rate, contract_term,
+                   plan_id1, plan_id2, plan_id3, priority_code,
+                   cust_first_name, cust_last_name, customer_email, customer_phone,
+                   billing_address, billing_city, billing_state, billing_zip,
+                   agent_commission_rate, mills, lmp, load_profile,
+                   city_tax_exempt, county_tax_exempt, state_tax_exempt, mta_cda_tax_exempt,
+                   spdt_tax_exempt, spdt2_tax_exempt, grt_tax_exempt, puc_tax_exempt,
+                   tdsp_duns, tdsp_name, utility_account_number, confirmation_sid
+            FROM enrollment_masterroll
             WHERE batch_no = :batch_no
-            ORDER BY cust_id
+            ORDER BY customer_id
         """),
         {"batch_no": batch_no},
     )
@@ -546,6 +574,8 @@ async def get_batch_customers(
     for c in customers:
         if c.get("enrollment_date") and not isinstance(c["enrollment_date"], str):
             c["enrollment_date"] = str(c["enrollment_date"])
+        if c.get("contract_end_date") and not isinstance(c["contract_end_date"], str):
+            c["contract_end_date"] = str(c["contract_end_date"])
 
     return {"batch": batch, "customers": customers}
 
@@ -558,46 +588,148 @@ async def activate_customer(
     db: AsyncSession = Depends(get_db),
     payload: dict = Depends(require_auth),
 ):
-    cust_r = await db.execute(
-        text("SELECT cust_id, premise_id FROM contract_renewal WHERE cust_id = :cid"),
+    mr_r = await db.execute(
+        text("SELECT * FROM enrollment_masterroll WHERE customer_id = :cid"),
         {"cid": customer_id},
     )
-    row = cust_r.mappings().fetchone()
-    if not row:
+    mr_row = mr_r.mappings().fetchone()
+    if not mr_row:
         raise HTTPException(status_code=404, detail="Customer not found")
+    mr = dict(mr_row)
 
-    esi_id = row["premise_id"]
+    if mr.get("status") not in ("pending", "submitted"):
+        raise HTTPException(
+            status_code=409,
+            detail=f"Customer is already {mr.get('status')}, cannot activate again",
+        )
 
-    # Pull rate from confirmation_log (¢/kWh → $/kWh) and refresh contract_rate
-    rate_r = await db.execute(
-        text("""
-            SELECT contract_rate FROM confirmation_log
-            WHERE esiid = :esi
-               OR esiid LIKE CONCAT(:esi, ',%')
-               OR esiid LIKE CONCAT('%, ', :esi)
-               OR esiid LIKE CONCAT('%, ', :esi, ',%')
-            ORDER BY date_modified DESC
-            LIMIT 1
-        """),
-        {"esi": esi_id},
-    )
-    rate_row = rate_r.fetchone()
-    contract_rate = None
-    if rate_row and rate_row[0]:
-        try:
-            contract_rate = round(float(str(rate_row[0])) / 100, 6)
-        except (ValueError, TypeError):
-            contract_rate = None
+    esi_id = mr["esi_id"]
 
+    # Full record insert — activation is the only point contract_renewal gets
+    # a row for this customer under Option A. Rate comes straight from
+    # enrollment_masterroll.contract_rate, not looked up again from confirmation_log.
     await db.execute(
         text("""
-            UPDATE contract_renewal
-            SET status = 'active',
-                contract_rate = COALESCE(:contract_rate, contract_rate)
-            WHERE cust_id = :cid
+            INSERT INTO contract_renewal (
+                premise_id, cust_id, status, batch_no, account_type,
+                contract_type, contract_rate, contract_start_date, contract_end_date,
+                plan_id, plan_group,
+                company_name, cust_first_name, cust_last_name, cust_email, cust_phone1,
+                billing_address, billing_city, billing_state, billing_zip,
+                broker_code, broker_name, comm_rate, other_charge, load_profile,
+                city_tax_exempt, county_tax_exempt, state_tax_exempt, mtacda_tax_exempt,
+                spdt_tax_exempt, spdt2_tax_exempt, grt_tax_exempt, puc_tax_exempt
+            ) VALUES (
+                :premise_id, :cust_id, 'active', :batch_no, 'standalone',
+                :contract_type, :contract_rate, :contract_start_date, :contract_end_date,
+                :plan_id, :plan_group,
+                :company_name, :cust_first_name, :cust_last_name, :cust_email, :cust_phone1,
+                :billing_address, :billing_city, :billing_state, :billing_zip,
+                :broker_code, :broker_name, :comm_rate, :other_charge, :load_profile,
+                :city_tax_exempt, :county_tax_exempt, :state_tax_exempt, :mtacda_tax_exempt,
+                :spdt_tax_exempt, :spdt2_tax_exempt, :grt_tax_exempt, :puc_tax_exempt
+            )
         """),
-        {"cid": customer_id, "contract_rate": contract_rate},
+        {
+            "premise_id":          esi_id,
+            "cust_id":             customer_id,
+            "batch_no":            mr.get("batch_no"),
+            "contract_type":       mr.get("contract_type"),
+            "contract_rate":       mr.get("contract_rate"),
+            "contract_start_date": mr.get("contract_start_date"),
+            "contract_end_date":   mr.get("contract_end_date"),
+            "plan_id":             mr.get("plan_id1"),
+            "plan_group":          mr.get("plan_group"),
+            "company_name":        mr.get("company_name"),
+            "cust_first_name":     mr.get("cust_first_name"),
+            "cust_last_name":      mr.get("cust_last_name"),
+            "cust_email":          mr.get("customer_email"),
+            "cust_phone1":         mr.get("customer_phone"),
+            "billing_address":     mr.get("billing_address"),
+            "billing_city":        mr.get("billing_city"),
+            "billing_state":       mr.get("billing_state"),
+            "billing_zip":         mr.get("billing_zip"),
+            "broker_code":         mr.get("broker_code"),
+            "broker_name":         mr.get("broker_name"),
+            "comm_rate":           mr.get("agent_commission_rate"),
+            "other_charge":        mr.get("meter_fee"),
+            "load_profile":        mr.get("load_profile"),
+            "city_tax_exempt":     mr.get("city_tax_exempt"),
+            "county_tax_exempt":   mr.get("county_tax_exempt"),
+            "state_tax_exempt":    mr.get("state_tax_exempt"),
+            "mtacda_tax_exempt":   mr.get("mta_cda_tax_exempt"),
+            "spdt_tax_exempt":     mr.get("spdt_tax_exempt"),
+            "spdt2_tax_exempt":    mr.get("spdt2_tax_exempt"),
+            "grt_tax_exempt":      mr.get("grt_tax_exempt"),
+            "puc_tax_exempt":      mr.get("puc_tax_exempt"),
+        },
     )
+
+    # Fetch the now-active real contract row to copy fields to the default contract
+    real_r = await db.execute(
+        text("SELECT * FROM contract_renewal WHERE cust_id = :cid"),
+        {"cid": customer_id},
+    )
+    real_row = dict(real_r.mappings().fetchone() or {})
+
+    # Duplicate guard — skip if default contract already exists for this ESI
+    dup_default_r = await db.execute(
+        text(
+            "SELECT serial FROM contract_renewal"
+            " WHERE premise_id = :esi AND account_type = 'default' LIMIT 1"
+        ),
+        {"esi": esi_id},
+    )
+    if not dup_default_r.fetchone():
+        start = real_row.get("contract_start_date")
+        start_str = str(start) if start else str(date.today())
+        default_end = (
+            f"{int(start_str[:4]) + 30}{start_str[4:]}"
+            if start_str
+            else f"{date.today().year + 30}{str(date.today())[4:]}"
+        )
+        await db.execute(
+            text("""
+                INSERT INTO contract_renewal (
+                    premise_id, cust_id, status, account_type, contract_type,
+                    contract_rate, contract_start_date, contract_end_date,
+                    broker_code, broker_name, plan_group, other_charge,
+                    company_name, cust_first_name, cust_last_name, cust_email,
+                    billing_address, billing_city, billing_state, billing_zip
+                ) VALUES (
+                    :premise_id, NULL, 'active', 'default', 'Default',
+                    '0.1300', :contract_start_date, :contract_end_date,
+                    :broker_code, :broker_name, :plan_group, '0',
+                    :company_name, :cust_first_name, :cust_last_name, :cust_email,
+                    :billing_address, :billing_city, :billing_state, :billing_zip
+                )
+            """),
+            {
+                "premise_id":          esi_id,
+                "contract_start_date": start_str,
+                "contract_end_date":   default_end,
+                "broker_code":         real_row.get("broker_code"),
+                "broker_name":         real_row.get("broker_name"),
+                "plan_group":          real_row.get("plan_group"),
+                "company_name":        real_row.get("company_name"),
+                "cust_first_name":     real_row.get("cust_first_name"),
+                "cust_last_name":      real_row.get("cust_last_name"),
+                "cust_email":          real_row.get("cust_email"),
+                "billing_address":     real_row.get("billing_address"),
+                "billing_city":        real_row.get("billing_city"),
+                "billing_state":       real_row.get("billing_state"),
+                "billing_zip":         real_row.get("billing_zip"),
+            },
+        )
+    # TODO: Cron job pending — the day after a real contract's contract_end_date,
+    # if the ESI ID has an account_type='default' contract and the real contract
+    # status becomes 'expired', billing automatically switches to the default contract.
+
+    await db.execute(
+        text("UPDATE enrollment_masterroll SET status = 'active' WHERE customer_id = :cid"),
+        {"cid": customer_id},
+    )
+
     await db.commit()
     return {"ok": True, "customer_id": customer_id, "esi_id": esi_id}
 
@@ -609,14 +741,14 @@ async def cancel_customer(
     payload: dict = Depends(require_auth),
 ):
     result = await db.execute(
-        text("SELECT cust_id FROM contract_renewal WHERE cust_id = :cid"),
+        text("SELECT customer_id FROM enrollment_masterroll WHERE customer_id = :cid"),
         {"cid": customer_id},
     )
     if not result.fetchone():
         raise HTTPException(status_code=404, detail="Customer not found")
 
     await db.execute(
-        text("UPDATE contract_renewal SET status = 'cancelled' WHERE cust_id = :cid"),
+        text("UPDATE enrollment_masterroll SET status = 'cancelled' WHERE customer_id = :cid"),
         {"cid": customer_id},
     )
     await db.commit()

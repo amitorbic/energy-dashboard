@@ -367,7 +367,7 @@ export default function BillingExceptionsPage() {
   // ── render ───────────────────────────────────────────────────────────────────
   if (loading) {
     return (
-      <BillingLayout title="Billing Module">
+      <BillingLayout title="Billing Audit">
         <div className="flex items-center gap-2 text-gray-500 text-sm mt-10">
           <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
             <circle
@@ -391,7 +391,7 @@ export default function BillingExceptionsPage() {
   }
 
   return (
-    <BillingLayout title="Billing Module">
+    <BillingLayout title="Billing Audit">
       {/* ── header bar ── */}
       <div className="flex items-center justify-between mb-6">
         <div>

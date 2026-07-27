@@ -13,20 +13,11 @@ const CustomersIndex = () => {
   const [stats, setStats] = useState<Stats>({ expiringSoon: null, expired: null });
 
   useEffect(() => {
-    api.get("/contract-renewal/list").then((res) => {
-      const rows: { contract_end_date?: string }[] = res.data.rows ?? res.data ?? [];
-      const today = Date.now();
-      let expiringSoon = 0;
-      let expired = 0;
-      for (const r of rows) {
-        if (!r.contract_end_date) continue;
-        const diff = Math.round(
-          (new Date(r.contract_end_date).getTime() - today) / 86400000
-        );
-        if (diff < 0) expired++;
-        else if (diff <= 60) expiringSoon++;
-      }
-      setStats({ expiringSoon, expired });
+    api.get("/contract-renewal/counts").then((res) => {
+      setStats({
+        expiringSoon: res.data.expiring_soon,
+        expired: res.data.expired,
+      });
     });
   }, []);
 

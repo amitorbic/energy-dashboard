@@ -1,0 +1,349 @@
+import { useCallback, useEffect, useState } from "react";
+import BillingEngineLayout from "../../components/BillingEngineLayout";
+import api from "../../utils/api";
+
+// ── types ─────────────────────────────────────────────────────────────────────
+
+interface UnmatchedEsi {
+  id: number;
+  esi_id: string;
+  service_start: string;
+  service_end: string;
+  usage_kwh: number | null;
+  tdsp_name: string | null;
+  created_at: string;
+  original_filename: string | null;
+  file_date: string | null;
+}
+
+interface UnknownCharge {
+  id: number;
+  esi_id: string;
+  charge_code: string;
+  charge_description: string | null;
+  charge_amount: number;
+  tdsp_name: string | null;
+  service_start: string;
+  service_end: string;
+  created_at: string;
+  original_filename: string | null;
+}
+
+interface ReadyToBill {
+  id: number;
+  esi_id: string;
+  service_start: string;
+  service_end: string;
+  billing_days: number;
+  usage_kwh: number | null;
+  contract_rate: number;
+  meter_fee: number | null;
+  flags: string | null;
+  status: string;
+  created_at: string;
+}
+
+type TabKey = "unmatched" | "unknown" | "ready";
+
+// ── helpers ───────────────────────────────────────────────────────────────────
+
+function fmt(v: number | null | undefined, decimals = 4): string {
+  if (v == null) return "—";
+  return Number(v).toFixed(decimals);
+}
+
+function period(start: string, end: string) {
+  return `${start} – ${end}`;
+}
+
+function Spinner() {
+  return (
+    <svg className="w-4 h-4 animate-spin text-gray-400" viewBox="0 0 24 24" fill="none">
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+    </svg>
+  );
+}
+
+function EmptyRow({ cols, msg }: { cols: number; msg: string }) {
+  return (
+    <tr>
+      <td colSpan={cols} className="px-4 py-8 text-center text-sm text-gray-400">
+        {msg}
+      </td>
+    </tr>
+  );
+}
+
+// ── tab badge ─────────────────────────────────────────────────────────────────
+
+function Badge({ count, loading }: { count: number; loading: boolean }) {
+  if (loading) return <span className="ml-1.5 text-gray-300 text-xs">…</span>;
+  if (count === 0) return null;
+  return (
+    <span className="ml-1.5 inline-flex items-center justify-center px-1.5 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-600 min-w-[1.25rem]">
+      {count}
+    </span>
+  );
+}
+
+// ── tables ────────────────────────────────────────────────────────────────────
+
+function UnmatchedTable({ rows, loading }: { rows: UnmatchedEsi[]; loading: boolean }) {
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full text-xs">
+        <thead className="bg-gray-50 border-b border-gray-100">
+          <tr>
+            <th className="px-3 py-2.5 text-left text-gray-500 font-medium">ESI ID</th>
+            <th className="px-3 py-2.5 text-left text-gray-500 font-medium">Service Period</th>
+            <th className="px-3 py-2.5 text-right text-gray-500 font-medium">Usage (kWh)</th>
+            <th className="px-3 py-2.5 text-left text-gray-500 font-medium">TDSP</th>
+            <th className="px-3 py-2.5 text-left text-gray-500 font-medium">Source File</th>
+            <th className="px-3 py-2.5 text-left text-gray-500 font-medium whitespace-nowrap">Loaded At</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-gray-50">
+          {loading ? (
+            <EmptyRow cols={6} msg="Loading…" />
+          ) : rows.length === 0 ? (
+            <EmptyRow cols={6} msg="No unmatched ESI IDs." />
+          ) : (
+            rows.map((r) => (
+              <tr key={r.id} className="hover:bg-gray-50">
+                <td className="px-3 py-2 text-gray-800 font-mono">{r.esi_id}</td>
+                <td className="px-3 py-2 text-gray-600 whitespace-nowrap">
+                  {period(r.service_start, r.service_end)}
+                </td>
+                <td className="px-3 py-2 text-right text-gray-700">
+                  {fmt(r.usage_kwh, 2)}
+                </td>
+                <td className="px-3 py-2 text-gray-600">{r.tdsp_name ?? "—"}</td>
+                <td className="px-3 py-2 text-gray-500 max-w-xs truncate" title={r.original_filename ?? ""}>
+                  {r.original_filename ?? "—"}
+                </td>
+                <td className="px-3 py-2 text-gray-400 whitespace-nowrap">
+                  {r.created_at ? new Date(r.created_at).toLocaleString() : "—"}
+                </td>
+              </tr>
+            ))
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function UnknownChargesTable({ rows, loading }: { rows: UnknownCharge[]; loading: boolean }) {
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full text-xs">
+        <thead className="bg-gray-50 border-b border-gray-100">
+          <tr>
+            <th className="px-3 py-2.5 text-left text-gray-500 font-medium">Charge Code</th>
+            <th className="px-3 py-2.5 text-left text-gray-500 font-medium">Description</th>
+            <th className="px-3 py-2.5 text-left text-gray-500 font-medium">ESI ID</th>
+            <th className="px-3 py-2.5 text-right text-gray-500 font-medium">Amount ($)</th>
+            <th className="px-3 py-2.5 text-left text-gray-500 font-medium">Service Period</th>
+            <th className="px-3 py-2.5 text-left text-gray-500 font-medium">TDSP</th>
+            <th className="px-3 py-2.5 text-left text-gray-500 font-medium">Source File</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-gray-50">
+          {loading ? (
+            <EmptyRow cols={7} msg="Loading…" />
+          ) : rows.length === 0 ? (
+            <EmptyRow cols={7} msg="No unknown charge codes." />
+          ) : (
+            rows.map((r) => (
+              <tr key={r.id} className="hover:bg-gray-50">
+                <td className="px-3 py-2">
+                  <span className="font-mono font-medium text-orange-700 bg-orange-50 px-1.5 py-0.5 rounded">
+                    {r.charge_code}
+                  </span>
+                </td>
+                <td className="px-3 py-2 text-gray-600">{r.charge_description ?? "—"}</td>
+                <td className="px-3 py-2 text-gray-700 font-mono">{r.esi_id}</td>
+                <td className="px-3 py-2 text-right text-gray-700">
+                  {Number(r.charge_amount).toFixed(2)}
+                </td>
+                <td className="px-3 py-2 text-gray-600 whitespace-nowrap">
+                  {period(r.service_start, r.service_end)}
+                </td>
+                <td className="px-3 py-2 text-gray-600">{r.tdsp_name ?? "—"}</td>
+                <td className="px-3 py-2 text-gray-500 max-w-xs truncate" title={r.original_filename ?? ""}>
+                  {r.original_filename ?? "—"}
+                </td>
+              </tr>
+            ))
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function ReadyToBillTable({ rows, loading }: { rows: ReadyToBill[]; loading: boolean }) {
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full text-xs">
+        <thead className="bg-gray-50 border-b border-gray-100">
+          <tr>
+            <th className="px-3 py-2.5 text-left text-gray-500 font-medium">ESI ID</th>
+            <th className="px-3 py-2.5 text-left text-gray-500 font-medium">Service Period</th>
+            <th className="px-3 py-2.5 text-right text-gray-500 font-medium">Days</th>
+            <th className="px-3 py-2.5 text-right text-gray-500 font-medium">Usage (kWh)</th>
+            <th className="px-3 py-2.5 text-right text-gray-500 font-medium">Rate (¢/kWh)</th>
+            <th className="px-3 py-2.5 text-right text-gray-500 font-medium">Meter Fee ($)</th>
+            <th className="px-3 py-2.5 text-left text-gray-500 font-medium">Status</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-gray-50">
+          {loading ? (
+            <EmptyRow cols={7} msg="Loading…" />
+          ) : rows.length === 0 ? (
+            <EmptyRow cols={7} msg="No billing periods ready to bill." />
+          ) : (
+            rows.map((r) => {
+              // contract_rate is stored as decimal (e.g. 0.054321) — display as ¢/kWh
+              const rateCents = Number(r.contract_rate) * 100;
+              return (
+                <tr key={r.id} className="hover:bg-gray-50">
+                  <td className="px-3 py-2 text-gray-800 font-mono">{r.esi_id}</td>
+                  <td className="px-3 py-2 text-gray-600 whitespace-nowrap">
+                    {period(r.service_start, r.service_end)}
+                  </td>
+                  <td className="px-3 py-2 text-right text-gray-700">{r.billing_days}</td>
+                  <td className="px-3 py-2 text-right text-gray-700">
+                    {fmt(r.usage_kwh, 2)}
+                  </td>
+                  <td className="px-3 py-2 text-right text-gray-700">
+                    {rateCents.toFixed(4)}
+                  </td>
+                  <td className="px-3 py-2 text-right text-gray-700">
+                    {r.meter_fee != null ? Number(r.meter_fee).toFixed(2) : "—"}
+                  </td>
+                  <td className="px-3 py-2">
+                    <span className={`inline-flex px-1.5 py-0.5 rounded text-xs font-medium ${
+                      r.status === "reviewed"
+                        ? "bg-blue-50 text-blue-700"
+                        : "bg-gray-100 text-gray-600"
+                    }`}>
+                      {r.status}
+                    </span>
+                  </td>
+                </tr>
+              );
+            })
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+// ── page ──────────────────────────────────────────────────────────────────────
+
+export default function BillingReviewPage() {
+  const [activeTab, setActiveTab] = useState<TabKey>("unmatched");
+
+  const [unmatched, setUnmatched]   = useState<UnmatchedEsi[]>([]);
+  const [unknown, setUnknown]       = useState<UnknownCharge[]>([]);
+  const [ready, setReady]           = useState<ReadyToBill[]>([]);
+  const [loading, setLoading]       = useState(true);
+  const [error, setError]           = useState("");
+
+  const loadAll = useCallback(async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const [r1, r2, r3] = await Promise.all([
+        api.get("/billing-engine/review/unmatched-esi"),
+        api.get("/billing-engine/review/unknown-charges"),
+        api.get("/billing-engine/review/ready-to-bill"),
+      ]);
+      setUnmatched(r1.data);
+      setUnknown(r2.data);
+      setReady(r3.data);
+    } catch (e: any) {
+      setError(e?.response?.data?.detail ?? "Failed to load review data.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { loadAll(); }, [loadAll]);
+
+  const TABS: { key: TabKey; label: string; count: number }[] = [
+    { key: "unmatched", label: "Unmatched ESI IDs",    count: unmatched.length },
+    { key: "unknown",   label: "Unknown Charge Codes",  count: unknown.length   },
+    { key: "ready",     label: "Ready to Bill",         count: ready.length     },
+  ];
+
+  return (
+    <BillingEngineLayout title="Billing Review">
+      {/* header */}
+      <div className="mb-6 flex items-start justify-between">
+        <div>
+          <h2 className="text-base font-semibold text-gray-800">Billing Review</h2>
+          <p className="text-xs text-gray-400 mt-0.5">
+            Resolve exceptions before approving billing periods.
+          </p>
+        </div>
+        <button
+          onClick={loadAll}
+          disabled={loading}
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-gray-500 border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-40 transition-colors"
+        >
+          {loading ? <Spinner /> : (
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+          )}
+          Refresh
+        </button>
+      </div>
+
+      {error && (
+        <div className="mb-4 px-4 py-3 bg-red-50 border border-red-200 rounded text-sm text-red-600">
+          {error}
+        </div>
+      )}
+
+      {/* tabs */}
+      <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+        {/* tab bar */}
+        <div className="flex border-b border-gray-200 bg-gray-50">
+          {TABS.map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`flex items-center px-5 py-3 text-sm font-medium transition-colors border-b-2 -mb-px ${
+                activeTab === tab.key
+                  ? "border-green-600 text-green-700 bg-white"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+              }`}
+            >
+              {tab.label}
+              <Badge count={tab.count} loading={loading} />
+            </button>
+          ))}
+        </div>
+
+        {/* tab content */}
+        <div>
+          {activeTab === "unmatched" && (
+            <UnmatchedTable rows={unmatched} loading={loading} />
+          )}
+          {activeTab === "unknown" && (
+            <UnknownChargesTable rows={unknown} loading={loading} />
+          )}
+          {activeTab === "ready" && (
+            <ReadyToBillTable rows={ready} loading={loading} />
+          )}
+        </div>
+      </div>
+    </BillingEngineLayout>
+  );
+}

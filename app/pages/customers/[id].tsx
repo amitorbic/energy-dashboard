@@ -151,7 +151,7 @@ const InputField = ({
   </div>
 );
 
-// Tax toggle — admin only
+// Tax toggle — editable by any logged-in user
 const TaxToggle = ({
   label,
   value,
@@ -180,30 +180,6 @@ const TaxToggle = ({
   );
 };
 
-// Read-only tax display (non-admin)
-const TaxField = ({
-  label,
-  val,
-}: {
-  label: string;
-  val: string | number | null | undefined;
-}) => {
-  const text =
-    val === "100" || val === 100 || val === 1
-      ? "Exempt"
-      : val === "0" || val === 0
-      ? "Taxable"
-      : "—";
-  return (
-    <div>
-      <p className="text-xs text-slate-500 uppercase tracking-wide mb-0.5">{label}</p>
-      <p className={`text-sm font-mono ${text === "Exempt" ? "text-green-400" : "text-slate-300"}`}>
-        {text}
-      </p>
-    </div>
-  );
-};
-
 interface ContractRow {
   serial: number;
   cust_id: string | null;
@@ -219,12 +195,35 @@ interface ContractRow {
   plan_group: string | null;
   plan_id: string | null;
   other_charge: string | null;
+  account_type: string | null;
   created_at: string | null;
+}
+
+interface AddonAttachedRow {
+  addon_type_id: number;
+  code: string;
+  description: string | null;
+  calculation_basis: string;
+  is_taxable: boolean;
+  is_active: boolean;
+  current_rate: number | null;
+  rate_effective_from: string | null;
+}
+
+interface AddonTypeOption {
+  id: number;
+  code: string;
+  description: string | null;
+  calculation_basis: string;
+  is_taxable: boolean;
+  current_rate: number | null;
+  rate_effective_from: string | null;
 }
 
 const TABS = [
   "Overview",
   "Contracts",
+  "Addon Charges",
   "Bills",
   "Payments",
   "Services",
@@ -261,6 +260,16 @@ const CustomerDetailPage = () => {
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState("");
   const [saveError, setSaveError] = useState(false);
+
+  const [attachedAddons, setAttachedAddons] = useState<AddonAttachedRow[]>([]);
+  const [addonsLoading, setAddonsLoading] = useState(false);
+  const [addonsLoaded, setAddonsLoaded] = useState(false);
+  const [availableTypes, setAvailableTypes] = useState<AddonTypeOption[]>([]);
+  const [selectedAddonTypeId, setSelectedAddonTypeId] = useState("");
+  const [addonAttaching, setAddonAttaching] = useState(false);
+  const [addonMsg, setAddonMsg] = useState("");
+  const [addonError, setAddonError] = useState(false);
+  const [detachConfirm, setDetachConfirm] = useState<number | null>(null);
 
   useEffect(() => {
     setAdmin(isAdmin());
@@ -322,6 +331,22 @@ const CustomerDetailPage = () => {
       .finally(() => setContractsLoading(false));
   }, [activeTab, contractsLoaded, customer?.esi_id]);
 
+  useEffect(() => {
+    if (activeTab !== "Addon Charges" || addonsLoaded || !id) return;
+    setAddonsLoading(true);
+    Promise.all([
+      api.get(`/contract-renewal/${id}/addon-charges`),
+      api.get(`/contract-renewal/addon-types`),
+    ])
+      .then(([addonsRes, typesRes]) => {
+        setAttachedAddons(addonsRes.data);
+        setAvailableTypes(typesRes.data);
+        setAddonsLoaded(true);
+      })
+      .catch(() => setAddonsLoaded(true))
+      .finally(() => setAddonsLoading(false));
+  }, [activeTab, addonsLoaded, id]);
+
   const set = (field: keyof EditForm) => (v: string) =>
     setForm((prev) => ({ ...prev, [field]: v }));
 
@@ -344,6 +369,15 @@ const CustomerDetailPage = () => {
           billing_zip: form.billing_zip,
           premise_address: form.premise_address,
           attn: form.attn,
+          // Tax exemptions — editable by any logged-in user, not admin-only
+          city_tax_exempt: form.city_tax_exempt,
+          county_tax_exempt: form.county_tax_exempt,
+          state_tax_exempt: form.state_tax_exempt,
+          grt_tax_exempt: form.grt_tax_exempt,
+          puc_tax_exempt: form.puc_tax_exempt,
+          mtacda_tax_exempt: form.mtacda_tax_exempt,
+          spdt_tax_exempt: form.spdt_tax_exempt,
+          spdt2_tax_exempt: form.spdt2_tax_exempt,
         };
 
     try {
@@ -359,6 +393,47 @@ const CustomerDetailPage = () => {
       setSaveError(true);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleAttach = async () => {
+    if (!selectedAddonTypeId || !id) return;
+    setAddonAttaching(true);
+    setAddonMsg("");
+    setAddonError(false);
+    try {
+      const res = await api.post(`/contract-renewal/${id}/addon-charges`, {
+        addon_type_id: parseInt(selectedAddonTypeId),
+      });
+      setAttachedAddons(res.data);
+      setSelectedAddonTypeId("");
+      setAddonMsg("Addon attached.");
+      setTimeout(() => setAddonMsg(""), 3000);
+    } catch (err: unknown) {
+      const msg =
+        (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ??
+        "Failed to attach — please try again.";
+      setAddonMsg(msg);
+      setAddonError(true);
+    } finally {
+      setAddonAttaching(false);
+    }
+  };
+
+  const handleDetach = async (addonTypeId: number) => {
+    if (!id) return;
+    setAddonMsg("");
+    setAddonError(false);
+    try {
+      const res = await api.delete(`/contract-renewal/${id}/addon-charges/${addonTypeId}`);
+      setAttachedAddons(res.data);
+      setDetachConfirm(null);
+    } catch (err: unknown) {
+      const msg =
+        (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ??
+        "Failed to detach.";
+      setAddonMsg(msg);
+      setAddonError(true);
     }
   };
 
@@ -480,10 +555,15 @@ const CustomerDetailPage = () => {
                         cancelled:   "bg-slate-700 text-slate-400",
                       };
                       const badgeCls = statusColors[c.status] ?? "bg-slate-700 text-slate-400";
+                      const isDefault = c.account_type === "default";
                       return (
-                        <tr key={c.serial} className="border-t border-slate-800 hover:bg-slate-800/40">
+                        <tr key={c.serial} className={`border-t border-slate-800 ${isDefault ? "opacity-50 hover:opacity-70" : "hover:bg-slate-800/40"}`}>
                           <td className="px-3 py-2">
-                            <span className={`text-xs px-2 py-0.5 rounded ${badgeCls}`}>{c.status}</span>
+                            {isDefault ? (
+                              <span className="text-xs px-2 py-0.5 rounded bg-slate-800 text-slate-500 border border-slate-700">Default</span>
+                            ) : (
+                              <span className={`text-xs px-2 py-0.5 rounded ${badgeCls}`}>{c.status}</span>
+                            )}
                           </td>
                           <td className="px-3 py-2">{c.contract_type || "—"}</td>
                           <td className="px-3 py-2 text-right font-mono">
@@ -511,10 +591,139 @@ const CustomerDetailPage = () => {
         )}
 
         {/* Coming soon placeholder for unbuilt tabs */}
-        {activeTab !== "Overview" && activeTab !== "Contracts" && (
+        {activeTab !== "Overview" && activeTab !== "Contracts" && activeTab !== "Addon Charges" && (
           <div className="bg-slate-900 border border-slate-800 rounded-xl p-10 text-center">
             <h2 className="text-slate-300 text-lg font-semibold mb-2">{activeTab}</h2>
             <p className="text-slate-500 text-sm">This section is under construction — coming soon.</p>
+          </div>
+        )}
+
+        {/* Addon Charges tab */}
+        {activeTab === "Addon Charges" && (
+          <div className="space-y-4">
+            <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
+              <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">
+                Attached Addon Charges
+              </h2>
+              {addonsLoading ? (
+                <p className="text-slate-500 text-sm animate-pulse">Loading…</p>
+              ) : attachedAddons.length === 0 ? (
+                <p className="text-slate-500 text-sm">No addon charges attached to this contract.</p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs text-slate-300">
+                    <thead>
+                      <tr className="bg-slate-800 text-slate-400 uppercase text-xs">
+                        <th className="px-3 py-2 text-left">Code</th>
+                        <th className="px-3 py-2 text-left">Description</th>
+                        <th className="px-3 py-2 text-left">Basis</th>
+                        <th className="px-3 py-2 text-right">Current Rate</th>
+                        <th className="px-3 py-2 text-left">Status</th>
+                        <th className="px-3 py-2"></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {attachedAddons.map((a) => (
+                        <tr key={a.addon_type_id} className="border-t border-slate-800 hover:bg-slate-800/40">
+                          <td className="px-3 py-2 font-mono font-bold text-slate-200">{a.code}</td>
+                          <td className="px-3 py-2">{a.description || "—"}</td>
+                          <td className="px-3 py-2 text-slate-400">{a.calculation_basis}</td>
+                          <td className="px-3 py-2 text-right font-mono">
+                            {a.current_rate !== null
+                              ? `$${a.current_rate.toFixed(6)}`
+                              : <span className="text-slate-500">no rate</span>}
+                          </td>
+                          <td className="px-3 py-2">
+                            {a.is_active ? (
+                              <span className="text-xs px-2 py-0.5 rounded bg-green-900/50 text-green-400">Active</span>
+                            ) : (
+                              <span className="text-xs px-2 py-0.5 rounded bg-slate-700 text-slate-400">Inactive</span>
+                            )}
+                          </td>
+                          <td className="px-3 py-2">
+                            {detachConfirm === a.addon_type_id ? (
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs text-yellow-400">Detach?</span>
+                                <button
+                                  onClick={() => handleDetach(a.addon_type_id)}
+                                  className="text-xs px-2 py-0.5 rounded bg-red-900/60 text-red-400 hover:bg-red-800/60 transition-colors"
+                                >
+                                  Confirm
+                                </button>
+                                <button
+                                  onClick={() => setDetachConfirm(null)}
+                                  className="text-xs text-slate-400 hover:text-slate-200"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => setDetachConfirm(a.addon_type_id)}
+                                className="text-xs text-slate-500 hover:text-red-400 transition-colors"
+                              >
+                                Detach
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+              {addonMsg && (
+                <p className={`text-sm mt-3 ${addonError ? "text-red-400" : "text-green-400"}`}>
+                  {addonMsg}
+                </p>
+              )}
+            </div>
+
+            <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
+              <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">
+                Attach Addon Charge
+              </h2>
+              {(() => {
+                const attachedIds = new Set(attachedAddons.map((a) => a.addon_type_id));
+                const unattached = availableTypes.filter((t) => !attachedIds.has(t.id));
+                if (unattached.length === 0) {
+                  return (
+                    <p className="text-slate-500 text-sm">
+                      {addonsLoading ? "Loading…" : "All active addon types are already attached."}
+                    </p>
+                  );
+                }
+                return (
+                  <div className="flex items-end gap-3 flex-wrap">
+                    <div className="flex-1 min-w-[220px] max-w-sm">
+                      <label className="text-xs text-slate-500 uppercase tracking-wide block mb-1">
+                        Addon type
+                      </label>
+                      <select
+                        value={selectedAddonTypeId}
+                        onChange={(e) => setSelectedAddonTypeId(e.target.value)}
+                        className="w-full bg-slate-800 border border-slate-700 text-white text-sm px-3 py-2 rounded focus:outline-none focus:border-red-500 transition-colors"
+                      >
+                        <option value="">— select —</option>
+                        {unattached.map((t) => (
+                          <option key={t.id} value={String(t.id)}>
+                            {t.code}{t.description ? ` — ${t.description}` : ""}
+                            {t.current_rate !== null ? ` ($${t.current_rate.toFixed(6)})` : ""}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <button
+                      onClick={handleAttach}
+                      disabled={!selectedAddonTypeId || addonAttaching}
+                      className="bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white px-4 py-2 rounded text-sm font-bold uppercase transition"
+                    >
+                      {addonAttaching ? "Attaching…" : "Attach"}
+                    </button>
+                  </div>
+                );
+              })()}
+            </div>
           </div>
         )}
 
@@ -625,39 +834,24 @@ const CustomerDetailPage = () => {
           </div>
         </section>
 
-        {/* Tax Exemptions */}
+        {/* Tax Exemptions — editable by any logged-in user, not admin-only */}
         <section className="bg-slate-900 border border-slate-800 rounded-xl p-5">
           <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">
-            Tax Exemptions
-            {admin && (
-              <span className="ml-2 text-slate-600 font-normal normal-case tracking-normal">
-                editable
-              </span>
-            )}
+            Tax Exemptions{" "}
+            <span className="text-slate-600 font-normal normal-case tracking-normal ml-1">
+              editable
+            </span>
           </h2>
-          {admin ? (
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-5">
-              <TaxToggle label="City" value={form.city_tax_exempt} onChange={set("city_tax_exempt")} />
-              <TaxToggle label="County" value={form.county_tax_exempt} onChange={set("county_tax_exempt")} />
-              <TaxToggle label="State" value={form.state_tax_exempt} onChange={set("state_tax_exempt")} />
-              <TaxToggle label="GRT" value={form.grt_tax_exempt} onChange={set("grt_tax_exempt")} />
-              <TaxToggle label="PUC" value={form.puc_tax_exempt} onChange={set("puc_tax_exempt")} />
-              <TaxToggle label="MTACDA" value={form.mtacda_tax_exempt} onChange={set("mtacda_tax_exempt")} />
-              <TaxToggle label="SPDT" value={form.spdt_tax_exempt} onChange={set("spdt_tax_exempt")} />
-              <TaxToggle label="SPDT2" value={form.spdt2_tax_exempt} onChange={set("spdt2_tax_exempt")} />
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-5">
-              <TaxField label="City" val={customer.city_tax_exempt} />
-              <TaxField label="County" val={customer.county_tax_exempt} />
-              <TaxField label="State" val={customer.state_tax_exempt} />
-              <TaxField label="GRT" val={customer.grt_tax_exempt} />
-              <TaxField label="PUC" val={customer.puc_tax_exempt} />
-              <TaxField label="MTACDA" val={customer.mtacda_tax_exempt} />
-              <TaxField label="SPDT" val={customer.spdt_tax_exempt} />
-              <TaxField label="SPDT2" val={customer.spdt2_tax_exempt} />
-            </div>
-          )}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-5">
+            <TaxToggle label="City" value={form.city_tax_exempt} onChange={set("city_tax_exempt")} />
+            <TaxToggle label="County" value={form.county_tax_exempt} onChange={set("county_tax_exempt")} />
+            <TaxToggle label="State" value={form.state_tax_exempt} onChange={set("state_tax_exempt")} />
+            <TaxToggle label="GRT" value={form.grt_tax_exempt} onChange={set("grt_tax_exempt")} />
+            <TaxToggle label="PUC" value={form.puc_tax_exempt} onChange={set("puc_tax_exempt")} />
+            <TaxToggle label="MTACDA" value={form.mtacda_tax_exempt} onChange={set("mtacda_tax_exempt")} />
+            <TaxToggle label="SPDT" value={form.spdt_tax_exempt} onChange={set("spdt_tax_exempt")} />
+            <TaxToggle label="SPDT2" value={form.spdt2_tax_exempt} onChange={set("spdt2_tax_exempt")} />
+          </div>
         </section>
 
         </>}

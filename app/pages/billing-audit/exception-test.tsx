@@ -184,7 +184,7 @@ export default function BillingExceptionTestPage() {
   const checksWithRows = Object.values(rowsMap).filter((v) => v.length > 0).length;
 
   return (
-    <BillingLayout title="Billing Module">
+    <BillingLayout title="Billing Audit">
       {/* header */}
       <div className="mb-6">
         <h2 className="text-base font-semibold text-gray-800">PHP Billing Exception Test</h2>

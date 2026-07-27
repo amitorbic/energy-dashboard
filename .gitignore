@@ -10,6 +10,7 @@ __pycache__/
 
 # Database dumps
 *.sql
+!api/migrations/*.sql
 
 # OS
 .DS_Store

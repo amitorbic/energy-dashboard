@@ -45,7 +45,7 @@ export default function BillingRecipientsPage() {
   };
 
   return (
-    <BillingLayout title="Billing Module">
+    <BillingLayout title="Billing Audit">
       <div className="max-w-2xl">
         <h2 className="text-base font-semibold text-gray-800 mb-6">
           Email Recipients
