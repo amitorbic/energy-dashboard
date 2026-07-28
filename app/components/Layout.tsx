@@ -8,6 +8,7 @@ const NAV_MODULES = [
   { label: "Pricing", href: "/pricing" },
   { label: "Broker Database", href: "/broker" },
   { label: "Customer Database", href: "/customers" },
+  { label: "ESI ID Search", href: "/esi-search" },
   { label: "Daily Pricing", href: "/daily-pricing" },
   { label: "Contract Confirmation", href: "/contracts" },
   { label: "Billing Audit", href: "/billing-audit" },

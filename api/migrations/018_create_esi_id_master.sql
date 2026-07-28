@@ -1,6 +1,6 @@
 -- Migration 018: Create esi_id_master and load_history.
 --
--- ESI ID master reference database, sourced from 11 ERCOT TDSP extract
+-- ESI ID master reference database, sourced from 12 ERCOT TDSP extract
 -- files (~13.3M rows total, see docs/BILLING_ENGINE.md-adjacent inspection
 -- notes). Standalone table -- not linked to contract_renewal, billing
 -- engine, or any other existing table.

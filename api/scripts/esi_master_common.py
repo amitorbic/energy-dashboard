@@ -9,7 +9,11 @@ Source files have no header row and 22 positional columns (not the 19 in
 the original ERCOT spec) -- see migration 018 comments for the column
 mapping (COUNTY at position 6, two premise-subtype columns at the end).
 """
+import os
 import pymysql
+from dotenv import load_dotenv
+
+load_dotenv()
 
 SRC_DIR = r"C:\Users\Amit\Desktop\ESI ID Database"
 
@@ -76,7 +80,10 @@ SET
 
 def connect():
     return pymysql.connect(
-        host="localhost", user="root", password="",
-        database="u972964962_orbic", port=3306,
+        host=os.getenv("DB_HOST", "localhost"),
+        user=os.getenv("DB_USER", "root"),
+        password=os.getenv("DB_PASSWORD", ""),
+        database=os.getenv("DB_NAME", "u972964962_orbic"),
+        port=int(os.getenv("DB_PORT", "3306")),
         local_infile=True, autocommit=False,
     )

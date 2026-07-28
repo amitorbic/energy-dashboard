@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from middleware.auth import require_auth
 from utils.database import get_db
 
 router = APIRouter(prefix="/esi-master", tags=["esi-master"])
@@ -32,6 +33,7 @@ async def search_esi_master(
     address: Optional[str] = Query(None, description="Optional partial address match"),
     limit: int = Query(200, ge=1, le=1000),
     db: AsyncSession = Depends(get_db),
+    user=Depends(require_auth),
 ):
     """
     Search by zipcode + city (both required -- deliberate perf/business
@@ -59,7 +61,7 @@ async def search_esi_master(
 
 
 @router.get("/{esi_id}")
-async def get_esi_id(esi_id: str, db: AsyncSession = Depends(get_db)):
+async def get_esi_id(esi_id: str, db: AsyncSession = Depends(get_db), user=Depends(require_auth)):
     """Direct primary-key lookup of a single ESI ID."""
     result = await db.execute(
         text(f"SELECT {SELECT_COLS} FROM esi_id_master WHERE esi_id = :esi_id"),

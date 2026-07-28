@@ -11,13 +11,13 @@
 --
 -- Data: addon_charge_types has 1 live row (ANCSVC / Ancillary Services,
 -- usage_based, taxable, active) and addon_charge_type_rates has 1 live row
--- for it (rate 0.001456, effective 2024-04-01, still active). Captured
--- verbatim below. contract_addon_charges has 0 live rows (schema only).
+-- for it (rate 0.001456, effective 2024-04-01, still active).
+-- contract_addon_charges has 0 live rows (schema only).
 --
--- Note: the live description string is "Ancillary Services (ANCSVC)
--- updated" -- captured as-is from dev; the trailing "updated" looks like
--- leftover dev-testing text, not verified as intentional. Worth confirming
--- with whoever owns this feature before it ships to production.
+-- The dev description string was captured verbatim as "Ancillary Services
+-- (ANCSVC) updated" -- the trailing "updated" was leftover dev-testing
+-- text, confirmed not intentional. Corrected to "Ancillary Services
+-- (ANCSVC)" below before this shipped to production.
 
 USE `u972964962_orbic`;
 
@@ -64,7 +64,7 @@ CREATE TABLE IF NOT EXISTS `contract_addon_charges` (
 INSERT INTO `addon_charge_types`
   (`code`, `description`, `calculation_basis`, `is_taxable`, `is_active`)
 VALUES
-  ('ANCSVC', 'Ancillary Services (ANCSVC) updated', 'usage_based', 1, 1)
+  ('ANCSVC', 'Ancillary Services (ANCSVC)', 'usage_based', 1, 1)
 ON DUPLICATE KEY UPDATE
   `description`       = VALUES(`description`),
   `calculation_basis` = VALUES(`calculation_basis`),

@@ -6,6 +6,9 @@ api/reference_data/city-rates.xlsx (sheet "Jul26") per migrations
 import os
 import openpyxl
 import pymysql
+from dotenv import load_dotenv
+
+load_dotenv()
 
 XLSX_PATH = os.path.join(os.path.dirname(__file__), "..", "reference_data", "city-rates.xlsx")
 MIGRATIONS_DIR = os.path.join(os.path.dirname(__file__), "..", "migrations")
@@ -111,7 +114,13 @@ def main():
     rows = load_rows()
     print(f"Parsed {len(rows)} data rows from city-rates.xlsx (sheet Jul26)")
 
-    conn = pymysql.connect(host="localhost", user="root", password="", database="u972964962_orbic", port=3306)
+    conn = pymysql.connect(
+        host=os.getenv("DB_HOST", "localhost"),
+        user=os.getenv("DB_USER", "root"),
+        password=os.getenv("DB_PASSWORD", ""),
+        database=os.getenv("DB_NAME", "u972964962_orbic"),
+        port=int(os.getenv("DB_PORT", "3306")),
+    )
     try:
         cur = conn.cursor()
 
