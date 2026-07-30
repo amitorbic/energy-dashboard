@@ -245,6 +245,19 @@ export default function Dashboard() {
                   Open admin →
                 </div>
               </Link>
+              <Link
+                href="/admin/test-data-generator"
+                className="group block border border-red-500/20 hover:border-red-500/50 bg-red-500/5 hover:bg-red-500/10 rounded-xl p-5 transition-all duration-200"
+              >
+                <div className="text-2xl mb-3 text-red-400">🧪</div>
+                <h3 className="text-white font-semibold text-sm mb-1">Test Data Generator</h3>
+                <p className="text-slate-400 text-xs leading-relaxed">
+                  Generate synthetic 867/810 EDI files for a set of ESI IDs, for testing billing and enrollment flows.
+                </p>
+                <div className="mt-4 text-xs font-medium text-red-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                  Open admin →
+                </div>
+              </Link>
             </div>
           </div>
         )}

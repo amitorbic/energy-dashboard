@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { getUser, clearAuth, User } from "../utils/auth";
+import { getUser, clearAuth, isAdmin, User } from "../utils/auth";
 
 const NAV_MODULES = [
   { label: "Pricing", href: "/pricing" },
@@ -20,6 +20,8 @@ const NAV_MODULES = [
   { label: "Enrollment",       href: "/enrollment" },
   { label: "Enrollment Audit", href: "/enrollment-audit" },
 ];
+
+const ADMIN_NAV_MODULE = { label: "Admin", href: "/admin" };
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -64,7 +66,7 @@ export default function Layout({ children, title }: LayoutProps) {
 
             {/* Desktop Nav */}
             <nav className="hidden md:flex items-center gap-1">
-              {NAV_MODULES.map((m) => (
+              {(isAdmin() ? [...NAV_MODULES, ADMIN_NAV_MODULE] : NAV_MODULES).map((m) => (
                 <Link
                   key={m.href}
                   href={m.href}
@@ -72,7 +74,9 @@ export default function Layout({ children, title }: LayoutProps) {
                     ${
                       router.pathname.startsWith(m.href)
                         ? "bg-sky-500 text-white"
-                        : "text-slate-300 hover:text-white hover:bg-slate-700"
+                        : m.href === "/admin"
+                          ? "text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                          : "text-slate-300 hover:text-white hover:bg-slate-700"
                     }`}
                 >
                   {m.label}
