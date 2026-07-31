@@ -131,9 +131,11 @@ app.include_router(esi_master_router.router, prefix="/api")
 
 from routers import admin_addon_types as admin_addon_types_router
 from routers import admin_test_data as admin_test_data_router
+from routers import admin_billing as admin_billing_router
 
 app.include_router(admin_addon_types_router.router, prefix="/api")
 app.include_router(admin_test_data_router.router, prefix="/api")
+app.include_router(admin_billing_router.router, prefix="/api")
 
 from routers import consumer as consumer_router
 

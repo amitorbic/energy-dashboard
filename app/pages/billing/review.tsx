@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import BillingEngineLayout from "../../components/BillingEngineLayout";
 import api from "../../utils/api";
+import { isAdmin } from "../../utils/auth";
 
 // ── types ─────────────────────────────────────────────────────────────────────
 
@@ -89,7 +90,33 @@ function Badge({ count, loading }: { count: number; loading: boolean }) {
 
 // ── tables ────────────────────────────────────────────────────────────────────
 
-function UnmatchedTable({ rows, loading }: { rows: UnmatchedEsi[]; loading: boolean }) {
+function UnmatchedTable({ rows, loading, onRefresh }: {
+  rows: UnmatchedEsi[];
+  loading: boolean;
+  onRefresh: () => void;
+}) {
+  const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [rowError, setRowError]     = useState<{ id: number; msg: string } | null>(null);
+  const admin = isAdmin();
+
+  const handleDelete = async (row: UnmatchedEsi) => {
+    if (!window.confirm(
+      `Delete unmatched record for ESI ${row.esi_id} (${period(row.service_start, row.service_end)})?\n\n` +
+      `This permanently removes this record. Blocked if it has already been matched to a billing period.`
+    )) return;
+
+    setRowError(null);
+    setDeletingId(row.id);
+    try {
+      await api.delete(`/admin/edi-867-usage/${row.id}`);
+      onRefresh();
+    } catch (e: any) {
+      setRowError({ id: row.id, msg: e?.response?.data?.detail ?? "Delete failed." });
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-xs">
@@ -101,13 +128,14 @@ function UnmatchedTable({ rows, loading }: { rows: UnmatchedEsi[]; loading: bool
             <th className="px-3 py-2.5 text-left text-gray-500 font-medium">TDSP</th>
             <th className="px-3 py-2.5 text-left text-gray-500 font-medium">Source File</th>
             <th className="px-3 py-2.5 text-left text-gray-500 font-medium whitespace-nowrap">Loaded At</th>
+            {admin && <th className="px-3 py-2.5 text-right text-gray-500 font-medium">&nbsp;</th>}
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-50">
           {loading ? (
-            <EmptyRow cols={6} msg="Loading…" />
+            <EmptyRow cols={admin ? 7 : 6} msg="Loading…" />
           ) : rows.length === 0 ? (
-            <EmptyRow cols={6} msg="No unmatched ESI IDs." />
+            <EmptyRow cols={admin ? 7 : 6} msg="No unmatched ESI IDs." />
           ) : (
             rows.map((r) => (
               <tr key={r.id} className="hover:bg-gray-50">
@@ -125,6 +153,21 @@ function UnmatchedTable({ rows, loading }: { rows: UnmatchedEsi[]; loading: bool
                 <td className="px-3 py-2 text-gray-400 whitespace-nowrap">
                   {r.created_at ? new Date(r.created_at).toLocaleString() : "—"}
                 </td>
+                {admin && (
+                  <td className="px-3 py-2 text-right">
+                    <button
+                      onClick={() => handleDelete(r)}
+                      disabled={deletingId === r.id}
+                      className="text-xs text-red-500 hover:text-red-700 disabled:opacity-40"
+                      title="Delete this record (blocked if already matched to a billing period)"
+                    >
+                      {deletingId === r.id ? "…" : "Delete"}
+                    </button>
+                    {rowError?.id === r.id && (
+                      <p className="text-xs text-red-500 mt-1 max-w-[220px] ml-auto text-right">{rowError.msg}</p>
+                    )}
+                  </td>
+                )}
               </tr>
             ))
           )}
@@ -334,7 +377,7 @@ export default function BillingReviewPage() {
         {/* tab content */}
         <div>
           {activeTab === "unmatched" && (
-            <UnmatchedTable rows={unmatched} loading={loading} />
+            <UnmatchedTable rows={unmatched} loading={loading} onRefresh={loadAll} />
           )}
           {activeTab === "unknown" && (
             <UnknownChargesTable rows={unknown} loading={loading} />

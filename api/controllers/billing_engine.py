@@ -360,6 +360,260 @@ async def _retroactive_810_link(db: AsyncSession, bp_id: int, esi_id: str, svc_s
     return len(rows)
 
 
+async def _fetch_contract_segments(
+    db: AsyncSession, esi_id: str, svc_start: date, svc_end: date,
+) -> list:
+    """
+    Active contract_renewal segments overlapping [svc_start, svc_end].
+    contract_end_date is VARCHAR(100) in the legacy table -- overlap
+    filtering is done in Python via _parse_date() rather than SQL.
+    Shared by ingest_867 (initial match) and recompute_billing_period
+    (admin revert re-match).
+    """
+    all_cr = await db.execute(text("""
+        SELECT contract_rate, other_charge,
+               contract_start_date, contract_end_date
+        FROM contract_renewal
+        WHERE premise_id = :esi_id AND status = 'active'
+        ORDER BY contract_start_date
+    """), {'esi_id': esi_id})
+
+    segments = []
+    for cr_row in all_cr.fetchall():
+        c_rate_str, c_other, c_start, c_end_str = cr_row
+        if c_start is None:
+            continue
+        c_end    = _parse_date(str(c_end_str) if c_end_str else '')
+        ov_start = max(c_start, svc_start)
+        ov_end   = min(c_end if c_end else svc_end, svc_end)
+        seg_days = (ov_end - ov_start).days
+        if seg_days <= 0:
+            continue
+        segments.append({
+            'rate_str': c_rate_str,
+            'other':    c_other,
+            'c_start':  c_start,
+            'ov_start': ov_start,
+            'ov_end':   ov_end,
+            'seg_days': seg_days,
+        })
+    return segments
+
+
+def _compute_energy_from_segments(
+    segments: list,
+    billing_days: int,
+    usage_kwh: Optional[Decimal],
+) -> dict:
+    """
+    Derive contract_rate / meter_fee / energy_charge / flags / energy_rows
+    from already-fetched contract segments. Pure function, no DB access --
+    shared by ingest_867 and recompute_billing_period (admin revert).
+
+    Empty `segments` naturally falls into the coverage-gap branch below
+    (covered_days=0 < billing_days), which is the right outcome for revert
+    (the billing_period already exists and must land somewhere). ingest_867
+    still special-cases "no segments at all" itself, before calling this,
+    since it additionally marks the source edi_867_usage row and skips
+    billing_period creation entirely -- a distinction that only applies
+    at initial ingest.
+    """
+    covered_days = sum(s['seg_days'] for s in segments)
+    multi        = len(segments) > 1
+
+    if not segments or covered_days < billing_days:
+        return {
+            'contract_rate': None, 'meter_fee': None,
+            'energy_charge': Decimal('0.00'),
+            'flags': ['contract_coverage_gap'], 'energy_rows': [],
+        }
+
+    if not multi:
+        seg           = segments[0]
+        contract_rate = _parse_decimal(str(seg['rate_str'])) if seg['rate_str'] else None
+        meter_fee     = _parse_meter_fee(seg['other'])
+        energy_charge = (
+            (Decimal(str(usage_kwh)) * contract_rate).quantize(Decimal('0.01'))
+            if usage_kwh is not None and contract_rate is not None
+            else Decimal('0.00')
+        )
+        return {
+            'contract_rate': contract_rate, 'meter_fee': meter_fee,
+            'energy_charge': energy_charge, 'flags': [], 'energy_rows': [],
+        }
+
+    # Multiple contracts overlap the period -- prorate energy by days.
+    # contract_rate stays NULL (no single rate represents the period).
+    # meter_fee = latest segment's other_charge, taken in full.
+    kwh       = Decimal(str(usage_kwh)) if usage_kwh is not None else Decimal('0')
+    daily_kwh = kwh / Decimal(str(billing_days)) if billing_days > 0 else Decimal('0')
+    energy_charge = Decimal('0.00')
+    energy_rows   = []
+
+    for seg in segments:
+        seg_rate = _parse_decimal(str(seg['rate_str'])) if seg['rate_str'] else Decimal('0')
+        seg_kwh  = (daily_kwh * Decimal(str(seg['seg_days']))).quantize(Decimal('0.0001'))
+        seg_amt  = (seg_kwh * seg_rate).quantize(Decimal('0.01'))
+        energy_charge += seg_amt
+        rate_str = str(seg_rate.normalize())
+        desc = (
+            f"Energy Charge "
+            f"{seg['ov_start'].strftime('%m/%d')}-{seg['ov_end'].strftime('%m/%d')}"
+            f" @ ${rate_str}/kWh"
+        )
+        energy_rows.append({
+            'description': desc,
+            'quantity':    seg_kwh,
+            'unit_rate':   seg_rate,
+            'amount':      seg_amt,
+        })
+
+    latest_seg = max(segments, key=lambda s: s['c_start'])
+    meter_fee  = _parse_meter_fee(latest_seg['other'])
+
+    return {
+        'contract_rate': None, 'meter_fee': meter_fee,
+        'energy_charge': energy_charge,
+        'flags': ['multi_contract_period'], 'energy_rows': energy_rows,
+    }
+
+
+async def _replay_810_charges(db: AsyncSession, bp_id: int) -> int:
+    """
+    Re-insert billing_period_charges rows for 810 line items already linked
+    to this billing_period. Used by recompute_billing_period after an admin
+    revert wipes billing_period_charges -- the revert never clears
+    edi_810_line_items.billing_period_id/mapping_id/status, so the same
+    mapping guard as _retroactive_810_link applies, just keyed off the
+    existing link instead of a fresh NULL->bp_id match.
+    """
+    r = await db.execute(text("""
+        SELECT li.id, li.charge_code, li.charge_description,
+               li.charge_amount, li.charge_rate, li.charge_quantity,
+               li.charge_unit, li.registered_quantity, li.charge_comments,
+               li.line_item_number,
+               m.id, m.billing_category, m.is_taxable
+        FROM edi_810_line_items li
+        JOIN tdsp_charge_mappings m ON m.id = li.mapping_id
+        WHERE li.billing_period_id = :bp_id
+          AND li.status = 'mapped'
+          AND m.billing_category != 'excluded'
+          AND m.is_taxable IS NOT NULL
+    """), {'bp_id': bp_id})
+    rows = r.fetchall()
+
+    for row in rows:
+        (li_id, code, desc, amount, rate, qty, unit, reg_qty, comments,
+         line_num, mapping_id, category, is_taxable) = row
+        li_dict = {
+            'charge_code':        code,
+            'charge_description': desc,
+            'charge_amount':      amount,
+            'charge_rate':        rate,
+            'charge_quantity':    qty,
+            'charge_unit':        unit,
+            'registered_quantity': reg_qty,
+            'charge_comments':    comments,
+            'line_item_number':   line_num,
+        }
+        await _insert_bpc(db, bp_id, mapping_id, category, is_taxable, li_dict, li_id)
+
+    return len(rows)
+
+
+async def recompute_billing_period(db: AsyncSession, bp_id: int) -> dict:
+    """
+    Re-derive a billing_period's contract_rate/meter_fee/energy_charge/flags
+    and regenerate its billing_period_charges (TDSP + addon + multi-segment
+    energy breakdown) from the still-linked edi_867_usage/edi_810_line_items
+    rows and current contract_renewal data.
+
+    Called by the admin revert endpoint immediately after a period's invoice
+    is deleted, its billing_period_charges are wiped, and its status is reset
+    to 'draft' -- so staff can re-approve without re-uploading the source EDI
+    files. Does NOT touch edi_867_usage/edi_810_line_items or their
+    billing_period_id links; those stay intact across a revert.
+    """
+    bp_r = await db.execute(text("""
+        SELECT esi_id, service_start, service_end, billing_days, usage_kwh
+        FROM billing_periods WHERE id = :id
+    """), {'id': bp_id})
+    esi_id, svc_start, svc_end, billing_days, usage_kwh = bp_r.fetchone()
+
+    segments = await _fetch_contract_segments(db, esi_id, svc_start, svc_end)
+    match = _compute_energy_from_segments(segments, billing_days, usage_kwh)
+    flags = list(match['flags'])
+
+    if 'contract_coverage_gap' not in flags:
+        addon_flags = await _insert_addon_charges(
+            db=db,
+            bp_id=bp_id,
+            esi_id=esi_id,
+            svc_start=svc_start,
+            svc_end=svc_end,
+            usage_kwh=Decimal(str(usage_kwh)) if usage_kwh is not None else None,
+            billing_days=billing_days,
+        )
+        for f in addon_flags:
+            if f not in flags:
+                flags.append(f)
+
+        if match['energy_rows']:
+            for i, er in enumerate(match['energy_rows']):
+                await db.execute(text("""
+                    INSERT INTO billing_period_charges
+                      (billing_period_id, charge_source, charge_category,
+                       description, amount, quantity, unit_rate, unit,
+                       is_taxable, sort_order)
+                    VALUES
+                      (:bp_id, 'supplier', 'energy',
+                       :desc, :amount, :qty, :rate, 'kWh',
+                       1, :sort)
+                """), {
+                    'bp_id':  bp_id,
+                    'desc':   er['description'],
+                    'amount': er['amount'],
+                    'qty':    er['quantity'],
+                    'rate':   er['unit_rate'],
+                    'sort':   i,
+                })
+            if match['meter_fee'] is not None and match['meter_fee'] > 0:
+                await db.execute(text("""
+                    INSERT INTO billing_period_charges
+                      (billing_period_id, charge_source, charge_category,
+                       description, amount, quantity, unit_rate, unit,
+                       is_taxable, sort_order)
+                    VALUES
+                      (:bp_id, 'supplier', 'meter_fee',
+                       'Meter Fee', :amount, 1, :rate, NULL,
+                       1, 99)
+                """), {'bp_id': bp_id, 'amount': match['meter_fee'], 'rate': match['meter_fee']})
+
+    tdsp_count = await _replay_810_charges(db, bp_id)
+
+    await db.execute(text("""
+        UPDATE billing_periods
+        SET contract_rate = :cr, meter_fee = :mf, energy_charge = :ec,
+            flags = :flags, has_810 = :has_810
+        WHERE id = :id
+    """), {
+        'cr':      match['contract_rate'],
+        'mf':      match['meter_fee'],
+        'ec':      match['energy_charge'],
+        'flags':   json.dumps(flags) if flags else None,
+        'has_810': 1 if tdsp_count > 0 else 0,
+        'id':      bp_id,
+    })
+
+    return {
+        'contract_rate':         match['contract_rate'],
+        'meter_fee':             match['meter_fee'],
+        'energy_charge':         match['energy_charge'],
+        'flags':                 flags,
+        'tdsp_charges_restored': tdsp_count,
+    }
+
+
 async def _get_charge_mapping(db: AsyncSession, charge_code: str, tdsp_duns: Optional[str]):
     """DUNS-specific mapping first, then universal (NULL) fallback."""
     if tdsp_duns:
@@ -668,39 +922,11 @@ async def ingest_867(
             continue
 
         # ── Contract matching with multi-segment proration ────────────────────
-        # contract_end_date is VARCHAR(100) in the legacy table — overlap
-        # filtering is done in Python via _parse_date() rather than SQL.
         svc_start    = rec['service_start']
         svc_end      = rec['service_end']
         billing_days = rec['billing_days']   # (svc_end - svc_start).days
 
-        all_cr = await db.execute(text("""
-            SELECT contract_rate, other_charge,
-                   contract_start_date, contract_end_date
-            FROM contract_renewal
-            WHERE premise_id = :esi_id AND status = 'active'
-            ORDER BY contract_start_date
-        """), {'esi_id': esi_id})
-
-        segments = []
-        for cr_row in all_cr.fetchall():
-            c_rate_str, c_other, c_start, c_end_str = cr_row
-            if c_start is None:
-                continue
-            c_end    = _parse_date(str(c_end_str) if c_end_str else '')
-            ov_start = max(c_start, svc_start)
-            ov_end   = min(c_end if c_end else svc_end, svc_end)
-            seg_days = (ov_end - ov_start).days
-            if seg_days <= 0:
-                continue
-            segments.append({
-                'rate_str': c_rate_str,
-                'other':    c_other,
-                'c_start':  c_start,
-                'ov_start': ov_start,
-                'ov_end':   ov_end,
-                'seg_days': seg_days,
-            })
+        segments = await _fetch_contract_segments(db, esi_id, svc_start, svc_end)
 
         if not segments:
             await db.execute(text(
@@ -709,62 +935,13 @@ async def ingest_867(
             results.append({'esi_id': esi_id, 'status': 'no_contract'})
             continue
 
-        covered_days = sum(s['seg_days'] for s in segments)
-        multi        = len(segments) > 1
-
-        if covered_days < billing_days:
-            # Gap: some days in the period have no contract coverage.
-            # Cannot compute a valid energy charge — block approval.
-            flags         = ['contract_coverage_gap']
-            contract_rate = None
-            meter_fee     = None
-            energy_charge = Decimal('0.00')
-            energy_rows   = []
-
-        elif not multi:
-            # Single contract covers the full period.
-            seg           = segments[0]
-            contract_rate = _parse_decimal(str(seg['rate_str'])) if seg['rate_str'] else None
-            meter_fee     = _parse_meter_fee(seg['other'])
-            energy_charge = (
-                (Decimal(str(rec['usage_kwh'])) * contract_rate).quantize(Decimal('0.01'))
-                if rec['usage_kwh'] is not None and contract_rate is not None
-                else Decimal('0.00')
-            )
-            flags       = []
-            energy_rows = []
-
-        else:
-            # Multiple contracts overlap the period — prorate energy by days.
-            # contract_rate stays NULL (no single rate represents the period).
-            # meter_fee = latest segment's other_charge, taken in full.
-            flags         = ['multi_contract_period']
-            contract_rate = None
-            kwh           = Decimal(str(rec['usage_kwh'])) if rec['usage_kwh'] is not None else Decimal('0')
-            daily_kwh     = kwh / Decimal(str(billing_days)) if billing_days > 0 else Decimal('0')
-            energy_charge = Decimal('0.00')
-            energy_rows   = []
-
-            for seg in segments:
-                seg_rate = _parse_decimal(str(seg['rate_str'])) if seg['rate_str'] else Decimal('0')
-                seg_kwh  = (daily_kwh * Decimal(str(seg['seg_days']))).quantize(Decimal('0.0001'))
-                seg_amt  = (seg_kwh * seg_rate).quantize(Decimal('0.01'))
-                energy_charge += seg_amt
-                rate_str = str(seg_rate.normalize())
-                desc = (
-                    f"Energy Charge "
-                    f"{seg['ov_start'].strftime('%m/%d')}-{seg['ov_end'].strftime('%m/%d')}"
-                    f" @ ${rate_str}/kWh"
-                )
-                energy_rows.append({
-                    'description': desc,
-                    'quantity':    seg_kwh,
-                    'unit_rate':   seg_rate,
-                    'amount':      seg_amt,
-                })
-
-            latest_seg = max(segments, key=lambda s: s['c_start'])
-            meter_fee  = _parse_meter_fee(latest_seg['other'])
+        multi = len(segments) > 1
+        match = _compute_energy_from_segments(segments, billing_days, rec['usage_kwh'])
+        contract_rate = match['contract_rate']
+        meter_fee     = match['meter_fee']
+        energy_charge = match['energy_charge']
+        flags         = match['flags']
+        energy_rows   = match['energy_rows']
 
         # Create billing_period (IGNORE on duplicate esi+period — 867 re-send)
         bp = await db.execute(text("""

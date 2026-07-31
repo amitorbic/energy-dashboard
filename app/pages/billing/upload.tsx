@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import BillingEngineLayout from "../../components/BillingEngineLayout";
 import api from "../../utils/api";
+import { isAdmin } from "../../utils/auth";
 
 // ── types ─────────────────────────────────────────────────────────────────────
 
@@ -209,6 +210,29 @@ function HistoryTable({ rows, loading, onRefresh }: {
   loading: boolean;
   onRefresh: () => void;
 }) {
+  const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [rowError, setRowError]     = useState<{ id: number; msg: string } | null>(null);
+  const admin = isAdmin();
+
+  const handleDelete = async (row: EdiFile) => {
+    if (!window.confirm(
+      `Delete "${row.original_filename ?? row.interchange_control}"?\n\n` +
+      `This permanently deletes the file and all its parsed records. ` +
+      `Blocked if any record has already been matched to a billing period.`
+    )) return;
+
+    setRowError(null);
+    setDeletingId(row.id);
+    try {
+      await api.delete(`/admin/edi-files/${row.id}`);
+      onRefresh();
+    } catch (e: any) {
+      setRowError({ id: row.id, msg: e?.response?.data?.detail ?? "Delete failed." });
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   return (
     <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
       <div className="px-4 py-3 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
@@ -245,6 +269,7 @@ function HistoryTable({ rows, loading, onRefresh }: {
                 <th className="px-3 py-2 text-right text-gray-500 font-medium">Matched</th>
                 <th className="px-3 py-2 text-left text-gray-500 font-medium">Status</th>
                 <th className="px-3 py-2 text-left text-gray-500 font-medium whitespace-nowrap">Uploaded At</th>
+                {admin && <th className="px-3 py-2 text-right text-gray-500 font-medium">&nbsp;</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
@@ -286,6 +311,21 @@ function HistoryTable({ rows, loading, onRefresh }: {
                   <td className="px-3 py-2 text-gray-400 whitespace-nowrap">
                     {r.created_at ? new Date(r.created_at).toLocaleString() : "—"}
                   </td>
+                  {admin && (
+                    <td className="px-3 py-2 text-right">
+                      <button
+                        onClick={() => handleDelete(r)}
+                        disabled={deletingId === r.id}
+                        className="text-xs text-red-500 hover:text-red-700 disabled:opacity-40"
+                        title="Delete this file and its records (blocked if already billed)"
+                      >
+                        {deletingId === r.id ? "…" : "Delete"}
+                      </button>
+                      {rowError?.id === r.id && (
+                        <p className="text-xs text-red-500 mt-1 max-w-[220px] ml-auto text-right">{rowError.msg}</p>
+                      )}
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>

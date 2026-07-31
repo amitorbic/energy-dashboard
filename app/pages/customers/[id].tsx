@@ -220,6 +220,22 @@ interface AddonTypeOption {
   rate_effective_from: string | null;
 }
 
+interface InvoiceRow {
+  id: number;
+  invoice_number: string;
+  billing_period_id: number;
+  esi_id: string;
+  invoice_date: string | null;
+  due_date: string | null;
+  total_amount: number;
+  status: string;
+  sent_at: string | null;
+  paid_at: string | null;
+  created_at: string | null;
+  service_start: string | null;
+  service_end: string | null;
+}
+
 const TABS = [
   "Overview",
   "Contracts",
@@ -270,6 +286,15 @@ const CustomerDetailPage = () => {
   const [addonMsg, setAddonMsg] = useState("");
   const [addonError, setAddonError] = useState(false);
   const [detachConfirm, setDetachConfirm] = useState<number | null>(null);
+
+  const [invoices, setInvoices] = useState<InvoiceRow[]>([]);
+  const [invoicesLoading, setInvoicesLoading] = useState(false);
+  const [invoicesLoaded, setInvoicesLoaded] = useState(false);
+  const [postingId, setPostingId] = useState<number | null>(null);
+  const [invoiceMsg, setInvoiceMsg] = useState("");
+  const [invoiceError, setInvoiceError] = useState(false);
+  const [unpostConfirmId, setUnpostConfirmId] = useState<number | null>(null);
+  const [unpostBusyId, setUnpostBusyId] = useState<number | null>(null);
 
   useEffect(() => {
     setAdmin(isAdmin());
@@ -346,6 +371,59 @@ const CustomerDetailPage = () => {
       .catch(() => setAddonsLoaded(true))
       .finally(() => setAddonsLoading(false));
   }, [activeTab, addonsLoaded, id]);
+
+  useEffect(() => {
+    if (activeTab !== "Bills" || invoicesLoaded || !customer?.esi_id) return;
+    setInvoicesLoading(true);
+    api
+      .get(`/billing-engine/invoices/by-esi/${customer.esi_id}`)
+      .then((r) => { setInvoices(r.data || []); setInvoicesLoaded(true); })
+      .catch(() => setInvoicesLoaded(true))
+      .finally(() => setInvoicesLoading(false));
+  }, [activeTab, invoicesLoaded, customer?.esi_id]);
+
+  const handlePostInvoice = async (invoiceId: number) => {
+    setPostingId(invoiceId);
+    setInvoiceMsg("");
+    setInvoiceError(false);
+    try {
+      await api.post(`/billing-engine/invoices/${invoiceId}/post`);
+      setInvoices((prev) =>
+        prev.map((inv) => (inv.id === invoiceId ? { ...inv, status: "posted" } : inv))
+      );
+    } catch (err: unknown) {
+      const msg =
+        (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ??
+        "Failed to post invoice — please try again.";
+      setInvoiceMsg(msg);
+      setInvoiceError(true);
+    } finally {
+      setPostingId(null);
+    }
+  };
+
+  const handleUnpostInvoice = async (invoiceId: number) => {
+    setUnpostBusyId(invoiceId);
+    setInvoiceMsg("");
+    setInvoiceError(false);
+    try {
+      await api.post(`/admin/invoices/${invoiceId}/unpost`);
+      setInvoices((prev) =>
+        prev.map((inv) => (inv.id === invoiceId ? { ...inv, status: "draft" } : inv))
+      );
+      setUnpostConfirmId(null);
+      setInvoiceMsg("Invoice unposted. You can now revert this billing period if needed.");
+      setInvoiceError(false);
+    } catch (err: unknown) {
+      const msg =
+        (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ??
+        "Failed to unpost invoice — please try again.";
+      setInvoiceMsg(msg);
+      setInvoiceError(true);
+    } finally {
+      setUnpostBusyId(null);
+    }
+  };
 
   const set = (field: keyof EditForm) => (v: string) =>
     setForm((prev) => ({ ...prev, [field]: v }));
@@ -590,8 +668,100 @@ const CustomerDetailPage = () => {
           </div>
         )}
 
+        {/* Bills tab */}
+        {activeTab === "Bills" && (
+          <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
+            <h2 className="text-white font-bold uppercase tracking-tight text-sm mb-4">Bills</h2>
+            {invoicesLoading ? (
+              <p className="text-slate-500 text-sm animate-pulse">Loading…</p>
+            ) : invoices.length === 0 ? (
+              <p className="text-slate-500 text-sm">No bills found for this ESI ID.</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs text-slate-300">
+                  <thead>
+                    <tr className="bg-slate-800 text-slate-400 uppercase text-xs">
+                      <th className="px-3 py-2 text-left">Bill Number</th>
+                      <th className="px-3 py-2 text-left">Bill Date</th>
+                      <th className="px-3 py-2 text-left">Service Start</th>
+                      <th className="px-3 py-2 text-left">Service End</th>
+                      <th className="px-3 py-2 text-right">Bill Amount</th>
+                      <th className="px-3 py-2 text-left">Due Date</th>
+                      <th className="px-3 py-2 text-left">Status</th>
+                      <th className="px-3 py-2 text-left">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {invoices.map((inv) => {
+                      const statusColors: Record<string, string> = {
+                        draft:  "bg-slate-700 text-slate-400",
+                        posted: "bg-blue-900/50 text-blue-400",
+                        sent:   "bg-yellow-900/50 text-yellow-400",
+                        paid:   "bg-green-900/50 text-green-400",
+                        void:   "bg-red-900/50 text-red-400",
+                      };
+                      const badgeCls = statusColors[inv.status] ?? "bg-slate-700 text-slate-400";
+                      return (
+                        <tr key={inv.id} className="border-t border-slate-800 hover:bg-slate-800/40">
+                          <td className="px-3 py-2 font-mono font-bold text-slate-200">{inv.invoice_number}</td>
+                          <td className="px-3 py-2 font-mono whitespace-nowrap">{inv.invoice_date || "—"}</td>
+                          <td className="px-3 py-2 font-mono whitespace-nowrap">{inv.service_start || "—"}</td>
+                          <td className="px-3 py-2 font-mono whitespace-nowrap">{inv.service_end || "—"}</td>
+                          <td className="px-3 py-2 text-right font-mono">
+                            ${inv.total_amount.toFixed(2)}
+                          </td>
+                          <td className="px-3 py-2 font-mono whitespace-nowrap">{inv.due_date || "—"}</td>
+                          <td className="px-3 py-2">
+                            <span className={`text-xs px-2 py-0.5 rounded ${badgeCls}`}>{inv.status}</span>
+                          </td>
+                          <td className="px-3 py-2">
+                            <div className="flex items-center gap-3">
+                              {inv.status === "draft" ? (
+                                <button
+                                  onClick={() => handlePostInvoice(inv.id)}
+                                  disabled={postingId === inv.id}
+                                  className="text-xs px-2 py-0.5 rounded bg-red-900/60 text-red-400 hover:bg-red-800/60 disabled:opacity-50 transition-colors"
+                                >
+                                  {postingId === inv.id ? "Posting…" : "Post"}
+                                </button>
+                              ) : null}
+                              {admin && inv.status === "sent" ? (
+                                <button
+                                  onClick={() => setUnpostConfirmId(inv.id)}
+                                  disabled={unpostBusyId === inv.id}
+                                  className="text-xs px-2 py-0.5 rounded bg-amber-900/60 text-amber-400 hover:bg-amber-800/60 disabled:opacity-50 transition-colors"
+                                >
+                                  {unpostBusyId === inv.id ? "Unposting…" : "Unpost"}
+                                </button>
+                              ) : null}
+                              <span
+                                title="PDF generation is not yet available"
+                                className="text-xs text-slate-600 cursor-not-allowed"
+                              >
+                                View PDF (Not yet available)
+                              </span>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+            {invoiceMsg && (
+              <p className={`text-sm mt-3 ${invoiceError ? "text-red-400" : "text-green-400"}`}>
+                {invoiceMsg}
+              </p>
+            )}
+          </div>
+        )}
+
         {/* Coming soon placeholder for unbuilt tabs */}
-        {activeTab !== "Overview" && activeTab !== "Contracts" && activeTab !== "Addon Charges" && (
+        {activeTab !== "Overview" &&
+          activeTab !== "Contracts" &&
+          activeTab !== "Addon Charges" &&
+          activeTab !== "Bills" && (
           <div className="bg-slate-900 border border-slate-800 rounded-xl p-10 text-center">
             <h2 className="text-slate-300 text-lg font-semibold mb-2">{activeTab}</h2>
             <p className="text-slate-500 text-sm">This section is under construction — coming soon.</p>
@@ -875,6 +1045,42 @@ const CustomerDetailPage = () => {
         )}
 
       </div>
+
+      {unpostConfirmId !== null && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="bg-slate-900 border border-amber-800 rounded-xl shadow-xl w-full max-w-lg overflow-hidden">
+            <div className="px-6 py-4 border-b border-amber-800 bg-amber-950/40">
+              <p className="font-semibold text-amber-400">
+                Unpost Invoice {invoices.find((i) => i.id === unpostConfirmId)?.invoice_number}?
+              </p>
+            </div>
+            <div className="px-6 py-4 space-y-3 text-sm text-slate-300">
+              <p className="text-amber-300 bg-amber-950/30 border border-amber-800 rounded px-3 py-2">
+                Unposting a sent bill can create accounting discrepancies, especially if
+                significant time has passed since it was sent. This should only be done
+                shortly after sending, and the affected accounting period may need manual
+                reconciliation. Continue?
+              </p>
+            </div>
+            <div className="px-6 py-4 border-t border-slate-800 flex justify-end gap-2">
+              <button
+                onClick={() => setUnpostConfirmId(null)}
+                disabled={unpostBusyId === unpostConfirmId}
+                className="px-4 py-2 text-sm font-medium text-slate-400 hover:text-slate-200 disabled:opacity-40"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleUnpostInvoice(unpostConfirmId)}
+                disabled={unpostBusyId === unpostConfirmId}
+                className="px-4 py-2 bg-amber-600 text-white text-sm font-medium rounded hover:bg-amber-700 disabled:opacity-40 transition-colors"
+              >
+                {unpostBusyId === unpostConfirmId ? "Unposting…" : "Yes, Unpost"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </Layout>
   );
 };

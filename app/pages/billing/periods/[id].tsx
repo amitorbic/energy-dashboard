@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 import Link from "next/link";
 import BillingEngineLayout from "../../../components/BillingEngineLayout";
 import api from "../../../utils/api";
+import { isAdmin } from "../../../utils/auth";
 
 // ── types ─────────────────────────────────────────────────────────────────────
 
@@ -109,6 +110,12 @@ export default function BillingPeriodDetailPage() {
   const [error, setError]         = useState("");
   const [actionBusy, setActionBusy] = useState(false);
   const [actionMsg, setActionMsg]   = useState("");
+  const [showRevertConfirm, setShowRevertConfirm] = useState(false);
+  const [revertBusy, setRevertBusy] = useState(false);
+  const [revertMsg, setRevertMsg]   = useState("");
+  const [showUnpostConfirm, setShowUnpostConfirm] = useState(false);
+  const [unpostBusy, setUnpostBusy] = useState(false);
+  const [unpostMsg, setUnpostMsg]   = useState("");
 
   const load = useCallback(async (pid: string) => {
     setLoading(true);
@@ -161,6 +168,37 @@ export default function BillingPeriodDetailPage() {
       setActionMsg(e?.response?.data?.detail ?? "Invoice generation failed.");
     } finally {
       setActionBusy(false);
+    }
+  };
+
+  const revertToDraft = async () => {
+    if (!period) return;
+    setRevertBusy(true);
+    setRevertMsg("");
+    try {
+      await api.post(`/admin/billing-periods/${period.id}/revert`);
+      setShowRevertConfirm(false);
+      await load(String(period.id));
+    } catch (e: any) {
+      setRevertMsg(e?.response?.data?.detail ?? "Revert failed.");
+    } finally {
+      setRevertBusy(false);
+    }
+  };
+
+  const unpostInvoice = async () => {
+    if (!invoice) return;
+    setUnpostBusy(true);
+    setUnpostMsg("");
+    try {
+      await api.post(`/admin/invoices/${invoice.id}/unpost`);
+      setShowUnpostConfirm(false);
+      await load(String(period!.id));
+      setUnpostMsg("Invoice unposted. You can now revert this billing period if needed.");
+    } catch (e: any) {
+      setUnpostMsg(e?.response?.data?.detail ?? "Unpost failed.");
+    } finally {
+      setUnpostBusy(false);
     }
   };
 
@@ -326,6 +364,43 @@ export default function BillingPeriodDetailPage() {
                 <p className="text-xs text-red-500 text-center">{actionMsg}</p>
               )}
             </div>
+            {isAdmin() && (period.status !== "draft" || invoice) && (
+              <div className="px-4 py-3 border-t border-gray-100 space-y-2">
+                {invoice && (invoice.status === "sent" || invoice.status === "paid") ? (
+                  <>
+                    <div className="px-3 py-2 bg-red-50 border border-red-200 rounded text-xs text-red-600">
+                      <p className="font-medium mb-0.5">Revert blocked</p>
+                      <p>Invoice {invoice.invoice_number} has already been {invoice.status}. Periods with a sent or paid invoice can never be reverted.</p>
+                    </div>
+                    {invoice.status === "sent" && (
+                      <button
+                        onClick={() => { setUnpostMsg(""); setShowUnpostConfirm(true); }}
+                        disabled={actionBusy || unpostBusy}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-white border border-amber-300 text-amber-700 text-sm font-medium rounded hover:bg-amber-50 disabled:opacity-40 transition-colors"
+                      >
+                        Unpost Invoice
+                      </button>
+                    )}
+                  </>
+                ) : (
+                  <button
+                    onClick={() => { setRevertMsg(""); setShowRevertConfirm(true); }}
+                    disabled={actionBusy || revertBusy}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-white border border-red-300 text-red-600 text-sm font-medium rounded hover:bg-red-50 disabled:opacity-40 transition-colors"
+                  >
+                    Revert to Draft
+                  </button>
+                )}
+                {revertMsg && (
+                  <p className="text-xs text-red-500 text-center">{revertMsg}</p>
+                )}
+                {unpostMsg && (
+                  <p className={`text-xs text-center ${unpostMsg.startsWith("Invoice unposted") ? "text-green-600" : "text-red-500"}`}>
+                    {unpostMsg}
+                  </p>
+                )}
+              </div>
+            )}
           </div>
 
           {/* invoice card */}
@@ -469,6 +544,86 @@ export default function BillingPeriodDetailPage() {
 
         </div>
       </div>
+
+      {showRevertConfirm && period && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-lg overflow-hidden">
+            <div className="px-6 py-4 border-b border-red-200 bg-red-50">
+              <p className="font-semibold text-red-700">Revert Period #{period.id} to Draft?</p>
+            </div>
+            <div className="px-6 py-4 space-y-3 text-sm text-gray-700">
+              <p>This action cannot be undone. It will immediately:</p>
+              <ul className="list-disc pl-5 space-y-1 text-gray-600">
+                {invoice && (
+                  <li>Delete invoice <span className="font-mono">{invoice.invoice_number}</span> ({invoice.status}) entirely.</li>
+                )}
+                <li>Wipe all {period.charges.length} charge line(s) (energy, meter fee, TDSP, addon, tax).</li>
+                <li>Reset the period's status back to <span className="font-mono">draft</span>.</li>
+                <li>Recompute contract rate, meter fee, energy charge, TDSP charges, and flags from the still-linked EDI data — no re-upload needed.</li>
+              </ul>
+              <p className="text-gray-500">The underlying EDI 867/810 records stay linked, so staff can re-approve this period afterward.</p>
+              {revertMsg && (
+                <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">{revertMsg}</p>
+              )}
+            </div>
+            <div className="px-6 py-4 border-t border-gray-100 flex justify-end gap-2">
+              <button
+                onClick={() => setShowRevertConfirm(false)}
+                disabled={revertBusy}
+                className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-800 disabled:opacity-40"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={revertToDraft}
+                disabled={revertBusy}
+                className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white text-sm font-medium rounded hover:bg-red-700 disabled:opacity-40 transition-colors"
+              >
+                {revertBusy && <Spinner />}
+                Yes, Revert to Draft
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showUnpostConfirm && invoice && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-lg overflow-hidden">
+            <div className="px-6 py-4 border-b border-amber-200 bg-amber-50">
+              <p className="font-semibold text-amber-800">Unpost Invoice {invoice.invoice_number}?</p>
+            </div>
+            <div className="px-6 py-4 space-y-3 text-sm text-gray-700">
+              <p className="text-amber-700 bg-amber-50 border border-amber-200 rounded px-3 py-2">
+                Unposting a sent bill can create accounting discrepancies, especially if
+                significant time has passed since it was sent. This should only be done
+                shortly after sending, and the affected accounting period may need manual
+                reconciliation. Continue?
+              </p>
+              {unpostMsg && (
+                <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">{unpostMsg}</p>
+              )}
+            </div>
+            <div className="px-6 py-4 border-t border-gray-100 flex justify-end gap-2">
+              <button
+                onClick={() => setShowUnpostConfirm(false)}
+                disabled={unpostBusy}
+                className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-800 disabled:opacity-40"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={unpostInvoice}
+                disabled={unpostBusy}
+                className="flex items-center gap-2 px-4 py-2 bg-amber-600 text-white text-sm font-medium rounded hover:bg-amber-700 disabled:opacity-40 transition-colors"
+              >
+                {unpostBusy && <Spinner />}
+                Yes, Unpost
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </BillingEngineLayout>
   );
 }

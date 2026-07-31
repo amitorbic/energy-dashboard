@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { getUser, clearAuth, isAdmin, User } from "../utils/auth";
+import { getUser, clearAuth, User } from "../utils/auth";
 
 const NAV_MODULES = [
   { label: "Pricing", href: "/pricing" },
@@ -66,7 +66,7 @@ export default function Layout({ children, title }: LayoutProps) {
 
             {/* Desktop Nav */}
             <nav className="hidden md:flex items-center gap-1">
-              {(isAdmin() ? [...NAV_MODULES, ADMIN_NAV_MODULE] : NAV_MODULES).map((m) => (
+              {(user?.role === '1' ? [...NAV_MODULES, ADMIN_NAV_MODULE] : NAV_MODULES).map((m) => (
                 <Link
                   key={m.href}
                   href={m.href}

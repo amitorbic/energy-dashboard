@@ -174,7 +174,7 @@ class Invoice(Base):
     supplier_charge   = Column(Numeric(12, 2), nullable=False, default=0)
     tdsp_total        = Column(Numeric(12, 2), nullable=False, default=0)
     tax_total         = Column(Numeric(12, 2), nullable=False, default=0)
-    status            = Column(Enum("draft", "sent", "paid", "void"), nullable=False, default="draft")
+    status            = Column(Enum("draft", "posted", "sent", "paid", "void"), nullable=False, default="draft")
     sent_at           = Column(TIMESTAMP, nullable=True)
     paid_at           = Column(TIMESTAMP, nullable=True)
     created_at        = Column(TIMESTAMP, server_default=func.now())

@@ -17,16 +17,29 @@ def _is_exempt_varchar(val) -> bool:
 
 
 async def _next_invoice_number(db: AsyncSession, today: date) -> str:
-    """B + YYMMDD + 4-digit daily sequence starting at 0001."""
-    r = await db.execute(text("""
-        SELECT COALESCE(
-          MAX(CAST(SUBSTRING(invoice_number, 8) AS UNSIGNED)),
-          0
-        ) + 1
-        FROM invoices
-        WHERE invoice_date = :today
+    """B + YYMMDD + 4-digit daily sequence starting at 0001.
+
+    Driven by invoice_sequence_tracker, NOT by MAX() over existing invoice
+    rows -- reverting an invoice DELETEs its row, so deriving the next
+    number from surviving rows would let a deleted number be reissued.
+    The INSERT ... ON DUPLICATE KEY UPDATE ... LAST_INSERT_ID(expr) idiom
+    increments and reads back the new value atomically under an InnoDB row
+    lock, so concurrent invoice generation for the same day can't race into
+    a duplicate sequence number. LAST_INSERT_ID(1) also appears in the
+    VALUES clause (not just ON DUPLICATE KEY UPDATE) -- without it, the
+    plain-INSERT branch taken for a date's first-ever call never sets the
+    session's last-insert-id, which then reads back as whatever value an
+    unrelated AUTO_INCREMENT insert on the same pooled connection last left
+    it as, corrupting the sequence.
+    """
+    await db.execute(text("""
+        INSERT INTO invoice_sequence_tracker (`date`, last_sequence_used)
+        VALUES (:today, LAST_INSERT_ID(1))
+        ON DUPLICATE KEY UPDATE
+          last_sequence_used = LAST_INSERT_ID(last_sequence_used + 1)
     """), {'today': today})
-    seq = r.scalar() or 1
+    r = await db.execute(text("SELECT LAST_INSERT_ID()"))
+    seq = r.scalar()
     return f"B{today.strftime('%y%m%d')}{int(seq):04d}"
 
 
