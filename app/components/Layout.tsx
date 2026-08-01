@@ -1,27 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/router";
 import { getUser, clearAuth, User } from "../utils/auth";
-
-const NAV_MODULES = [
-  { label: "Pricing", href: "/pricing" },
-  { label: "Broker Database", href: "/broker" },
-  { label: "Customer Database", href: "/customers" },
-  { label: "ESI ID Search", href: "/esi-search" },
-  { label: "Daily Pricing", href: "/daily-pricing" },
-  { label: "Contract Confirmation", href: "/contracts" },
-  { label: "Billing Audit", href: "/billing-audit" },
-  { label: "Billing", href: "/billing" },
-  { label: "Payments", href: "/payments" },
-  { label: "Past Due Portal", href: "/past-due" },
-  { label: "Commission Data", href: "/commission" },
-  { label: "Portfolio", href: "/portfolio" },
-  { label: "Enrollment",       href: "/enrollment" },
-  { label: "Enrollment Audit", href: "/enrollment-audit" },
-];
-
-const ADMIN_NAV_MODULE = { label: "Admin", href: "/admin" };
+import Sidebar from "./Sidebar";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -50,71 +31,24 @@ export default function Layout({ children, title }: LayoutProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      {/* Header */}
-      <header className="bg-slate-900 text-white shadow-lg flex-shrink-0">
-        <div className="max-w-screen-xl mx-auto px-4">
-          <div className="flex items-center justify-between h-14">
-            {/* Logo */}
-            <Link
-              href="/"
-              className="flex items-center gap-2 font-bold text-lg tracking-tight"
-            >
-              <span className="text-sky-400">⚡</span>
-              <span>ORBIC</span>
-            </Link>
+    <div className="flex min-h-screen" style={{ background: "var(--ct-canvas)" }}>
+      <Sidebar user={user} onLogout={handleLogout} />
 
-            {/* Desktop Nav */}
-            <nav className="hidden md:flex items-center gap-1">
-              {(user?.role === '1' ? [...NAV_MODULES, ADMIN_NAV_MODULE] : NAV_MODULES).map((m) => (
-                <Link
-                  key={m.href}
-                  href={m.href}
-                  className={`px-3 py-2 rounded text-sm font-medium transition-colors
-                    ${
-                      router.pathname.startsWith(m.href)
-                        ? "bg-sky-500 text-white"
-                        : m.href === "/admin"
-                          ? "text-red-400 hover:text-red-300 hover:bg-red-500/10"
-                          : "text-slate-300 hover:text-white hover:bg-slate-700"
-                    }`}
-                >
-                  {m.label}
-                </Link>
-              ))}
-            </nav>
-
-            {/* User menu */}
-            <div className="flex items-center gap-3">
-              {user && (
-                <span className="text-sm text-slate-400 hidden md:block">
-                  {user.username}
-                </span>
-              )}
-              <button
-                onClick={handleLogout}
-                className="text-sm text-slate-400 hover:text-white transition-colors px-3 py-1.5 rounded border border-slate-700 hover:border-slate-500"
-              >
-                Logout
-              </button>
-            </div>
+      <div className="flex-1 min-w-0 flex flex-col">
+        {title && (
+          <div
+            className="px-6 py-3.5 shrink-0"
+            style={{ background: "var(--ct-surface)", borderBottom: "1px solid var(--ct-border-subtle)" }}
+          >
+            <h1 className="text-[15px] font-semibold" style={{ color: "var(--ct-text-primary)" }}>
+              {title}
+            </h1>
           </div>
-        </div>
-      </header>
-
-      {/* Page title bar */}
-      {title && (
-        <div className="bg-white border-b border-gray-200 px-4 py-3 flex-shrink-0">
-          <div className="max-w-screen-xl mx-auto">
-            <h1 className="text-lg font-semibold text-gray-800">{title}</h1>
-          </div>
-        </div>
-      )}
-
-      {/* Main content */}
-      <main className="max-w-screen-xl mx-auto px-4 py-6 w-full flex-grow">
-        {children}
-      </main>
+        )}
+        <main className="flex-1 px-6 py-6" style={{ color: "var(--ct-text-primary)" }}>
+          {children}
+        </main>
+      </div>
     </div>
   );
 }
