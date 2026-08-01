@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import Layout from "../components/Layout";
 import api from "../utils/api";
 
@@ -43,8 +43,8 @@ const MAX_BATCH_IDS = 100;
 function Field({ label, value, mono = false }: { label: string; value: string | null | undefined; mono?: boolean }) {
   return (
     <div>
-      <p className="text-xs text-gray-500 uppercase tracking-wide mb-0.5">{label}</p>
-      <p className={`text-sm text-gray-800 ${mono ? "font-mono" : ""}`}>{value || "—"}</p>
+      <p className="text-xs text-[var(--ct-text-muted)] uppercase tracking-wide mb-0.5">{label}</p>
+      <p className={`text-sm text-[var(--ct-text-primary)] ${mono ? "font-mono" : ""}`}>{value || "—"}</p>
     </div>
   );
 }
@@ -55,15 +55,15 @@ function ModeTabs({ mode, onChange }: { mode: "direct" | "address"; onChange: (m
     { key: "address", label: "Address Search" },
   ];
   return (
-    <div className="flex gap-1 border-b border-gray-200 mb-5">
+    <div className="flex gap-1 border-b border-[var(--ct-border-subtle)] mb-5">
       {tabs.map((t) => (
         <button
           key={t.key}
           onClick={() => onChange(t.key)}
           className={`px-4 py-2 text-sm font-medium rounded-t transition-colors ${
             mode === t.key
-              ? "bg-white border border-b-white border-gray-200 text-sky-700 -mb-px"
-              : "text-gray-500 hover:text-gray-800"
+              ? "bg-[var(--ct-surface)] border border-b-[var(--ct-surface)] border-[var(--ct-border-subtle)] text-[var(--accent-light)] -mb-px"
+              : "text-[var(--ct-text-muted)] hover:text-[var(--ct-text-primary)]"
           }`}
         >
           {t.label}
@@ -218,8 +218,8 @@ export default function EsiSearch() {
                 onClick={() => setDirectSubMode("single")}
                 className={`px-3 py-1 text-xs font-medium rounded-full transition-colors ${
                   directSubMode === "single"
-                    ? "bg-sky-600 text-white"
-                    : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                    ? "bg-[var(--accent-light)] text-[var(--accent-light-on-solid)]"
+                    : "bg-[var(--ct-surface-hover)] text-[var(--ct-text-muted)] hover:bg-[var(--ct-surface-hover)]"
                 }`}
               >
                 Single ESI ID
@@ -228,8 +228,8 @@ export default function EsiSearch() {
                 onClick={() => setDirectSubMode("batch")}
                 className={`px-3 py-1 text-xs font-medium rounded-full transition-colors ${
                   directSubMode === "batch"
-                    ? "bg-sky-600 text-white"
-                    : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                    ? "bg-[var(--accent-light)] text-[var(--accent-light-on-solid)]"
+                    : "bg-[var(--ct-surface-hover)] text-[var(--ct-text-muted)] hover:bg-[var(--ct-surface-hover)]"
                 }`}
               >
                 Multiple ESI IDs
@@ -237,22 +237,22 @@ export default function EsiSearch() {
             </div>
 
             {directSubMode === "single" && (
-              <div className="bg-white border border-gray-200 rounded-lg p-4 flex flex-wrap gap-3 items-end">
+              <div className="bg-[var(--ct-surface)] border border-[var(--ct-border-subtle)] rounded-lg p-4 flex flex-wrap gap-3 items-end">
                 <div className="flex-1 min-w-[240px]">
-                  <label className="block text-xs text-gray-500 mb-1">ESI ID</label>
+                  <label className="block text-xs text-[var(--ct-text-muted)] mb-1">ESI ID</label>
                   <input
                     type="text"
                     value={esiIdInput}
                     onChange={(e) => setEsiIdInput(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && lookupEsiId()}
                     placeholder="e.g. 10443720009112031"
-                    className="border border-gray-300 rounded px-2 py-1.5 text-sm font-mono w-full"
+                    className="border border-[var(--ct-border-default)] rounded px-2 py-1.5 text-sm font-mono w-full"
                   />
                 </div>
                 <button
                   onClick={lookupEsiId}
                   disabled={directLoading || !esiIdInput.trim()}
-                  className="px-4 py-1.5 bg-sky-600 text-white text-sm font-medium rounded hover:bg-sky-700 disabled:opacity-50"
+                  className="px-4 py-1.5 bg-[var(--accent-light)] text-[var(--accent-light-on-solid)] text-sm font-medium rounded hover:bg-[var(--accent-light-hover)] disabled:opacity-50"
                 >
                   {directLoading ? "Searching…" : "Search"}
                 </button>
@@ -260,24 +260,24 @@ export default function EsiSearch() {
             )}
 
             {directSubMode === "single" && directError && (
-              <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-2 rounded">
+              <div className="bg-[var(--danger-light-tint)] border border-[var(--danger-light)] text-[var(--danger-light)] text-sm px-4 py-2 rounded">
                 {directError}
               </div>
             )}
 
             {directSubMode === "single" && directResult && (
-              <div className="bg-white border border-gray-200 rounded-lg p-5 space-y-5">
+              <div className="bg-[var(--ct-surface)] border border-[var(--ct-border-subtle)] rounded-lg p-5 space-y-5">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-base font-semibold text-gray-900 font-mono">{directResult.esi_id}</h2>
+                  <h2 className="text-base font-semibold text-[var(--ct-text-primary)] font-mono">{directResult.esi_id}</h2>
                   {directResult.status && (
-                    <span className="inline-block px-2 py-0.5 rounded text-xs bg-sky-100 text-sky-700 font-medium uppercase">
+                    <span className="inline-block px-2 py-0.5 rounded text-xs bg-[var(--accent-light-tint)] text-[var(--accent-light)] font-medium uppercase">
                       {directResult.status}
                     </span>
                   )}
                 </div>
 
                 <div>
-                  <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Location</h3>
+                  <h3 className="text-xs font-semibold text-[var(--ct-text-muted)] uppercase tracking-wide mb-2">Location</h3>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <Field label="Address" value={directResult.address} />
                     <Field label="Address Overflow" value={directResult.address_overflow} />
@@ -290,7 +290,7 @@ export default function EsiSearch() {
                 </div>
 
                 <div>
-                  <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">TDSP / Meter</h3>
+                  <h3 className="text-xs font-semibold text-[var(--ct-text-muted)] uppercase tracking-wide mb-2">TDSP / Meter</h3>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <Field label="DUNS" value={directResult.duns} mono />
                     <Field label="Meter Read Cycle" value={directResult.meter_read_cycle} />
@@ -304,7 +304,7 @@ export default function EsiSearch() {
                 </div>
 
                 <div>
-                  <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Indicators</h3>
+                  <h3 className="text-xs font-semibold text-[var(--ct-text-muted)] uppercase tracking-wide mb-2">Indicators</h3>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <Field label="Open Service Orders" value={directResult.open_service_orders} />
                     <Field label="POLR Customer Class" value={directResult.polr_customer_class} />
@@ -317,13 +317,13 @@ export default function EsiSearch() {
             )}
 
             {directSubMode === "single" && !directResult && !directError && directSearched && !directLoading && (
-              <p className="text-sm text-gray-400 py-3">No result to display.</p>
+              <p className="text-sm text-[var(--ct-text-muted)] py-3">No result to display.</p>
             )}
 
             {directSubMode === "batch" && (
               <div className="space-y-4">
-                <div className="bg-white border border-gray-200 rounded-lg p-4 space-y-2">
-                  <label className="block text-xs text-gray-500 mb-1">
+                <div className="bg-[var(--ct-surface)] border border-[var(--ct-border-subtle)] rounded-lg p-4 space-y-2">
+                  <label className="block text-xs text-[var(--ct-text-muted)] mb-1">
                     ESI IDs — one per line, or comma-separated (max {MAX_BATCH_IDS})
                   </label>
                   <textarea
@@ -331,21 +331,21 @@ export default function EsiSearch() {
                     onChange={(e) => setBatchInput(e.target.value)}
                     placeholder={"10443720009112031\n10443720000000041\n10443720006149795"}
                     rows={6}
-                    className="border border-gray-300 rounded px-2 py-1.5 text-sm font-mono w-full"
+                    className="border border-[var(--ct-border-default)] rounded px-2 py-1.5 text-sm font-mono w-full"
                   />
                   {batchValidationError && (
-                    <p className="text-sm text-red-600">{batchValidationError}</p>
+                    <p className="text-sm text-[var(--danger-light)]">{batchValidationError}</p>
                   )}
                   <div className="flex items-center gap-3">
                     <button
                       onClick={runBatchLookup}
                       disabled={batchRunning || !batchInput.trim()}
-                      className="px-4 py-1.5 bg-sky-600 text-white text-sm font-medium rounded hover:bg-sky-700 disabled:opacity-50"
+                      className="px-4 py-1.5 bg-[var(--accent-light)] text-[var(--accent-light-on-solid)] text-sm font-medium rounded hover:bg-[var(--accent-light-hover)] disabled:opacity-50"
                     >
                       {batchRunning ? "Looking up…" : "Search All"}
                     </button>
                     {batchItems.length > 0 && (
-                      <span className="text-xs text-gray-400">
+                      <span className="text-xs text-[var(--ct-text-muted)]">
                         {batchItems.filter((b) => b.status === "found" || b.status === "not_found" || b.status === "error").length}
                         {" "}/ {batchItems.length} processed
                       </span>
@@ -354,53 +354,53 @@ export default function EsiSearch() {
                 </div>
 
                 {batchItems.length > 0 && (
-                  <div className="overflow-x-auto rounded-lg border border-gray-200">
-                    <table className="min-w-full text-xs text-gray-700">
-                      <thead className="bg-gray-50 border-b border-gray-200">
+                  <div className="overflow-x-auto rounded-lg border border-[var(--ct-border-subtle)]">
+                    <table className="min-w-full text-xs text-[var(--ct-text-secondary)]">
+                      <thead className="bg-[var(--ct-surface-hover)] border-b border-[var(--ct-border-subtle)]">
                         <tr>
-                          <th className="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                          <th className="px-3 py-2 text-left font-medium text-[var(--ct-text-muted)] uppercase tracking-wider whitespace-nowrap">
                             ESI ID
                           </th>
-                          <th className="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">
+                          <th className="px-3 py-2 text-left font-medium text-[var(--ct-text-muted)] uppercase tracking-wider">
                             Address
                           </th>
-                          <th className="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">
+                          <th className="px-3 py-2 text-left font-medium text-[var(--ct-text-muted)] uppercase tracking-wider">
                             City
                           </th>
-                          <th className="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">
+                          <th className="px-3 py-2 text-left font-medium text-[var(--ct-text-muted)] uppercase tracking-wider">
                             County
                           </th>
-                          <th className="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">
+                          <th className="px-3 py-2 text-left font-medium text-[var(--ct-text-muted)] uppercase tracking-wider">
                             Zip
                           </th>
-                          <th className="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">
+                          <th className="px-3 py-2 text-left font-medium text-[var(--ct-text-muted)] uppercase tracking-wider">
                             Status
                           </th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-gray-100 bg-white">
+                      <tbody className="divide-y divide-[var(--ct-border-subtle)] bg-[var(--ct-surface)]">
                         {batchItems.map((item) => (
-                          <tr key={item.esiId} className="hover:bg-gray-50">
+                          <tr key={item.esiId} className="hover:bg-[var(--ct-surface-hover)]">
                             <td className="px-3 py-2 font-mono whitespace-nowrap">{item.esiId}</td>
                             <td className="px-3 py-2">{item.data?.address || "—"}</td>
                             <td className="px-3 py-2">{item.data?.city || "—"}</td>
                             <td className="px-3 py-2">{item.data?.county || "—"}</td>
                             <td className="px-3 py-2">{item.data?.zipcode || "—"}</td>
                             <td className="px-3 py-2">
-                              {item.status === "pending" && <span className="text-gray-400">pending</span>}
-                              {item.status === "loading" && <span className="text-blue-500">looking up…</span>}
+                              {item.status === "pending" && <span className="text-[var(--ct-text-muted)]">pending</span>}
+                              {item.status === "loading" && <span className="text-[var(--info-light)]">looking up…</span>}
                               {item.status === "found" && (
-                                <span className="inline-block px-1.5 py-0.5 rounded text-xs bg-green-100 text-green-700 font-medium">
+                                <span className="inline-block px-1.5 py-0.5 rounded text-xs bg-[var(--success-light-tint)] text-[var(--success-light)] font-medium">
                                   {item.data?.status || "Found"}
                                 </span>
                               )}
                               {item.status === "not_found" && (
-                                <span className="inline-block px-1.5 py-0.5 rounded text-xs bg-red-100 text-red-700 font-medium">
+                                <span className="inline-block px-1.5 py-0.5 rounded text-xs bg-red-100 text-[var(--danger-light)] font-medium">
                                   Not Found
                                 </span>
                               )}
                               {item.status === "error" && (
-                                <span className="text-red-500" title={item.error}>
+                                <span className="text-[var(--danger-light)]" title={item.error}>
                                   error
                                 </span>
                               )}
@@ -418,48 +418,48 @@ export default function EsiSearch() {
 
         {mode === "address" && (
           <div className="space-y-4">
-            <div className="bg-white border border-gray-200 rounded-lg p-4 space-y-3">
+            <div className="bg-[var(--ct-surface)] border border-[var(--ct-border-subtle)] rounded-lg p-4 space-y-3">
               <div className="flex flex-wrap gap-3 items-end">
                 <div>
-                  <label className="block text-xs text-gray-500 mb-1">
-                    Zipcode <span className="text-red-500">*</span>
+                  <label className="block text-xs text-[var(--ct-text-muted)] mb-1">
+                    Zipcode <span className="text-[var(--danger-light)]">*</span>
                   </label>
                   <input
                     type="text"
                     value={zipcode}
                     onChange={(e) => setZipcode(e.target.value)}
                     placeholder="75201"
-                    className="border border-gray-300 rounded px-2 py-1.5 text-sm w-32"
+                    className="border border-[var(--ct-border-default)] rounded px-2 py-1.5 text-sm w-32"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-500 mb-1">
-                    City <span className="text-red-500">*</span>
+                  <label className="block text-xs text-[var(--ct-text-muted)] mb-1">
+                    City <span className="text-[var(--danger-light)]">*</span>
                   </label>
                   <input
                     type="text"
                     value={city}
                     onChange={(e) => setCity(e.target.value)}
                     placeholder="Dallas"
-                    className="border border-gray-300 rounded px-2 py-1.5 text-sm w-40"
+                    className="border border-[var(--ct-border-default)] rounded px-2 py-1.5 text-sm w-40"
                   />
                 </div>
                 <div className="flex-1 min-w-[200px]">
-                  <label className="block text-xs text-gray-500 mb-1">Address (partial match, optional)</label>
+                  <label className="block text-xs text-[var(--ct-text-muted)] mb-1">Address (partial match, optional)</label>
                   <input
                     type="text"
                     value={address}
                     onChange={(e) => setAddress(e.target.value)}
                     placeholder="e.g. Main St"
-                    className="border border-gray-300 rounded px-2 py-1.5 text-sm w-full"
+                    className="border border-[var(--ct-border-default)] rounded px-2 py-1.5 text-sm w-full"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-500 mb-1">Limit</label>
+                  <label className="block text-xs text-[var(--ct-text-muted)] mb-1">Limit</label>
                   <select
                     value={limit}
                     onChange={(e) => setLimit(Number(e.target.value))}
-                    className="border border-gray-300 rounded px-2 py-1.5 text-sm"
+                    className="border border-[var(--ct-border-default)] rounded px-2 py-1.5 text-sm"
                   >
                     {LIMIT_OPTIONS.map((n) => (
                       <option key={n} value={n}>
@@ -471,35 +471,35 @@ export default function EsiSearch() {
                 <button
                   onClick={runAddressSearch}
                   disabled={searchLoading}
-                  className="px-4 py-1.5 bg-sky-600 text-white text-sm font-medium rounded hover:bg-sky-700 disabled:opacity-50"
+                  className="px-4 py-1.5 bg-[var(--accent-light)] text-[var(--accent-light-on-solid)] text-sm font-medium rounded hover:bg-[var(--accent-light-hover)] disabled:opacity-50"
                 >
                   {searchLoading ? "Searching…" : "Search"}
                 </button>
               </div>
               {validationError && (
-                <p className="text-sm text-red-600">{validationError}</p>
+                <p className="text-sm text-[var(--danger-light)]">{validationError}</p>
               )}
             </div>
 
             {searchError && (
-              <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-2 rounded">
+              <div className="bg-[var(--danger-light-tint)] border border-[var(--danger-light)] text-[var(--danger-light)] text-sm px-4 py-2 rounded">
                 {searchError}
               </div>
             )}
 
             {resultCount !== null && !searchError && (
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">
-                  <span className="font-semibold text-gray-900">{resultCount}</span> result
+                <span className="text-sm text-[var(--ct-text-secondary)]">
+                  <span className="font-semibold text-[var(--ct-text-primary)]">{resultCount}</span> result
                   {resultCount !== 1 ? "s" : ""}
                   {resultCount === limit && (
-                    <span className="text-amber-600 ml-2">
+                    <span className="text-[var(--amber-light)] ml-2">
                       (result set may be truncated at the {limit} limit — narrow with an address filter or raise the limit)
                     </span>
                   )}
                 </span>
                 {results.length > 0 && (
-                  <span className="text-xs text-gray-400">
+                  <span className="text-xs text-[var(--ct-text-muted)]">
                     Page {page} of {totalPages}
                   </span>
                 )}
@@ -508,36 +508,36 @@ export default function EsiSearch() {
 
             {results.length > 0 && (
               <>
-                <div className="overflow-x-auto rounded-lg border border-gray-200">
-                  <table className="min-w-full text-xs text-gray-700">
-                    <thead className="bg-gray-50 border-b border-gray-200">
+                <div className="overflow-x-auto rounded-lg border border-[var(--ct-border-subtle)]">
+                  <table className="min-w-full text-xs text-[var(--ct-text-secondary)]">
+                    <thead className="bg-[var(--ct-surface-hover)] border-b border-[var(--ct-border-subtle)]">
                       <tr>
-                        <th className="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                        <th className="px-3 py-2 text-left font-medium text-[var(--ct-text-muted)] uppercase tracking-wider whitespace-nowrap">
                           ESI ID
                         </th>
-                        <th className="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-3 py-2 text-left font-medium text-[var(--ct-text-muted)] uppercase tracking-wider">
                           Address
                         </th>
-                        <th className="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-3 py-2 text-left font-medium text-[var(--ct-text-muted)] uppercase tracking-wider">
                           City
                         </th>
-                        <th className="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-3 py-2 text-left font-medium text-[var(--ct-text-muted)] uppercase tracking-wider">
                           Zip
                         </th>
-                        <th className="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-3 py-2 text-left font-medium text-[var(--ct-text-muted)] uppercase tracking-wider">
                           County
                         </th>
-                        <th className="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-3 py-2 text-left font-medium text-[var(--ct-text-muted)] uppercase tracking-wider">
                           Status
                         </th>
-                        <th className="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                        <th className="px-3 py-2 text-left font-medium text-[var(--ct-text-muted)] uppercase tracking-wider whitespace-nowrap">
                           DUNS
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-100 bg-white">
+                    <tbody className="divide-y divide-[var(--ct-border-subtle)] bg-[var(--ct-surface)]">
                       {pagedResults.map((r) => (
-                        <tr key={r.esi_id} className="hover:bg-gray-50">
+                        <tr key={r.esi_id} className="hover:bg-[var(--ct-surface-hover)]">
                           <td className="px-3 py-2 font-mono whitespace-nowrap">{r.esi_id}</td>
                           <td className="px-3 py-2">{r.address || "—"}</td>
                           <td className="px-3 py-2">{r.city || "—"}</td>
@@ -556,17 +556,17 @@ export default function EsiSearch() {
                     <button
                       onClick={() => setPage((p) => Math.max(1, p - 1))}
                       disabled={page === 1}
-                      className="px-3 py-1 text-sm border border-gray-300 rounded disabled:opacity-40"
+                      className="px-3 py-1 text-sm border border-[var(--ct-border-default)] rounded disabled:opacity-40"
                     >
                       Prev
                     </button>
-                    <span className="text-xs text-gray-500">
+                    <span className="text-xs text-[var(--ct-text-muted)]">
                       Page {page} of {totalPages}
                     </span>
                     <button
                       onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                       disabled={page === totalPages}
-                      className="px-3 py-1 text-sm border border-gray-300 rounded disabled:opacity-40"
+                      className="px-3 py-1 text-sm border border-[var(--ct-border-default)] rounded disabled:opacity-40"
                     >
                       Next
                     </button>
@@ -576,7 +576,7 @@ export default function EsiSearch() {
             )}
 
             {resultCount === 0 && !searchError && (
-              <p className="text-sm text-gray-400 py-3">No matching records found.</p>
+              <p className="text-sm text-[var(--ct-text-muted)] py-3">No matching records found.</p>
             )}
           </div>
         )}
