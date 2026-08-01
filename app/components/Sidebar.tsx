@@ -21,6 +21,8 @@ const SECTIONS: NavSection[] = [
     items: [
       { label: "Pricing", href: "/pricing" },
       { label: "ESI ID Search", href: "/esi-search" },
+      { label: "Daily Pricing", href: "/daily-pricing" },
+      { label: "Document Parser", href: "/document-parser" },
     ],
   },
   {
@@ -73,6 +75,13 @@ const ICONS: Record<string, React.ReactNode> = {
     <>
       <circle cx="6.5" cy="6.5" r="4.5" />
       <path d="M13 13l-3.5-3.5" />
+    </>
+  ),
+  "Daily Pricing": <path d="M2 13V9M6 13V6M10 13V3M2 13h11" />,
+  "Document Parser": (
+    <>
+      <path d="M2 3h11v9H2z" />
+      <path d="M2 5.5h11M5 3v9" />
     </>
   ),
   Contracts: <path d="M2 5h11M2 7.5h11M2 10h7" />,
