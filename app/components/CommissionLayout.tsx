@@ -1,15 +1,8 @@
 import React from "react";
 import Layout from "./Layout";
-import { useRouter } from "next/router";
-import Link from "next/link"; // Added Link import
+import SectionNav, { SectionNavLink } from "./SectionNav";
 
-interface NavLink {
-  label: string;
-  href: string;
-  comingSoon?: boolean;
-}
-
-const LINKS: NavLink[] = [
+const LINKS: SectionNavLink[] = [
   { label: "Update Data", href: "/commission/upload" },
   { label: "View Data", href: "/commission/view" },
   { label: "Commission Exceptions", href: "/commission/exceptions" },
@@ -33,50 +26,10 @@ interface Props {
 }
 
 export default function CommissionLayout({ children, title }: Props) {
-  const router = useRouter();
-
   return (
     <Layout title={title}>
-      <div className="flex gap-0 -mx-4 -mt-6">
-        {/* Sidebar */}
-        <aside className="w-52 min-h-screen bg-white border-r border-gray-200 pt-4 flex-shrink-0">
-          {LINKS.map((item) => {
-            if (item.comingSoon) {
-              // href preserved in LINKS above — swap <div> for <Link href={item.href}> when page is built
-              return (
-                <div
-                  key={item.href}
-                  className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-400 cursor-not-allowed"
-                >
-                  <span className="w-2 h-2 rounded-full flex-shrink-0 bg-gray-200" />
-                  <span>{item.label}</span>
-                  <span className="ml-auto text-[9px] font-semibold bg-gray-100 px-1.5 py-0.5 rounded">SOON</span>
-                </div>
-              );
-            }
-            const active = router.pathname === item.href;
-            return (
-              <Link key={item.href} href={item.href}>
-                <div
-                  className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-colors cursor-pointer ${
-                    active
-                      ? "bg-green-600 text-white font-medium"
-                      : "text-gray-700 hover:bg-gray-100"
-                  }`}
-                >
-                  <span
-                    className={`w-2 h-2 rounded-full flex-shrink-0 ${
-                      active ? "bg-white" : "bg-gray-400"
-                    }`}
-                  />
-                  {item.label}
-                </div>
-              </Link>
-            );
-          })}
-        </aside>
-
-        {/* Page content */}
+      <div className="flex gap-0 -mx-6 -mt-6 min-h-full">
+        <SectionNav links={LINKS} />
         <div className="flex-1 p-6 min-w-0">{children}</div>
       </div>
     </Layout>

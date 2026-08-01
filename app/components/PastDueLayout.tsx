@@ -1,24 +1,7 @@
 import React from "react";
 import Layout from "./Layout";
+import SectionNav, { SectionNavLink } from "./SectionNav";
 import { useRouter } from "next/router";
-import Link from "next/link";
-
-interface NavLink {
-  label: string;
-  href: string;
-  comingSoon?: boolean;
-}
-
-const LINKS: NavLink[] = [
-  { label: "Dashboard", href: "/past-due" },
-  { label: "Active Accounts", href: "/past-due?track=ACTIVE" },
-  { label: "Inactive / Collections", href: "/past-due?track=INACTIVE" },
-  { label: "Approval Queue", href: "/past-due/approvals" },
-  { label: "Import AR Sheet", href: "/past-due/upload" },
-  { label: "ARR Exposure",  href: "/past-due/reports/arr",   comingSoon: true },
-  { label: "Aging Report",  href: "/past-due/reports/aging", comingSoon: true },
-  { label: "ETF Open",      href: "/past-due/reports/etf",   comingSoon: true },
-];
 
 interface Props {
   children: React.ReactNode;
@@ -40,50 +23,21 @@ export default function PastDueLayout({ children, title }: Props) {
     return router.pathname === href;
   };
 
+  const LINKS: SectionNavLink[] = [
+    { label: "Dashboard", href: "/past-due", active: isActive("/past-due") },
+    { label: "Active Accounts", href: "/past-due?track=ACTIVE", active: isActive("/past-due?track=ACTIVE") },
+    { label: "Inactive / Collections", href: "/past-due?track=INACTIVE", active: isActive("/past-due?track=INACTIVE") },
+    { label: "Approval Queue", href: "/past-due/approvals" },
+    { label: "Import AR Sheet", href: "/past-due/upload" },
+    { label: "ARR Exposure", href: "/past-due/reports/arr", comingSoon: true },
+    { label: "Aging Report", href: "/past-due/reports/aging", comingSoon: true },
+    { label: "ETF Open", href: "/past-due/reports/etf", comingSoon: true },
+  ];
+
   return (
     <Layout title={title}>
-      <div className="flex gap-0 -mx-4 -mt-6">
-        {/* Sidebar */}
-        <aside className="w-52 min-h-screen bg-white border-r border-gray-200 pt-4 flex-shrink-0">
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-4 mb-2">
-            Past Due Portal
-          </p>
-          {LINKS.map((item) => {
-            if (item.comingSoon) {
-              // href preserved in LINKS above — swap <div> for <Link href={item.href}> when page is built
-              return (
-                <div
-                  key={item.href}
-                  className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-400 cursor-not-allowed"
-                >
-                  <span className="w-2 h-2 rounded-full flex-shrink-0 bg-gray-200" />
-                  <span>{item.label}</span>
-                  <span className="ml-auto text-[9px] font-semibold bg-gray-100 px-1.5 py-0.5 rounded">SOON</span>
-                </div>
-              );
-            }
-            const active = isActive(item.href);
-            return (
-              <Link key={item.href} href={item.href}>
-                <div
-                  className={`flex items-center gap-2 px-4 py-2.5 text-sm transition-colors cursor-pointer
-                  ${
-                    active
-                      ? "bg-sky-600 text-white font-medium"
-                      : "text-gray-700 hover:bg-gray-100"
-                  }`}
-                >
-                  <span
-                    className={`w-2 h-2 rounded-full flex-shrink-0 ${active ? "bg-white" : "bg-gray-400"}`}
-                  />
-                  {item.label}
-                </div>
-              </Link>
-            );
-          })}
-        </aside>
-
-        {/* Page content */}
+      <div className="flex gap-0 -mx-6 -mt-6 min-h-full">
+        <SectionNav links={LINKS} title="Past Due Portal" />
         <div className="flex-1 p-6 min-w-0">{children}</div>
       </div>
     </Layout>

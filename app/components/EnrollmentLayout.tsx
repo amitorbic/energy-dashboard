@@ -1,9 +1,8 @@
 import React from "react";
 import Layout from "./Layout";
-import Link from "next/link";
-import { useRouter } from "next/router";
+import SectionNav, { SectionNavGroup } from "./SectionNav";
 
-const SECTIONS = [
+const GROUPS: SectionNavGroup[] = [
   {
     heading: null,
     links: [{ label: "Enrollment Home", href: "/enrollment-audit" }],
@@ -54,46 +53,10 @@ interface Props {
 }
 
 export default function EnrollmentLayout({ children, title }: Props) {
-  const router = useRouter();
-
   return (
     <Layout title={title}>
-      <div className="flex gap-0 -mx-4 -mt-6">
-        {/* Sidebar */}
-        <aside className="w-56 min-h-screen bg-white border-r border-gray-200 pt-4 flex-shrink-0 overflow-y-auto">
-          {SECTIONS.map((section, si) => (
-            <div key={si} className={si > 0 ? "mt-1" : ""}>
-              {section.heading && (
-                <p className="px-4 pt-3 pb-1 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                  {section.heading}
-                </p>
-              )}
-              {section.links.map((item) => {
-                const active = router.pathname === item.href;
-                return (
-                  <Link key={item.href} href={item.href}>
-                    <div
-                      className={`flex items-center gap-2 px-4 py-2 text-sm transition-colors cursor-pointer ${
-                        active
-                          ? "bg-blue-600 text-white font-medium"
-                          : "text-gray-700 hover:bg-gray-100"
-                      }`}
-                    >
-                      <span
-                        className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
-                          active ? "bg-white" : "bg-gray-400"
-                        }`}
-                      />
-                      {item.label}
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
-          ))}
-        </aside>
-
-        {/* Page content */}
+      <div className="flex gap-0 -mx-6 -mt-6 min-h-full">
+        <SectionNav groups={GROUPS} />
         <div className="flex-1 p-6 min-w-0">{children}</div>
       </div>
     </Layout>
