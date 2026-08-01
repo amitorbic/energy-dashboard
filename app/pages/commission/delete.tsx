@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import Layout from "@/components/Layout";
 import api from "../../utils/api";
 
 export default function DeleteCommissionData() {
@@ -61,7 +60,7 @@ export default function DeleteCommissionData() {
   }
 
   return (
-    <Layout>
+    <>
       {
         <div className="max-w-lg p-6">
           <h2 className="text-lg font-semibold text-orange-600 mb-4">
@@ -129,6 +128,6 @@ export default function DeleteCommissionData() {
           </div>
         </div>
       }
-    </Layout>
+    </>
   );
 }
