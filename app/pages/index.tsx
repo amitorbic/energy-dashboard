@@ -76,37 +76,13 @@ const MODULES = [
   },
 ];
 
-const COLOR_MAP: Record<string, string> = {
-  sky: "border-sky-500/30 hover:border-sky-500 bg-sky-500/5 hover:bg-sky-500/10",
-  violet:
-    "border-violet-500/30 hover:border-violet-500 bg-violet-500/5 hover:bg-violet-500/10",
-  emerald:
-    "border-emerald-500/30 hover:border-emerald-500 bg-emerald-500/5 hover:bg-emerald-500/10",
-  amber:
-    "border-amber-500/30 hover:border-amber-500 bg-amber-500/5 hover:bg-amber-500/10",
-  blue: "border-blue-500/30 hover:border-blue-500 bg-blue-500/5 hover:bg-blue-500/10",
-  teal: "border-teal-500/30 hover:border-teal-500 bg-teal-500/5 hover:bg-teal-500/10",
-  indigo:
-    "border-indigo-500/30 hover:border-indigo-500 bg-indigo-500/5 hover:bg-indigo-500/10",
-  red: "border-red-500/30 hover:border-red-500 bg-red-500/5 hover:bg-red-500/10",
-  green:
-    "border-green-500/30 hover:border-green-500 bg-green-500/5 hover:bg-green-500/10",
-  purple:
-    "border-purple-500/30 hover:border-purple-500 bg-purple-500/5 hover:bg-purple-500/10",
-};
-
-const ICON_COLOR: Record<string, string> = {
-  sky: "text-sky-400",
-  violet: "text-violet-400",
-  emerald: "text-emerald-400",
-  amber: "text-amber-400",
-  blue: "text-blue-400",
-  teal: "text-teal-400",
-  indigo: "text-indigo-400",
-  red: "text-red-400",
-  green: "text-green-400",
-  purple: "text-purple-400",
-};
+// All modules share one accent (--accent-dark) for border/bg/icon color so the
+// grid reads as one consistent system rather than a per-card rainbow; the
+// `color` field on each module is now unused for styling but left in place
+// since it's still passed through unchanged elsewhere in this file's data shape.
+const CARD_CLASS =
+  "border-[var(--sb-border-default)] hover:border-[var(--accent-dark)] bg-[var(--sb-surface)] hover:bg-[var(--sb-surface-hover)]";
+const ICON_CLASS = "text-[var(--accent-dark)]";
 
 export default function Dashboard() {
   const router = useRouter();
@@ -127,25 +103,38 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900">
+    <div className="min-h-screen" style={{ background: "var(--sb-canvas)" }}>
       {/* Background grid */}
-      <div className="fixed inset-0 bg-[linear-gradient(rgba(56,189,248,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(56,189,248,0.02)_1px,transparent_1px)] bg-[size:48px_48px] pointer-events-none" />
+      <div className="fixed inset-0 bg-[linear-gradient(rgba(38,198,217,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(38,198,217,0.02)_1px,transparent_1px)] bg-[size:48px_48px] pointer-events-none" />
 
       {/* Header */}
-      <header className="relative z-10 border-b border-slate-800 bg-slate-900/90 backdrop-blur-sm">
+      <header
+        className="relative z-10 border-b backdrop-blur-sm"
+        style={{ borderColor: "var(--sb-border-subtle)", background: "color-mix(in srgb, var(--sb-canvas) 90%, transparent)" }}
+      >
         <div className="max-w-screen-xl mx-auto px-6 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-2 font-bold text-lg text-white tracking-tight">
-            <span className="text-sky-400">⚡</span>
-            <span className="text-sky-400">ORBIC</span>
-            <span className="text-slate-600 font-normal text-sm ml-1">
+          <div
+            className="flex items-center gap-2 font-bold text-lg tracking-tight"
+            style={{ color: "var(--sb-text-primary)" }}
+          >
+            <span style={{ color: "var(--accent-dark)" }}>⚡</span>
+            <span style={{ color: "var(--accent-dark)" }}>ORBIC</span>
+            <span className="font-normal text-sm ml-1" style={{ color: "var(--sb-text-muted)" }}>
               Internal
             </span>
           </div>
           <div className="flex items-center gap-4">
             {user && (
-              <span className="text-slate-400 text-sm">
+              <span className="text-sm" style={{ color: "var(--sb-text-secondary)" }}>
                 {user.username}
-                <span className="ml-2 text-xs bg-slate-800 border border-slate-700 px-2 py-0.5 rounded text-slate-500">
+                <span
+                  className="ml-2 text-xs border px-2 py-0.5 rounded-[var(--r-sm)]"
+                  style={{
+                    background: "var(--sb-surface)",
+                    borderColor: "var(--sb-border-default)",
+                    color: "var(--sb-text-muted)",
+                  }}
+                >
                   {user.role === "1"
                     ? "Admin"
                     : user.role === "2"
@@ -156,7 +145,8 @@ export default function Dashboard() {
             )}
             <button
               onClick={handleLogout}
-              className="text-sm text-slate-500 hover:text-white border border-slate-700 hover:border-slate-500 px-3 py-1.5 rounded transition-colors"
+              className="text-sm border px-3 py-1.5 rounded-[var(--r-sm)] transition-colors"
+              style={{ color: "var(--sb-text-muted)", borderColor: "var(--sb-border-default)" }}
             >
               Logout
             </button>
@@ -168,10 +158,10 @@ export default function Dashboard() {
       <main className="relative z-10 max-w-screen-xl mx-auto px-6 py-10">
         {/* Welcome */}
         <div className="mb-10">
-          <h1 className="text-2xl font-bold text-white mb-1">
+          <h1 className="text-2xl font-bold mb-1" style={{ color: "var(--sb-text-primary)" }}>
             Welcome back{user ? `, ${user.username}` : ""}
           </h1>
-          <p className="text-slate-400 text-sm">
+          <p className="text-sm" style={{ color: "var(--sb-text-secondary)" }}>
             ORBIC Energy Intelligence Platform — Texas ERCOT Market
           </p>
         </div>
@@ -179,21 +169,34 @@ export default function Dashboard() {
         {/* Orbi AI Agent */}
         <Link
           href="/agent"
-          className="group flex items-center gap-5 border border-blue-500/30 hover:border-blue-500 bg-blue-500/5 hover:bg-blue-500/10 rounded-xl p-5 mb-8 transition-all duration-200"
+          className="group flex items-center gap-5 border rounded-[var(--r-lg)] p-5 mb-8 transition-all duration-200 hover:border-[var(--accent-dark)]"
+          style={{ borderColor: "var(--sb-border-default)", background: "var(--sb-surface)" }}
         >
           <div className="text-3xl shrink-0">✨</div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
-              <h3 className="text-white font-semibold text-sm">Orbi — AI Agent</h3>
-              <span className="text-xs bg-blue-500/20 text-blue-400 border border-blue-500/30 px-2 py-0.5 rounded-full font-medium">
+              <h3 className="font-semibold text-sm" style={{ color: "var(--sb-text-primary)" }}>
+                Orbi — AI Agent
+              </h3>
+              <span
+                className="text-xs border px-2 py-0.5 rounded-[var(--r-full)] font-medium"
+                style={{
+                  background: "var(--accent-dark-tint)",
+                  color: "var(--accent-dark)",
+                  borderColor: "var(--accent-dark)",
+                }}
+              >
                 New
               </span>
             </div>
-            <p className="text-slate-400 text-xs leading-relaxed">
+            <p className="text-xs leading-relaxed" style={{ color: "var(--sb-text-secondary)" }}>
               Ask Orbi about customers, contracts, pricing, portfolio data, past-due accounts, and more. Full-page chat with sortable tables and quick actions.
             </p>
           </div>
-          <div className="text-xs font-medium text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+          <div
+            className="text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+            style={{ color: "var(--accent-dark)" }}
+          >
             Open Orbi →
           </div>
         </Link>
@@ -204,19 +207,19 @@ export default function Dashboard() {
             <Link
               key={mod.href}
               href={mod.href}
-              className={`group block border rounded-xl p-5 transition-all duration-200 cursor-pointer ${COLOR_MAP[mod.color]}`}
+              className={`group block border rounded-[var(--r-lg)] p-5 transition-all duration-200 cursor-pointer ${CARD_CLASS}`}
             >
-              <div className={`text-2xl mb-3 ${ICON_COLOR[mod.color]}`}>
+              <div className={`text-2xl mb-3 ${ICON_CLASS}`}>
                 {mod.icon}
               </div>
-              <h3 className="text-white font-semibold text-sm mb-1">
+              <h3 className="font-semibold text-sm mb-1" style={{ color: "var(--sb-text-primary)" }}>
                 {mod.label}
               </h3>
-              <p className="text-slate-400 text-xs leading-relaxed">
+              <p className="text-xs leading-relaxed" style={{ color: "var(--sb-text-secondary)" }}>
                 {mod.description}
               </p>
               <div
-                className={`mt-4 text-xs font-medium ${ICON_COLOR[mod.color]} opacity-0 group-hover:opacity-100 transition-opacity`}
+                className={`mt-4 text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity ${ICON_CLASS}`}
               >
                 Open module →
               </div>
@@ -228,33 +231,50 @@ export default function Dashboard() {
         {user && isAdmin() && (
           <div className="mt-6">
             <div className="flex items-center gap-2 mb-3">
-              <span className="text-[10px] font-semibold text-red-400 uppercase tracking-widest">Admin</span>
-              <div className="flex-1 h-px bg-red-500/20" />
+              <span
+                className="text-[10px] font-semibold uppercase tracking-widest"
+                style={{ color: "var(--danger-dark)" }}
+              >
+                Admin
+              </span>
+              <div className="flex-1 h-px" style={{ background: "var(--danger-dark-tint)" }} />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               <Link
                 href="/admin/addon-charge-types"
-                className="group block border border-red-500/20 hover:border-red-500/50 bg-red-500/5 hover:bg-red-500/10 rounded-xl p-5 transition-all duration-200"
+                className="group block border rounded-[var(--r-lg)] p-5 transition-all duration-200 hover:border-[var(--danger-dark)]"
+                style={{ borderColor: "var(--danger-dark-tint)", background: "var(--sb-surface)" }}
               >
-                <div className="text-2xl mb-3 text-red-400">⚙</div>
-                <h3 className="text-white font-semibold text-sm mb-1">Addon Charge Types</h3>
-                <p className="text-slate-400 text-xs leading-relaxed">
+                <div className="text-2xl mb-3" style={{ color: "var(--danger-dark)" }}>⚙</div>
+                <h3 className="font-semibold text-sm mb-1" style={{ color: "var(--sb-text-primary)" }}>
+                  Addon Charge Types
+                </h3>
+                <p className="text-xs leading-relaxed" style={{ color: "var(--sb-text-secondary)" }}>
                   Manage supplier addon charge definitions and effective-dated rate history (ANCSVC, LINELOSS, etc.)
                 </p>
-                <div className="mt-4 text-xs font-medium text-red-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div
+                  className="mt-4 text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity"
+                  style={{ color: "var(--danger-dark)" }}
+                >
                   Open admin →
                 </div>
               </Link>
               <Link
                 href="/admin/test-data-generator"
-                className="group block border border-red-500/20 hover:border-red-500/50 bg-red-500/5 hover:bg-red-500/10 rounded-xl p-5 transition-all duration-200"
+                className="group block border rounded-[var(--r-lg)] p-5 transition-all duration-200 hover:border-[var(--danger-dark)]"
+                style={{ borderColor: "var(--danger-dark-tint)", background: "var(--sb-surface)" }}
               >
-                <div className="text-2xl mb-3 text-red-400">🧪</div>
-                <h3 className="text-white font-semibold text-sm mb-1">Test Data Generator</h3>
-                <p className="text-slate-400 text-xs leading-relaxed">
+                <div className="text-2xl mb-3" style={{ color: "var(--danger-dark)" }}>🧪</div>
+                <h3 className="font-semibold text-sm mb-1" style={{ color: "var(--sb-text-primary)" }}>
+                  Test Data Generator
+                </h3>
+                <p className="text-xs leading-relaxed" style={{ color: "var(--sb-text-secondary)" }}>
                   Generate synthetic 867/810 EDI files for a set of ESI IDs, for testing billing and enrollment flows.
                 </p>
-                <div className="mt-4 text-xs font-medium text-red-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div
+                  className="mt-4 text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity"
+                  style={{ color: "var(--danger-dark)" }}
+                >
                   Open admin →
                 </div>
               </Link>
@@ -263,7 +283,10 @@ export default function Dashboard() {
         )}
 
         {/* Footer */}
-        <div className="mt-16 pt-6 border-t border-slate-800 text-center text-slate-600 text-xs">
+        <div
+          className="mt-16 pt-6 border-t text-center text-xs"
+          style={{ borderColor: "var(--sb-border-subtle)", color: "var(--sb-text-muted)" }}
+        >
           ORBIC Internal Applications · ERCOT Texas Market
         </div>
       </main>
