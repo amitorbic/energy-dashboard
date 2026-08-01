@@ -197,11 +197,11 @@ const CustomPricingList = () => {
   return (
     <PricingLayout title="Custom Pricing">
       <div className="max-w-7xl mx-auto p-6 space-y-8">
-        <header className="border-b border-slate-800 pb-6">
-          <h1 className="text-3xl font-black text-white uppercase tracking-tighter">
+        <header className="border-b pb-6" style={{ borderColor: "var(--ct-border-subtle)" }}>
+          <h1 className="text-3xl font-black uppercase tracking-tighter" style={{ color: "var(--ct-text-primary)" }}>
             Custom Pricing
           </h1>
-          <p className="text-slate-500 text-sm mt-1">
+          <p className="text-sm mt-1" style={{ color: "var(--ct-text-secondary)" }}>
             Choose how to start pricing a customer
           </p>
         </header>
@@ -209,40 +209,61 @@ const CustomPricingList = () => {
         {/* 3 Flow Cards */}
         <div className="grid grid-cols-3 gap-6">
           {/* Card 1: New Customer */}
-          <div className="bg-slate-800 rounded-lg p-6 space-y-4 border border-slate-700 hover:border-red-500 transition-colors">
-            <div className="w-10 h-10 bg-red-600 rounded-lg flex items-center justify-center text-white font-black text-lg">
+          <div
+            className="rounded-[var(--r-lg)] p-6 space-y-4 border transition-colors hover:border-[var(--accent-light)]"
+            style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}
+          >
+            <div
+              className="w-10 h-10 rounded-[var(--r-lg)] flex items-center justify-center font-black text-lg"
+              style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
+            >
               1
             </div>
-            <h2 className="text-white font-bold text-lg">New Customer</h2>
-            <p className="text-slate-400 text-sm">
+            <h2 className="font-bold text-lg" style={{ color: "var(--ct-text-primary)" }}>New Customer</h2>
+            <p className="text-sm" style={{ color: "var(--ct-text-secondary)" }}>
               Fill in customer details and add usage manually or upload later on
               the pricing page.
             </p>
             <button
               onClick={() => router.push("/custom_pricing/add")}
-              className="w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded text-sm font-bold uppercase transition-colors"
+              className="w-full py-2 rounded text-sm font-bold uppercase transition-colors"
+              style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
             >
               Start →
             </button>
           </div>
 
           {/* Card 2: Upload Usage */}
-          <div className="bg-slate-800 rounded-lg p-6 space-y-4 border border-slate-700 hover:border-red-500 transition-colors">
-            <div className="w-10 h-10 bg-red-600 rounded-lg flex items-center justify-center text-white font-black text-lg">
+          <div
+            className="rounded-[var(--r-lg)] p-6 space-y-4 border transition-colors hover:border-[var(--accent-light)]"
+            style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}
+          >
+            <div
+              className="w-10 h-10 rounded-[var(--r-lg)] flex items-center justify-center font-black text-lg"
+              style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
+            >
               2
             </div>
-            <h2 className="text-white font-bold text-lg">Upload Usage First</h2>
-            <p className="text-slate-400 text-sm">
+            <h2 className="font-bold text-lg" style={{ color: "var(--ct-text-primary)" }}>Upload Usage First</h2>
+            <p className="text-sm" style={{ color: "var(--ct-text-secondary)" }}>
               Upload a usage file — ESID, meter count, and profiles will be
               auto-filled in the form.
             </p>
             {uploadMsg && (
-              <div className="bg-slate-700 text-yellow-300 px-3 py-2 rounded text-xs">
+              <div
+                className="px-3 py-2 rounded text-xs border"
+                style={{ background: "var(--amber-light-tint)", borderColor: "var(--amber-light-border)", color: "var(--amber-light)" }}
+              >
                 {uploadMsg}
               </div>
             )}
             <label
-              className={`w-full block text-center ${uploading ? "bg-slate-600" : "bg-red-600 hover:bg-red-700"} text-white py-2 rounded text-sm font-bold uppercase transition-colors cursor-pointer`}
+              className="w-full block text-center py-2 rounded text-sm font-bold uppercase transition-colors cursor-pointer"
+              style={
+                uploading
+                  ? { background: "var(--ct-surface-hover)", color: "var(--ct-text-muted)" }
+                  : { background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }
+              }
             >
               {uploading ? "Parsing..." : "Upload File →"}
               <input
@@ -257,18 +278,25 @@ const CustomPricingList = () => {
           </div>
 
           {/* Card 3: Renewal */}
-          <div className="bg-slate-800 rounded-lg p-6 space-y-4 border border-slate-700 hover:border-red-500 transition-colors">
-            <div className="w-10 h-10 bg-red-600 rounded-lg flex items-center justify-center text-white font-black text-lg">
+          <div
+            className="rounded-[var(--r-lg)] p-6 space-y-4 border transition-colors hover:border-[var(--accent-light)]"
+            style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}
+          >
+            <div
+              className="w-10 h-10 rounded-[var(--r-lg)] flex items-center justify-center font-black text-lg"
+              style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
+            >
               3
             </div>
-            <h2 className="text-white font-bold text-lg">Renewal Customer</h2>
-            <p className="text-slate-400 text-sm">
+            <h2 className="font-bold text-lg" style={{ color: "var(--ct-text-primary)" }}>Renewal Customer</h2>
+            <p className="text-sm" style={{ color: "var(--ct-text-secondary)" }}>
               Search existing customers from the contract renewal database and
               import their data.
             </p>
             <button
               onClick={() => setShowRenewalModal(true)}
-              className="w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded text-sm font-bold uppercase transition-colors"
+              className="w-full py-2 rounded text-sm font-bold uppercase transition-colors"
+              style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
             >
               Search →
             </button>
@@ -278,7 +306,7 @@ const CustomPricingList = () => {
         {/* Customer List */}
         <div className="space-y-4">
           <div className="flex justify-between items-center">
-            <h2 className="text-white font-bold uppercase text-sm">
+            <h2 className="font-bold uppercase text-sm" style={{ color: "var(--ct-text-primary)" }}>
               Recent Customers
             </h2>
           </div>
@@ -288,22 +316,23 @@ const CustomPricingList = () => {
             placeholder="Search by name or ESID..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-slate-800 text-white px-4 py-2 rounded border border-slate-700 focus:outline-none focus:border-red-500"
+            className="w-full px-4 py-2 rounded border focus:outline-none"
+            style={{ background: "var(--ct-canvas)", color: "var(--ct-text-primary)", borderColor: "var(--ct-border-default)" }}
           />
 
           {loading ? (
-            <div className="text-slate-500 text-center py-10 italic animate-pulse">
+            <div className="text-center py-10 italic animate-pulse" style={{ color: "var(--ct-text-muted)" }}>
               Loading...
             </div>
           ) : filtered.length === 0 ? (
-            <div className="text-slate-500 text-center py-10 italic">
+            <div className="text-center py-10 italic" style={{ color: "var(--ct-text-muted)" }}>
               No customers found.
             </div>
           ) : (
-            <div className="bg-slate-900 rounded-lg border border-slate-800 overflow-hidden">
+            <div className="rounded-[var(--r-lg)] border overflow-hidden" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="bg-slate-800 text-slate-400 uppercase text-xs">
+                  <tr className="uppercase text-xs" style={{ background: "var(--ct-surface-hover)", color: "var(--ct-text-muted)" }}>
                     <th className="p-3 text-left">Company</th>
                     <th className="p-3 text-left">ESID</th>
                     <th className="p-3 text-center">No. ESIDs</th>
@@ -318,33 +347,35 @@ const CustomPricingList = () => {
                   {filtered.map((c) => (
                     <tr
                       key={c.id}
-                      className="border-t border-slate-800 hover:bg-slate-800/50 transition-colors"
+                      className="border-t transition-colors hover:bg-[var(--ct-surface-hover)]"
+                      style={{ borderColor: "var(--ct-border-subtle)" }}
                     >
-                      <td className="p-3 text-white font-semibold">
+                      <td className="p-3 font-semibold" style={{ color: "var(--ct-text-primary)" }}>
                         {c.company_name}
                       </td>
-                      <td className="p-3 text-slate-400 font-mono text-xs">
+                      <td className="p-3 font-mono text-xs" style={{ color: "var(--ct-text-secondary)" }}>
                         {c.esid}
                       </td>
-                      <td className="p-3 text-center text-slate-400">
+                      <td className="p-3 text-center" style={{ color: "var(--ct-text-secondary)" }}>
                         {c.num_esids}
                       </td>
-                      <td className="p-3 text-slate-400">{c.broker_code}</td>
+                      <td className="p-3" style={{ color: "var(--ct-text-secondary)" }}>{c.broker_code}</td>
                       <td className="p-3 text-center">
                         <span
-                          className={`px-2 py-1 rounded text-xs font-bold ${
+                          className="px-2 py-1 rounded text-xs font-bold"
+                          style={
                             c.credit_status === "Approved"
-                              ? "bg-green-900 text-green-300"
-                              : "bg-yellow-900 text-yellow-300"
-                          }`}
+                              ? { background: "var(--success-light-tint)", color: "var(--success-light)" }
+                              : { background: "var(--amber-light-tint)", color: "var(--amber-light)" }
+                          }
                         >
                           {c.credit_status || "Pending"}
                         </span>
                       </td>
-                      <td className="p-3 text-center text-slate-400">
+                      <td className="p-3 text-center" style={{ color: "var(--ct-text-secondary)" }}>
                         {sanitizeDate(c.contract_start_date)}
                       </td>
-                      <td className="p-3 text-center text-slate-400">
+                      <td className="p-3 text-center" style={{ color: "var(--ct-text-secondary)" }}>
                         {sanitizeDate(c.pricing_start_date)}
                       </td>
                       <td className="p-3 text-center">
@@ -353,7 +384,8 @@ const CustomPricingList = () => {
                             onClick={() =>
                               router.push(`/custom_pricing/${c.id}`)
                             }
-                            className="bg-slate-700 hover:bg-slate-600 text-white px-3 py-1 rounded text-xs font-bold"
+                            className="px-3 py-1 rounded text-xs font-bold border transition-colors"
+                            style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)", color: "var(--ct-text-primary)" }}
                           >
                             Price
                           </button>
@@ -361,13 +393,15 @@ const CustomPricingList = () => {
                             onClick={() =>
                               router.push(`/custom_pricing/${c.id}/edit`)
                             }
-                            className="bg-blue-900 hover:bg-blue-800 text-blue-300 px-3 py-1 rounded text-xs font-bold"
+                            className="px-3 py-1 rounded text-xs font-bold transition-colors"
+                            style={{ background: "var(--accent-light-tint)", color: "var(--accent-light)" }}
                           >
                             Edit
                           </button>
                           <button
                             onClick={() => handleDelete(c.id)}
-                            className="bg-red-900 hover:bg-red-800 text-red-300 px-3 py-1 rounded text-xs font-bold"
+                            className="px-3 py-1 rounded text-xs font-bold transition-colors"
+                            style={{ background: "var(--danger-light-tint)", color: "var(--danger-light)" }}
                           >
                             Delete
                           </button>
@@ -384,14 +418,15 @@ const CustomPricingList = () => {
         {/* Renewal Modal */}
         {showRenewalModal && (
           <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
-            <div className="bg-slate-800 rounded-lg p-6 w-full max-w-2xl space-y-4 mx-4">
+            <div className="rounded-[var(--r-lg)] p-6 w-full max-w-2xl space-y-4 mx-4" style={{ background: "var(--ct-surface)" }}>
               <div className="flex justify-between items-center">
-                <h2 className="text-white font-bold text-lg uppercase">
+                <h2 className="font-bold text-lg uppercase" style={{ color: "var(--ct-text-primary)" }}>
                   Search Renewal Customer
                 </h2>
                 <button
                   onClick={() => setShowRenewalModal(false)}
-                  className="text-slate-400 hover:text-white text-xl"
+                  className="text-xl transition-colors"
+                  style={{ color: "var(--ct-text-muted)" }}
                 >
                   ✕
                 </button>
@@ -404,12 +439,14 @@ const CustomPricingList = () => {
                   value={renewalSearch}
                   onChange={(e) => setRenewalSearch(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleRenewalSearch()}
-                  className="flex-1 bg-slate-700 text-white px-3 py-2 rounded text-sm border border-slate-600 focus:outline-none focus:border-red-500"
+                  className="flex-1 px-3 py-2 rounded text-sm border focus:outline-none"
+                  style={{ background: "var(--ct-canvas)", color: "var(--ct-text-primary)", borderColor: "var(--ct-border-default)" }}
                 />
                 <button
                   onClick={handleRenewalSearch}
                   disabled={renewalSearching}
-                  className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded text-sm font-bold uppercase"
+                  className="px-4 py-2 rounded text-sm font-bold uppercase"
+                  style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
                 >
                   {renewalSearching ? "..." : "Search"}
                 </button>
@@ -426,24 +463,25 @@ const CustomPricingList = () => {
                         <div
                           key={r.serial}
                           onClick={() => handleRenewalToggle(r)}
-                          className={`rounded p-3 flex justify-between items-center cursor-pointer transition-colors ${
+                          className="rounded p-3 flex justify-between items-center cursor-pointer transition-colors border"
+                          style={
                             isSelected
-                              ? "bg-red-900/50 border border-red-500"
-                              : "bg-slate-700 hover:bg-slate-600"
-                          }`}
+                              ? { background: "var(--accent-light-tint)", borderColor: "var(--accent-light)" }
+                              : { background: "var(--ct-canvas)", borderColor: "transparent" }
+                          }
                         >
                           <div className="flex items-center gap-3">
                             <input
                               type="checkbox"
                               checked={!!isSelected}
                               onChange={(e) => e.stopPropagation()} // ← stop propagation, let div handle it
-                              className="accent-red-500 w-4 h-4"
+                              className="accent-[var(--accent-light)] w-4 h-4"
                             />
                             <div>
-                              <p className="text-white font-semibold">
+                              <p className="font-semibold" style={{ color: "var(--ct-text-primary)" }}>
                                 {r.company_name}
                               </p>
-                              <p className="text-slate-400 text-xs font-mono">
+                              <p className="text-xs font-mono" style={{ color: "var(--ct-text-muted)" }}>
                                 {r.premise_id} — {r.broker_name} — Exp:{" "}
                                 {r.contract_end_date}
                               </p>
@@ -455,14 +493,15 @@ const CustomPricingList = () => {
                   </div>
 
                   {selectedRenewals.length > 0 && (
-                    <div className="flex justify-between items-center pt-2 border-t border-slate-700">
-                      <span className="text-slate-400 text-sm">
+                    <div className="flex justify-between items-center pt-2 border-t" style={{ borderColor: "var(--ct-border-default)" }}>
+                      <span className="text-sm" style={{ color: "var(--ct-text-secondary)" }}>
                         {selectedRenewals.length} ESID
                         {selectedRenewals.length > 1 ? "s" : ""} selected
                       </span>
                       <button
                         onClick={handleRenewalConfirm}
-                        className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded text-sm font-bold uppercase"
+                        className="px-6 py-2 rounded text-sm font-bold uppercase"
+                        style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
                       >
                         Continue →
                       </button>
@@ -474,7 +513,7 @@ const CustomPricingList = () => {
               {renewalResults.length === 0 &&
                 renewalSearch &&
                 !renewalSearching && (
-                  <div className="text-slate-500 text-center py-4 italic">
+                  <div className="text-center py-4 italic" style={{ color: "var(--ct-text-muted)" }}>
                     No results found.
                   </div>
                 )}
