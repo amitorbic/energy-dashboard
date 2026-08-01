@@ -61,6 +61,28 @@ const defaultForm: CustomerForm = {
 
 const sanitizeDate = (d: string) => (d === "0000-00-00" || !d ? "" : d);
 
+const inputClass =
+  "w-full px-3 py-2 rounded text-sm border focus:outline-none focus:border-[var(--accent-light)]";
+const inputStyle = {
+  background: "var(--ct-canvas)",
+  color: "var(--ct-text-primary)",
+  borderColor: "var(--ct-border-default)",
+};
+const panelClass = "rounded-[var(--r-lg)] p-5 space-y-4 border";
+const panelStyle = { background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" };
+const panelHeadingClass =
+  "text-xs font-bold uppercase tracking-wide border-b pb-2";
+const panelHeadingStyle = { color: "var(--ct-text-muted)", borderColor: "var(--ct-border-default)" };
+const fieldLabelClass = "text-xs mb-1 block";
+const fieldLabelStyle = { color: "var(--ct-text-muted)" };
+const secondaryBtnClass =
+  "px-5 py-2 rounded text-xs font-bold uppercase transition-colors border disabled:opacity-50";
+const secondaryBtnStyle = {
+  background: "var(--ct-surface)",
+  borderColor: "var(--ct-border-default)",
+  color: "var(--ct-text-primary)",
+};
+
 const CustomerPricingPage = () => {
   const router = useRouter();
   const { id } = router.query;
@@ -230,7 +252,7 @@ const CustomerPricingPage = () => {
   if (loading)
     return (
       <Layout title="Customer Pricing">
-        <div className="text-slate-500 text-center py-20 animate-pulse">
+        <div className="text-center py-20 animate-pulse" style={{ color: "var(--ct-text-muted)" }}>
           Loading...
         </div>
       </Layout>
@@ -240,16 +262,17 @@ const CustomerPricingPage = () => {
     <Layout title={`${form.company_name} — Pricing`}>
       <div className="max-w-6xl mx-auto p-6 space-y-6">
         {/* Header */}
-        <header className="flex justify-between items-center border-b border-slate-800 pb-5">
+        <header className="flex justify-between items-center border-b pb-5" style={{ borderColor: "var(--ct-border-subtle)" }}>
           <div>
-            <h1 className="text-3xl font-black text-white uppercase tracking-tighter">
+            <h1 className="text-3xl font-black uppercase tracking-tighter" style={{ color: "var(--ct-text-primary)" }}>
               {form.company_name || "Customer Pricing"}
             </h1>
-            <p className="text-slate-500 font-mono text-sm">{form.esid}</p>
+            <p className="font-mono text-sm" style={{ color: "var(--ct-text-secondary)" }}>{form.esid}</p>
           </div>
           <button
             onClick={() => router.push("/custom_pricing")}
-            className="text-slate-400 hover:text-white text-sm px-4 py-2"
+            className="text-sm px-4 py-2 transition-colors"
+            style={{ color: "var(--ct-text-muted)" }}
           >
             ← Back
           </button>
@@ -259,8 +282,8 @@ const CustomerPricingPage = () => {
           {/* ── LEFT ── */}
           <div className="space-y-5">
             {/* Customer Details — editable inline */}
-            <div className="bg-slate-800 rounded-lg p-5 space-y-4">
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-wide border-b border-slate-700 pb-2">
+            <div className={panelClass} style={panelStyle}>
+              <p className={panelHeadingClass} style={panelHeadingStyle}>
                 Customer details
               </p>
               <div className="grid grid-cols-2 gap-3">
@@ -293,7 +316,7 @@ const CustomerPricingPage = () => {
                   },
                 ].map(({ label, name, type = "text", span }) => (
                   <div key={name} className={span === 2 ? "col-span-2" : ""}>
-                    <label className="text-xs text-slate-400 mb-1 block">
+                    <label className={fieldLabelClass} style={fieldLabelStyle}>
                       {label}
                     </label>
                     <input
@@ -301,21 +324,23 @@ const CustomerPricingPage = () => {
                       name={name}
                       value={(form as any)[name] ?? ""}
                       onChange={handleChange}
-                      className="w-full bg-slate-700 text-white px-3 py-2 rounded text-sm border border-slate-600 focus:outline-none focus:border-red-500"
+                      className={inputClass}
+                      style={inputStyle}
                     />
                   </div>
                 ))}
 
                 {/* Broker dropdown */}
                 <div>
-                  <label className="text-xs text-slate-400 mb-1 block">
+                  <label className={fieldLabelClass} style={fieldLabelStyle}>
                     Broker
                   </label>
                   <select
                     name="broker_code"
                     value={form.broker_code}
                     onChange={handleChange}
-                    className="w-full bg-slate-700 text-white px-3 py-2 rounded text-sm border border-slate-600 focus:outline-none focus:border-red-500"
+                    className={inputClass}
+                    style={inputStyle}
                   >
                     <option value="">-- Select --</option>
                     {brokerList.map((b) => (
@@ -328,14 +353,15 @@ const CustomerPricingPage = () => {
 
                 {/* Credit Status */}
                 <div>
-                  <label className="text-xs text-slate-400 mb-1 block">
+                  <label className={fieldLabelClass} style={fieldLabelStyle}>
                     Credit Status
                   </label>
                   <select
                     name="credit_status"
                     value={form.credit_status}
                     onChange={handleChange}
-                    className="w-full bg-slate-700 text-white px-3 py-2 rounded text-sm border border-slate-600 focus:outline-none focus:border-red-500"
+                    className={inputClass}
+                    style={inputStyle}
                   >
                     <option value="Pending">Pending</option>
                     <option value="Approved">Approved</option>
@@ -344,14 +370,15 @@ const CustomerPricingPage = () => {
 
                 {/* Nodal */}
                 <div>
-                  <label className="text-xs text-slate-400 mb-1 block">
+                  <label className={fieldLabelClass} style={fieldLabelStyle}>
                     Nodal & RUC
                   </label>
                   <select
                     name="nodal"
                     value={form.nodal}
                     onChange={handleChange}
-                    className="w-full bg-slate-700 text-white px-3 py-2 rounded text-sm border border-slate-600 focus:outline-none focus:border-red-500"
+                    className={inputClass}
+                    style={inputStyle}
                   >
                     <option value="Included">Included</option>
                     <option value="Excluded">Excluded</option>
@@ -360,7 +387,7 @@ const CustomerPricingPage = () => {
 
                 {/* Billing Address */}
                 <div className="col-span-2">
-                  <label className="text-xs text-slate-400 mb-1 block">
+                  <label className={fieldLabelClass} style={fieldLabelStyle}>
                     Billing Address
                   </label>
                   <input
@@ -368,13 +395,14 @@ const CustomerPricingPage = () => {
                     name="billing_address"
                     value={form.billing_address ?? ""}
                     onChange={handleChange}
-                    className="w-full bg-slate-700 text-white px-3 py-2 rounded text-sm border border-slate-600 focus:outline-none focus:border-red-500"
+                    className={inputClass}
+                    style={inputStyle}
                   />
                 </div>
 
                 {/* Comments */}
                 <div className="col-span-2">
-                  <label className="text-xs text-slate-400 mb-1 block">
+                  <label className={fieldLabelClass} style={fieldLabelStyle}>
                     Comments
                   </label>
                   <textarea
@@ -382,7 +410,8 @@ const CustomerPricingPage = () => {
                     value={form.comments ?? ""}
                     onChange={handleChange}
                     rows={2}
-                    className="w-full bg-slate-700 text-white px-3 py-2 rounded text-sm border border-slate-600 focus:outline-none focus:border-red-500 resize-none"
+                    className={`${inputClass} resize-none`}
+                    style={inputStyle}
                   />
                 </div>
               </div>
@@ -390,18 +419,19 @@ const CustomerPricingPage = () => {
               <button
                 onClick={handleSaveCustomer}
                 disabled={saving}
-                className="bg-slate-600 hover:bg-slate-500 disabled:opacity-50 text-white px-5 py-2 rounded text-xs font-bold uppercase transition"
+                className={secondaryBtnClass}
+                style={secondaryBtnStyle}
               >
                 {saving ? "Saving..." : "Save Customer"}
               </button>
               {saveMsg && (
-                <span className="text-green-400 text-xs ml-3">{saveMsg}</span>
+                <span className="text-xs ml-3" style={{ color: "var(--success-light)" }}>{saveMsg}</span>
               )}
             </div>
 
             {/* Upload Usage */}
-            <div className="bg-slate-800 rounded-lg p-5 space-y-3">
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-wide border-b border-slate-700 pb-2">
+            <div className={panelClass} style={panelStyle}>
+              <p className={panelHeadingClass} style={panelHeadingStyle}>
                 Upload usage files
               </p>
               <div className="space-y-2">
@@ -413,9 +443,14 @@ const CustomerPricingPage = () => {
                       }}
                       type="file"
                       accept=".xlsx,.xls,.csv"
-                      className="bg-slate-700 text-white text-sm rounded border border-slate-600 px-2 py-1 w-64 file:bg-red-600 file:text-white file:border-0 file:px-3 file:py-1 file:rounded file:text-xs file:font-bold file:uppercase file:cursor-pointer"
+                      className="text-sm rounded border px-2 py-1 w-64 file:border-0 file:px-3 file:py-1 file:rounded file:text-xs file:font-bold file:uppercase file:cursor-pointer"
+                      style={{
+                        background: "var(--ct-canvas)",
+                        color: "var(--ct-text-primary)",
+                        borderColor: "var(--ct-border-default)",
+                      }}
                     />
-                    <span className="text-slate-500 text-xs">File {i + 1}</span>
+                    <span className="text-xs" style={{ color: "var(--ct-text-muted)" }}>File {i + 1}</span>
                   </div>
                 ))}
               </div>
@@ -423,7 +458,8 @@ const CustomerPricingPage = () => {
                 {fileSlots.length < 5 && (
                   <button
                     onClick={() => setFileSlots((p) => [...p, p.length])}
-                    className="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded text-sm font-bold"
+                    className={secondaryBtnClass}
+                    style={secondaryBtnStyle}
                   >
                     + Add File
                   </button>
@@ -470,23 +506,24 @@ const CustomerPricingPage = () => {
                     setSelectedProfiles(vols);
                     setUploading(false);
                   }}
-                  className="bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white px-4 py-2 rounded text-sm font-bold uppercase"
+                  className="px-4 py-2 rounded text-sm font-bold uppercase disabled:opacity-50"
+                  style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
                 >
                   {uploading ? "Uploading..." : "Upload All"}
                 </button>
               </div>
               {uploadMsg && (
-                <p className="text-slate-300 text-xs">{uploadMsg}</p>
+                <p className="text-xs" style={{ color: "var(--ct-text-secondary)" }}>{uploadMsg}</p>
               )}
             </div>
 
             {/* Profile & Volume */}
-            <div className="bg-slate-800 rounded-lg p-5 space-y-3">
-              <div className="flex justify-between items-center border-b border-slate-700 pb-2">
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">
+            <div className={panelClass} style={panelStyle}>
+              <div className="flex justify-between items-center border-b pb-2" style={{ borderColor: "var(--ct-border-default)" }}>
+                <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "var(--ct-text-muted)" }}>
                   Profile &amp; volume
                 </p>
-                <span className="text-xs text-slate-400 font-mono">
+                <span className="text-xs font-mono" style={{ color: "var(--ct-text-muted)" }}>
                   Total: {totalVolume.toLocaleString()} KWH
                 </span>
               </div>
@@ -498,7 +535,7 @@ const CustomerPricingPage = () => {
                   if (!zoneProfiles.length) return null;
                   return (
                     <div key={zone}>
-                      <p className="text-xs font-bold text-red-400 uppercase mb-2">
+                      <p className="text-xs font-bold uppercase mb-2" style={{ color: "var(--accent-light)" }}>
                         {zoneDisplay[zone] || zone}
                       </p>
                       {zoneProfiles.map((p) => {
@@ -514,9 +551,9 @@ const CustomerPricingPage = () => {
                               onChange={() =>
                                 handleProfileToggle(p.profile_key)
                               }
-                              className="accent-red-500 w-4 h-4 cursor-pointer"
+                              className="accent-[var(--accent-light)] w-4 h-4 cursor-pointer"
                             />
-                            <span className="text-slate-300 font-mono text-xs w-40">
+                            <span className="font-mono text-xs w-40" style={{ color: "var(--ct-text-secondary)" }}>
                               {p.profile_key}
                             </span>
                             {isSelected && (
@@ -530,7 +567,8 @@ const CustomerPricingPage = () => {
                                   )
                                 }
                                 placeholder="KWH"
-                                className="bg-slate-700 text-white px-2 py-1 rounded text-xs border border-slate-600 w-28 focus:outline-none focus:border-red-500"
+                                className="px-2 py-1 rounded text-xs border w-28 focus:outline-none focus:border-[var(--accent-light)]"
+                                style={{ background: "var(--ct-canvas)", color: "var(--ct-text-primary)", borderColor: "var(--ct-border-default)" }}
                               />
                             )}
                           </div>
@@ -543,7 +581,8 @@ const CustomerPricingPage = () => {
               <button
                 onClick={handleSaveProfiles}
                 disabled={saving}
-                className="bg-slate-600 hover:bg-slate-500 disabled:opacity-50 text-white px-5 py-2 rounded text-xs font-bold uppercase transition"
+                className={secondaryBtnClass}
+                style={secondaryBtnStyle}
               >
                 {saving ? "Saving..." : "Save Profiles"}
               </button>
@@ -553,24 +592,25 @@ const CustomerPricingPage = () => {
           {/* ── RIGHT ── */}
           <div className="space-y-5">
             {/* Pricing Controls */}
-            <div className="bg-slate-800 rounded-lg p-5 space-y-4">
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-wide border-b border-slate-700 pb-2">
+            <div className={panelClass} style={panelStyle}>
+              <p className={panelHeadingClass} style={panelHeadingStyle}>
                 Custom pricing
               </p>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs text-slate-400 mb-1 block">
+                  <label className={fieldLabelClass} style={fieldLabelStyle}>
                     Start date
                   </label>
                   <input
                     type="date"
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
-                    className="w-full bg-slate-700 text-white px-3 py-2 rounded text-sm border border-slate-600 focus:outline-none focus:border-red-500"
+                    className={inputClass}
+                    style={inputStyle}
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-slate-400 mb-1 block">
+                  <label className={fieldLabelClass} style={fieldLabelStyle}>
                     Terms
                   </label>
                   <input
@@ -578,7 +618,8 @@ const CustomerPricingPage = () => {
                     value={terms}
                     onChange={(e) => setTerms(e.target.value)}
                     placeholder="6,12,18,24"
-                    className="w-full bg-slate-700 text-white px-3 py-2 rounded text-sm border border-slate-600 focus:outline-none focus:border-red-500"
+                    className={inputClass}
+                    style={inputStyle}
                   />
                 </div>
               </div>
@@ -587,7 +628,8 @@ const CustomerPricingPage = () => {
                 disabled={
                   calculating || Object.keys(selectedProfiles).length === 0
                 }
-                className="w-full bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white py-2.5 rounded text-sm font-bold uppercase transition"
+                className="w-full py-2.5 rounded text-sm font-bold uppercase transition-colors disabled:opacity-50"
+                style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
               >
                 {calculating ? "Calculating..." : "Calculate Price"}
               </button>
@@ -595,13 +637,13 @@ const CustomerPricingPage = () => {
 
             {/* Results */}
             {pricing.length > 0 && (
-              <div className="bg-slate-800 rounded-lg p-5 space-y-4">
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-wide border-b border-slate-700 pb-2">
+              <div className={panelClass} style={panelStyle}>
+                <p className={panelHeadingClass} style={panelHeadingStyle}>
                   Results
                 </p>
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="bg-slate-700 text-slate-400 uppercase text-xs">
+                    <tr className="uppercase text-xs" style={{ background: "var(--ct-surface-hover)", color: "var(--ct-text-muted)" }}>
                       <th className="p-3 text-center">Term</th>
                       <th className="p-3 text-center">Price (¢/kWh)</th>
                       <th className="p-3 text-center">Total KWH</th>
@@ -612,20 +654,21 @@ const CustomerPricingPage = () => {
                     {pricing.map((p) => (
                       <tr
                         key={p.term}
-                        className="border-t border-slate-700 hover:bg-slate-700/50"
+                        className="border-t transition-colors hover:bg-[var(--ct-surface-hover)]"
+                        style={{ borderColor: "var(--ct-border-default)" }}
                       >
-                        <td className="p-3 text-center text-white font-bold">
+                        <td className="p-3 text-center font-bold" style={{ color: "var(--ct-text-primary)" }}>
                           {p.term} mo
                         </td>
-                        <td className="p-3 text-center text-red-400 font-mono font-bold text-lg">
+                        <td className="p-3 text-center font-mono font-bold text-lg" style={{ color: "var(--accent-light)" }}>
                           {p.custom_price !== null
                             ? p.custom_price.toFixed(4)
                             : "N/A"}
                         </td>
-                        <td className="p-3 text-center text-slate-400">
+                        <td className="p-3 text-center" style={{ color: "var(--ct-text-secondary)" }}>
                           {p.total_kwh.toLocaleString()}
                         </td>
-                        <td className="p-3 text-center text-slate-400">
+                        <td className="p-3 text-center" style={{ color: "var(--ct-text-secondary)" }}>
                           {p.matched_volume.toLocaleString()}
                         </td>
                       </tr>
@@ -637,13 +680,15 @@ const CustomerPricingPage = () => {
                 <button
                   onClick={handleSendEmail}
                   disabled={sending}
-                  className="w-full bg-blue-700 hover:bg-blue-600 disabled:opacity-50 text-white py-2.5 rounded text-sm font-bold uppercase transition"
+                  className="w-full py-2.5 rounded text-sm font-bold uppercase transition-colors disabled:opacity-50"
+                  style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
                 >
                   {sending ? "Sending..." : "Send Pricing Email"}
                 </button>
                 {sendMsg && (
                   <p
-                    className={`text-xs text-center ${sendMsg.includes("success") ? "text-green-400" : "text-red-400"}`}
+                    className="text-xs text-center"
+                    style={{ color: sendMsg.includes("success") ? "var(--success-light)" : "var(--danger-light)" }}
                   >
                     {sendMsg}
                   </p>
@@ -652,8 +697,8 @@ const CustomerPricingPage = () => {
             )}
 
             {/* Customer summary */}
-            <div className="bg-slate-800 rounded-lg p-5">
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-wide border-b border-slate-700 pb-2 mb-3">
+            <div className={panelClass} style={panelStyle}>
+              <p className={`${panelHeadingClass} mb-3`} style={panelHeadingStyle}>
                 Summary
               </p>
               <div className="grid grid-cols-2 gap-2 text-xs">
@@ -666,8 +711,8 @@ const CustomerPricingPage = () => {
                   ["No. ESIDs", form.num_esids],
                 ].map(([label, val]) => (
                   <div key={label as string}>
-                    <span className="text-slate-500">{label}: </span>
-                    <span className="text-slate-300 font-semibold">
+                    <span style={{ color: "var(--ct-text-muted)" }}>{label}: </span>
+                    <span className="font-semibold" style={{ color: "var(--ct-text-secondary)" }}>
                       {val as string}
                     </span>
                   </div>
