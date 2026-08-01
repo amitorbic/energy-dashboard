@@ -37,33 +37,56 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 flex items-center justify-center px-4">
+    <div
+      className="min-h-screen flex items-center justify-center px-4"
+      style={{ background: "var(--sb-canvas)" }}
+    >
       {/* Background grid */}
-      <div className="absolute inset-0 bg-[linear-gradient(rgba(56,189,248,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(56,189,248,0.03)_1px,transparent_1px)] bg-[size:48px_48px]" />
+      <div className="absolute inset-0 bg-[linear-gradient(rgba(38,198,217,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(38,198,217,0.03)_1px,transparent_1px)] bg-[size:48px_48px]" />
 
       <div className="relative w-full max-w-sm">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 text-2xl font-bold text-white">
-            <span className="text-sky-400 text-3xl">⚡</span>
+          <div
+            className="inline-flex items-center gap-2 text-2xl font-bold"
+            style={{ color: "var(--sb-text-primary)" }}
+          >
+            <span className="text-3xl" style={{ color: "var(--accent-dark)" }}>⚡</span>
             ORBIC
           </div>
-          <p className="text-slate-400 text-sm mt-2">Energy Intelligence Platform</p>
+          <p className="text-sm mt-2" style={{ color: "var(--sb-text-secondary)" }}>
+            Energy Intelligence Platform
+          </p>
         </div>
 
         {/* Card */}
-        <div className="bg-slate-800 border border-slate-700 rounded-xl p-8 shadow-2xl">
-          <h2 className="text-white text-lg font-semibold mb-6">Sign in to your account</h2>
+        <div
+          className="rounded-[var(--r-lg)] p-8 shadow-2xl border"
+          style={{ background: "var(--sb-surface)", borderColor: "var(--sb-border-default)" }}
+        >
+          <h2 className="text-lg font-semibold mb-6" style={{ color: "var(--sb-text-primary)" }}>
+            Sign in to your account
+          </h2>
 
           {error && (
-            <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm rounded-lg px-4 py-3 mb-5">
+            <div
+              className="text-sm rounded-[var(--r-md)] px-4 py-3 mb-5 border"
+              style={{
+                background: "var(--danger-dark-tint)",
+                borderColor: "var(--danger-dark)",
+                color: "var(--danger-dark)",
+              }}
+            >
               {error}
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-slate-400 text-xs font-medium mb-1.5 uppercase tracking-wide">
+              <label
+                className="block text-xs font-medium mb-1.5 uppercase tracking-wide"
+                style={{ color: "var(--sb-text-secondary)" }}
+              >
                 Username or Email
               </label>
               <input
@@ -72,14 +95,21 @@ export default function LoginPage() {
                 onChange={(e) => setLogin(e.target.value)}
                 required
                 autoFocus
-                className="w-full bg-slate-900 border border-slate-600 text-white rounded-lg px-4 py-2.5 text-sm
-                           placeholder-slate-500 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition-colors"
+                className="w-full rounded-[var(--r-md)] px-4 py-2.5 text-sm border focus:outline-none focus:ring-1 transition-colors"
+                style={{
+                  background: "var(--sb-canvas)",
+                  borderColor: "var(--sb-border-strong)",
+                  color: "var(--sb-text-primary)",
+                }}
                 placeholder="Enter username or email"
               />
             </div>
 
             <div>
-              <label className="block text-slate-400 text-xs font-medium mb-1.5 uppercase tracking-wide">
+              <label
+                className="block text-xs font-medium mb-1.5 uppercase tracking-wide"
+                style={{ color: "var(--sb-text-secondary)" }}
+              >
                 Password
               </label>
               <input
@@ -87,8 +117,12 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="w-full bg-slate-900 border border-slate-600 text-white rounded-lg px-4 py-2.5 text-sm
-                           placeholder-slate-500 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition-colors"
+                className="w-full rounded-[var(--r-md)] px-4 py-2.5 text-sm border focus:outline-none focus:ring-1 transition-colors"
+                style={{
+                  background: "var(--sb-canvas)",
+                  borderColor: "var(--sb-border-strong)",
+                  color: "var(--sb-text-primary)",
+                }}
                 placeholder="Enter password"
               />
             </div>
@@ -96,8 +130,8 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-sky-500 hover:bg-sky-400 disabled:bg-sky-500/50 text-white font-semibold
-                         rounded-lg px-4 py-2.5 text-sm transition-colors mt-2 flex items-center justify-center gap-2"
+              className="w-full font-semibold rounded-[var(--r-md)] px-4 py-2.5 text-sm transition-colors mt-2 flex items-center justify-center gap-2 disabled:opacity-50"
+              style={{ background: "var(--accent-dark)", color: "var(--accent-dark-on-solid)" }}
             >
               {loading ? (
                 <>
@@ -112,7 +146,7 @@ export default function LoginPage() {
           </form>
         </div>
 
-        <p className="text-center text-slate-600 text-xs mt-6">
+        <p className="text-center text-xs mt-6" style={{ color: "var(--sb-text-muted)" }}>
           ORBIC Internal Applications
         </p>
       </div>
