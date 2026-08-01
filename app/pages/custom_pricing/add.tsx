@@ -47,6 +47,16 @@ const defaultForm: CustomerForm = {
   comments: "",
 };
 
+const fieldInputClass =
+  "px-3 py-2 rounded text-sm border focus:outline-none focus:border-[var(--accent-light)]";
+const fieldInputStyle = {
+  background: "var(--ct-canvas)",
+  color: "var(--ct-text-primary)",
+  borderColor: "var(--ct-border-default)",
+};
+const fieldLabelClass = "text-xs uppercase font-bold";
+const fieldLabelStyle = { color: "var(--ct-text-muted)" };
+
 // 3. Field Component
 interface FieldProps {
   label: string;
@@ -68,7 +78,7 @@ const Field = ({
   onChange,
 }: FieldProps) => (
   <div className="flex flex-col gap-1">
-    <label className="text-slate-400 text-xs uppercase font-bold">
+    <label className={fieldLabelClass} style={fieldLabelStyle}>
       {label}
     </label>
     {options ? (
@@ -76,7 +86,8 @@ const Field = ({
         name={name}
         value={value}
         onChange={onChange}
-        className="bg-slate-700 text-white px-3 py-2 rounded text-sm border border-slate-600 focus:outline-none focus:border-red-500"
+        className={fieldInputClass}
+        style={fieldInputStyle}
       >
         {options.map((o) => (
           <option key={o} value={o}>
@@ -90,7 +101,8 @@ const Field = ({
         name={name}
         value={value ?? ""}
         onChange={onChange}
-        className="bg-slate-700 text-white px-3 py-2 rounded text-sm border border-slate-600 focus:outline-none focus:border-red-500"
+        className={fieldInputClass}
+        style={fieldInputStyle}
       />
     )}
   </div>
@@ -228,32 +240,39 @@ const AddCustomer = () => {
   return (
     <PricingLayout title="Add Customer">
       <div className="max-w-5xl mx-auto p-6 space-y-8">
-        <header className="flex justify-between items-center border-b border-slate-800 pb-6">
-          <h1 className="text-3xl font-black text-white uppercase tracking-tighter">
+        <header className="flex justify-between items-center border-b pb-6" style={{ borderColor: "var(--ct-border-subtle)" }}>
+          <h1 className="text-3xl font-black uppercase tracking-tighter" style={{ color: "var(--ct-text-primary)" }}>
             Add Customer
           </h1>
           <button
             onClick={() => router.push("/custom_pricing")}
-            className="text-slate-400 hover:text-white text-sm"
+            className="text-sm transition-colors"
+            style={{ color: "var(--ct-text-muted)" }}
           >
             ← Back
           </button>
         </header>
         {router.query.source === "upload" && (
-          <div className="bg-blue-900/50 border border-blue-500 text-white px-4 py-3 rounded text-sm">
+          <div
+            className="px-4 py-3 rounded text-sm border"
+            style={{ background: "var(--info-light-tint)", borderColor: "var(--info-light)", color: "var(--info-light)" }}
+          >
             ℹ️ First usage file parsed and profiles pre-filled. You can upload
             additional files after saving on the pricing page.
           </div>
         )}
 
         {error && (
-          <div className="bg-red-900/50 border border-red-500 text-red-300 px-4 py-3 rounded text-sm">
+          <div
+            className="px-4 py-3 rounded text-sm border"
+            style={{ background: "var(--danger-light-tint)", borderColor: "var(--danger-light)", color: "var(--danger-light)" }}
+          >
             {error}
           </div>
         )}
 
-        <div className="bg-slate-800 rounded-lg p-6 space-y-6">
-          <h2 className="text-white font-bold text-sm uppercase border-b border-slate-700 pb-2">
+        <div className="rounded-[var(--r-lg)] p-6 space-y-6 border" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
+          <h2 className="font-bold text-sm uppercase border-b pb-2" style={{ color: "var(--ct-text-primary)", borderColor: "var(--ct-border-default)" }}>
             Meter Information
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -328,8 +347,8 @@ const AddCustomer = () => {
           </div>
         </div>
 
-        <div className="bg-slate-800 rounded-lg p-6 space-y-6">
-          <h2 className="text-white font-bold text-sm uppercase border-b border-slate-700 pb-2">
+        <div className="rounded-[var(--r-lg)] p-6 space-y-6 border" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
+          <h2 className="font-bold text-sm uppercase border-b pb-2" style={{ color: "var(--ct-text-primary)", borderColor: "var(--ct-border-default)" }}>
             Customer Information
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -340,14 +359,15 @@ const AddCustomer = () => {
               onChange={handleChange}
             />
             <div className="flex flex-col gap-1">
-              <label className="text-slate-400 text-xs uppercase font-bold">
+              <label className={fieldLabelClass} style={fieldLabelStyle}>
                 Broker
               </label>
               <select
                 name="broker_code"
                 value={form.broker_code}
                 onChange={handleChange}
-                className="bg-slate-700 text-white px-3 py-2 rounded text-sm border border-slate-600 focus:outline-none focus:border-red-500"
+                className={fieldInputClass}
+                style={fieldInputStyle}
               >
                 <option value="">-- Select Broker --</option>
                 {brokerList.map((b) => (
@@ -377,7 +397,7 @@ const AddCustomer = () => {
               onChange={handleChange}
             />
             <div className="flex flex-col gap-1 col-span-1 md:col-span-2">
-              <label className="text-slate-400 text-xs uppercase font-bold">
+              <label className={fieldLabelClass} style={fieldLabelStyle}>
                 Billing Address
               </label>
               <input
@@ -385,11 +405,12 @@ const AddCustomer = () => {
                 name="billing_address"
                 value={form.billing_address}
                 onChange={handleChange}
-                className="bg-slate-700 text-white px-3 py-2 rounded text-sm border border-slate-600 focus:outline-none focus:border-red-500"
+                className={fieldInputClass}
+                style={fieldInputStyle}
               />
             </div>
             <div className="flex flex-col gap-1 col-span-1 md:col-span-2">
-              <label className="text-slate-400 text-xs uppercase font-bold">
+              <label className={fieldLabelClass} style={fieldLabelStyle}>
                 Comments
               </label>
               <textarea
@@ -397,7 +418,8 @@ const AddCustomer = () => {
                 value={form.comments}
                 onChange={handleChange}
                 rows={3}
-                className="bg-slate-700 text-white px-3 py-2 rounded text-sm border border-slate-600 focus:outline-none focus:border-red-500"
+                className={fieldInputClass}
+                style={fieldInputStyle}
               />
             </div>
           </div>
@@ -407,13 +429,15 @@ const AddCustomer = () => {
           <button
             onClick={handleSubmit}
             disabled={saving}
-            className="bg-red-600 hover:bg-red-700 text-white px-8 py-2 rounded text-sm font-bold uppercase transition-colors disabled:opacity-50"
+            className="px-8 py-2 rounded text-sm font-bold uppercase transition-colors disabled:opacity-50"
+            style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
           >
             {saving ? "Saving..." : "Save Customer"}
           </button>
           <button
             onClick={() => router.push("/custom_pricing")}
-            className="bg-slate-700 hover:bg-slate-600 text-white px-8 py-2 rounded text-sm font-bold uppercase transition-colors"
+            className="px-8 py-2 rounded text-sm font-bold uppercase transition-colors border"
+            style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)", color: "var(--ct-text-primary)" }}
           >
             Cancel
           </button>
