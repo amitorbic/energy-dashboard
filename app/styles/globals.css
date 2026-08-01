@@ -1,1 +1,68 @@
 @import "tailwindcss";
+
+/* ORBIC hybrid design tokens — approved direction: dark control-room rail
+   (Sidebar) + light workspace (page content). Two grounds, one system.
+   Accent/semantic colors ship in a dark-ground and light-ground variant
+   each, since the same hex can't hold AA contrast on both. See the
+   approved token proposal artifact for the full rationale. */
+:root {
+  /* rail (Sidebar) — dark, used as-is */
+  --sb-canvas: #0a0f1a;
+  --sb-surface: #101828;
+  --sb-surface-hover: #1b2740;
+  --sb-border-subtle: #1c2a42;
+  --sb-border-default: #263a5c;
+  --sb-border-strong: #324c78;
+  --sb-text-primary: #e7ecf5;
+  --sb-text-secondary: #94a3c4;
+  --sb-text-muted: #5c6c8f;
+
+  /* content workspace — light, used as-is */
+  --ct-canvas: #f5f7fb;
+  --ct-surface: #ffffff;
+  --ct-surface-hover: #eef2f8;
+  --ct-border-subtle: #e4e9f2;
+  --ct-border-default: #d3dce9;
+  --ct-border-strong: #b7c3d9;
+  --ct-text-primary: #101728;
+  --ct-text-secondary: #51607a;
+  --ct-text-muted: #8896b0;
+
+  /* accent + semantic — one variant per ground */
+  --accent-dark: #26c6d9;
+  --accent-dark-tint: rgba(38, 198, 217, 0.12);
+  --accent-dark-on-solid: #04222a;
+  --accent-light: #0e93a6;
+  --accent-light-hover: #0aa6bc;
+  --accent-light-tint: rgba(14, 147, 166, 0.1);
+  --accent-light-on-solid: #ffffff;
+
+  --amber-dark: #e8a93a;
+  --amber-dark-tint: rgba(232, 169, 58, 0.14);
+  --amber-light: #b9790e;
+  --amber-light-tint: rgba(185, 121, 14, 0.12);
+  --amber-light-border: rgba(185, 121, 14, 0.28);
+
+  --success-dark: #34b37a;
+  --success-dark-tint: rgba(52, 179, 122, 0.14);
+  --success-light: #178a5d;
+  --success-light-tint: rgba(23, 138, 93, 0.12);
+
+  --danger-dark: #e5484d;
+  --danger-dark-tint: rgba(229, 72, 77, 0.14);
+  --danger-light: #c6262c;
+  --danger-light-tint: rgba(198, 38, 44, 0.1);
+  --danger-light-on-solid: #ffffff;
+
+  --info-dark: #6e7fa3;
+  --info-dark-tint: rgba(110, 127, 163, 0.16);
+  --info-light: #55648a;
+  --info-light-tint: rgba(85, 100, 138, 0.1);
+
+  --r-sm: 6px;
+  --r-md: 8px;
+  --r-lg: 12px;
+  --r-full: 999px;
+
+  --shadow-content: 0 16px 40px rgba(16, 23, 40, 0.14);
+}
