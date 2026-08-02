@@ -16,7 +16,7 @@ export default function EditConfirmation() {
 
   return (
     <ContractLayout title="Edit Confirmation">
-      <div className="text-sm text-gray-400 p-8">Loading...</div>
+      <div className="text-sm p-8" style={{ color: "var(--ct-text-muted)" }}>Loading...</div>
     </ContractLayout>
   );
 }
