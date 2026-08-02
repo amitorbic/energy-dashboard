@@ -96,25 +96,49 @@ const SampleBill = () => {
   };
 
   const inputCls =
-    "w-full bg-slate-700 text-white px-3 py-2 rounded text-sm border border-slate-600 focus:outline-none focus:border-red-500";
-  const labelCls = "text-xs text-slate-400 mb-1 block";
+    "w-full px-3 py-2 rounded text-sm border focus:outline-none focus:border-[var(--accent-light)]";
+  const inputStyle = {
+    background: "var(--ct-canvas)",
+    color: "var(--ct-text-primary)",
+    borderColor: "var(--ct-border-default)",
+  };
+  const labelCls = "text-xs mb-1 block";
+  const labelStyle = { color: "var(--ct-text-muted)" };
+  const panelCls = "rounded-[var(--r-lg)] p-5 space-y-4 border";
+  const panelStyle = {
+    background: "var(--ct-surface)",
+    borderColor: "var(--ct-border-default)",
+  };
+  const panelHeadingCls =
+    "text-xs font-bold uppercase tracking-wide border-b pb-2";
+  const panelHeadingStyle = {
+    color: "var(--ct-text-muted)",
+    borderColor: "var(--ct-border-default)",
+  };
 
   return (
     <Layout title="Sample Bill">
       <div className="max-w-6xl mx-auto p-6 space-y-6">
         {/* Header */}
-        <div className="flex items-center gap-4 border-b border-slate-800 pb-5">
+        <div
+          className="flex items-center gap-4 border-b pb-5"
+          style={{ borderColor: "var(--ct-border-subtle)" }}
+        >
           <button
             onClick={() => router.push("/pricing")}
-            className="text-slate-400 hover:text-white text-sm"
+            className="text-sm transition-colors"
+            style={{ color: "var(--ct-text-muted)" }}
           >
             ← Pricing
           </button>
           <div>
-            <h1 className="text-2xl font-black text-white uppercase tracking-tighter">
+            <h1
+              className="text-2xl font-black uppercase tracking-tighter"
+              style={{ color: "var(--ct-text-primary)" }}
+            >
               Sample Bill
             </h1>
-            <p className="text-slate-400 text-xs mt-0.5">
+            <p className="text-xs mt-0.5" style={{ color: "var(--ct-text-muted)" }}>
               Generate a sample electricity bill PDF
             </p>
           </div>
@@ -124,38 +148,47 @@ const SampleBill = () => {
           {/* ── LEFT — Form ── */}
           <div className="space-y-5">
             {/* Customer Info */}
-            <div className="bg-slate-800 rounded-lg p-5 space-y-4">
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-wide border-b border-slate-700 pb-2">
+            <div className={panelCls} style={panelStyle}>
+              <p className={panelHeadingCls} style={panelHeadingStyle}>
                 Customer info
               </p>
               <div className="space-y-3">
                 <div>
-                  <label className={labelCls}>Customer name</label>
+                  <label className={labelCls} style={labelStyle}>
+                    Customer name
+                  </label>
                   <input
                     name="name"
                     value={form.name}
                     onChange={handleChange}
                     className={inputCls}
+                    style={inputStyle}
                     placeholder="e.g. ABC Corp"
                   />
                 </div>
                 <div>
-                  <label className={labelCls}>Service address</label>
+                  <label className={labelCls} style={labelStyle}>
+                    Service address
+                  </label>
                   <input
                     name="address"
                     value={form.address}
                     onChange={handleChange}
                     className={inputCls}
+                    style={inputStyle}
                     placeholder="e.g. 123 Main St, Houston TX 77001"
                   />
                 </div>
                 <div>
-                  <label className={labelCls}>Bill month (MM/YYYY)</label>
+                  <label className={labelCls} style={labelStyle}>
+                    Bill month (MM/YYYY)
+                  </label>
                   <input
                     name="bill_month"
                     value={form.bill_month}
                     onChange={handleChange}
                     className={inputCls}
+                    style={inputStyle}
                     placeholder="e.g. 04/2026"
                   />
                 </div>
@@ -163,13 +196,15 @@ const SampleBill = () => {
             </div>
 
             {/* Charges */}
-            <div className="bg-slate-800 rounded-lg p-5 space-y-4">
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-wide border-b border-slate-700 pb-2">
+            <div className={panelCls} style={panelStyle}>
+              <p className={panelHeadingCls} style={panelHeadingStyle}>
                 Charges
               </p>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className={labelCls}>Rate ($/kWh)</label>
+                  <label className={labelCls} style={labelStyle}>
+                    Rate ($/kWh)
+                  </label>
                   <input
                     name="rate"
                     type="number"
@@ -177,22 +212,28 @@ const SampleBill = () => {
                     value={form.rate}
                     onChange={handleChange}
                     className={inputCls}
+                    style={inputStyle}
                     placeholder="e.g. 0.0750"
                   />
                 </div>
                 <div>
-                  <label className={labelCls}>Usage (kWh)</label>
+                  <label className={labelCls} style={labelStyle}>
+                    Usage (kWh)
+                  </label>
                   <input
                     name="usage"
                     type="number"
                     value={form.usage}
                     onChange={handleChange}
                     className={inputCls}
+                    style={inputStyle}
                     placeholder="e.g. 5000"
                   />
                 </div>
                 <div>
-                  <label className={labelCls}>TDSP charges ($)</label>
+                  <label className={labelCls} style={labelStyle}>
+                    TDSP charges ($)
+                  </label>
                   <input
                     name="tdsp"
                     type="number"
@@ -200,11 +241,14 @@ const SampleBill = () => {
                     value={form.tdsp}
                     onChange={handleChange}
                     className={inputCls}
+                    style={inputStyle}
                     placeholder="e.g. 45.00"
                   />
                 </div>
                 <div>
-                  <label className={labelCls}>Base / fee charges ($)</label>
+                  <label className={labelCls} style={labelStyle}>
+                    Base / fee charges ($)
+                  </label>
                   <input
                     name="fee"
                     type="number"
@@ -212,6 +256,7 @@ const SampleBill = () => {
                     value={form.fee}
                     onChange={handleChange}
                     className={inputCls}
+                    style={inputStyle}
                     placeholder="e.g. 9.95"
                   />
                 </div>
@@ -219,8 +264,8 @@ const SampleBill = () => {
             </div>
 
             {/* Tax Exemption */}
-            <div className="bg-slate-800 rounded-lg p-5 space-y-3">
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-wide border-b border-slate-700 pb-2">
+            <div className={panelCls} style={panelStyle}>
+              <p className={panelHeadingCls} style={panelHeadingStyle}>
                 Tax exemption
               </p>
               <select
@@ -228,6 +273,7 @@ const SampleBill = () => {
                 value={form.tax_exempt}
                 onChange={handleChange}
                 className={inputCls}
+                style={inputStyle}
               >
                 {TAX_OPTIONS.map((o) => (
                   <option key={o.value} value={o.value}>
@@ -237,12 +283,20 @@ const SampleBill = () => {
               </select>
             </div>
 
-            {error && <p className="text-red-400 text-xs">{error}</p>}
+            {error && (
+              <p className="text-xs" style={{ color: "var(--danger-light)" }}>
+                {error}
+              </p>
+            )}
 
             <button
               onClick={handleGenerate}
               disabled={generating}
-              className="w-full bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white py-3 rounded text-sm font-bold uppercase transition"
+              className="w-full py-3 rounded text-sm font-bold uppercase transition-colors disabled:opacity-50"
+              style={{
+                background: "var(--accent-light)",
+                color: "var(--accent-light-on-solid)",
+              }}
             >
               {generating ? "Generating..." : "Generate Sample Bill"}
             </button>
@@ -252,8 +306,8 @@ const SampleBill = () => {
           <div className="space-y-5">
             {/* Live calculation summary */}
             {(rate > 0 || usage > 0) && (
-              <div className="bg-slate-800 rounded-lg p-5 space-y-3">
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-wide border-b border-slate-700 pb-2">
+              <div className={panelCls} style={panelStyle}>
+                <p className={panelHeadingCls} style={panelHeadingStyle}>
                   Calculation preview
                 </p>
                 <div className="space-y-1.5 text-xs">
@@ -271,13 +325,24 @@ const SampleBill = () => {
                     ["PUC assessment (0.167%)", `$${puc_tax.toFixed(2)}`],
                   ].map(([label, val]) => (
                     <div key={label} className="flex justify-between">
-                      <span className="text-slate-400">{label}</span>
-                      <span className="text-slate-200 font-mono">{val}</span>
+                      <span style={{ color: "var(--ct-text-muted)" }}>{label}</span>
+                      <span
+                        className="font-mono"
+                        style={{ color: "var(--ct-text-secondary)" }}
+                      >
+                        {val}
+                      </span>
                     </div>
                   ))}
-                  <div className="flex justify-between border-t border-slate-700 pt-2 font-bold">
-                    <span className="text-white">Total Due</span>
-                    <span className="text-green-400 font-mono text-sm">
+                  <div
+                    className="flex justify-between border-t pt-2 font-bold"
+                    style={{ borderColor: "var(--ct-border-default)" }}
+                  >
+                    <span style={{ color: "var(--ct-text-primary)" }}>Total Due</span>
+                    <span
+                      className="font-mono text-sm"
+                      style={{ color: "var(--accent-light)" }}
+                    >
                       ${total_due.toFixed(2)}
                     </span>
                   </div>
@@ -287,22 +352,29 @@ const SampleBill = () => {
 
             {/* PDF Preview */}
             {previewUrl && (
-              <div className="bg-slate-800 rounded-lg p-5 space-y-3">
-                <div className="flex justify-between items-center border-b border-slate-700 pb-2">
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">
+              <div className={panelCls} style={panelStyle}>
+                <div
+                  className="flex justify-between items-center border-b pb-2"
+                  style={{ borderColor: "var(--ct-border-default)" }}
+                >
+                  <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "var(--ct-text-muted)" }}>
                     Preview
                   </p>
                   <button
                     onClick={handleDownload}
-                    className="bg-red-600 hover:bg-red-700 text-white px-4 py-1.5 rounded text-xs font-bold uppercase"
+                    className="px-4 py-1.5 rounded text-xs font-bold uppercase transition-colors"
+                    style={{
+                      background: "var(--accent-light)",
+                      color: "var(--accent-light-on-solid)",
+                    }}
                   >
                     Download PDF
                   </button>
                 </div>
                 <iframe
                   src={previewUrl}
-                  className="w-full rounded border border-slate-700"
-                  style={{ height: "600px" }}
+                  className="w-full rounded border"
+                  style={{ height: "600px", borderColor: "var(--ct-border-default)" }}
                   title="Sample Bill Preview"
                 />
               </div>
