@@ -35,31 +35,36 @@ function EnrollmentNav() {
     { label: "Batch History", href: "/enrollment/batches" },
   ];
   return (
-    <div className="flex gap-1 border-b border-gray-200 mb-5">
-      {links.map((l) => (
-        <Link
-          key={l.href}
-          href={l.href}
-          className={`px-4 py-2 text-sm font-medium rounded-t transition-colors ${
-            router.pathname.startsWith(l.href) && l.href !== "/enrollment"
-              ? "bg-white border border-b-white border-gray-200 text-sky-700 -mb-px"
-              : l.href === "/enrollment" && router.pathname === "/enrollment"
-              ? "bg-white border border-b-white border-gray-200 text-sky-700 -mb-px"
-              : "text-gray-500 hover:text-gray-800"
-          }`}
-        >
-          {l.label}
-        </Link>
-      ))}
+    <div className="flex gap-1 border-b mb-5" style={{ borderColor: "var(--ct-border-default)" }}>
+      {links.map((l) => {
+        const active =
+          (router.pathname.startsWith(l.href) && l.href !== "/enrollment") ||
+          (l.href === "/enrollment" && router.pathname === "/enrollment");
+        return (
+          <Link
+            key={l.href}
+            href={l.href}
+            className="px-4 py-2 text-sm font-medium rounded-t transition-colors -mb-px"
+            style={
+              active
+                ? { background: "var(--ct-surface)", borderLeft: "1px solid var(--ct-border-default)", borderRight: "1px solid var(--ct-border-default)", borderTop: "1px solid var(--ct-border-default)", borderBottom: "1px solid var(--ct-surface)", color: "var(--accent-light)" }
+                : { color: "var(--ct-text-muted)" }
+            }
+          >
+            {l.label}
+          </Link>
+        );
+      })}
     </div>
   );
 }
 
-const STATUS_BADGE: Record<string, string> = {
-  pending:    "bg-yellow-100 text-yellow-700",
-  active:     "bg-green-100 text-green-700",
-  cancelled:  "bg-red-100 text-red-600",
+const STATUS_BADGE: Record<string, { background: string; color: string }> = {
+  pending: { background: "var(--amber-light-tint)", color: "var(--amber-light)" },
+  active: { background: "var(--success-light-tint)", color: "var(--success-light)" },
+  cancelled: { background: "var(--danger-light-tint)", color: "var(--danger-light)" },
 };
+const DEFAULT_STATUS_BADGE = { background: "var(--ct-surface-hover)", color: "var(--ct-text-secondary)" };
 
 export default function BatchDetailPage() {
   const router = useRouter();
@@ -122,38 +127,39 @@ export default function BatchDetailPage() {
         <EnrollmentNav />
 
         {/* Breadcrumb */}
-        <div className="flex items-center gap-2 text-sm text-gray-500">
-          <Link href="/enrollment/batches" className="hover:text-gray-800">
+        <div className="flex items-center gap-2 text-sm" style={{ color: "var(--ct-text-muted)" }}>
+          <Link href="/enrollment/batches" className="hover:underline" style={{ color: "var(--ct-text-muted)" }}>
             Batch History
           </Link>
           <span>›</span>
-          <span className="text-gray-800 font-medium">B{batch_no}</span>
+          <span className="font-medium" style={{ color: "var(--ct-text-primary)" }}>B{batch_no}</span>
         </div>
 
         {/* Batch summary */}
         {batch && (
-          <div className="bg-white border border-gray-200 rounded-lg px-5 py-3 flex flex-wrap gap-6 text-sm">
+          <div className="rounded-[var(--r-lg)] border px-5 py-3 flex flex-wrap gap-6 text-sm" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
             <div>
-              <span className="text-gray-400 text-xs uppercase tracking-wide block">Batch</span>
-              <span className="font-mono font-semibold text-gray-900">B{batch.batch_no}</span>
+              <span className="text-xs uppercase tracking-wide block" style={{ color: "var(--ct-text-muted)" }}>Batch</span>
+              <span className="font-mono font-semibold" style={{ color: "var(--ct-text-primary)" }}>B{batch.batch_no}</span>
             </div>
             <div>
-              <span className="text-gray-400 text-xs uppercase tracking-wide block">Generated</span>
+              <span className="text-xs uppercase tracking-wide block" style={{ color: "var(--ct-text-muted)" }}>Generated</span>
               <span>{batch.generated_at ? new Date(batch.generated_at).toLocaleDateString() : "—"}</span>
             </div>
             <div>
-              <span className="text-gray-400 text-xs uppercase tracking-wide block">By</span>
+              <span className="text-xs uppercase tracking-wide block" style={{ color: "var(--ct-text-muted)" }}>By</span>
               <span>{batch.generated_by}</span>
             </div>
             <div>
-              <span className="text-gray-400 text-xs uppercase tracking-wide block">ESI IDs</span>
+              <span className="text-xs uppercase tracking-wide block" style={{ color: "var(--ct-text-muted)" }}>ESI IDs</span>
               <span>{customers.length}</span>
             </div>
             <div>
-              <span className="text-gray-400 text-xs uppercase tracking-wide block">Status</span>
-              <span className={`inline-block px-2 py-0.5 rounded text-xs font-semibold ${
-                batch.status === "submitted" ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-600"
-              }`}>
+              <span className="text-xs uppercase tracking-wide block" style={{ color: "var(--ct-text-muted)" }}>Status</span>
+              <span
+                className="inline-block px-2 py-0.5 rounded-[var(--r-sm)] text-xs font-semibold"
+                style={batch.status === "submitted" ? { background: "var(--info-light-tint)", color: "var(--info-light)" } : DEFAULT_STATUS_BADGE}
+              >
                 {batch.status}
               </span>
             </div>
@@ -161,49 +167,49 @@ export default function BatchDetailPage() {
         )}
 
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-2 rounded">
+          <div className="text-sm px-4 py-2 rounded-[var(--r-md)]" style={{ background: "var(--danger-light-tint)", color: "var(--danger-light)" }}>
             {error}
           </div>
         )}
 
         {loading ? (
-          <p className="text-sm text-gray-400 animate-pulse">Loading…</p>
+          <p className="text-sm animate-pulse" style={{ color: "var(--ct-text-muted)" }}>Loading…</p>
         ) : customers.length === 0 ? (
-          <p className="text-sm text-gray-400">No customers found in this batch.</p>
+          <p className="text-sm" style={{ color: "var(--ct-text-muted)" }}>No customers found in this batch.</p>
         ) : (
-          <div className="overflow-x-auto rounded-lg border border-gray-200">
-            <table className="min-w-full text-xs text-gray-700">
-              <thead className="bg-gray-50 border-b border-gray-200">
+          <div className="overflow-x-auto rounded-[var(--r-lg)] border" style={{ borderColor: "var(--ct-border-default)" }}>
+            <table className="min-w-full text-xs" style={{ color: "var(--ct-text-secondary)" }}>
+              <thead className="border-b" style={{ background: "var(--ct-surface-hover)", borderColor: "var(--ct-border-default)" }}>
                 <tr>
-                  <th className="px-4 py-2 text-left font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Customer ID</th>
-                  <th className="px-4 py-2 text-left font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">ESI ID</th>
-                  <th className="px-4 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Company</th>
-                  <th className="px-4 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Broker</th>
-                  <th className="px-4 py-2 text-left font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Enroll Date</th>
-                  <th className="px-4 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Plan Group</th>
-                  <th className="px-4 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  <th className="px-4 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  {["Customer ID", "ESI ID", "Company", "Broker", "Enroll Date", "Plan Group", "Status", "Actions"].map((h) => (
+                    <th key={h} className="px-4 py-2 text-left font-medium uppercase tracking-wider whitespace-nowrap" style={{ color: "var(--ct-text-muted)" }}>
+                      {h}
+                    </th>
+                  ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 bg-white">
+              <tbody className="divide-y" style={{ background: "var(--ct-surface)" }}>
                 {customers.map((c) => {
                   const busy = actionState[c.customer_id];
                   return (
-                    <tr key={c.customer_id} className="hover:bg-gray-50">
-                      <td className="px-4 py-2 font-mono text-gray-900 font-semibold">{c.customer_id}</td>
+                    <tr key={c.customer_id} className="border-b transition-colors hover:bg-[var(--ct-surface-hover)]" style={{ borderColor: "var(--ct-border-subtle)" }}>
+                      <td className="px-4 py-2 font-mono font-semibold" style={{ color: "var(--ct-text-primary)" }}>{c.customer_id}</td>
                       <td className="px-4 py-2 font-mono whitespace-nowrap">{c.esi_id}</td>
                       <td className="px-4 py-2 max-w-[200px] truncate" title={c.company_name ?? ""}>
                         {c.company_name || "—"}
                       </td>
                       <td className="px-4 py-2 whitespace-nowrap">
                         {c.broker_id
-                          ? <><span className="font-medium">{c.broker_id}</span>{c.broker_name && <span className="text-gray-400 ml-1">· {c.broker_name}</span>}</>
+                          ? <><span className="font-medium">{c.broker_id}</span>{c.broker_name && <span className="ml-1" style={{ color: "var(--ct-text-muted)" }}>· {c.broker_name}</span>}</>
                           : "—"}
                       </td>
                       <td className="px-4 py-2 whitespace-nowrap font-mono">{c.enrollment_date || "—"}</td>
                       <td className="px-4 py-2">{c.plan_group || "—"}</td>
                       <td className="px-4 py-2">
-                        <span className={`inline-block px-2 py-0.5 rounded text-xs font-semibold ${STATUS_BADGE[c.status] ?? "bg-gray-100 text-gray-600"}`}>
+                        <span
+                          className="inline-block px-2 py-0.5 rounded-[var(--r-sm)] text-xs font-semibold"
+                          style={STATUS_BADGE[c.status] ?? DEFAULT_STATUS_BADGE}
+                        >
                           {c.status}
                         </span>
                       </td>
@@ -214,24 +220,26 @@ export default function BatchDetailPage() {
                               <button
                                 onClick={() => activate(c.customer_id)}
                                 disabled={!!busy}
-                                className="px-3 py-1 text-xs bg-emerald-600 text-white rounded hover:bg-emerald-700 disabled:opacity-50 font-medium whitespace-nowrap"
+                                className="px-3 py-1 text-xs rounded-[var(--r-sm)] disabled:opacity-50 font-medium whitespace-nowrap transition-colors"
+                                style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
                               >
                                 {busy === "activating" ? "Activating…" : "Mark Active"}
                               </button>
                               <button
                                 onClick={() => cancel(c.customer_id)}
                                 disabled={!!busy}
-                                className="px-3 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200 disabled:opacity-50 font-medium whitespace-nowrap"
+                                className="px-3 py-1 text-xs rounded-[var(--r-sm)] disabled:opacity-50 font-medium whitespace-nowrap transition-colors"
+                                style={{ background: "var(--danger-light-tint)", color: "var(--danger-light)" }}
                               >
                                 {busy === "cancelling" ? "Cancelling…" : "Mark Cancelled"}
                               </button>
                             </>
                           )}
                           {c.status === "active" && (
-                            <span className="text-xs text-green-600 font-medium">Active ✓</span>
+                            <span className="text-xs font-medium" style={{ color: "var(--success-light)" }}>Active ✓</span>
                           )}
                           {c.status === "cancelled" && (
-                            <span className="text-xs text-gray-400">Cancelled</span>
+                            <span className="text-xs" style={{ color: "var(--ct-text-muted)" }}>Cancelled</span>
                           )}
                         </div>
                       </td>

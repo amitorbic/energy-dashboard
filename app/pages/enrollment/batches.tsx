@@ -23,29 +23,33 @@ function EnrollmentNav() {
     { label: "Batch History", href: "/enrollment/batches" },
   ];
   return (
-    <div className="flex gap-1 border-b border-gray-200 mb-5">
-      {links.map((l) => (
-        <Link
-          key={l.href}
-          href={l.href}
-          className={`px-4 py-2 text-sm font-medium rounded-t transition-colors ${
-            router.pathname === l.href
-              ? "bg-white border border-b-white border-gray-200 text-sky-700 -mb-px"
-              : "text-gray-500 hover:text-gray-800"
-          }`}
-        >
-          {l.label}
-        </Link>
-      ))}
+    <div className="flex gap-1 border-b mb-5" style={{ borderColor: "var(--ct-border-default)" }}>
+      {links.map((l) => {
+        const active = router.pathname === l.href;
+        return (
+          <Link
+            key={l.href}
+            href={l.href}
+            className="px-4 py-2 text-sm font-medium rounded-t transition-colors -mb-px"
+            style={
+              active
+                ? { background: "var(--ct-surface)", borderLeft: "1px solid var(--ct-border-default)", borderRight: "1px solid var(--ct-border-default)", borderTop: "1px solid var(--ct-border-default)", borderBottom: "1px solid var(--ct-surface)", color: "var(--accent-light)" }
+                : { color: "var(--ct-text-muted)" }
+            }
+          >
+            {l.label}
+          </Link>
+        );
+      })}
     </div>
   );
 }
 
-const STATUS_BADGE: Record<string, string> = {
-  generated:  "bg-gray-100 text-gray-600",
-  submitted:  "bg-blue-100 text-blue-700",
-  active:     "bg-green-100 text-green-700",
-  cancelled:  "bg-red-100 text-red-600",
+const STATUS_BADGE: Record<string, { background: string; color: string }> = {
+  generated: { background: "var(--ct-surface-hover)", color: "var(--ct-text-secondary)" },
+  submitted: { background: "var(--info-light-tint)", color: "var(--info-light)" },
+  active: { background: "var(--success-light-tint)", color: "var(--success-light)" },
+  cancelled: { background: "var(--danger-light-tint)", color: "var(--danger-light)" },
 };
 
 function fmtDate(iso: string | null) {
@@ -102,34 +106,31 @@ export default function BatchesPage() {
         <EnrollmentNav />
 
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-2 rounded">
+          <div className="text-sm px-4 py-2 rounded-[var(--r-md)]" style={{ background: "var(--danger-light-tint)", color: "var(--danger-light)" }}>
             {error}
           </div>
         )}
 
         {loading ? (
-          <p className="text-sm text-gray-400 animate-pulse">Loading batches…</p>
+          <p className="text-sm animate-pulse" style={{ color: "var(--ct-text-muted)" }}>Loading batches…</p>
         ) : batches.length === 0 ? (
-          <p className="text-sm text-gray-400">No batches generated yet.</p>
+          <p className="text-sm" style={{ color: "var(--ct-text-muted)" }}>No batches generated yet.</p>
         ) : (
-          <div className="overflow-x-auto rounded-lg border border-gray-200">
-            <table className="min-w-full text-xs text-gray-700">
-              <thead className="bg-gray-50 border-b border-gray-200">
+          <div className="overflow-x-auto rounded-[var(--r-lg)] border" style={{ borderColor: "var(--ct-border-default)" }}>
+            <table className="min-w-full text-xs" style={{ color: "var(--ct-text-secondary)" }}>
+              <thead className="border-b" style={{ background: "var(--ct-surface-hover)", borderColor: "var(--ct-border-default)" }}>
                 <tr>
-                  <th className="px-4 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Batch</th>
-                  <th className="px-4 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Generated</th>
-                  <th className="px-4 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">By</th>
-                  <th className="px-4 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Records</th>
-                  <th className="px-4 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Date Range</th>
-                  <th className="px-4 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  <th className="px-4 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Submitted</th>
-                  <th className="px-4 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  {["Batch", "Generated", "By", "Records", "Date Range", "Status", "Submitted", "Actions"].map((h) => (
+                    <th key={h} className="px-4 py-2 text-left font-medium uppercase tracking-wider" style={{ color: "var(--ct-text-muted)" }}>
+                      {h}
+                    </th>
+                  ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 bg-white">
+              <tbody className="divide-y" style={{ background: "var(--ct-surface)" }}>
                 {batches.map((b) => (
-                  <tr key={b.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-2 font-mono font-semibold text-gray-900">B{b.batch_no}</td>
+                  <tr key={b.id} className="border-b transition-colors hover:bg-[var(--ct-surface-hover)]" style={{ borderColor: "var(--ct-border-subtle)" }}>
+                    <td className="px-4 py-2 font-mono font-semibold" style={{ color: "var(--ct-text-primary)" }}>B{b.batch_no}</td>
                     <td className="px-4 py-2 whitespace-nowrap">{fmtDate(b.generated_at)}</td>
                     <td className="px-4 py-2">{b.generated_by}</td>
                     <td className="px-4 py-2 text-center">{b.record_count}</td>
@@ -139,7 +140,10 @@ export default function BatchesPage() {
                         : b.date_from || b.date_to || "—"}
                     </td>
                     <td className="px-4 py-2">
-                      <span className={`inline-block px-2 py-0.5 rounded text-xs font-semibold ${STATUS_BADGE[b.status] ?? STATUS_BADGE.generated}`}>
+                      <span
+                        className="inline-block px-2 py-0.5 rounded-[var(--r-sm)] text-xs font-semibold"
+                        style={STATUS_BADGE[b.status] ?? STATUS_BADGE.generated}
+                      >
                         {b.status}
                       </span>
                     </td>
@@ -150,14 +154,16 @@ export default function BatchesPage() {
                           <button
                             onClick={() => markSubmitted(b.batch_no)}
                             disabled={submitting === b.batch_no}
-                            className="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 font-medium whitespace-nowrap"
+                            className="px-3 py-1 text-xs rounded-[var(--r-sm)] disabled:opacity-50 font-medium whitespace-nowrap transition-colors"
+                            style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
                           >
                             {submitting === b.batch_no ? "Submitting…" : "Mark Submitted"}
                           </button>
                         )}
                         <Link
                           href={`/enrollment/batches/${b.batch_no}`}
-                          className="px-3 py-1 text-xs bg-gray-100 text-gray-700 rounded hover:bg-gray-200 font-medium whitespace-nowrap"
+                          className="px-3 py-1 text-xs rounded-[var(--r-sm)] font-medium whitespace-nowrap border transition-colors hover:bg-[var(--ct-surface-hover)]"
+                          style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-primary)" }}
                         >
                           View ESI IDs
                         </Link>
