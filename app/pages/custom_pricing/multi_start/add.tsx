@@ -32,6 +32,30 @@ interface CalcResult {
 
 const DEFAULT_TERMS = "6,12,18,24";
 
+const panelCls = "rounded-[var(--r-lg)] border p-5 space-y-3";
+const panelStyle = {
+  background: "var(--ct-surface)",
+  borderColor: "var(--ct-border-default)",
+};
+const panelHeadingCls = "text-xs font-bold uppercase tracking-wide";
+const panelHeadingStyle = { color: "var(--ct-text-muted)" };
+const inputCls =
+  "w-full px-3 py-2 rounded-[var(--r-md)] border focus:outline-none focus:border-[var(--accent-light)] text-sm";
+const inputStyle = {
+  background: "var(--ct-canvas)",
+  color: "var(--ct-text-primary)",
+  borderColor: "var(--ct-border-default)",
+};
+const labelCls = "text-xs mb-1 block";
+const labelStyle = { color: "var(--ct-text-muted)" };
+const secondaryBtnCls =
+  "py-2 rounded-[var(--r-md)] text-xs font-bold uppercase transition-colors border";
+const secondaryBtnStyle = {
+  background: "var(--ct-surface-hover)",
+  borderColor: "var(--ct-border-default)",
+  color: "var(--ct-text-primary)",
+};
+
 const MultiStartAdd = () => {
   const router = useRouter();
   const { sid: urlSid } = router.query;
@@ -355,25 +379,28 @@ const MultiStartAdd = () => {
     }
   };
 
-  const inputCls =
-    "w-full bg-slate-800 text-white px-3 py-2 rounded-lg border border-slate-600 focus:outline-none focus:border-red-500 text-sm";
-  const labelCls = "text-xs text-slate-400 mb-1 block";
-
   return (
     <Layout title="Multiple Start Pricing">
       <div className="max-w-6xl mx-auto p-6 space-y-6">
-        <div className="flex items-center gap-4 border-b border-slate-800 pb-5">
+        <div
+          className="flex items-center gap-4 border-b pb-5"
+          style={{ borderColor: "var(--ct-border-subtle)" }}
+        >
           <button
             onClick={() => router.push("/custom_pricing/multi_start")}
-            className="text-slate-400 hover:text-white text-sm"
+            className="text-sm transition-colors"
+            style={{ color: "var(--ct-text-muted)" }}
           >
             ← MSP Log
           </button>
           <div>
-            <h1 className="text-2xl font-black text-white uppercase tracking-tighter">
+            <h1
+              className="text-2xl font-black uppercase tracking-tighter"
+              style={{ color: "var(--ct-text-primary)" }}
+            >
               Multiple Start Pricing
             </h1>
-            <p className="text-slate-400 text-xs mt-0.5">
+            <p className="text-xs mt-0.5" style={{ color: "var(--ct-text-muted)" }}>
               Price customers with meters starting on different dates
             </p>
           </div>
@@ -381,26 +408,28 @@ const MultiStartAdd = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
           <div className="space-y-5">
-            <div className="bg-slate-900 rounded-xl border border-slate-700 p-5 space-y-3">
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">
+            <div className={panelCls} style={panelStyle}>
+              <p className={panelHeadingCls} style={panelHeadingStyle}>
                 Customer info
               </p>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className={labelCls}>Customer name</label>
+                  <label className={labelCls} style={labelStyle}>Customer name</label>
                   <input
                     value={customerName}
                     onChange={(e) => setCustomerName(e.target.value)}
                     className={inputCls}
+                    style={inputStyle}
                     placeholder="e.g. ABC Corp"
                   />
                 </div>
                 <div>
-                  <label className={labelCls}>Broker</label>
+                  <label className={labelCls} style={labelStyle}>Broker</label>
                   <select
                     value={brokerCode}
                     onChange={(e) => setBrokerCode(e.target.value)}
                     className={inputCls}
+                    style={inputStyle}
                   >
                     <option value="">Select broker</option>
                     {brokerList.map((b) => (
@@ -413,17 +442,18 @@ const MultiStartAdd = () => {
               </div>
             </div>
 
-            <div className="bg-slate-900 rounded-xl border border-slate-700 p-5 space-y-3">
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">
+            <div className={panelCls} style={panelStyle}>
+              <p className={panelHeadingCls} style={panelHeadingStyle}>
                 Pricing terms
               </p>
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className={labelCls}>Target end month</label>
+                  <label className={labelCls} style={labelStyle}>Target end month</label>
                   <select
                     value={endMonth}
                     onChange={(e) => setEndMonth(parseInt(e.target.value))}
                     className={inputCls}
+                    style={inputStyle}
                   >
                     {[
                       "Jan",
@@ -446,44 +476,48 @@ const MultiStartAdd = () => {
                   </select>
                 </div>
                 <div>
-                  <label className={labelCls}>{millsLabel}</label>
+                  <label className={labelCls} style={labelStyle}>{millsLabel}</label>
                   <input
                     type="number"
                     step="0.1"
                     value={ameriMills}
                     onChange={(e) => setAmeriMills(e.target.value)}
                     className={inputCls}
+                    style={inputStyle}
                     placeholder="0"
                   />
                 </div>
                 <div>
-                  <label className={labelCls}>Broker mills</label>
+                  <label className={labelCls} style={labelStyle}>Broker mills</label>
                   <input
                     type="number"
                     step="0.1"
                     value={brokerMills}
                     onChange={(e) => setBrokerMills(e.target.value)}
                     className={inputCls}
+                    style={inputStyle}
                     placeholder="0"
                   />
                 </div>
               </div>
             </div>
 
-            <div className="bg-slate-900 rounded-xl border border-slate-700 p-5 space-y-4">
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">
+            <div className={panelCls + " space-y-4"} style={panelStyle}>
+              <p className={panelHeadingCls} style={panelHeadingStyle}>
                 Start date groups
               </p>
               <div className="grid grid-cols-3 gap-2">
                 <button
                   onClick={addManualGroup}
-                  className="bg-slate-700 hover:bg-slate-600 text-white py-2 rounded-lg text-xs font-bold uppercase"
+                  className={secondaryBtnCls}
+                  style={secondaryBtnStyle}
                 >
                   + Manual
                 </button>
                 <button
                   onClick={() => fileRef.current?.click()}
-                  className="bg-slate-700 hover:bg-slate-600 text-white py-2 rounded-lg text-xs font-bold uppercase"
+                  className={secondaryBtnCls}
+                  style={secondaryBtnStyle}
                 >
                   + Upload
                 </button>
@@ -501,23 +535,31 @@ const MultiStartAdd = () => {
                     value={renewalQuery}
                     onChange={(e) => setRenewalQuery(e.target.value)}
                     placeholder="+ From renewal..."
-                    className="w-full bg-slate-700 text-white px-3 py-2 rounded-lg border border-slate-600 focus:outline-none focus:border-red-500 text-xs"
+                    className="w-full px-3 py-2 rounded-[var(--r-md)] border focus:outline-none focus:border-[var(--accent-light)] text-xs"
+                    style={inputStyle}
                   />
                   {renewalSearching && (
-                    <div className="absolute right-2 top-2 w-3 h-3 border-2 border-red-500 border-t-transparent rounded-full animate-spin" />
+                    <div
+                      className="absolute right-2 top-2 w-3 h-3 border-2 border-t-transparent rounded-full animate-spin"
+                      style={{ borderColor: "var(--accent-light)" }}
+                    />
                   )}
                   {showRenewalDrop && renewalResults.length > 0 && (
-                    <div className="absolute top-full left-0 right-0 mt-1 bg-slate-800 border border-slate-600 rounded-lg z-20 max-h-48 overflow-y-auto shadow-xl">
+                    <div
+                      className="absolute top-full left-0 right-0 mt-1 rounded-[var(--r-md)] border z-20 max-h-48 overflow-y-auto"
+                      style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)", boxShadow: "var(--shadow-content)" }}
+                    >
                       {renewalResults.map((r) => (
                         <div
                           key={r.cust_id}
                           onClick={() => addFromRenewal(r)}
-                          className="px-3 py-2 hover:bg-slate-700 cursor-pointer border-b border-slate-700 last:border-0"
+                          className="px-3 py-2 cursor-pointer border-b last:border-0 hover:bg-[var(--ct-surface-hover)]"
+                          style={{ borderColor: "var(--ct-border-subtle)" }}
                         >
-                          <p className="text-white text-xs font-semibold">
+                          <p className="text-xs font-semibold" style={{ color: "var(--ct-text-primary)" }}>
                             {r.company_name}
                           </p>
-                          <p className="text-slate-400 text-xs">
+                          <p className="text-xs" style={{ color: "var(--ct-text-muted)" }}>
                             ESI: {r.premise_id} · Ends: {r.contract_end_date}
                           </p>
                         </div>
@@ -530,27 +572,29 @@ const MultiStartAdd = () => {
               {groups.map((g, idx) => (
                 <div
                   key={g.id}
-                  className="bg-slate-800 rounded-lg p-4 space-y-3 border border-slate-700"
+                  className="rounded-[var(--r-md)] p-4 space-y-3 border"
+                  style={{ background: "var(--ct-surface-hover)", borderColor: "var(--ct-border-default)" }}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-slate-300 uppercase">
+                    <span className="text-xs font-bold uppercase" style={{ color: "var(--ct-text-secondary)" }}>
                       Group {idx + 1}{" "}
                       {g.source !== "manual" && (
-                        <span className="ml-2 text-xs text-slate-500 normal-case">
+                        <span className="ml-2 text-xs normal-case" style={{ color: "var(--ct-text-muted)" }}>
                           ({g.source})
                         </span>
                       )}
                     </span>
                     <button
                       onClick={() => removeGroup(g.id)}
-                      className="text-slate-500 hover:text-red-400 text-xs"
+                      className="text-xs"
+                      style={{ color: "var(--danger-light)" }}
                     >
                       Remove
                     </button>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className={labelCls}>Start date</label>
+                      <label className={labelCls} style={labelStyle}>Start date</label>
                       <input
                         type="date"
                         value={g.start_date}
@@ -558,10 +602,11 @@ const MultiStartAdd = () => {
                           updateGroup(g.id, "start_date", e.target.value)
                         }
                         className={inputCls}
+                        style={inputStyle}
                       />
                     </div>
                     <div>
-                      <label className={labelCls}>ESI ID(s)</label>
+                      <label className={labelCls} style={labelStyle}>ESI ID(s)</label>
                       <input
                         type="text"
                         value={g.esid}
@@ -569,16 +614,17 @@ const MultiStartAdd = () => {
                           updateGroup(g.id, "esid", e.target.value)
                         }
                         className={inputCls}
+                        style={inputStyle}
                         placeholder="optional"
                       />
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <label className={labelCls}>Profiles & volumes</label>
+                    <label className={labelCls} style={labelStyle}>Profiles &amp; volumes</label>
                     <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                       {Object.entries(ZONES).map(([zone, profileKeys]) => (
                         <div key={zone}>
-                          <p className="text-xs font-bold text-red-400 uppercase mb-1">
+                          <p className="text-xs font-bold uppercase mb-1" style={{ color: "var(--accent-light)" }}>
                             {zone}
                           </p>
                           {profileKeys.map((pk) => (
@@ -601,11 +647,12 @@ const MultiStartAdd = () => {
                                     updateGroup(g.id, "profiles", rest);
                                   }
                                 }}
-                                className="accent-red-500"
+                                style={{ accentColor: "var(--accent-light)" }}
                               />
                               <label
                                 htmlFor={`${g.id}_${pk}`}
-                                className="text-xs text-slate-300 flex-1 cursor-pointer"
+                                className="text-xs flex-1 cursor-pointer"
+                                style={{ color: "var(--ct-text-secondary)" }}
                               >
                                 {pk}
                               </label>
@@ -620,7 +667,8 @@ const MultiStartAdd = () => {
                                       e.target.value,
                                     )
                                   }
-                                  className="w-24 bg-slate-700 text-white px-2 py-1 rounded border border-slate-600 text-xs text-right font-mono focus:outline-none focus:border-red-500"
+                                  className="w-24 px-2 py-1 rounded border text-xs text-right font-mono focus:outline-none focus:border-[var(--accent-light)]"
+                                  style={inputStyle}
                                   placeholder="kWh/yr"
                                 />
                               )}
@@ -634,42 +682,44 @@ const MultiStartAdd = () => {
               ))}
             </div>
 
-            <div className="bg-slate-900 rounded-xl border border-slate-700 p-5">
-              <label className={labelCls}>Comments</label>
+            <div className={panelCls} style={panelStyle}>
+              <label className={labelCls} style={labelStyle}>Comments</label>
               <textarea
                 value={comments}
                 onChange={(e) => setComments(e.target.value)}
                 className={inputCls + " resize-none"}
+                style={inputStyle}
                 rows={2}
                 placeholder="Optional notes..."
               />
             </div>
-            {error && <p className="text-red-400 text-xs">{error}</p>}
+            {error && <p className="text-xs" style={{ color: "var(--danger-light)" }}>{error}</p>}
             <button
               onClick={handleCalculate}
               disabled={calculating}
-              className="w-full bg-red-600 hover:bg-red-700 disabled:bg-slate-600 text-white py-3 rounded-lg text-sm font-bold uppercase tracking-wide transition"
+              className="w-full py-3 rounded-[var(--r-md)] text-sm font-bold uppercase tracking-wide transition-colors disabled:opacity-50"
+              style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
             >
               {calculating ? "Calculating..." : "Calculate MSP Rates"}
             </button>
           </div>
 
-          <div className="bg-slate-900 rounded-xl border border-slate-700 p-5">
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-4">
+          <div className={panelCls} style={panelStyle}>
+            <p className={panelHeadingCls + " mb-4"} style={panelHeadingStyle}>
               Results
             </p>
             {!result ? (
-              <div className="text-center py-16 text-slate-500 text-sm space-y-2">
+              <div className="text-center py-16 text-sm space-y-2" style={{ color: "var(--ct-text-muted)" }}>
                 <p className="text-3xl">📊</p>
                 <p>Add groups and calculate to see weighted rates</p>
               </div>
             ) : (
               <div className="space-y-5">
-                <div className="bg-slate-800 rounded-lg p-3 text-center">
-                  <p className="text-xs text-slate-400 mb-1">
+                <div className="rounded-[var(--r-md)] p-3 text-center" style={{ background: "var(--ct-surface-hover)" }}>
+                  <p className="text-xs mb-1" style={{ color: "var(--ct-text-muted)" }}>
                     Total annual volume
                   </p>
-                  <p className="text-white font-bold font-mono">
+                  <p className="font-bold font-mono" style={{ color: "var(--ct-text-primary)" }}>
                     {result.total_ann_volume?.toLocaleString() ??
                       result.total_volume.toLocaleString()}{" "}
                     kWh/yr
@@ -679,17 +729,18 @@ const MultiStartAdd = () => {
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm border-collapse">
                     <thead>
-                      <tr className="bg-slate-800">
-                        <th className="text-left px-3 py-2.5 text-xs text-slate-400 uppercase">
+                      <tr style={{ background: "var(--ct-surface-hover)" }}>
+                        <th className="text-left px-3 py-2.5 text-xs uppercase" style={{ color: "var(--ct-text-muted)" }}>
                           Customer
                         </th>
-                        <th className="text-center px-3 py-2.5 text-xs text-slate-400 uppercase">
+                        <th className="text-center px-3 py-2.5 text-xs uppercase" style={{ color: "var(--ct-text-muted)" }}>
                           Meters
                         </th>
                         {result.end_dates?.map((ed) => (
                           <th
                             key={ed.end_date}
-                            className="text-right px-3 py-2.5 text-xs text-slate-400 uppercase"
+                            className="text-right px-3 py-2.5 text-xs uppercase"
+                            style={{ color: "var(--ct-text-muted)" }}
                           >
                             {ed.end_date}
                           </th>
@@ -697,11 +748,11 @@ const MultiStartAdd = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      <tr className="border-t border-slate-800">
-                        <td className="px-3 py-3 text-white font-semibold">
+                      <tr className="border-t" style={{ borderColor: "var(--ct-border-subtle)" }}>
+                        <td className="px-3 py-3 font-semibold" style={{ color: "var(--ct-text-primary)" }}>
                           {customerName || "—"}
                         </td>
-                        <td className="px-3 py-3 text-center text-slate-300">
+                        <td className="px-3 py-3 text-center" style={{ color: "var(--ct-text-secondary)" }}>
                           {result.total_meters ?? 0}
                         </td>
                         {result.end_dates?.map((ed) => {
@@ -717,11 +768,11 @@ const MultiStartAdd = () => {
                               className="px-3 py-3 text-right font-mono"
                             >
                               {adj !== null && adj !== undefined ? (
-                                <span className="text-green-400 font-bold text-base">
+                                <span className="font-bold text-base" style={{ color: "var(--accent-light)" }}>
                                   {adj.toFixed(4)}
                                 </span>
                               ) : (
-                                <span className="text-slate-500">N/A</span>
+                                <span style={{ color: "var(--ct-text-muted)" }}>N/A</span>
                               )}
                             </td>
                           );
@@ -732,24 +783,25 @@ const MultiStartAdd = () => {
                 </div>
 
                 {result.end_dates?.[0]?.groups && (
-                  <div className="bg-slate-800 rounded-lg p-4 space-y-2">
-                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">
+                  <div className="rounded-[var(--r-md)] p-4 space-y-2" style={{ background: "var(--ct-surface-hover)" }}>
+                    <p className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: "var(--ct-text-muted)" }}>
                       Group breakdown — {result.end_dates[0].end_date}
                     </p>
                     {result.end_dates[0].groups.map((gr: any, i: number) => (
                       <div
                         key={i}
-                        className="flex justify-between text-xs border-b border-slate-700 pb-1.5 last:border-0"
+                        className="flex justify-between text-xs border-b pb-1.5 last:border-0"
+                        style={{ borderColor: "var(--ct-border-default)" }}
                       >
-                        <span className="text-slate-300">
+                        <span style={{ color: "var(--ct-text-secondary)" }}>
                           Start {gr.start_date}{" "}
                           {gr.esid && (
-                            <span className="text-slate-500 ml-2 font-mono">
+                            <span className="ml-2 font-mono" style={{ color: "var(--ct-text-muted)" }}>
                               {gr.esid}
                             </span>
                           )}
                         </span>
-                        <span className="text-slate-400 font-mono">
+                        <span className="font-mono" style={{ color: "var(--ct-text-muted)" }}>
                           {gr.term_months}mo ·{" "}
                           {gr.period_volume?.toLocaleString()} kWh ·{" "}
                           {gr.price?.toFixed(4) ?? "N/A"} ¢
@@ -762,7 +814,8 @@ const MultiStartAdd = () => {
                 <button
                   onClick={handleSave}
                   disabled={saving}
-                  className="w-full bg-slate-700 hover:bg-slate-600 disabled:bg-slate-600 text-white py-2.5 rounded-lg text-sm font-bold uppercase transition"
+                  className="w-full py-2.5 rounded-[var(--r-md)] text-sm font-bold uppercase transition-colors border disabled:opacity-50"
+                  style={secondaryBtnStyle}
                 >
                   {saving
                     ? "Saving..."
@@ -789,7 +842,8 @@ const MultiStartAdd = () => {
                         setError(err.response?.data?.detail || "Send failed.");
                       }
                     }}
-                    className="w-full bg-blue-700 hover:bg-blue-600 text-white py-2.5 rounded-lg text-sm font-bold uppercase transition mt-2"
+                    className="w-full py-2.5 rounded-[var(--r-md)] text-sm font-bold uppercase transition-colors mt-2"
+                    style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
                   >
                     Send Pricing Email
                   </button>
