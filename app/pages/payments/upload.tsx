@@ -14,7 +14,7 @@ export default function PaymentUploadPage() {
       {!result ? (
         <div className="max-w-4xl">
           <div className="mb-5">
-            <p className="text-sm text-gray-500">
+            <p className="text-sm" style={{ color: "var(--ct-text-muted)" }}>
               Upload your daily payment sheet. Map your columns once and the
               mapping saves automatically for future uploads.
             </p>
@@ -28,15 +28,18 @@ export default function PaymentUploadPage() {
       ) : (
         <div className="max-w-xl space-y-5">
           <div
-            className={`rounded-lg border p-4 flex items-center gap-3
-            ${result.status === "COMPLETED" ? "bg-green-50 border-green-200" : "bg-amber-50 border-amber-200"}`}
+            className="rounded-[var(--r-lg)] border p-4 flex items-center gap-3"
+            style={result.status === "COMPLETED"
+              ? { background: "var(--success-light-tint)", borderColor: "var(--success-light-tint)" }
+              : { background: "var(--amber-light-tint)", borderColor: "var(--amber-light-tint)" }}
           >
             <span className="text-2xl">
               {result.status === "COMPLETED" ? "✓" : "⚠"}
             </span>
             <div>
               <p
-                className={`font-semibold ${result.status === "COMPLETED" ? "text-green-800" : "text-amber-800"}`}
+                className="font-semibold"
+                style={{ color: result.status === "COMPLETED" ? "var(--success-light)" : "var(--amber-light)" }}
               >
                 {result.status === "COMPLETED"
                   ? "Import complete"
@@ -50,21 +53,22 @@ export default function PaymentUploadPage() {
               {
                 label: "Processed",
                 value: result.processed ?? 0,
-                color: "text-green-600",
+                color: "var(--success-light)",
               },
               {
                 label: "Errors",
                 value: result.errors.length,
                 color:
-                  result.errors.length > 0 ? "text-red-600" : "text-gray-400",
+                  result.errors.length > 0 ? "var(--danger-light)" : "var(--ct-text-muted)",
               },
             ].map((s) => (
               <div
                 key={s.label}
-                className="bg-white rounded-lg border border-gray-200 px-4 py-4"
+                className="rounded-[var(--r-lg)] border px-4 py-4"
+                style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}
               >
-                <p className="text-xs text-gray-400 mb-1">{s.label}</p>
-                <p className={`text-2xl font-semibold ${s.color}`}>
+                <p className="text-xs mb-1" style={{ color: "var(--ct-text-muted)" }}>{s.label}</p>
+                <p className="text-2xl font-semibold" style={{ color: s.color }}>
                   {fmt(s.value)}
                 </p>
               </div>
@@ -72,18 +76,19 @@ export default function PaymentUploadPage() {
           </div>
 
           {result.errors.length > 0 && (
-            <div className="bg-white rounded-lg border border-red-200 overflow-hidden">
-              <div className="bg-red-50 px-4 py-2 text-xs font-medium text-red-600 border-b border-red-200">
+            <div className="rounded-[var(--r-lg)] border overflow-hidden" style={{ background: "var(--ct-surface)", borderColor: "var(--danger-light-tint)" }}>
+              <div className="px-4 py-2 text-xs font-medium border-b" style={{ background: "var(--danger-light-tint)", color: "var(--danger-light)", borderColor: "var(--danger-light-tint)" }}>
                 {result.errors.length} rows failed
               </div>
               {result.errors.slice(0, 10).map((e, i) => (
                 <div
                   key={i}
-                  className="px-4 py-2 text-xs flex gap-4 border-b border-gray-100 last:border-0"
+                  className="px-4 py-2 text-xs flex gap-4 border-b last:border-0"
+                  style={{ borderColor: "var(--ct-border-subtle)" }}
                 >
-                  <span className="text-gray-400">Row {e.row}</span>
-                  <span className="font-mono text-gray-500">{e.esiid}</span>
-                  <span className="text-red-500">{e.error}</span>
+                  <span style={{ color: "var(--ct-text-muted)" }}>Row {e.row}</span>
+                  <span className="font-mono" style={{ color: "var(--ct-text-secondary)" }}>{e.esiid}</span>
+                  <span style={{ color: "var(--danger-light)" }}>{e.error}</span>
                 </div>
               ))}
             </div>
@@ -92,13 +97,15 @@ export default function PaymentUploadPage() {
           <div className="flex gap-3">
             <button
               onClick={() => router.push("/payments")}
-              className="px-5 py-2 text-sm bg-sky-500 hover:bg-sky-600 text-white rounded font-medium"
+              className="px-5 py-2 text-sm rounded-[var(--r-sm)] font-medium transition-colors"
+              style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
             >
               View payments
             </button>
             <button
               onClick={() => setResult(null)}
-              className="px-4 py-2 text-sm border border-gray-300 rounded text-gray-600 hover:bg-gray-50"
+              className="px-4 py-2 text-sm rounded-[var(--r-sm)] border transition-colors hover:bg-[var(--ct-surface-hover)]"
+              style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-secondary)" }}
             >
               Upload another
             </button>
