@@ -28,46 +28,26 @@ interface ExceptionData {
   exceptions: Record<string, ExceptionRow[]>;
 }
 
+// Exception types are tiered into two severity levels using the shared
+// semantic palette: "danger" for financial errors that need urgent
+// correction, "amber" for data-quality items that need review.
 const EXCEPTION_LABELS: Record<
   string,
-  { label: string; color: string; bg: string }
+  { label: string; tier: "danger" | "amber" }
 > = {
-  duplicate: { label: "Duplicate", color: "text-red-700", bg: "bg-red-100" },
-  variance_30: {
-    label: "+/- 30% Variance",
-    color: "text-amber-700",
-    bg: "bg-amber-100",
-  },
-  inactive: {
-    label: "Inactive Customer",
-    color: "text-orange-700",
-    bg: "bg-orange-100",
-  },
-  zero_commission: {
-    label: "Zero Commission",
-    color: "text-blue-700",
-    bg: "bg-blue-100",
-  },
-  negative_commission: {
-    label: "Negative Commission",
-    color: "text-purple-700",
-    bg: "bg-purple-100",
-  },
-  expired_contract: {
-    label: "Expired Contract",
-    color: "text-pink-700",
-    bg: "bg-pink-100",
-  },
-  rate_anomaly: {
-    label: "Rate Anomaly",
-    color: "text-cyan-700",
-    bg: "bg-cyan-100",
-  },
-  missing_data: {
-    label: "Missing Data",
-    color: "text-gray-700",
-    bg: "bg-gray-200",
-  },
+  duplicate: { label: "Duplicate", tier: "danger" },
+  variance_30: { label: "+/- 30% Variance", tier: "amber" },
+  inactive: { label: "Inactive Customer", tier: "amber" },
+  zero_commission: { label: "Zero Commission", tier: "amber" },
+  negative_commission: { label: "Negative Commission", tier: "danger" },
+  expired_contract: { label: "Expired Contract", tier: "amber" },
+  rate_anomaly: { label: "Rate Anomaly", tier: "amber" },
+  missing_data: { label: "Missing Data", tier: "amber" },
+};
+
+const TIER_STYLE: Record<"danger" | "amber", { background: string; color: string }> = {
+  danger: { background: "var(--danger-light-tint)", color: "var(--danger-light)" },
+  amber: { background: "var(--amber-light-tint)", color: "var(--amber-light)" },
 };
 
 const uid = 1;
@@ -147,17 +127,13 @@ export default function CommissionExceptions() {
   }
   const getBadgeStyle = (row: ExceptionRow) => {
     if (row.exception_type === "rate_anomaly" && row.anomaly_level === "red") {
-      return { label: "Rate Anomaly", bg: "bg-red-100", color: "text-red-700" };
+      return { label: "Rate Anomaly", tier: "danger" as const };
     }
     if (
       row.exception_type === "rate_anomaly" &&
       row.anomaly_level === "yellow"
     ) {
-      return {
-        label: "Rate Anomaly",
-        bg: "bg-yellow-100",
-        color: "text-yellow-700",
-      };
+      return { label: "Rate Anomaly", tier: "amber" as const };
     }
     return (
       EXCEPTION_LABELS[row.exception_type] || EXCEPTION_LABELS.missing_data
@@ -166,23 +142,24 @@ export default function CommissionExceptions() {
 
   return (
     <div className="p-6">
-      <h2 className="text-lg font-semibold text-orange-600 mb-1">
+      <h2 className="text-lg font-semibold mb-1" style={{ color: "var(--accent-light)" }}>
         Commission Exceptions
       </h2>
-      <p className="text-sm text-gray-500 mb-5">
+      <p className="text-sm mb-5" style={{ color: "var(--ct-text-secondary)" }}>
         Automated audit checks — review and resolve exceptions before finalizing
         commission.
       </p>
 
-      <div className="bg-white border border-gray-200 rounded p-4 mb-5 flex items-end gap-4">
+      <div className="rounded-[var(--r-md)] border p-4 mb-5 flex items-end gap-4" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
         <div>
-          <label className="block text-xs text-gray-500 mb-1">
+          <label className="block text-xs mb-1" style={{ color: "var(--ct-text-muted)" }}>
             Select Month
           </label>
           <select
             value={selectedMonth}
             onChange={(e) => setSelectedMonth(e.target.value)}
-            className="border border-gray-300 rounded px-3 py-1.5 text-sm min-w-[180px]"
+            className="rounded-[var(--r-sm)] border px-3 py-1.5 text-sm min-w-[180px] focus:outline-none focus:border-[var(--accent-light)]"
+            style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-primary)" }}
           >
             <option value="">Choose month...</option>
             {months.map((m) => (
@@ -195,11 +172,10 @@ export default function CommissionExceptions() {
         <button
           onClick={runExceptions}
           disabled={loading || !selectedMonth}
-          className={`px-5 py-1.5 rounded text-white text-sm font-medium ${
-            loading || !selectedMonth
-              ? "bg-gray-400 cursor-not-allowed"
-              : "bg-orange-500 hover:bg-orange-600"
-          }`}
+          className="px-5 py-1.5 rounded-[var(--r-sm)] text-sm font-medium transition-colors"
+          style={loading || !selectedMonth
+            ? { background: "var(--ct-text-muted)", color: "#ffffff", cursor: "not-allowed" }
+            : { background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
         >
           {loading ? "Running..." : "Run Exceptions"}
         </button>
@@ -207,7 +183,10 @@ export default function CommissionExceptions() {
 
       {msg && (
         <div
-          className={`mb-4 px-4 py-2 rounded text-sm ${msg.type === "success" ? "bg-green-50 border border-green-200 text-green-800" : "bg-red-50 border border-red-200 text-red-800"}`}
+          className="mb-4 px-4 py-2 rounded-[var(--r-md)] text-sm border"
+          style={msg.type === "success"
+            ? { background: "var(--success-light-tint)", borderColor: "var(--success-light-tint)", color: "var(--success-light)" }
+            : { background: "var(--danger-light-tint)", borderColor: "var(--danger-light-tint)", color: "var(--danger-light)" }}
         >
           {msg.text}
         </div>
@@ -218,11 +197,10 @@ export default function CommissionExceptions() {
           <div className="flex flex-wrap gap-2 mb-3">
             <button
               onClick={() => setActiveFilter("all")}
-              className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
-                activeFilter === "all"
-                  ? "bg-gray-800 text-white border-gray-800"
-                  : "bg-white text-gray-600 border-gray-300 hover:border-gray-400"
-              }`}
+              className="px-3 py-1 rounded-full text-xs font-medium border transition-colors"
+              style={activeFilter === "all"
+                ? { background: "var(--accent-light)", color: "var(--accent-light-on-solid)", borderColor: "var(--accent-light)" }
+                : { background: "var(--ct-surface)", color: "var(--ct-text-secondary)", borderColor: "var(--ct-border-default)" }}
             >
               All ({data.total})
             </button>
@@ -230,15 +208,15 @@ export default function CommissionExceptions() {
               if (count === 0) return null;
               const meta =
                 EXCEPTION_LABELS[type] || EXCEPTION_LABELS.missing_data;
+              const tierStyle = TIER_STYLE[meta.tier];
               return (
                 <button
                   key={type}
                   onClick={() => setActiveFilter(type)}
-                  className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
-                    activeFilter === type
-                      ? `${meta.bg} ${meta.color} border-current`
-                      : "bg-white text-gray-600 border-gray-300 hover:border-gray-400"
-                  }`}
+                  className="px-3 py-1 rounded-full text-xs font-medium border transition-colors"
+                  style={activeFilter === type
+                    ? { background: tierStyle.background, color: tierStyle.color, borderColor: tierStyle.color }
+                    : { background: "var(--ct-surface)", color: "var(--ct-text-secondary)", borderColor: "var(--ct-border-default)" }}
                 >
                   {meta.label} ({count})
                 </button>
@@ -249,15 +227,15 @@ export default function CommissionExceptions() {
       )}
 
       {data && (
-        <div className="bg-white border border-gray-200 rounded overflow-auto">
+        <div className="rounded-[var(--r-md)] border overflow-auto" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
           {filteredRows.length === 0 ? (
-            <div className="p-8 text-center text-green-600 text-sm font-medium">
+            <div className="p-8 text-center text-sm font-medium" style={{ color: "var(--success-light)" }}>
               ✓ No exceptions found for this check.
             </div>
           ) : (
             <table className="w-full text-xs min-w-[1100px]">
               <thead>
-                <tr className="bg-gray-100 border-b border-gray-200">
+                <tr className="border-b" style={{ background: "var(--ct-surface-hover)", borderColor: "var(--ct-border-default)" }}>
                   {[
                     "#",
                     "Exception",
@@ -275,7 +253,8 @@ export default function CommissionExceptions() {
                   ].map((h) => (
                     <th
                       key={h}
-                      className="px-3 py-2 text-left text-gray-600 font-medium"
+                      className="px-3 py-2 text-left font-medium"
+                      style={{ color: "var(--ct-text-muted)" }}
                     >
                       {h}
                     </th>
@@ -285,16 +264,19 @@ export default function CommissionExceptions() {
               <tbody>
                 {filteredRows.map((row, i) => {
                   const meta = getBadgeStyle(row);
+                  const tierStyle = TIER_STYLE[meta.tier];
                   const isEditing = editingSid === row.sid;
                   return (
                     <tr
                       key={`${row.sid}-${i}`}
-                      className="border-b border-gray-100 hover:bg-gray-50"
+                      className="border-b hover:bg-[var(--ct-surface-hover)]"
+                      style={{ borderColor: "var(--ct-border-subtle)" }}
                     >
-                      <td className="px-3 py-1.5 text-gray-400">{i + 1}</td>
+                      <td className="px-3 py-1.5" style={{ color: "var(--ct-text-muted)" }}>{i + 1}</td>
                       <td className="px-3 py-1.5">
                         <span
-                          className={`px-2 py-0.5 rounded-full text-xs font-medium ${meta.bg} ${meta.color}`}
+                          className="px-2 py-0.5 rounded-full text-xs font-medium"
+                          style={{ background: tierStyle.background, color: tierStyle.color }}
                         >
                           {meta.label}
                           {row.variance_pct && ` (${row.variance_pct}%)`}
@@ -302,11 +284,11 @@ export default function CommissionExceptions() {
                             ` — ${row.missing_fields.join(", ")}`}
                         </span>
                       </td>
-                      <td className="px-3 py-1.5 font-medium">{row.vendor}</td>
-                      <td className="px-3 py-1.5 font-mono">
+                      <td className="px-3 py-1.5 font-medium" style={{ color: "var(--ct-text-primary)" }}>{row.vendor}</td>
+                      <td className="px-3 py-1.5 font-mono" style={{ color: "var(--ct-text-secondary)" }}>
                         {row.premise_id}
                       </td>
-                      <td className="px-3 py-1.5 max-w-[140px] truncate">
+                      <td className="px-3 py-1.5 max-w-[140px] truncate" style={{ color: "var(--ct-text-secondary)" }}>
                         {row.company_name}
                       </td>
                       <td className="px-3 py-1.5">
@@ -321,19 +303,23 @@ export default function CommissionExceptions() {
                                 cust_status: e.target.value,
                               }))
                             }
-                            className="border border-blue-300 rounded px-1 py-0.5 w-12 text-xs"
+                            className="rounded-[var(--r-sm)] border px-1 py-0.5 w-12 text-xs focus:outline-none focus:border-[var(--accent-light)]"
+                            style={{ borderColor: "var(--accent-light)" }}
                           />
                         ) : (
                           <span
-                            className={`px-1.5 py-0.5 rounded text-xs font-medium ${row.cust_status === "A" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}
+                            className="px-1.5 py-0.5 rounded-[var(--r-sm)] text-xs font-medium"
+                            style={row.cust_status === "A"
+                              ? { background: "var(--success-light-tint)", color: "var(--success-light)" }
+                              : { background: "var(--danger-light-tint)", color: "var(--danger-light)" }}
                           >
                             {row.cust_status}
                           </span>
                         )}
                       </td>
-                      <td className="px-3 py-1.5">{row.service_start_date}</td>
-                      <td className="px-3 py-1.5">{row.service_end_date}</td>
-                      <td className="px-3 py-1.5">
+                      <td className="px-3 py-1.5" style={{ color: "var(--ct-text-secondary)" }}>{row.service_start_date}</td>
+                      <td className="px-3 py-1.5" style={{ color: "var(--ct-text-secondary)" }}>{row.service_end_date}</td>
+                      <td className="px-3 py-1.5" style={{ color: "var(--ct-text-secondary)" }}>
                         {isEditing ? (
                           <input
                             value={
@@ -347,13 +333,14 @@ export default function CommissionExceptions() {
                                 commission_rate: e.target.value,
                               }))
                             }
-                            className="border border-blue-300 rounded px-1 py-0.5 w-16 text-xs"
+                            className="rounded-[var(--r-sm)] border px-1 py-0.5 w-16 text-xs focus:outline-none focus:border-[var(--accent-light)]"
+                            style={{ borderColor: "var(--accent-light)" }}
                           />
                         ) : (
                           row.commission_rate
                         )}
                       </td>
-                      <td className="px-3 py-1.5">
+                      <td className="px-3 py-1.5" style={{ color: "var(--ct-text-secondary)" }}>
                         {isEditing ? (
                           <input
                             value={
@@ -367,15 +354,14 @@ export default function CommissionExceptions() {
                                 commission_amount: e.target.value,
                               }))
                             }
-                            className="border border-blue-300 rounded px-1 py-0.5 w-20 text-xs"
+                            className="rounded-[var(--r-sm)] border px-1 py-0.5 w-20 text-xs focus:outline-none focus:border-[var(--accent-light)]"
+                            style={{ borderColor: "var(--accent-light)" }}
                           />
                         ) : (
                           <span
-                            className={
-                              parseFloat(String(row.commission_amount)) < 0
-                                ? "text-red-600 font-medium"
-                                : ""
-                            }
+                            style={parseFloat(String(row.commission_amount)) < 0
+                              ? { color: "var(--danger-light)", fontWeight: 500 }
+                              : undefined}
                           >
                             {parseFloat(
                               String(row.commission_amount || 0),
@@ -383,20 +369,22 @@ export default function CommissionExceptions() {
                           </span>
                         )}
                       </td>
-                      <td className="px-3 py-1.5">{row.kwh_usage}</td>
-                      <td className="px-3 py-1.5">{row.month}</td>
+                      <td className="px-3 py-1.5" style={{ color: "var(--ct-text-secondary)" }}>{row.kwh_usage}</td>
+                      <td className="px-3 py-1.5" style={{ color: "var(--ct-text-secondary)" }}>{row.month}</td>
                       <td className="px-3 py-1.5">
                         {isEditing ? (
                           <div className="flex gap-1">
                             <button
                               onClick={() => handleEdit(row.sid)}
-                              className="bg-green-600 text-white px-2 py-0.5 rounded text-xs hover:bg-green-700"
+                              className="px-2 py-0.5 rounded-[var(--r-sm)] text-xs transition-colors"
+                              style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
                             >
                               Save
                             </button>
                             <button
                               onClick={() => setEditingSid(null)}
-                              className="bg-gray-400 text-white px-2 py-0.5 rounded text-xs"
+                              className="px-2 py-0.5 rounded-[var(--r-sm)] text-xs transition-colors"
+                              style={{ background: "var(--ct-text-muted)", color: "#ffffff" }}
                             >
                               Cancel
                             </button>
@@ -414,13 +402,15 @@ export default function CommissionExceptions() {
                                   comments: row.comments,
                                 });
                               }}
-                              className="bg-blue-500 text-white px-2 py-0.5 rounded text-xs hover:bg-blue-600"
+                              className="px-2 py-0.5 rounded-[var(--r-sm)] text-xs transition-colors"
+                              style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
                             >
                               Edit
                             </button>
                             <button
                               onClick={() => handleDelete(row.sid)}
-                              className="bg-red-500 text-white px-2 py-0.5 rounded text-xs hover:bg-red-600"
+                              className="px-2 py-0.5 rounded-[var(--r-sm)] text-xs transition-colors"
+                              style={{ background: "var(--danger-light)", color: "var(--danger-light-on-solid)" }}
                             >
                               Delete
                             </button>
@@ -437,7 +427,7 @@ export default function CommissionExceptions() {
       )}
 
       {!data && !loading && (
-        <div className="bg-white border border-gray-200 rounded p-10 text-center text-gray-400 text-sm">
+        <div className="rounded-[var(--r-md)] border p-10 text-center text-sm" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)", color: "var(--ct-text-muted)" }}>
           {/* 2. Fixed unescaped entities error */}
           Select a month and click &quot;Run Exceptions&quot; to start the
           audit.
