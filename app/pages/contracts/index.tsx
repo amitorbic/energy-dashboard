@@ -7,7 +7,6 @@ type SectionItem = {
   href: string;
   desc: string;
   badge?: string;
-  badgeColor?: string;
   disabled?: boolean;
 };
 const SECTIONS: { title: string; items: SectionItem[] }[] = [
@@ -19,7 +18,6 @@ const SECTIONS: { title: string; items: SectionItem[] }[] = [
         href: "/contracts/upload",
         desc: "Upload usage data that feeds into confirmation summaries.",
         badge: "Upload",
-        badgeColor: "bg-blue-50 text-blue-700",
         disabled: false,
       },
       {
@@ -27,7 +25,6 @@ const SECTIONS: { title: string; items: SectionItem[] }[] = [
         href: "/contracts/custom-pricing",
         desc: "Select a custom pricing record and customer — auto-fills confirmation details.",
         badge: "Pricing",
-        badgeColor: "bg-green-50 text-green-700",
         disabled: false,
       },
     ],
@@ -98,7 +95,7 @@ export default function ContractsHome() {
       <div className="max-w-4xl">
         {/* Page intro */}
         <div className="mb-6">
-          <p className="text-sm text-gray-500">
+          <p className="text-sm" style={{ color: "var(--ct-text-muted)" }}>
             Post-sales confirmation management — send, edit, and track contract
             confirmations for brokers.
           </p>
@@ -107,7 +104,10 @@ export default function ContractsHome() {
         {/* Sections */}
         {SECTIONS.map((section) => (
           <div key={section.title} className="mb-6">
-            <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-2 pl-1">
+            <h2
+              className="text-xs font-semibold uppercase tracking-widest mb-2 pl-1"
+              style={{ color: "var(--ct-text-muted)" }}
+            >
               {section.title}
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -115,26 +115,28 @@ export default function ContractsHome() {
                 <div
                   key={item.href}
                   onClick={() => !item.disabled && router.push(item.href)}
-                  className={`bg-white border border-gray-200 rounded-lg px-4 py-3 transition-all
+                  className={`rounded-[var(--r-md)] px-4 py-3 border transition-all
                     ${
                       item.disabled
                         ? "opacity-50 cursor-not-allowed"
-                        : "cursor-pointer hover:border-sky-400 hover:shadow-sm"
+                        : "cursor-pointer hover:border-[var(--accent-light)] hover:shadow-sm"
                     }`}
+                  style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}
                 >
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="text-sm font-medium text-gray-800">
+                    <span className="text-sm font-medium" style={{ color: "var(--ct-text-primary)" }}>
                       {item.label}
                     </span>
                     {item.badge && (
                       <span
-                        className={`text-xs px-2 py-0.5 rounded font-medium ${item.badgeColor}`}
+                        className="text-xs px-2 py-0.5 rounded-[var(--r-sm)] font-medium"
+                        style={{ background: "var(--accent-light-tint)", color: "var(--accent-light)" }}
                       >
                         {item.badge}
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-gray-500 leading-relaxed">
+                  <p className="text-xs leading-relaxed" style={{ color: "var(--ct-text-muted)" }}>
                     {item.desc}
                   </p>
                 </div>
