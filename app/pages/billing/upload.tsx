@@ -44,18 +44,18 @@ function Spinner() {
 
 function StatusBadge({ item }: { item: QueueItem }) {
   if (item.status === "pending") {
-    return <span className="text-xs text-gray-400">pending</span>;
+    return <span className="text-xs" style={{ color: "var(--ct-text-muted)" }}>pending</span>;
   }
   if (item.status === "uploading") {
     return (
-      <span className="flex items-center gap-1 text-xs text-blue-500">
+      <span className="flex items-center gap-1 text-xs" style={{ color: "var(--info-light)" }}>
         <Spinner /> uploading
       </span>
     );
   }
   if (item.status === "success") {
     return (
-      <span className="text-xs text-green-600 font-medium">
+      <span className="text-xs font-medium" style={{ color: "var(--success-light)" }}>
         {item.matched}/{item.found} matched
         {item.interchange ? ` · ${item.interchange}` : ""}
       </span>
@@ -63,24 +63,24 @@ function StatusBadge({ item }: { item: QueueItem }) {
   }
   if (item.status === "duplicate") {
     return (
-      <span className="text-xs text-yellow-600 font-medium" title={item.error}>
+      <span className="text-xs font-medium" style={{ color: "var(--amber-light)" }} title={item.error}>
         duplicate
       </span>
     );
   }
   return (
-    <span className="text-xs text-red-500 font-medium" title={item.error}>
+    <span className="text-xs font-medium" style={{ color: "var(--danger-light)" }} title={item.error}>
       error
     </span>
   );
 }
 
 function statusIcon(status: FileStatus) {
-  if (status === "pending")   return <span className="text-gray-300 text-base leading-none">○</span>;
-  if (status === "uploading") return <span className="text-blue-400 text-base leading-none">◑</span>;
-  if (status === "success")   return <span className="text-green-500 text-base leading-none">✓</span>;
-  if (status === "duplicate") return <span className="text-yellow-500 text-base leading-none">⊘</span>;
-  return                             <span className="text-red-400 text-base leading-none">✗</span>;
+  if (status === "pending")   return <span className="text-base leading-none" style={{ color: "var(--ct-text-muted)" }}>○</span>;
+  if (status === "uploading") return <span className="text-base leading-none" style={{ color: "var(--info-light)" }}>◑</span>;
+  if (status === "success")   return <span className="text-base leading-none" style={{ color: "var(--success-light)" }}>✓</span>;
+  if (status === "duplicate") return <span className="text-base leading-none" style={{ color: "var(--amber-light)" }}>⊘</span>;
+  return                             <span className="text-base leading-none" style={{ color: "var(--danger-light)" }}>✗</span>;
 }
 
 // ── drop zone panel ───────────────────────────────────────────────────────────
@@ -116,15 +116,15 @@ function UploadPanel({
   const errors  = queue.filter((q) => q.status === "error").length;
 
   return (
-    <div className="flex-1 bg-white border border-gray-200 rounded-lg overflow-hidden min-w-0">
+    <div className="flex-1 rounded-[var(--r-lg)] border overflow-hidden min-w-0" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
       {/* header */}
-      <div className="px-4 py-3 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
-        <span className="text-sm font-semibold text-gray-700">{label}</span>
+      <div className="px-4 py-3 border-b flex items-center justify-between" style={{ borderColor: "var(--ct-border-subtle)", background: "var(--ct-surface-hover)" }}>
+        <span className="text-sm font-semibold" style={{ color: "var(--ct-text-primary)" }}>{label}</span>
         {queue.length > 0 && (
-          <span className="text-xs text-gray-400">
+          <span className="text-xs" style={{ color: "var(--ct-text-muted)" }}>
             {queue.length} file{queue.length !== 1 ? "s" : ""}
-            {done > 0 && <> · <span className="text-green-600">{done} ok</span></>}
-            {errors > 0 && <> · <span className="text-red-500">{errors} failed</span></>}
+            {done > 0 && <> · <span style={{ color: "var(--success-light)" }}>{done} ok</span></>}
+            {errors > 0 && <> · <span style={{ color: "var(--danger-light)" }}>{errors} failed</span></>}
           </span>
         )}
       </div>
@@ -136,20 +136,21 @@ function UploadPanel({
           onDragLeave={() => setDragOver(false)}
           onDrop={handleDrop}
           onClick={() => inputRef.current?.click()}
-          className={`flex flex-col items-center justify-center gap-1.5 rounded-lg border-2 border-dashed py-6 cursor-pointer transition-colors ${
-            dragOver
-              ? "border-green-400 bg-green-50"
-              : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+          className={`flex flex-col items-center justify-center gap-1.5 rounded-[var(--r-lg)] border-2 border-dashed py-6 cursor-pointer transition-colors ${
+            dragOver ? "" : "hover:border-[var(--accent-light)] hover:bg-[var(--accent-light-tint)]"
           }`}
+          style={dragOver
+            ? { borderColor: "var(--accent-light)", background: "var(--accent-light-tint)" }
+            : { borderColor: "var(--ct-border-default)" }}
         >
-          <svg className="w-8 h-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="w-8 h-8" style={{ color: "var(--ct-text-muted)" }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
               d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
           </svg>
-          <p className="text-xs text-gray-400">
-            Drag files here or <span className="text-green-600 font-medium">click to browse</span>
+          <p className="text-xs" style={{ color: "var(--ct-text-muted)" }}>
+            Drag files here or <span className="font-medium" style={{ color: "var(--accent-light)" }}>click to browse</span>
           </p>
-          <p className="text-xs text-gray-300">Multiple files supported</p>
+          <p className="text-xs" style={{ color: "var(--ct-text-muted)" }}>Multiple files supported</p>
         </div>
         <input
           ref={inputRef}
@@ -171,7 +172,7 @@ function UploadPanel({
           {queue.map((item, i) => (
             <li key={i} className="flex items-center gap-2 py-1">
               {statusIcon(item.status)}
-              <span className="flex-1 text-xs text-gray-600 truncate min-w-0" title={item.file.name}>
+              <span className="flex-1 text-xs truncate min-w-0" style={{ color: "var(--ct-text-secondary)" }} title={item.file.name}>
                 {item.file.name}
               </span>
               <StatusBadge item={item} />
@@ -185,7 +186,8 @@ function UploadPanel({
         <button
           onClick={onClear}
           disabled={queue.length === 0 || uploading}
-          className="px-3 py-1.5 text-xs text-gray-500 border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-40 transition-colors"
+          className="px-3 py-1.5 text-xs rounded-[var(--r-sm)] border disabled:opacity-40 transition-colors hover:bg-[var(--ct-surface-hover)]"
+          style={{ color: "var(--ct-text-secondary)", borderColor: "var(--ct-border-default)" }}
         >
           Clear
         </button>
@@ -193,7 +195,8 @@ function UploadPanel({
         <button
           onClick={onUpload}
           disabled={pending === 0 || uploading}
-          className="flex items-center gap-2 px-4 py-1.5 bg-green-600 text-white text-xs font-medium rounded hover:bg-green-700 disabled:opacity-40 transition-colors"
+          className="flex items-center gap-2 px-4 py-1.5 text-xs font-medium rounded-[var(--r-sm)] disabled:opacity-40 transition-colors"
+          style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
         >
           {uploading && <Spinner />}
           {uploading ? "Uploading…" : `Upload ${pending > 0 ? pending : ""} File${pending !== 1 ? "s" : ""}`}
@@ -234,13 +237,14 @@ function HistoryTable({ rows, loading, onRefresh }: {
   };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-      <div className="px-4 py-3 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
-        <span className="text-sm font-semibold text-gray-700">Upload History</span>
+    <div className="rounded-[var(--r-lg)] border overflow-hidden" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
+      <div className="px-4 py-3 border-b flex items-center justify-between" style={{ borderColor: "var(--ct-border-subtle)", background: "var(--ct-surface-hover)" }}>
+        <span className="text-sm font-semibold" style={{ color: "var(--ct-text-primary)" }}>Upload History</span>
         <button
           onClick={onRefresh}
           disabled={loading}
-          className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-700 disabled:opacity-40"
+          className="flex items-center gap-1.5 text-xs disabled:opacity-40 transition-colors hover:text-[var(--ct-text-primary)]"
+          style={{ color: "var(--ct-text-muted)" }}
         >
           {loading ? <Spinner /> : (
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -253,62 +257,66 @@ function HistoryTable({ rows, loading, onRefresh }: {
       </div>
 
       {loading && rows.length === 0 ? (
-        <div className="px-4 py-8 text-center text-sm text-gray-400">Loading…</div>
+        <div className="px-4 py-8 text-center text-sm" style={{ color: "var(--ct-text-muted)" }}>Loading…</div>
       ) : rows.length === 0 ? (
-        <div className="px-4 py-8 text-center text-sm text-gray-400">No uploads yet.</div>
+        <div className="px-4 py-8 text-center text-sm" style={{ color: "var(--ct-text-muted)" }}>No uploads yet.</div>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
-            <thead className="bg-gray-50 border-b border-gray-100">
+            <thead className="border-b" style={{ background: "var(--ct-surface-hover)", borderColor: "var(--ct-border-subtle)" }}>
               <tr>
-                <th className="px-3 py-2 text-left text-gray-500 font-medium whitespace-nowrap">Filename</th>
-                <th className="px-3 py-2 text-left text-gray-500 font-medium">Type</th>
-                <th className="px-3 py-2 text-left text-gray-500 font-medium">TDSP</th>
-                <th className="px-3 py-2 text-left text-gray-500 font-medium">File Date</th>
-                <th className="px-3 py-2 text-right text-gray-500 font-medium">Found</th>
-                <th className="px-3 py-2 text-right text-gray-500 font-medium">Matched</th>
-                <th className="px-3 py-2 text-left text-gray-500 font-medium">Status</th>
-                <th className="px-3 py-2 text-left text-gray-500 font-medium whitespace-nowrap">Uploaded At</th>
-                {admin && <th className="px-3 py-2 text-right text-gray-500 font-medium">&nbsp;</th>}
+                <th className="px-3 py-2 text-left font-medium whitespace-nowrap" style={{ color: "var(--ct-text-muted)" }}>Filename</th>
+                <th className="px-3 py-2 text-left font-medium" style={{ color: "var(--ct-text-muted)" }}>Type</th>
+                <th className="px-3 py-2 text-left font-medium" style={{ color: "var(--ct-text-muted)" }}>TDSP</th>
+                <th className="px-3 py-2 text-left font-medium" style={{ color: "var(--ct-text-muted)" }}>File Date</th>
+                <th className="px-3 py-2 text-right font-medium" style={{ color: "var(--ct-text-muted)" }}>Found</th>
+                <th className="px-3 py-2 text-right font-medium" style={{ color: "var(--ct-text-muted)" }}>Matched</th>
+                <th className="px-3 py-2 text-left font-medium" style={{ color: "var(--ct-text-muted)" }}>Status</th>
+                <th className="px-3 py-2 text-left font-medium whitespace-nowrap" style={{ color: "var(--ct-text-muted)" }}>Uploaded At</th>
+                {admin && <th className="px-3 py-2 text-right font-medium" style={{ color: "var(--ct-text-muted)" }}>&nbsp;</th>}
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
+            <tbody className="divide-y" style={{ borderColor: "var(--ct-border-subtle)" }}>
               {rows.map((r) => (
-                <tr key={r.id} className="hover:bg-gray-50">
-                  <td className="px-3 py-2 text-gray-700 max-w-xs truncate" title={r.original_filename ?? ""}>
+                <tr key={r.id} className="transition-colors hover:bg-[var(--ct-surface-hover)]">
+                  <td className="px-3 py-2 max-w-xs truncate" style={{ color: "var(--ct-text-secondary)" }} title={r.original_filename ?? ""}>
                     {r.original_filename ?? "—"}
                   </td>
                   <td className="px-3 py-2">
-                    <span className={`inline-flex px-1.5 py-0.5 rounded text-xs font-medium ${
-                      r.edi_type === "867_03"
-                        ? "bg-blue-50 text-blue-700"
-                        : "bg-purple-50 text-purple-700"
-                    }`}>
+                    <span
+                      className="inline-flex px-1.5 py-0.5 rounded-[var(--r-sm)] text-xs font-medium"
+                      style={{ background: "var(--accent-light-tint)", color: "var(--accent-light)" }}
+                    >
                       {r.edi_type}
                     </span>
                   </td>
-                  <td className="px-3 py-2 text-gray-600">{r.tdsp_name ?? "—"}</td>
-                  <td className="px-3 py-2 text-gray-600 whitespace-nowrap">{r.file_date ?? "—"}</td>
-                  <td className="px-3 py-2 text-gray-700 text-right">{r.records_found ?? "—"}</td>
+                  <td className="px-3 py-2" style={{ color: "var(--ct-text-secondary)" }}>{r.tdsp_name ?? "—"}</td>
+                  <td className="px-3 py-2 whitespace-nowrap" style={{ color: "var(--ct-text-secondary)" }}>{r.file_date ?? "—"}</td>
+                  <td className="px-3 py-2 text-right" style={{ color: "var(--ct-text-secondary)" }}>{r.records_found ?? "—"}</td>
                   <td className="px-3 py-2 text-right">
-                    <span className={r.records_matched === r.records_found && r.records_found !== null
-                      ? "text-green-600 font-medium"
-                      : "text-orange-500 font-medium"
-                    }>
+                    <span
+                      className="font-medium"
+                      style={{ color: r.records_matched === r.records_found && r.records_found !== null
+                        ? "var(--success-light)"
+                        : "var(--amber-light)" }}
+                    >
                       {r.records_matched ?? "—"}
                     </span>
                   </td>
                   <td className="px-3 py-2">
-                    <span className={`inline-flex px-1.5 py-0.5 rounded text-xs font-medium ${
-                      r.status === "matched"   ? "bg-green-50 text-green-700"  :
-                      r.status === "duplicate" ? "bg-yellow-50 text-yellow-700" :
-                      r.status === "partial"   ? "bg-orange-50 text-orange-700" :
-                      "bg-gray-100 text-gray-500"
-                    }`}>
+                    <span
+                      className="inline-flex px-1.5 py-0.5 rounded-[var(--r-sm)] text-xs font-medium"
+                      style={
+                        r.status === "matched"   ? { background: "var(--success-light-tint)", color: "var(--success-light)" } :
+                        r.status === "duplicate" ? { background: "var(--amber-light-tint)", color: "var(--amber-light)" } :
+                        r.status === "partial"   ? { background: "var(--amber-light-tint)", color: "var(--amber-light)" } :
+                        { background: "var(--ct-surface-hover)", color: "var(--ct-text-secondary)" }
+                      }
+                    >
                       {r.status}
                     </span>
                   </td>
-                  <td className="px-3 py-2 text-gray-400 whitespace-nowrap">
+                  <td className="px-3 py-2 whitespace-nowrap" style={{ color: "var(--ct-text-muted)" }}>
                     {r.created_at ? new Date(r.created_at).toLocaleString() : "—"}
                   </td>
                   {admin && (
@@ -316,13 +324,14 @@ function HistoryTable({ rows, loading, onRefresh }: {
                       <button
                         onClick={() => handleDelete(r)}
                         disabled={deletingId === r.id}
-                        className="text-xs text-red-500 hover:text-red-700 disabled:opacity-40"
+                        className="text-xs disabled:opacity-40 transition-colors hover:text-[var(--danger-light)]"
+                        style={{ color: "var(--danger-light)" }}
                         title="Delete this file and its records (blocked if already billed)"
                       >
                         {deletingId === r.id ? "…" : "Delete"}
                       </button>
                       {rowError?.id === r.id && (
-                        <p className="text-xs text-red-500 mt-1 max-w-[220px] ml-auto text-right">{rowError.msg}</p>
+                        <p className="text-xs mt-1 max-w-[220px] ml-auto text-right" style={{ color: "var(--danger-light)" }}>{rowError.msg}</p>
                       )}
                     </td>
                   )}
@@ -437,8 +446,8 @@ export default function BillingUploadPage() {
     <BillingEngineLayout title="EDI Upload">
       {/* page header */}
       <div className="mb-6">
-        <h2 className="text-base font-semibold text-gray-800">EDI File Upload</h2>
-        <p className="text-xs text-gray-400 mt-0.5">
+        <h2 className="text-base font-semibold" style={{ color: "var(--ct-text-primary)" }}>EDI File Upload</h2>
+        <p className="text-xs mt-0.5" style={{ color: "var(--ct-text-muted)" }}>
           Upload ERCOT 867 usage files and 810 TDSP invoice files. Multiple files can be queued and uploaded in batch.
         </p>
       </div>
