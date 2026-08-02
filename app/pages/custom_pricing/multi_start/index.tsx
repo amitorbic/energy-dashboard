@@ -15,6 +15,14 @@ interface MspRecord {
   updated_at: string;
 }
 
+const secondaryBtnCls =
+  "px-3 py-1 rounded text-xs font-bold border transition-colors";
+const secondaryBtnStyle = {
+  background: "var(--ct-surface)",
+  borderColor: "var(--ct-border-default)",
+  color: "var(--ct-text-primary)",
+};
+
 const MspLog = () => {
   const router = useRouter();
   const [records, setRecords] = useState<MspRecord[]>([]);
@@ -47,26 +55,37 @@ const MspLog = () => {
   return (
     <Layout title="Multiple Start Pricing">
       <div className="max-w-7xl mx-auto p-6 space-y-5">
-        <div className="flex items-center justify-between border-b border-slate-800 pb-5">
+        <div
+          className="flex items-center justify-between border-b pb-5"
+          style={{ borderColor: "var(--ct-border-subtle)" }}
+        >
           <div className="flex items-center gap-4">
             <button
               onClick={() => router.push("/pricing")}
-              className="text-slate-400 hover:text-white text-sm"
+              className="text-sm transition-colors"
+              style={{ color: "var(--ct-text-muted)" }}
             >
               ← Pricing
             </button>
-            <h1 className="text-2xl font-black text-white uppercase tracking-tighter">
+            <h1
+              className="text-2xl font-black uppercase tracking-tighter"
+              style={{ color: "var(--ct-text-primary)" }}
+            >
               Multiple Start Pricing
             </h1>
             {!loading && (
-              <span className="bg-slate-700 text-slate-300 text-xs px-2 py-1 rounded font-mono">
+              <span
+                className="text-xs px-2 py-1 rounded font-mono"
+                style={{ background: "var(--ct-surface-hover)", color: "var(--ct-text-secondary)" }}
+              >
                 {records.length} records
               </span>
             )}
           </div>
           <button
             onClick={() => router.push("/custom_pricing/multi_start/add")}
-            className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded text-sm font-bold uppercase transition"
+            className="px-4 py-2 rounded text-sm font-bold uppercase transition-colors"
+            style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
           >
             + New MSP
           </button>
@@ -77,22 +96,29 @@ const MspLog = () => {
           placeholder="Search by customer, broker or ESI ID..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full bg-slate-800 text-white px-4 py-2 rounded border border-slate-700 focus:outline-none focus:border-red-500 text-sm"
+          className="w-full px-4 py-2 rounded border focus:outline-none focus:border-[var(--accent-light)] text-sm"
+          style={{ background: "var(--ct-surface)", color: "var(--ct-text-primary)", borderColor: "var(--ct-border-default)" }}
         />
 
         {loading ? (
-          <div className="text-slate-500 text-center py-20 animate-pulse">
+          <div className="text-center py-20 animate-pulse" style={{ color: "var(--ct-text-muted)" }}>
             Loading...
           </div>
         ) : filtered.length === 0 ? (
-          <div className="text-slate-500 text-center py-20">
+          <div className="text-center py-20" style={{ color: "var(--ct-text-muted)" }}>
             No records found.
           </div>
         ) : (
-          <div className="bg-slate-900 rounded-lg border border-slate-800 overflow-x-auto">
+          <div
+            className="rounded-[var(--r-lg)] border overflow-x-auto"
+            style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}
+          >
             <table className="w-full text-sm">
               <thead>
-                <tr className="bg-slate-800 text-slate-400 uppercase text-xs">
+                <tr
+                  className="uppercase text-xs"
+                  style={{ background: "var(--ct-surface-hover)", color: "var(--ct-text-muted)" }}
+                >
                   <th className="p-3 text-left">Customer</th>
                   <th className="p-3 text-left">Broker</th>
                   <th className="p-3 text-left">ESI IDs</th>
@@ -105,19 +131,20 @@ const MspLog = () => {
                 {filtered.map((r) => (
                   <tr
                     key={r.sid}
-                    className="border-t border-slate-800 hover:bg-slate-800/40 transition-colors"
+                    className="border-t transition-colors hover:bg-[var(--ct-surface-hover)]"
+                    style={{ borderColor: "var(--ct-border-subtle)" }}
                   >
-                    <td className="p-3 font-semibold text-white">
+                    <td className="p-3 font-semibold" style={{ color: "var(--ct-text-primary)" }}>
                       {r.customer_name}
                     </td>
-                    <td className="p-3 text-slate-400">{r.broker_code}</td>
-                    <td className="p-3 text-xs font-mono text-slate-400 truncate max-w-40">
+                    <td className="p-3" style={{ color: "var(--ct-text-secondary)" }}>{r.broker_code}</td>
+                    <td className="p-3 text-xs font-mono truncate max-w-40" style={{ color: "var(--ct-text-secondary)" }}>
                       {r.esids}
                     </td>
-                    <td className="p-3 text-slate-400 font-mono text-xs">
+                    <td className="p-3 font-mono text-xs" style={{ color: "var(--ct-text-secondary)" }}>
                       {r.terms}
                     </td>
-                    <td className="p-3 text-slate-500 text-xs">
+                    <td className="p-3 text-xs" style={{ color: "var(--ct-text-muted)" }}>
                       {r.updated_at
                         ? new Date(r.updated_at).toLocaleDateString()
                         : "—"}
@@ -130,7 +157,8 @@ const MspLog = () => {
                               `/custom_pricing/multi_start/add?sid=${r.sid}`,
                             )
                           }
-                          className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs font-bold"
+                          className={secondaryBtnCls}
+                          style={secondaryBtnStyle}
                         >
                           Price
                         </button>
@@ -145,13 +173,15 @@ const MspLog = () => {
                               );
                             }
                           }}
-                          className="bg-blue-700 hover:bg-blue-600 text-white px-3 py-1 rounded text-xs font-bold"
+                          className="px-3 py-1 rounded text-xs font-bold transition-colors"
+                          style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
                         >
                           Send
                         </button>
                         <button
                           onClick={() => handleDelete(r.sid)}
-                          className="bg-red-900 hover:bg-red-800 text-red-300 px-3 py-1 rounded text-xs font-bold"
+                          className="px-3 py-1 rounded text-xs font-bold transition-colors"
+                          style={{ background: "var(--danger-light-tint)", color: "var(--danger-light)" }}
                         >
                           Delete
                         </button>
