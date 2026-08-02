@@ -28,11 +28,11 @@ const DailyPricingHome = () => {
   return (
     <Layout title="Daily Pricing">
       <div className="max-w-5xl mx-auto p-6 space-y-8">
-        <header className="border-b border-slate-800 pb-6">
-          <h1 className="text-3xl font-black text-white uppercase tracking-tighter">
+        <header className="border-b pb-6" style={{ borderColor: "var(--ct-border-default)" }}>
+          <h1 className="text-3xl font-black uppercase tracking-tighter" style={{ color: "var(--ct-text-primary)" }}>
             Daily Pricing
           </h1>
-          <p className="text-slate-500 text-sm mt-1">
+          <p className="text-sm mt-1" style={{ color: "var(--ct-text-muted)" }}>
             Manage pricing data and view daily matrices
           </p>
         </header>
@@ -42,11 +42,12 @@ const DailyPricingHome = () => {
             <div
               key={m.href}
               onClick={() => router.push(m.href)}
-              className="bg-slate-800 rounded-lg p-6 space-y-3 border border-slate-700 hover:border-red-500 transition-colors cursor-pointer"
+              className="rounded-[var(--r-lg)] p-6 space-y-3 border transition-colors cursor-pointer hover:border-[var(--accent-light)]"
+              style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}
             >
               <div className="text-2xl">{m.icon}</div>
-              <h2 className="text-white font-bold text-sm">{m.label}</h2>
-              <span className="text-red-400 text-xs font-bold">Open →</span>
+              <h2 className="font-bold text-sm" style={{ color: "var(--ct-text-primary)" }}>{m.label}</h2>
+              <span className="text-xs font-bold" style={{ color: "var(--accent-light)" }}>Open →</span>
             </div>
           ))}
         </div>
