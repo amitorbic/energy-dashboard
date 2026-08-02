@@ -62,24 +62,36 @@ const fmt = (n: number) =>
     n,
   );
 
-const TIER_STYLE: Record<string, string> = {
-  CRITICAL: "bg-red-100 text-red-700",
-  HIGH: "bg-orange-100 text-orange-700",
-  MEDIUM: "bg-amber-100 text-amber-700",
-  LOW: "bg-green-100 text-green-700",
+// Semantic tiers, shared across tier/stage badges below. Only the design
+// system's four semantic hues (danger/amber/success/info) plus neutral are
+// available, so multi-hue severity scales (e.g. red/orange/amber/green)
+// collapse onto this smaller vocabulary while preserving relative ordering.
+const SEMANTIC: Record<string, { background: string; color: string }> = {
+  danger: { background: "var(--danger-light-tint)", color: "var(--danger-light)" },
+  amber: { background: "var(--amber-light-tint)", color: "var(--amber-light)" },
+  success: { background: "var(--success-light-tint)", color: "var(--success-light)" },
+  info: { background: "var(--info-light-tint)", color: "var(--info-light)" },
+  neutral: { background: "var(--ct-surface-hover)", color: "var(--ct-text-secondary)" },
 };
 
-const STAGE_STYLE: Record<string, string> = {
-  REMINDER: "bg-blue-100 text-blue-700",
-  DNP_NOTICE: "bg-orange-100 text-orange-700",
-  DNP_ACTIVE: "bg-red-100 text-red-700",
-  MVO: "bg-red-200 text-red-800",
-  EMAIL_OUTREACH: "bg-sky-100 text-sky-700",
-  CHASING: "bg-amber-100 text-amber-700",
-  DEMAND_SENT: "bg-orange-100 text-orange-700",
-  IN_LEGAL: "bg-red-100 text-red-700",
-  RESOLVED: "bg-green-100 text-green-700",
-  WRITTEN_OFF: "bg-gray-100 text-gray-500",
+const TIER_TONE: Record<string, keyof typeof SEMANTIC> = {
+  CRITICAL: "danger",
+  HIGH: "danger",
+  MEDIUM: "amber",
+  LOW: "success",
+};
+
+const STAGE_TONE: Record<string, keyof typeof SEMANTIC> = {
+  REMINDER: "info",
+  DNP_NOTICE: "amber",
+  DNP_ACTIVE: "danger",
+  MVO: "danger",
+  EMAIL_OUTREACH: "info",
+  CHASING: "amber",
+  DEMAND_SENT: "amber",
+  IN_LEGAL: "danger",
+  RESOLVED: "success",
+  WRITTEN_OFF: "neutral",
 };
 
 const STAGE_LABEL: Record<string, string> = {
@@ -167,7 +179,7 @@ export default function PastDueDashboard() {
   return (
     <PastDueLayout title="Past Due Portal">
       {error && (
-        <div className="mb-4 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+        <div className="mb-4 rounded-[var(--r-lg)] border px-4 py-3 text-sm" style={{ background: "var(--danger-light-tint)", borderColor: "var(--danger-light-tint)", color: "var(--danger-light)" }}>
           Failed to load: {error}
         </div>
       )}
@@ -179,59 +191,60 @@ export default function PastDueDashboard() {
             {
               label: "Total accounts",
               value: summary.total_accounts,
-              color: "text-gray-900",
+              color: "var(--ct-text-primary)",
             },
             {
               label: "At risk",
               value: fmt(summary.total_at_risk),
-              color: "text-red-600",
+              color: "var(--danger-light)",
             },
             {
               label: "Active track",
               value: summary.active_track_count,
-              color: "text-blue-600",
+              color: "var(--ct-text-primary)",
             },
             {
               label: "Inactive track",
               value: summary.inactive_track_count,
-              color: "text-indigo-600",
+              color: "var(--ct-text-primary)",
             },
             {
               label: "Pending approvals",
               value: summary.pending_approvals,
               color:
                 summary.pending_approvals > 0
-                  ? "text-amber-600"
-                  : "text-gray-400",
+                  ? "var(--amber-light)"
+                  : "var(--ct-text-muted)",
             },
             {
               label: "ETF open",
               value: summary.etf_open_count,
               color:
-                summary.etf_open_count > 0 ? "text-amber-600" : "text-gray-400",
+                summary.etf_open_count > 0 ? "var(--amber-light)" : "var(--ct-text-muted)",
             },
             {
               label: "Critical",
               value: summary.critical_accounts,
               color:
                 summary.critical_accounts > 0
-                  ? "text-red-600"
-                  : "text-gray-400",
+                  ? "var(--danger-light)"
+                  : "var(--ct-text-muted)",
             },
             {
               label: "Resolved / mo",
               value: summary.resolved_this_month,
-              color: "text-green-600",
+              color: "var(--success-light)",
             },
           ].map((s) => (
             <div
               key={s.label}
-              className="bg-white rounded-lg border border-gray-200 px-3 py-3"
+              className="rounded-[var(--r-lg)] border px-3 py-3"
+              style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}
             >
-              <p className="text-xs text-gray-400 mb-1 leading-tight">
+              <p className="text-xs mb-1 leading-tight" style={{ color: "var(--ct-text-muted)" }}>
                 {s.label}
               </p>
-              <p className={`text-lg font-semibold ${s.color}`}>{s.value}</p>
+              <p className="text-lg font-semibold" style={{ color: s.color }}>{s.value}</p>
             </div>
           ))}
         </div>
@@ -239,14 +252,14 @@ export default function PastDueDashboard() {
 
       {/* ── Aging buckets ── */}
       {summary?.aging && summary.aging.length > 0 && (
-        <div className="bg-white rounded-lg border border-gray-200 px-5 py-4 mb-5">
+        <div className="rounded-[var(--r-lg)] border px-5 py-4 mb-5" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
           <div className="flex items-center justify-between mb-3">
-            <p className="text-sm font-medium text-gray-700">Aging breakdown</p>
+            <p className="text-sm font-medium" style={{ color: "var(--ct-text-secondary)" }}>Aging breakdown</p>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
-                <tr className="text-gray-400 uppercase tracking-wide">
+                <tr className="uppercase tracking-wide" style={{ color: "var(--ct-text-muted)" }}>
                   <th className="text-left py-1 pr-6 font-medium">Track</th>
                   {[
                     "1–30 days",
@@ -262,28 +275,28 @@ export default function PastDueDashboard() {
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y" style={{ borderColor: "var(--ct-border-subtle)" }}>
                 {summary.aging.map((row) => (
                   <tr key={row.track}>
-                    <td className="py-2 pr-6 font-medium text-gray-700">
+                    <td className="py-2 pr-6 font-medium" style={{ color: "var(--ct-text-secondary)" }}>
                       {row.track}
                     </td>
-                    <td className="py-2 pr-4 text-right text-blue-600">
+                    <td className="py-2 pr-4 text-right" style={{ color: "var(--info-light)" }}>
                       {fmt(row.bucket_1_30)}
                     </td>
-                    <td className="py-2 pr-4 text-right text-amber-600">
+                    <td className="py-2 pr-4 text-right" style={{ color: "var(--amber-light)" }}>
                       {fmt(row.bucket_31_60)}
                     </td>
-                    <td className="py-2 pr-4 text-right text-orange-600">
+                    <td className="py-2 pr-4 text-right" style={{ color: "var(--amber-light)" }}>
                       {fmt(row.bucket_61_90)}
                     </td>
-                    <td className="py-2 pr-4 text-right text-red-600">
+                    <td className="py-2 pr-4 text-right" style={{ color: "var(--danger-light)" }}>
                       {fmt(row.bucket_91_120)}
                     </td>
-                    <td className="py-2 pr-4 text-right text-red-700 font-medium">
+                    <td className="py-2 pr-4 text-right font-medium" style={{ color: "var(--danger-light)" }}>
                       {fmt(row.bucket_120_plus)}
                     </td>
-                    <td className="py-2 pr-4 text-right font-semibold text-gray-900">
+                    <td className="py-2 pr-4 text-right font-semibold" style={{ color: "var(--ct-text-primary)" }}>
                       {fmt(row.total_due)}
                     </td>
                   </tr>
@@ -295,9 +308,9 @@ export default function PastDueDashboard() {
       )}
 
       {/* ── Filters + tabs ── */}
-      <div className="bg-white rounded-lg border border-gray-200 px-5 py-4 mb-4">
+      <div className="rounded-[var(--r-lg)] border px-5 py-4 mb-4" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
         {/* Track tabs */}
-        <div className="flex gap-1 mb-4 border-b border-gray-200 -mx-5 px-5">
+        <div className="flex gap-1 mb-4 border-b -mx-5 px-5" style={{ borderColor: "var(--ct-border-default)" }}>
           {(["ALL", "ACTIVE", "INACTIVE"] as const).map((t) => (
             <button
               key={t}
@@ -305,8 +318,10 @@ export default function PastDueDashboard() {
                 setActiveTab(t);
                 setPage(1);
               }}
-              className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors
-                ${activeTab === t ? "border-sky-500 text-sky-600" : "border-transparent text-gray-400 hover:text-gray-600"}`}
+              className="px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors"
+              style={activeTab === t
+                ? { borderColor: "var(--accent-light)", color: "var(--accent-light)" }
+                : { borderColor: "transparent", color: "var(--ct-text-muted)" }}
             >
               {t === "ALL"
                 ? "All accounts"
@@ -319,9 +334,13 @@ export default function PastDueDashboard() {
             {summary && summary.pending_approvals > 0 && (
               <button
                 onClick={() => router.push("/past-due/approvals")}
-                className="px-3 py-1.5 text-sm font-medium text-amber-600 flex items-center gap-1.5 hover:bg-amber-50 rounded transition-colors"
+                className="px-3 py-1.5 text-sm font-medium flex items-center gap-1.5 rounded-[var(--r-sm)] transition-colors hover:bg-[var(--amber-light-tint)]"
+                style={{ color: "var(--amber-light)" }}
               >
-                <span className="w-5 h-5 rounded-full bg-amber-100 text-amber-700 text-xs flex items-center justify-center font-bold">
+                <span
+                  className="w-5 h-5 rounded-full text-xs flex items-center justify-center font-bold"
+                  style={{ background: "var(--amber-light-tint)", color: "var(--amber-light)" }}
+                >
                   {summary.pending_approvals}
                 </span>
                 Pending approvals
@@ -329,7 +348,8 @@ export default function PastDueDashboard() {
             )}
             <button
               onClick={() => router.push("/past-due/upload")}
-              className="px-4 py-1.5 text-sm bg-sky-500 hover:bg-sky-600 text-white rounded font-medium transition-colors"
+              className="px-4 py-1.5 text-sm rounded-[var(--r-sm)] font-medium transition-colors"
+              style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
             >
               + Import AR sheet
             </button>
@@ -345,7 +365,8 @@ export default function PastDueDashboard() {
               setPage(1);
             }}
             placeholder="Search name, ESIID, account..."
-            className="border border-gray-300 rounded px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-sky-500 w-56"
+            className="rounded-[var(--r-sm)] border px-3 py-1.5 text-sm outline-none w-56 focus:border-[var(--accent-light)]"
+            style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-primary)" }}
           />
           <select
             value={stageFilter}
@@ -353,7 +374,8 @@ export default function PastDueDashboard() {
               setStageFilter(e.target.value);
               setPage(1);
             }}
-            className="border border-gray-300 rounded px-3 py-1.5 text-sm text-gray-600 outline-none focus:ring-2 focus:ring-sky-500"
+            className="rounded-[var(--r-sm)] border px-3 py-1.5 text-sm outline-none focus:border-[var(--accent-light)]"
+            style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-secondary)" }}
           >
             <option value="">All stages</option>
             {Object.entries(STAGE_LABEL).map(([v, l]) => (
@@ -368,7 +390,8 @@ export default function PastDueDashboard() {
               setTierFilter(e.target.value);
               setPage(1);
             }}
-            className="border border-gray-300 rounded px-3 py-1.5 text-sm text-gray-600 outline-none focus:ring-2 focus:ring-sky-500"
+            className="rounded-[var(--r-sm)] border px-3 py-1.5 text-sm outline-none focus:border-[var(--accent-light)]"
+            style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-secondary)" }}
           >
             <option value="">All tiers</option>
             {["CRITICAL", "HIGH", "MEDIUM", "LOW"].map((t) => (
@@ -377,7 +400,7 @@ export default function PastDueDashboard() {
               </option>
             ))}
           </select>
-          <label className="flex items-center gap-1.5 text-sm text-gray-600 cursor-pointer">
+          <label className="flex items-center gap-1.5 text-sm cursor-pointer" style={{ color: "var(--ct-text-secondary)" }}>
             <input
               type="checkbox"
               checked={etfOnly}
@@ -385,11 +408,12 @@ export default function PastDueDashboard() {
                 setEtfOnly(e.target.checked);
                 setPage(1);
               }}
-              className="rounded accent-amber-500"
+              className="rounded-[var(--r-sm)]"
+              style={{ accentColor: "var(--accent-light)" }}
             />
             ETF open
           </label>
-          <label className="flex items-center gap-1.5 text-sm text-gray-600 cursor-pointer">
+          <label className="flex items-center gap-1.5 text-sm cursor-pointer" style={{ color: "var(--ct-text-secondary)" }}>
             <input
               type="checkbox"
               checked={legalOnly}
@@ -397,22 +421,23 @@ export default function PastDueDashboard() {
                 setLegalOnly(e.target.checked);
                 setPage(1);
               }}
-              className="rounded accent-red-500"
+              className="rounded-[var(--r-sm)]"
+              style={{ accentColor: "var(--accent-light)" }}
             />
             In legal
           </label>
-          <span className="ml-auto text-sm text-gray-400">
+          <span className="ml-auto text-sm" style={{ color: "var(--ct-text-muted)" }}>
             {(total ?? 0).toLocaleString()} accounts
           </span>
         </div>
       </div>
 
       {/* ── Account table ── */}
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+      <div className="rounded-[var(--r-lg)] border overflow-hidden" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-gray-50 border-b border-gray-200 text-xs text-gray-500 uppercase tracking-wide">
+              <tr className="border-b text-xs uppercase tracking-wide" style={{ background: "var(--ct-surface-hover)", borderColor: "var(--ct-border-default)", color: "var(--ct-text-muted)" }}>
                 <th className="text-left px-4 py-3 font-medium">Customer</th>
                 <th className="text-left px-4 py-3 font-medium">ESIID</th>
                 <th className="text-left px-4 py-3 font-medium">Track</th>
@@ -426,116 +451,128 @@ export default function PastDueDashboard() {
                 <th className="text-left px-4 py-3 font-medium">Flags</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y" style={{ borderColor: "var(--ct-border-subtle)" }}>
               {loading ? (
                 <tr>
-                  <td colSpan={11} className="py-16 text-center text-gray-400">
+                  <td colSpan={11} className="py-16 text-center" style={{ color: "var(--ct-text-muted)" }}>
                     Loading...
                   </td>
                 </tr>
               ) : accounts.length === 0 ? (
                 <tr>
-                  <td colSpan={11} className="py-16 text-center text-gray-400">
+                  <td colSpan={11} className="py-16 text-center" style={{ color: "var(--ct-text-muted)" }}>
                     No accounts found
                   </td>
                 </tr>
               ) : (
-                accounts.map((a) => (
-                  <tr
-                    key={a.id}
-                    onClick={() => router.push(`/past-due/${a.id}`)}
-                    className="hover:bg-sky-50 cursor-pointer transition-colors"
-                  >
-                    <td className="px-4 py-3">
-                      <p className="font-medium text-gray-800 truncate max-w-[180px]">
-                        {a.customer_name}
-                      </p>
-                      <p className="text-xs text-gray-400">
-                        {a.account_number}
-                      </p>
-                    </td>
-                    <td className="px-4 py-3 text-xs text-gray-400 font-mono">
-                      {a.esiid}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`px-2 py-0.5 rounded text-xs font-medium
-                        ${a.track === "ACTIVE" ? "bg-blue-100 text-blue-700" : "bg-indigo-100 text-indigo-700"}`}
-                      >
-                        {a.track}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`px-2 py-0.5 rounded text-xs font-medium ${STAGE_STYLE[a.stage] || "bg-gray-100 text-gray-600"}`}
-                      >
-                        {STAGE_LABEL[a.stage] || a.stage}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-right font-semibold text-gray-900">
-                      {fmt(a.total_due)}
-                    </td>
-                    <td className="px-4 py-3 text-right text-gray-600">
-                      {fmt(a.usage_balance)}
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      {a.etf_amount > 0 ? (
+                accounts.map((a) => {
+                  const daysColor =
+                    a.days_overdue > 90
+                      ? "var(--danger-light)"
+                      : a.days_overdue > 30
+                        ? "var(--amber-light)"
+                        : "var(--ct-text-secondary)";
+                  const tierTone = SEMANTIC[TIER_TONE[a.delinquency_tier]] || SEMANTIC.neutral;
+                  const stageTone = SEMANTIC[STAGE_TONE[a.stage]] || SEMANTIC.neutral;
+                  return (
+                    <tr
+                      key={a.id}
+                      onClick={() => router.push(`/past-due/${a.id}`)}
+                      className="cursor-pointer transition-colors hover:bg-[var(--accent-light-tint)]"
+                    >
+                      <td className="px-4 py-3">
+                        <p className="font-medium truncate max-w-[180px]" style={{ color: "var(--ct-text-primary)" }}>
+                          {a.customer_name}
+                        </p>
+                        <p className="text-xs" style={{ color: "var(--ct-text-muted)" }}>
+                          {a.account_number}
+                        </p>
+                      </td>
+                      <td className="px-4 py-3 text-xs font-mono" style={{ color: "var(--ct-text-muted)" }}>
+                        {a.esiid}
+                      </td>
+                      <td className="px-4 py-3">
                         <span
-                          className={
-                            a.etf_flag
-                              ? "text-amber-600 font-medium"
-                              : "text-gray-500"
-                          }
+                          className="px-2 py-0.5 rounded-[var(--r-sm)] text-xs font-medium"
+                          style={{ background: "var(--accent-light-tint)", color: "var(--accent-light)" }}
                         >
-                          {fmt(a.etf_amount)}
-                          {a.etf_flag && (
-                            <span className="ml-1 text-xs bg-amber-100 text-amber-700 px-1 rounded">
-                              !
+                          {a.track}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span
+                          className="px-2 py-0.5 rounded-[var(--r-sm)] text-xs font-medium"
+                          style={stageTone}
+                        >
+                          {STAGE_LABEL[a.stage] || a.stage}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-right font-semibold" style={{ color: "var(--ct-text-primary)" }}>
+                        {fmt(a.total_due)}
+                      </td>
+                      <td className="px-4 py-3 text-right" style={{ color: "var(--ct-text-secondary)" }}>
+                        {fmt(a.usage_balance)}
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        {a.etf_amount > 0 ? (
+                          <span
+                            style={{
+                              color: a.etf_flag ? "var(--amber-light)" : "var(--ct-text-secondary)",
+                              fontWeight: a.etf_flag ? 500 : 400,
+                            }}
+                          >
+                            {fmt(a.etf_amount)}
+                            {a.etf_flag && (
+                              <span
+                                className="ml-1 text-xs px-1 rounded-[var(--r-sm)]"
+                                style={{ background: "var(--amber-light-tint)", color: "var(--amber-light)" }}
+                              >
+                                !
+                              </span>
+                            )}
+                          </span>
+                        ) : (
+                          <span style={{ color: "var(--ct-text-muted)" }}>—</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <span className="font-medium" style={{ color: daysColor }}>
+                          {a.days_overdue}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span
+                          className="px-2 py-0.5 rounded-[var(--r-sm)] text-xs font-medium"
+                          style={tierTone}
+                        >
+                          {a.delinquency_tier}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-xs max-w-[120px] truncate" style={{ color: "var(--ct-text-secondary)" }}>
+                        {a.broker_name || "—"}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex gap-1">
+                          {a.is_legal && (
+                            <span className="px-1.5 py-0.5 rounded-[var(--r-sm)] text-xs" style={{ background: "var(--danger-light-tint)", color: "var(--danger-light)" }}>
+                              Legal
                             </span>
                           )}
-                        </span>
-                      ) : (
-                        <span className="text-gray-300">—</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <span
-                        className={`font-medium ${a.days_overdue > 90 ? "text-red-600" : a.days_overdue > 60 ? "text-orange-600" : a.days_overdue > 30 ? "text-amber-600" : "text-gray-600"}`}
-                      >
-                        {a.days_overdue}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`px-2 py-0.5 rounded text-xs font-medium ${TIER_STYLE[a.delinquency_tier] || "bg-gray-100 text-gray-500"}`}
-                      >
-                        {a.delinquency_tier}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-xs text-gray-500 max-w-[120px] truncate">
-                      {a.broker_name || "—"}
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex gap-1">
-                        {a.is_legal && (
-                          <span className="px-1.5 py-0.5 rounded text-xs bg-red-100 text-red-700">
-                            Legal
-                          </span>
-                        )}
-                        {a.is_dnp_active && (
-                          <span className="px-1.5 py-0.5 rounded text-xs bg-orange-100 text-orange-700">
-                            DNP
-                          </span>
-                        )}
-                        {a.is_flagged && (
-                          <span className="px-1.5 py-0.5 rounded text-xs bg-yellow-100 text-yellow-700">
-                            ⚑
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                          {a.is_dnp_active && (
+                            <span className="px-1.5 py-0.5 rounded-[var(--r-sm)] text-xs" style={{ background: "var(--danger-light-tint)", color: "var(--danger-light)" }}>
+                              DNP
+                            </span>
+                          )}
+                          {a.is_flagged && (
+                            <span className="px-1.5 py-0.5 rounded-[var(--r-sm)] text-xs" style={{ background: "var(--amber-light-tint)", color: "var(--amber-light)" }}>
+                              ⚑
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
@@ -543,7 +580,7 @@ export default function PastDueDashboard() {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="border-t border-gray-200 px-4 py-3 flex items-center justify-between text-sm text-gray-500">
+          <div className="border-t px-4 py-3 flex items-center justify-between text-sm" style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-muted)" }}>
             <span>
               {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, total)}{" "}
               of {total.toLocaleString()}
@@ -552,7 +589,8 @@ export default function PastDueDashboard() {
               <button
                 disabled={page === 1}
                 onClick={() => setPage((p) => p - 1)}
-                className="px-3 py-1 rounded border border-gray-200 hover:bg-gray-50 disabled:opacity-30"
+                className="px-3 py-1 rounded-[var(--r-sm)] border transition-colors hover:bg-[var(--ct-surface-hover)] disabled:opacity-30"
+                style={{ borderColor: "var(--ct-border-default)" }}
               >
                 ←
               </button>
@@ -562,7 +600,10 @@ export default function PastDueDashboard() {
                   <button
                     key={p}
                     onClick={() => setPage(p)}
-                    className={`px-3 py-1 rounded border transition-colors ${p === page ? "bg-sky-500 border-sky-500 text-white" : "border-gray-200 hover:bg-gray-50"}`}
+                    className="px-3 py-1 rounded-[var(--r-sm)] border transition-colors"
+                    style={p === page
+                      ? { background: "var(--accent-light)", borderColor: "var(--accent-light)", color: "var(--accent-light-on-solid)" }
+                      : { borderColor: "var(--ct-border-default)" }}
                   >
                     {p}
                   </button>
@@ -571,7 +612,8 @@ export default function PastDueDashboard() {
               <button
                 disabled={page === totalPages}
                 onClick={() => setPage((p) => p + 1)}
-                className="px-3 py-1 rounded border border-gray-200 hover:bg-gray-50 disabled:opacity-30"
+                className="px-3 py-1 rounded-[var(--r-sm)] border transition-colors hover:bg-[var(--ct-surface-hover)] disabled:opacity-30"
+                style={{ borderColor: "var(--ct-border-default)" }}
               >
                 →
               </button>
