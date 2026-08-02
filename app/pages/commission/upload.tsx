@@ -84,22 +84,22 @@ export default function UploadCommission() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
-        <h1 className="text-xl font-semibold text-gray-800">Commission Data</h1>
-        <p className="text-sm text-gray-500 mt-0.5">Upload Commission File</p>
+    <div className="min-h-screen" style={{ background: "var(--ct-canvas)" }}>
+      <div className="border-b px-6 py-4" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
+        <h1 className="text-xl font-semibold" style={{ color: "var(--ct-text-primary)" }}>Commission Data</h1>
+        <p className="text-sm mt-0.5" style={{ color: "var(--ct-text-secondary)" }}>Upload Commission File</p>
       </div>
 
       <div className="flex">
         <main className="flex-1 p-8">
           <div className="max-w-lg">
-            <h2 className="text-lg font-semibold text-orange-600 mb-1">
+            <h2 className="text-lg font-semibold mb-1" style={{ color: "var(--accent-light)" }}>
               Add Commission Data
             </h2>
-            <hr className="border-gray-200 mb-6" />
+            <hr className="mb-6" style={{ borderColor: "var(--ct-border-subtle)" }} />
 
             {success && (
-              <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded text-green-800 text-sm">
+              <div className="mb-4 p-3 rounded-[var(--r-md)] border text-sm" style={{ background: "var(--success-light-tint)", borderColor: "var(--success-light-tint)", color: "var(--success-light)" }}>
                 {success}
               </div>
             )}
@@ -107,13 +107,15 @@ export default function UploadCommission() {
               <div className="mt-4 flex items-center gap-4">
                 <button
                   onClick={() => handleDownloadPaymentSheet(uploadedMonth)}
-                  className="bg-green-600 text-white px-5 py-2 rounded text-sm font-medium hover:bg-green-700"
+                  className="px-5 py-2 rounded-[var(--r-sm)] text-sm font-medium transition-colors"
+                  style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
                 >
                   Download Payment Sheet
                 </button>
                 <a
                   href="/commission/view"
-                  className="text-sm text-blue-600 hover:underline"
+                  className="text-sm hover:underline"
+                  style={{ color: "var(--accent-light)" }}
                 >
                   Go to View Data →
                 </a>
@@ -121,7 +123,7 @@ export default function UploadCommission() {
             )}
 
             {error && (
-              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded text-red-800 text-sm">
+              <div className="mb-4 p-3 rounded-[var(--r-md)] border text-sm" style={{ background: "var(--danger-light-tint)", borderColor: "var(--danger-light-tint)", color: "var(--danger-light)" }}>
                 <p className="font-medium">{error}</p>
                 {missingBrokers.length > 0 && (
                   <div className="mt-2">
@@ -132,7 +134,8 @@ export default function UploadCommission() {
                       {missingBrokers.map((b) => (
                         <span
                           key={b}
-                          className="bg-red-100 text-red-700 px-2 py-0.5 rounded text-xs font-mono"
+                          className="px-2 py-0.5 rounded-[var(--r-sm)] text-xs font-mono"
+                          style={{ background: "var(--danger-light-tint)", color: "var(--danger-light)" }}
                         >
                           {b}
                         </span>
@@ -141,7 +144,8 @@ export default function UploadCommission() {
                     {/* 3. Use <Link> for error navigation */}
                     <Link
                       href="/broker/add"
-                      className="text-xs text-blue-600 underline"
+                      className="text-xs underline"
+                      style={{ color: "var(--accent-light)" }}
                     >
                       Go to Broker Database to add them →
                     </Link>
@@ -156,7 +160,8 @@ export default function UploadCommission() {
                       {noCommissionId.map((b) => (
                         <span
                           key={b}
-                          className="bg-amber-100 text-amber-700 px-2 py-0.5 rounded text-xs font-mono"
+                          className="px-2 py-0.5 rounded-[var(--r-sm)] text-xs font-mono"
+                          style={{ background: "var(--amber-light-tint)", color: "var(--amber-light)" }}
                         >
                           {b}
                         </span>
@@ -165,7 +170,8 @@ export default function UploadCommission() {
                     {/* 4. Use <Link> for error navigation */}
                     <Link
                       href="/broker"
-                      className="text-xs text-blue-600 underline"
+                      className="text-xs underline"
+                      style={{ color: "var(--accent-light)" }}
                     >
                       Go to Broker Database to generate Commission IDs →
                     </Link>
@@ -176,31 +182,33 @@ export default function UploadCommission() {
 
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="flex items-center gap-4">
-                <label className="w-40 text-sm text-gray-700 text-right flex-shrink-0">
+                <label className="w-40 text-sm text-right flex-shrink-0" style={{ color: "var(--ct-text-secondary)" }}>
                   Enter Start Date :
                 </label>
                 <input
                   type="date"
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
-                  className="border border-gray-300 rounded px-3 py-1.5 text-sm w-48 focus:outline-none"
+                  className="rounded-[var(--r-sm)] border px-3 py-1.5 text-sm w-48 focus:outline-none focus:border-[var(--accent-light)]"
+                  style={{ borderColor: "var(--ct-border-default)" }}
                   required
                 />
               </div>
               <div className="flex items-center gap-4">
-                <label className="w-40 text-sm text-gray-700 text-right flex-shrink-0">
+                <label className="w-40 text-sm text-right flex-shrink-0" style={{ color: "var(--ct-text-secondary)" }}>
                   Enter End Date :
                 </label>
                 <input
                   type="date"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
-                  className="border border-gray-300 rounded px-3 py-1.5 text-sm w-48 focus:outline-none"
+                  className="rounded-[var(--r-sm)] border px-3 py-1.5 text-sm w-48 focus:outline-none focus:border-[var(--accent-light)]"
+                  style={{ borderColor: "var(--ct-border-default)" }}
                   required
                 />
               </div>
               <div className="flex items-center gap-4">
-                <label className="w-40 text-sm text-gray-700 text-right flex-shrink-0">
+                <label className="w-40 text-sm text-right flex-shrink-0" style={{ color: "var(--ct-text-secondary)" }}>
                   Upload File :
                 </label>
                 <div>
@@ -208,10 +216,11 @@ export default function UploadCommission() {
                     type="file"
                     accept=".xlsx,.xls"
                     onChange={(e) => setFile(e.target.files?.[0] || null)}
-                    className="text-sm text-gray-700 border border-gray-300 rounded px-2 py-1"
+                    className="text-sm rounded-[var(--r-sm)] border px-2 py-1"
+                    style={{ color: "var(--ct-text-secondary)", borderColor: "var(--ct-border-default)" }}
                     required
                   />
-                  <p className="text-xs text-gray-400 mt-1">
+                  <p className="text-xs mt-1" style={{ color: "var(--ct-text-muted)" }}>
                     Accepts .xlsx or .xls files
                   </p>
                 </div>
@@ -221,7 +230,10 @@ export default function UploadCommission() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className={`px-6 py-2 rounded text-white text-sm font-medium ${loading ? "bg-gray-400" : "bg-orange-500 hover:bg-orange-600"}`}
+                  className="px-6 py-2 rounded-[var(--r-sm)] text-sm font-medium transition-colors"
+                  style={loading
+                    ? { background: "var(--ct-text-muted)", color: "#ffffff" }
+                    : { background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
                 >
                   {loading ? "Uploading..." : "Submit"}
                 </button>
