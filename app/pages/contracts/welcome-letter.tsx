@@ -3,9 +3,11 @@ import { useEffect, useState } from "react";
 import ContractLayout from "../../components/ContractLayout";
 import api from "../../utils/api";
 
-const INPUT =
-  "w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-sky-400";
-const LABEL = "text-sm font-medium text-gray-600 w-40 flex-shrink-0";
+const inputCls =
+  "w-full rounded-[var(--r-sm)] px-3 py-1.5 text-sm border focus:outline-none focus:border-[var(--accent-light)]";
+const inputStyle = { background: "var(--ct-surface)", color: "var(--ct-text-primary)", borderColor: "var(--ct-border-default)" };
+const labelCls = "text-sm font-medium w-40 flex-shrink-0";
+const labelStyle = { color: "var(--ct-text-secondary)" };
 
 interface Confirmation {
   sid: number;
@@ -187,7 +189,8 @@ export default function WelcomeLetterPage() {
         <div className="max-w-6xl">
           <div className="flex items-center gap-3 mb-4">
             <input
-              className="border border-gray-300 rounded px-3 py-1.5 text-sm w-64 focus:outline-none focus:ring-1 focus:ring-sky-400"
+              className="rounded-[var(--r-md)] px-3 py-1.5 text-sm w-64 border focus:outline-none focus:border-[var(--accent-light)]"
+              style={inputStyle}
               placeholder="Search customer or broker..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -195,7 +198,8 @@ export default function WelcomeLetterPage() {
             />
             <button
               onClick={() => loadList(1, search)}
-              className="px-4 py-1.5 text-sm bg-sky-600 text-white rounded hover:bg-sky-700"
+              className="px-4 py-1.5 text-sm rounded-[var(--r-md)] transition-colors"
+              style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
             >
               Search
             </button>
@@ -204,19 +208,20 @@ export default function WelcomeLetterPage() {
                 setSearch("");
                 loadList(1, "");
               }}
-              className="px-4 py-1.5 text-sm border border-gray-300 rounded text-gray-600 hover:bg-gray-50"
+              className="px-4 py-1.5 text-sm rounded-[var(--r-md)] border transition-colors hover:bg-[var(--ct-surface-hover)]"
+              style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-secondary)" }}
             >
               Browse all
             </button>
-            <span className="text-xs text-gray-400 ml-auto">
+            <span className="text-xs ml-auto" style={{ color: "var(--ct-text-muted)" }}>
               {total} records
             </span>
           </div>
 
-          <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+          <div className="rounded-[var(--r-lg)] border overflow-hidden" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
             <table className="w-full text-xs">
               <thead>
-                <tr className="bg-gray-50 border-b border-gray-200">
+                <tr className="border-b" style={{ background: "var(--ct-surface-hover)", borderColor: "var(--ct-border-default)" }}>
                   {[
                     "#",
                     "Date",
@@ -237,7 +242,8 @@ export default function WelcomeLetterPage() {
                   ].map((h) => (
                     <th
                       key={h}
-                      className="text-left px-2 py-2.5 font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap"
+                      className="text-left px-2 py-2.5 font-semibold uppercase tracking-wide whitespace-nowrap"
+                      style={{ color: "var(--ct-text-muted)" }}
                     >
                       {h}
                     </th>
@@ -247,13 +253,13 @@ export default function WelcomeLetterPage() {
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={16} className="text-center py-8 text-gray-400">
+                    <td colSpan={16} className="text-center py-8" style={{ color: "var(--ct-text-muted)" }}>
                       Loading...
                     </td>
                   </tr>
                 ) : rows.length === 0 ? (
                   <tr>
-                    <td colSpan={16} className="text-center py-8 text-gray-400">
+                    <td colSpan={16} className="text-center py-8" style={{ color: "var(--ct-text-muted)" }}>
                       No records found
                     </td>
                   </tr>
@@ -261,41 +267,43 @@ export default function WelcomeLetterPage() {
                   rows.map((r, i) => (
                     <tr
                       key={r.sid}
-                      className={`border-b border-gray-100 ${i % 2 === 0 ? "" : "bg-gray-50/50"}`}
+                      className="border-b"
+                      style={{ borderColor: "var(--ct-border-subtle)", background: i % 2 === 0 ? "transparent" : "var(--ct-canvas)" }}
                     >
-                      <td className="px-2 py-2">
+                      <td className="px-2 py-2" style={{ color: "var(--ct-text-secondary)" }}>
                         {(page - 1) * limit + i + 1}
                       </td>
-                      <td className="px-2 py-2 whitespace-nowrap">
+                      <td className="px-2 py-2 whitespace-nowrap" style={{ color: "var(--ct-text-secondary)" }}>
                         {r.date_modified}
                       </td>
-                      <td className="px-2 py-2 font-medium text-gray-800">
+                      <td className="px-2 py-2 font-medium" style={{ color: "var(--ct-text-primary)" }}>
                         {r.customer_name}
                       </td>
                       <td className="px-2 py-2">
                         <button
                           onClick={() => handleSelect(r)}
-                          className="px-2 py-1 bg-sky-600 text-white rounded text-xs hover:bg-sky-700 whitespace-nowrap"
+                          className="px-2 py-1 rounded-[var(--r-sm)] text-xs whitespace-nowrap transition-colors"
+                          style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
                         >
                           Open →
                         </button>
                       </td>
-                      <td className="px-2 py-2">{r.broker_name}</td>
-                      <td className="px-2 py-2">{r.contract_rate}</td>
-                      <td className="px-2 py-2">{r.commission}</td>
-                      <td className="px-2 py-2">{r.mill}</td>
-                      <td className="px-2 py-2">{r.ap_quote}</td>
-                      <td className="px-2 py-2">{r.term}</td>
-                      <td className="px-2 py-2 whitespace-nowrap">
+                      <td className="px-2 py-2" style={{ color: "var(--ct-text-secondary)" }}>{r.broker_name}</td>
+                      <td className="px-2 py-2" style={{ color: "var(--ct-text-secondary)" }}>{r.contract_rate}</td>
+                      <td className="px-2 py-2" style={{ color: "var(--ct-text-secondary)" }}>{r.commission}</td>
+                      <td className="px-2 py-2" style={{ color: "var(--ct-text-secondary)" }}>{r.mill}</td>
+                      <td className="px-2 py-2" style={{ color: "var(--ct-text-secondary)" }}>{r.ap_quote}</td>
+                      <td className="px-2 py-2" style={{ color: "var(--ct-text-secondary)" }}>{r.term}</td>
+                      <td className="px-2 py-2 whitespace-nowrap" style={{ color: "var(--ct-text-secondary)" }}>
                         {r.start_date}
                       </td>
-                      <td className="px-2 py-2">{r.type_of_contract}</td>
-                      <td className="px-2 py-2">{r.esid_count}</td>
-                      <td className="px-2 py-2">{r.meter_fees}</td>
-                      <td className="px-2 py-2 max-w-32 truncate">
+                      <td className="px-2 py-2" style={{ color: "var(--ct-text-secondary)" }}>{r.type_of_contract}</td>
+                      <td className="px-2 py-2" style={{ color: "var(--ct-text-secondary)" }}>{r.esid_count}</td>
+                      <td className="px-2 py-2" style={{ color: "var(--ct-text-secondary)" }}>{r.meter_fees}</td>
+                      <td className="px-2 py-2 max-w-32 truncate" style={{ color: "var(--ct-text-secondary)" }}>
                         {r.comment}
                       </td>
-                      <td className="px-2 py-2">{r.sent_by}</td>
+                      <td className="px-2 py-2" style={{ color: "var(--ct-text-secondary)" }}>{r.sent_by}</td>
                     </tr>
                   ))
                 )}
@@ -308,17 +316,19 @@ export default function WelcomeLetterPage() {
               <button
                 disabled={page === 1}
                 onClick={() => loadList(page - 1)}
-                className="px-3 py-1 text-sm border rounded disabled:opacity-40 hover:bg-gray-50"
+                className="px-3 py-1 text-sm rounded-[var(--r-md)] border disabled:opacity-40 transition-colors hover:bg-[var(--ct-surface-hover)]"
+                style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-primary)" }}
               >
                 ← Prev
               </button>
-              <span className="text-sm text-gray-500">
+              <span className="text-sm" style={{ color: "var(--ct-text-muted)" }}>
                 Page {page} of {totalPages}
               </span>
               <button
                 disabled={page === totalPages}
                 onClick={() => loadList(page + 1)}
-                className="px-3 py-1 text-sm border rounded disabled:opacity-40 hover:bg-gray-50"
+                className="px-3 py-1 text-sm rounded-[var(--r-md)] border disabled:opacity-40 transition-colors hover:bg-[var(--ct-surface-hover)]"
+                style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-primary)" }}
               >
                 Next →
               </button>
@@ -335,24 +345,26 @@ export default function WelcomeLetterPage() {
         <div className="flex items-center gap-3 mb-5">
           <button
             onClick={() => setView("list")}
-            className="text-xs text-sky-600 hover:underline"
+            className="text-xs hover:underline"
+            style={{ color: "var(--accent-light)" }}
           >
             ← Back to list
           </button>
-          <span className="text-sm font-medium text-gray-700">
+          <span className="text-sm font-medium" style={{ color: "var(--ct-text-secondary)" }}>
             {selected?.customer_name}
           </span>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-lg p-5 mb-4">
-          <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-4">
+        <div className="rounded-[var(--r-lg)] border p-5 mb-4" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
+          <h2 className="text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: "var(--ct-text-muted)" }}>
             Customer Details
           </h2>
 
           <div className="flex items-center gap-3 mb-3">
-            <span className={LABEL}>Customer Email</span>
+            <span className={labelCls} style={labelStyle}>Customer Email</span>
             <input
-              className={INPUT}
+              className={inputCls}
+              style={inputStyle}
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -360,72 +372,80 @@ export default function WelcomeLetterPage() {
             />
           </div>
           <div className="flex items-center gap-3 mb-3">
-            <span className={LABEL}>Company Name</span>
+            <span className={labelCls} style={labelStyle}>Company Name</span>
             <input
-              className={INPUT}
+              className={inputCls}
+              style={inputStyle}
               value={selected?.customer_name || ""}
               disabled
             />
           </div>
           <div className="flex items-center gap-3 mb-3">
-            <span className={LABEL}>Signor&apos;s Name (Attn)</span>
+            <span className={labelCls} style={labelStyle}>Signor&apos;s Name (Attn)</span>
             <input
-              className={INPUT}
+              className={inputCls}
+              style={inputStyle}
               value={sname}
               onChange={(e) => setSname(e.target.value)}
             />
           </div>
           <div className="flex items-center gap-3 mb-3">
-            <span className={LABEL}>Address Line 1</span>
+            <span className={labelCls} style={labelStyle}>Address Line 1</span>
             <input
-              className={INPUT}
+              className={inputCls}
+              style={inputStyle}
               value={addr1}
               onChange={(e) => setAddr1(e.target.value)}
             />
           </div>
           <div className="flex items-center gap-3 mb-3">
-            <span className={LABEL}>Address Line 2</span>
+            <span className={labelCls} style={labelStyle}>Address Line 2</span>
             <input
-              className={INPUT}
+              className={inputCls}
+              style={inputStyle}
               value={addr2}
               onChange={(e) => setAddr2(e.target.value)}
             />
           </div>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-lg p-5 mb-4">
-          <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-4">
+        <div className="rounded-[var(--r-lg)] border p-5 mb-4" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
+          <h2 className="text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: "var(--ct-text-muted)" }}>
             Contract Details
           </h2>
 
           <div className="flex items-center gap-3 mb-3">
-            <span className={LABEL}>Contract Start Date</span>
+            <span className={labelCls} style={labelStyle}>Contract Start Date</span>
             <input
-              className={INPUT}
+              className={inputCls}
+              style={inputStyle}
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
             />
           </div>
           <div className="flex items-center gap-3 mb-3">
-            <span className={LABEL}>Term (months)</span>
+            <span className={labelCls} style={labelStyle}>Term (months)</span>
             <input
-              className={INPUT}
+              className={inputCls}
+              style={inputStyle}
               value={term}
               onChange={(e) => setTerm(e.target.value)}
             />
           </div>
           <div className="flex items-center gap-3 mb-3">
-            <span className={LABEL}>Date</span>
+            <span className={labelCls} style={labelStyle}>Date</span>
             <input
-              className={INPUT}
+              className={inputCls}
+              style={inputStyle}
               value={curDate}
               onChange={(e) => setCurDate(e.target.value)}
             />
           </div>
           <div className="flex items-center gap-3 mb-3">
-            <span className={LABEL}>TDSP</span>
+            <span className={labelCls} style={labelStyle}>TDSP</span>
             <select
-              className={INPUT}
+              className={inputCls}
+              style={inputStyle}
               value={tdsp}
               onChange={(e) => setTdsp(e.target.value)}
             >
@@ -439,20 +459,21 @@ export default function WelcomeLetterPage() {
           </div>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-lg p-5 mb-4">
+        <div className="rounded-[var(--r-lg)] border p-5 mb-4" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-widest">
+            <h2 className="text-xs font-semibold uppercase tracking-widest" style={{ color: "var(--ct-text-muted)" }}>
               ESI IDs
             </h2>
             <button
               onClick={addEsidRow}
-              className="text-xs text-sky-600 hover:underline"
+              className="text-xs hover:underline"
+              style={{ color: "var(--accent-light)" }}
             >
               + Add row
             </button>
           </div>
           <div className="space-y-2">
-            <div className="grid grid-cols-[1fr_1.5fr_1.5fr_auto] gap-2 text-xs font-medium text-gray-500 px-1">
+            <div className="grid grid-cols-[1fr_1.5fr_1.5fr_auto] gap-2 text-xs font-medium px-1" style={{ color: "var(--ct-text-muted)" }}>
               <span>ESI ID</span>
               <span>Service Address</span>
               <span>City/State/Zip</span>
@@ -464,13 +485,15 @@ export default function WelcomeLetterPage() {
                 className="grid grid-cols-[1fr_1.5fr_1.5fr_auto] gap-2"
               >
                 <input
-                  className={INPUT}
+                  className={inputCls}
+                  style={inputStyle}
                   value={row.esid}
                   onChange={(e) => updateEsidRow(i, "esid", e.target.value)}
                   placeholder="ESI ID"
                 />
                 <input
-                  className={INPUT}
+                  className={inputCls}
+                  style={inputStyle}
                   value={row.service_address}
                   onChange={(e) =>
                     updateEsidRow(i, "service_address", e.target.value)
@@ -478,7 +501,8 @@ export default function WelcomeLetterPage() {
                   placeholder="Address"
                 />
                 <input
-                  className={INPUT}
+                  className={inputCls}
+                  style={inputStyle}
                   value={row.city_state_zip}
                   onChange={(e) =>
                     updateEsidRow(i, "city_state_zip", e.target.value)
@@ -487,7 +511,8 @@ export default function WelcomeLetterPage() {
                 />
                 <button
                   onClick={() => removeEsidRow(i)}
-                  className="text-gray-400 hover:text-red-500 text-sm px-1"
+                  className="text-sm px-1 transition-colors hover:text-[var(--danger-light)]"
+                  style={{ color: "var(--ct-text-muted)" }}
                 >
                   ×
                 </button>
@@ -498,7 +523,12 @@ export default function WelcomeLetterPage() {
 
         {result && (
           <div
-            className={`text-sm px-4 py-2 rounded mb-3 ${result.includes("Failed") ? "bg-red-50 text-red-700" : "bg-green-50 text-green-700"}`}
+            className="text-sm px-4 py-2 rounded-[var(--r-md)] mb-3"
+            style={
+              result.includes("Failed")
+                ? { background: "var(--danger-light-tint)", color: "var(--danger-light)" }
+                : { background: "var(--success-light-tint)", color: "var(--success-light)" }
+            }
           >
             {result}
           </div>
@@ -508,14 +538,16 @@ export default function WelcomeLetterPage() {
           <button
             onClick={handleDownloadPdf}
             disabled={generating}
-            className="px-5 py-2 text-sm rounded border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+            className="px-5 py-2 text-sm rounded-[var(--r-md)] border disabled:opacity-50 transition-colors hover:bg-[var(--ct-surface-hover)]"
+            style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-secondary)" }}
           >
             {generating ? "Generating..." : "Download PDF"}
           </button>
           <button
             onClick={handleSendEmail}
             disabled={sending}
-            className="px-5 py-2 text-sm font-medium rounded bg-sky-600 text-white hover:bg-sky-700 disabled:opacity-50"
+            className="px-5 py-2 text-sm font-medium rounded-[var(--r-md)] disabled:opacity-50 transition-colors"
+            style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
           >
             {sending ? "Sending..." : "Send to Customer"}
           </button>
