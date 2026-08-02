@@ -65,15 +65,19 @@ const ChargesForm: React.FC<ChargesFormProps> = ({
     <div className="max-w-6xl mx-auto p-4">
       <form
         onSubmit={handleSubmit}
-        className="bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden"
+        className="rounded-[var(--r-lg)] border overflow-hidden"
+        style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)", boxShadow: "var(--shadow-content)" }}
       >
-        <div className="p-6 border-b border-slate-800 bg-slate-800/50 flex justify-between items-center">
+        <div
+          className="p-6 border-b flex justify-between items-center"
+          style={{ borderColor: "var(--ct-border-default)", background: "var(--ct-surface-hover)" }}
+        >
           <div>
-            <h2 className="text-white font-bold text-xl uppercase tracking-tight">
+            <h2 className="font-bold text-xl uppercase tracking-tight" style={{ color: "var(--ct-text-primary)" }}>
               {title}
             </h2>
             {/* USED lastSync HERE to fix ESLint error */}
-            <div className="flex items-center gap-2 mt-1 text-slate-500">
+            <div className="flex items-center gap-2 mt-1" style={{ color: "var(--info-light)" }}>
               <Clock size={12} />
               <span className="text-[10px] font-mono uppercase tracking-widest">
                 Last Sync: {lastSync || "NEVER"}
@@ -83,9 +87,9 @@ const ChargesForm: React.FC<ChargesFormProps> = ({
           <button
             type="button"
             onClick={loadData}
-            className="p-2 hover:bg-slate-700 rounded-full transition-colors"
+            className="p-2 rounded-[var(--r-full)] transition-colors hover:bg-[var(--ct-surface-hover)]"
           >
-            <RotateCcw size={20} className="text-slate-400" />
+            <RotateCcw size={20} style={{ color: "var(--ct-text-muted)" }} />
           </button>
         </div>
 
@@ -93,9 +97,10 @@ const ChargesForm: React.FC<ChargesFormProps> = ({
           {Object.keys(charges).map((profile) => (
             <div
               key={profile}
-              className="flex items-center justify-between py-2 border-b border-slate-800/50"
+              className="flex items-center justify-between py-2 border-b"
+              style={{ borderColor: "var(--ct-border-subtle)" }}
             >
-              <label className="text-slate-400 text-xs font-bold uppercase tracking-wider">
+              <label className="text-xs font-bold uppercase tracking-wider" style={{ color: "var(--ct-text-muted)" }}>
                 {profile.replace(/_/g, " ")}
               </label>
               <input
@@ -108,23 +113,29 @@ const ChargesForm: React.FC<ChargesFormProps> = ({
                     [profile]: parseFloat(e.target.value) || 0,
                   })
                 }
-                className="bg-slate-950 border border-slate-700 text-sky-400 text-right px-4 py-2 rounded-lg w-40 font-mono focus:ring-2 focus:ring-sky-500 outline-none transition-all"
+                className="text-right px-4 py-2 rounded-[var(--r-md)] w-40 font-mono outline-none transition-all border focus:border-[var(--accent-light)]"
+                style={{ background: "var(--ct-canvas)", borderColor: "var(--ct-border-default)", color: "var(--accent-light)" }}
               />
             </div>
           ))}
         </div>
 
-        <div className="p-6 bg-slate-800/30 border-t border-slate-800 flex justify-end gap-4">
+        <div
+          className="p-6 border-t flex justify-end gap-4"
+          style={{ background: "var(--ct-surface-hover)", borderColor: "var(--ct-border-default)" }}
+        >
           <button
             type="button"
             onClick={() => router.back()}
-            className="px-6 py-2 text-slate-400 hover:text-white font-semibold flex items-center gap-2"
+            className="px-6 py-2 font-semibold flex items-center gap-2 transition-colors"
+            style={{ color: "var(--ct-text-muted)" }}
           >
             <ArrowLeft size={18} /> Back
           </button>
           <button
             disabled={loading}
-            className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 text-white px-12 py-3 rounded-xl font-bold flex items-center gap-2 shadow-lg transition-all"
+            className="px-12 py-3 rounded-[var(--r-lg)] font-bold flex items-center gap-2 shadow-lg transition-all disabled:opacity-50"
+            style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
           >
             {loading ? "Saving..." : <Save size={20} />} Submit Update
           </button>
