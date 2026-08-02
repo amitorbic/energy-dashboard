@@ -4,10 +4,13 @@ import ContractLayout from "../../components/ContractLayout";
 import { useRouter } from "next/router";
 import api from "../../utils/api";
 
-const INPUT =
-  "w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-sky-400";
-const LABEL = "text-sm font-medium text-gray-600 text-right pr-2";
-const ERR = "text-red-500 text-xs mt-0.5";
+const inputCls =
+  "w-full rounded-[var(--r-sm)] px-3 py-1.5 text-sm border focus:outline-none focus:border-[var(--accent-light)]";
+const inputStyle = { background: "var(--ct-surface)", color: "var(--ct-text-primary)", borderColor: "var(--ct-border-default)" };
+const labelCls = "text-sm font-medium text-right pr-2";
+const labelStyle = { color: "var(--ct-text-secondary)" };
+const errCls = "text-xs mt-0.5";
+const errStyle = { color: "var(--danger-light)" };
 
 interface Broker {
   sid: number;
@@ -182,10 +185,10 @@ export default function SendLMPConfirmationPage() {
 
   const row = (label: string, content: React.ReactNode, errKey?: string) => (
     <div className="grid grid-cols-[220px_1fr] items-start gap-2 py-1.5">
-      <span className={LABEL}>{label}</span>
+      <span className={labelCls} style={labelStyle}>{label}</span>
       <div>
         {content}
-        {errKey && errors[errKey] && <p className={ERR}>{errors[errKey]}</p>}
+        {errKey && errors[errKey] && <p className={errCls} style={errStyle}>{errors[errKey]}</p>}
       </div>
     </div>
   );
@@ -201,12 +204,24 @@ export default function SendLMPConfirmationPage() {
       ).map(([n, label], i) => (
         <div key={n} className="flex items-center">
           <div
-            className={`flex items-center gap-2 px-3 py-1.5 rounded text-xs font-medium
-            ${step === n ? "bg-sky-600 text-white" : step > n ? "bg-green-600 text-white" : "bg-gray-100 text-gray-400"}`}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-[var(--r-md)] text-xs font-medium"
+            style={
+              step === n
+                ? { background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }
+                : step > n
+                ? { background: "var(--success-light)", color: "#ffffff" }
+                : { background: "var(--ct-surface-hover)", color: "var(--ct-text-muted)" }
+            }
           >
             <span
-              className={`w-4 h-4 rounded-full flex items-center justify-center text-xs font-bold
-              ${step === n ? "bg-white text-sky-600" : step > n ? "bg-white text-green-600" : "bg-gray-300 text-gray-500"}`}
+              className="w-4 h-4 rounded-full flex items-center justify-center text-xs font-bold"
+              style={
+                step === n
+                  ? { background: "var(--ct-surface)", color: "var(--accent-light)" }
+                  : step > n
+                  ? { background: "var(--ct-surface)", color: "var(--success-light)" }
+                  : { background: "var(--ct-border-default)", color: "var(--ct-text-muted)" }
+              }
             >
               {step > n ? "✓" : n}
             </span>
@@ -214,7 +229,8 @@ export default function SendLMPConfirmationPage() {
           </div>
           {i < 2 && (
             <div
-              className={`w-8 h-0.5 ${step > n ? "bg-green-400" : "bg-gray-200"}`}
+              className="w-8 h-0.5"
+              style={{ background: step > n ? "var(--success-light)" : "var(--ct-border-default)" }}
             />
           )}
         </div>
@@ -225,7 +241,7 @@ export default function SendLMPConfirmationPage() {
   if (!opts)
     return (
       <ContractLayout title="Send LMP Confirmation Emails">
-        <div className="text-sm text-gray-500 p-8">Loading...</div>
+        <div className="text-sm p-8" style={{ color: "var(--ct-text-muted)" }}>Loading...</div>
       </ContractLayout>
     );
 
@@ -238,27 +254,31 @@ export default function SendLMPConfirmationPage() {
 
           {/* LMP badge */}
           <div className="flex items-center gap-2 mb-4">
-            <span className="text-xs bg-purple-100 text-purple-700 px-3 py-1 rounded font-medium">
+            <span
+              className="text-xs px-3 py-1 rounded-[var(--r-sm)] font-medium"
+              style={{ background: "var(--accent-light-tint)", color: "var(--accent-light)" }}
+            >
               LMP Contract — Month to Month — Fixed Spread
             </span>
           </div>
 
           {errors._general && (
-            <div className="text-sm text-red-600 bg-red-50 px-4 py-2 rounded mb-4">
+            <div className="text-sm px-4 py-2 rounded-[var(--r-md)] mb-4" style={{ background: "var(--danger-light-tint)", color: "var(--danger-light)" }}>
               {errors._general}
             </div>
           )}
 
           {/* Contract Details */}
-          <div className="bg-white border border-gray-200 rounded-lg p-5 mb-4">
-            <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-4">
+          <div className="rounded-[var(--r-lg)] border p-5 mb-4" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
+            <h2 className="text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: "var(--ct-text-muted)" }}>
               Contract Details
             </h2>
 
             {row(
               "Type of Contract",
               <select
-                className={INPUT}
+                className={inputCls}
+                style={inputStyle}
                 value={form.type_of_contract}
                 onChange={(e) => set("type_of_contract", e.target.value)}
               >
@@ -270,7 +290,8 @@ export default function SendLMPConfirmationPage() {
             {row(
               "Deal Person",
               <select
-                className={INPUT}
+                className={inputCls}
+                style={inputStyle}
                 value={form.uid}
                 onChange={(e) => set("uid", e.target.value)}
               >
@@ -286,7 +307,8 @@ export default function SendLMPConfirmationPage() {
             {row(
               "Contract Number",
               <input
-                className={INPUT}
+                className={inputCls}
+                style={inputStyle}
                 value={form.contract_no}
                 onChange={(e) => set("contract_no", e.target.value)}
               />,
@@ -295,7 +317,8 @@ export default function SendLMPConfirmationPage() {
             {row(
               "Customer Name",
               <input
-                className={INPUT}
+                className={inputCls}
+                style={inputStyle}
                 value={form.customer_name}
                 onChange={(e) => set("customer_name", e.target.value)}
                 placeholder="Enter customer name"
@@ -305,13 +328,14 @@ export default function SendLMPConfirmationPage() {
 
             {row(
               "Term",
-              <input className={INPUT} value="Month to Month" disabled />,
+              <input className={inputCls} style={inputStyle} value="Month to Month" disabled />,
             )}
 
             {row(
               "Number of ESIIDs",
               <input
-                className={INPUT}
+                className={inputCls}
+                style={inputStyle}
                 type="number"
                 value={form.esid_count}
                 onChange={(e) => set("esid_count", e.target.value)}
@@ -322,7 +346,8 @@ export default function SendLMPConfirmationPage() {
             {row(
               "Broker",
               <select
-                className={INPUT}
+                className={inputCls}
+                style={inputStyle}
                 value={form.broker_code}
                 onChange={(e) => handleBrokerChange(e.target.value)}
               >
@@ -339,7 +364,8 @@ export default function SendLMPConfirmationPage() {
             {row(
               "Sender Name",
               <input
-                className={INPUT}
+                className={inputCls}
+                style={inputStyle}
                 value={form.sent_by}
                 onChange={(e) => set("sent_by", e.target.value)}
                 placeholder="ORBIC contract confirm..."
@@ -348,8 +374,8 @@ export default function SendLMPConfirmationPage() {
           </div>
 
           {/* LMP Rates */}
-          <div className="bg-white border border-gray-200 rounded-lg p-5 mb-4">
-            <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-4">
+          <div className="rounded-[var(--r-lg)] border p-5 mb-4" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
+            <h2 className="text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: "var(--ct-text-muted)" }}>
               LMP Rates (mills)
             </h2>
 
@@ -357,7 +383,8 @@ export default function SendLMPConfirmationPage() {
               "Contract Rate (mills)",
               <div>
                 <input
-                  className={INPUT}
+                  className={inputCls}
+                  style={inputStyle}
                   type="number"
                   step="0.1"
                   value={form.contract_rate}
@@ -365,7 +392,7 @@ export default function SendLMPConfirmationPage() {
                   placeholder="e.g. 3.5 → LMP + 0.035"
                 />
                 {form.contract_rate && (
-                  <p className="text-xs text-gray-400 mt-0.5">
+                  <p className="text-xs mt-0.5" style={{ color: "var(--ct-text-muted)" }}>
                     Displays as: LMP +{" "}
                     {(parseFloat(form.contract_rate) / 100).toFixed(3)}
                   </p>
@@ -378,7 +405,8 @@ export default function SendLMPConfirmationPage() {
               "Company Quote (mills)",
               <div>
                 <input
-                  className={INPUT}
+                  className={inputCls}
+                  style={inputStyle}
                   type="number"
                   step="0.1"
                   value={form.ap_quote}
@@ -386,7 +414,7 @@ export default function SendLMPConfirmationPage() {
                   placeholder="e.g. 3.0 → LMP + 0.030"
                 />
                 {form.ap_quote && (
-                  <p className="text-xs text-gray-400 mt-0.5">
+                  <p className="text-xs mt-0.5" style={{ color: "var(--ct-text-muted)" }}>
                     Displays as: LMP +{" "}
                     {(parseFloat(form.ap_quote) / 100).toFixed(3)}
                   </p>
@@ -398,9 +426,9 @@ export default function SendLMPConfirmationPage() {
             {/* Live commission preview */}
             {form.contract_rate && form.ap_quote && (
               <div className="grid grid-cols-[220px_1fr] items-start gap-2 py-1.5">
-                <span className={LABEL}>Commission</span>
+                <span className={labelCls} style={labelStyle}>Commission</span>
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-green-700">
+                  <span className="text-sm font-medium" style={{ color: "var(--accent-light)" }}>
                     {commission()} mills ={" "}
                     {(
                       (parseFloat(form.contract_rate) -
@@ -416,7 +444,8 @@ export default function SendLMPConfirmationPage() {
             {row(
               "Comments",
               <textarea
-                className={INPUT}
+                className={inputCls}
+                style={inputStyle}
                 rows={3}
                 value={form.comment}
                 onChange={(e) => set("comment", e.target.value)}
@@ -425,8 +454,8 @@ export default function SendLMPConfirmationPage() {
           </div>
 
           {/* Dates & Flags */}
-          <div className="bg-white border border-gray-200 rounded-lg p-5 mb-4">
-            <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-4">
+          <div className="rounded-[var(--r-lg)] border p-5 mb-4" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
+            <h2 className="text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: "var(--ct-text-muted)" }}>
               Dates & Flags
             </h2>
 
@@ -434,13 +463,14 @@ export default function SendLMPConfirmationPage() {
               "Start Date",
               <div className="flex items-center gap-4">
                 <input
-                  className={`${INPUT} w-40`}
+                  className={`${inputCls} w-40`}
+                  style={inputStyle}
                   type="date"
                   value={form.start_date}
                   disabled={form.asap}
                   onChange={(e) => set("start_date", e.target.value)}
                 />
-                <label className="flex items-center gap-1.5 text-sm text-gray-600">
+                <label className="flex items-center gap-1.5 text-sm" style={{ color: "var(--ct-text-secondary)" }}>
                   <input
                     type="checkbox"
                     checked={form.asap}
@@ -451,7 +481,7 @@ export default function SendLMPConfirmationPage() {
                   />
                   ASAP
                 </label>
-                <label className="flex items-center gap-1.5 text-sm text-gray-600">
+                <label className="flex items-center gap-1.5 text-sm" style={{ color: "var(--ct-text-secondary)" }}>
                   <input
                     type="checkbox"
                     checked={form.meter_read}
@@ -473,7 +503,8 @@ export default function SendLMPConfirmationPage() {
               ).map(([key, label]) => (
                 <label
                   key={key}
-                  className="flex items-center gap-2 text-sm text-gray-600"
+                  className="flex items-center gap-2 text-sm"
+                  style={{ color: "var(--ct-text-secondary)" }}
                 >
                   <input
                     type="checkbox"
@@ -486,7 +517,7 @@ export default function SendLMPConfirmationPage() {
             </div>
 
             <div className="mt-4 ml-4">
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-2">
+              <p className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: "var(--ct-text-muted)" }}>
                 Check which applies
               </p>
               <div className="flex gap-6">
@@ -499,7 +530,8 @@ export default function SendLMPConfirmationPage() {
                 ).map(([key, label]) => (
                   <label
                     key={key}
-                    className="flex items-center gap-2 text-sm text-gray-600"
+                    className="flex items-center gap-2 text-sm"
+                    style={{ color: "var(--ct-text-secondary)" }}
                   >
                     <input
                       type="checkbox"
@@ -514,15 +546,16 @@ export default function SendLMPConfirmationPage() {
           </div>
 
           {/* Customer & Billing */}
-          <div className="bg-white border border-gray-200 rounded-lg p-5 mb-6">
-            <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-4">
+          <div className="rounded-[var(--r-lg)] border p-5 mb-6" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
+            <h2 className="text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: "var(--ct-text-muted)" }}>
               Customer & Billing
             </h2>
 
             {row(
               "ESIID(s)",
               <textarea
-                className={INPUT}
+                className={inputCls}
+                style={inputStyle}
                 rows={2}
                 value={form.esiid}
                 onChange={(e) => set("esiid", e.target.value)}
@@ -543,7 +576,8 @@ export default function SendLMPConfirmationPage() {
             {row(
               "Customer email",
               <input
-                className={INPUT}
+                className={inputCls}
+                style={inputStyle}
                 type="email"
                 value={form.customer_email}
                 onChange={(e) => set("customer_email", e.target.value)}
@@ -562,7 +596,8 @@ export default function SendLMPConfirmationPage() {
                 ).map(([val, label]) => (
                   <label
                     key={val}
-                    className="flex items-center gap-2 text-sm text-gray-600"
+                    className="flex items-center gap-2 text-sm"
+                    style={{ color: "var(--ct-text-secondary)" }}
                   >
                     <input
                       type="radio"
@@ -580,7 +615,8 @@ export default function SendLMPConfirmationPage() {
             {row(
               "Meter fees",
               <input
-                className={`${INPUT} w-48`}
+                className={`${inputCls} w-48`}
+                style={inputStyle}
                 value={form.meter_fees}
                 onChange={(e) => set("meter_fees", e.target.value)}
                 placeholder="ex. 5.00, 7.00, 10.00"
@@ -590,7 +626,8 @@ export default function SendLMPConfirmationPage() {
             {row(
               "Comments / Notes",
               <textarea
-                className={INPUT}
+                className={inputCls}
+                style={inputStyle}
                 rows={2}
                 value={form.comment_mail}
                 onChange={(e) => set("comment_mail", e.target.value)}
@@ -602,11 +639,12 @@ export default function SendLMPConfirmationPage() {
             <button
               onClick={handlePreview}
               disabled={previewLoading}
-              className="px-6 py-2 text-sm font-medium rounded bg-sky-600 text-white hover:bg-sky-700 disabled:opacity-50"
+              className="px-6 py-2 text-sm font-medium rounded-[var(--r-md)] disabled:opacity-50 transition-colors"
+              style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
             >
               {previewLoading ? "Generating preview..." : "Preview Email →"}
             </button>
-            <span className="text-xs text-gray-400">Step 1 of 3</span>
+            <span className="text-xs" style={{ color: "var(--ct-text-muted)" }}>Step 1 of 3</span>
           </div>
         </div>
       </ContractLayout>
@@ -619,35 +657,39 @@ export default function SendLMPConfirmationPage() {
         <div className="max-w-3xl">
           <StepBar />
 
-          <div className="bg-white border border-gray-200 rounded-lg overflow-hidden mb-4">
-            <div className="px-5 py-3 border-b border-gray-100 flex items-center justify-between">
+          <div className="rounded-[var(--r-lg)] border overflow-hidden mb-4" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
+            <div className="px-5 py-3 border-b flex items-center justify-between" style={{ borderColor: "var(--ct-border-subtle)" }}>
               <div>
-                <p className="text-sm font-medium text-gray-800">
+                <p className="text-sm font-medium" style={{ color: "var(--ct-text-primary)" }}>
                   Email Preview — LMP Contract
                 </p>
-                <p className="text-xs text-gray-400 mt-0.5">
+                <p className="text-xs mt-0.5" style={{ color: "var(--ct-text-muted)" }}>
                   Contract #{form.contract_no} — {form.customer_name}
                 </p>
               </div>
               <button
                 onClick={() => setStep(1)}
-                className="text-xs text-sky-600 hover:underline"
+                className="text-xs hover:underline"
+                style={{ color: "var(--accent-light)" }}
               >
                 ← Edit form
               </button>
             </div>
-            <div className="p-4 bg-gray-50">
+            <div className="p-4" style={{ background: "var(--ct-canvas)" }}>
               <iframe
                 srcDoc={previewHtml}
-                className="w-full rounded border border-gray-200 bg-white"
-                style={{ minHeight: "520px" }}
+                className="w-full rounded-[var(--r-md)] border"
+                style={{ minHeight: "520px", borderColor: "var(--ct-border-default)", background: "var(--ct-surface)" }}
                 title="LMP Email Preview"
               />
             </div>
           </div>
 
           {/* Rate summary strip */}
-          <div className="bg-purple-50 border border-purple-100 rounded-lg px-5 py-3 mb-4 grid grid-cols-3 gap-3 text-xs">
+          <div
+            className="rounded-[var(--r-lg)] border px-5 py-3 mb-4 grid grid-cols-3 gap-3 text-xs"
+            style={{ background: "var(--accent-light-tint)", borderColor: "var(--accent-light)" }}
+          >
             {[
               [
                 "Contract Rate",
@@ -660,14 +702,14 @@ export default function SendLMPConfirmationPage() {
               ["Commission", `${commission()} mills`],
             ].map(([label, val]) => (
               <div key={label}>
-                <p className="text-purple-400 font-medium">{label}</p>
-                <p className="text-purple-800 font-semibold">{val}</p>
+                <p className="font-medium" style={{ color: "var(--accent-light)" }}>{label}</p>
+                <p className="font-semibold" style={{ color: "var(--ct-text-primary)" }}>{val}</p>
               </div>
             ))}
           </div>
 
           {errors._general && (
-            <div className="text-sm text-red-600 bg-red-50 px-4 py-2 rounded mb-4">
+            <div className="text-sm px-4 py-2 rounded-[var(--r-md)] mb-4" style={{ background: "var(--danger-light-tint)", color: "var(--danger-light)" }}>
               {errors._general}
             </div>
           )}
@@ -675,18 +717,20 @@ export default function SendLMPConfirmationPage() {
           <div className="flex items-center gap-3">
             <button
               onClick={() => setStep(1)}
-              className="px-5 py-2 text-sm rounded border border-gray-300 text-gray-600 hover:bg-gray-50"
+              className="px-5 py-2 text-sm rounded-[var(--r-md)] border transition-colors hover:bg-[var(--ct-surface-hover)]"
+              style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-secondary)" }}
             >
               ← Back to Form
             </button>
             <button
               onClick={handleSend}
               disabled={sending}
-              className="px-6 py-2 text-sm font-medium rounded bg-green-600 text-white hover:bg-green-700 disabled:opacity-50"
+              className="px-6 py-2 text-sm font-medium rounded-[var(--r-md)] disabled:opacity-50 transition-colors"
+              style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
             >
               {sending ? "Sending..." : "Send Email →"}
             </button>
-            <span className="text-xs text-gray-400">Step 2 of 3</span>
+            <span className="text-xs" style={{ color: "var(--ct-text-muted)" }}>Step 2 of 3</span>
           </div>
         </div>
       </ContractLayout>
@@ -697,33 +741,35 @@ export default function SendLMPConfirmationPage() {
     <ContractLayout title="Send LMP Confirmation Emails">
       <div className="max-w-3xl">
         <StepBar />
-        <div className="bg-white border border-gray-200 rounded-lg px-8 py-10 text-center">
-          <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
-            <span className="text-green-600 text-xl font-bold">✓</span>
+        <div className="rounded-[var(--r-lg)] border px-8 py-10 text-center" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
+          <div className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: "var(--success-light-tint)" }}>
+            <span className="text-xl font-bold" style={{ color: "var(--success-light)" }}>✓</span>
           </div>
-          <h2 className="text-lg font-semibold text-gray-800 mb-1">
+          <h2 className="text-lg font-semibold mb-1" style={{ color: "var(--ct-text-primary)" }}>
             LMP Confirmation Sent
           </h2>
-          <p className="text-sm text-gray-500 mb-1">
+          <p className="text-sm mb-1" style={{ color: "var(--ct-text-muted)" }}>
             Contract{" "}
-            <span className="font-medium text-gray-700">
+            <span className="font-medium" style={{ color: "var(--ct-text-secondary)" }}>
               #{sentResult?.contract_no}
             </span>{" "}
             sent successfully.
           </p>
-          <p className="text-xs text-gray-400 mb-6">
+          <p className="text-xs mb-6" style={{ color: "var(--ct-text-muted)" }}>
             Record ID: {sentResult?.sid}
           </p>
           <div className="flex justify-center gap-3">
             <button
               onClick={handleStartOver}
-              className="px-5 py-2 text-sm rounded bg-sky-600 text-white hover:bg-sky-700"
+              className="px-5 py-2 text-sm rounded-[var(--r-md)] transition-colors"
+              style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
             >
               Send Another
             </button>
             <button
               onClick={() => router.push("/contracts/view")}
-              className="px-5 py-2 text-sm rounded border border-gray-300 text-gray-600 hover:bg-gray-50"
+              className="px-5 py-2 text-sm rounded-[var(--r-md)] border transition-colors hover:bg-[var(--ct-surface-hover)]"
+              style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-secondary)" }}
             >
               View All Confirmations
             </button>
