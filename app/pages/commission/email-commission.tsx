@@ -54,19 +54,19 @@ export default function EmailCommission() {
 
   return (
     <div className="max-w-3xl">
-      <h2 className="text-lg font-semibold text-orange-600 mb-1">
+      <h2 className="text-lg font-semibold mb-1" style={{ color: "var(--accent-light)" }}>
         Email Commission Files
       </h2>
-      <p className="text-sm text-gray-500 mb-5">
+      <p className="text-sm mb-5" style={{ color: "var(--ct-text-secondary)" }}>
         Generate and email commission Excel files to brokers. Leave broker
         selection blank to send to all active brokers.
       </p>
 
-      <div className="bg-white border border-gray-200 rounded p-5 mb-5">
+      <div className="rounded-[var(--r-md)] border p-5 mb-5" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
         <div className="grid grid-cols-2 gap-6">
           {/* Broker selection */}
           <div>
-            <label className="block text-xs text-gray-500 mb-1">
+            <label className="block text-xs mb-1" style={{ color: "var(--ct-text-muted)" }}>
               Select Brokers (blank = all)
             </label>
             <select
@@ -77,7 +77,8 @@ export default function EmailCommission() {
                   Array.from(e.target.selectedOptions, (o) => o.value),
                 )
               }
-              className="border border-gray-300 rounded px-2 py-1 text-sm h-40 w-full"
+              className="rounded-[var(--r-sm)] border px-2 py-1 text-sm h-40 w-full focus:outline-none focus:border-[var(--accent-light)]"
+              style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-primary)" }}
             >
               {brokers.map((b) => (
                 <option key={b.vendor} value={b.vendor}>
@@ -85,7 +86,7 @@ export default function EmailCommission() {
                 </option>
               ))}
             </select>
-            <p className="text-xs text-gray-400 mt-0.5">
+            <p className="text-xs mt-0.5" style={{ color: "var(--ct-text-muted)" }}>
               Hold Ctrl/Cmd for multiple
             </p>
           </div>
@@ -93,13 +94,14 @@ export default function EmailCommission() {
           {/* Month + send */}
           <div className="flex flex-col justify-between">
             <div>
-              <label className="block text-xs text-gray-500 mb-1">
+              <label className="block text-xs mb-1" style={{ color: "var(--ct-text-muted)" }}>
                 Commission Month
               </label>
               <select
                 value={selectedMonth}
                 onChange={(e) => setSelectedMonth(e.target.value)}
-                className="border border-gray-300 rounded px-3 py-1.5 text-sm w-full"
+                className="rounded-[var(--r-sm)] border px-3 py-1.5 text-sm w-full focus:outline-none focus:border-[var(--accent-light)]"
+                style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-primary)" }}
               >
                 {months.map((m) => (
                   <option key={m.value} value={m.value}>
@@ -109,7 +111,7 @@ export default function EmailCommission() {
               </select>
             </div>
 
-            <div className="mt-4 p-3 bg-blue-50 border border-blue-100 rounded text-xs text-blue-700">
+            <div className="mt-4 p-3 rounded-[var(--r-md)] border text-xs" style={{ background: "var(--info-light-tint)", borderColor: "var(--info-light-tint)", color: "var(--info-light)" }}>
               Each broker will receive an Excel file with:
               <ul className="mt-1 space-y-0.5 list-disc list-inside">
                 <li>Last 12 months summary</li>
@@ -121,11 +123,10 @@ export default function EmailCommission() {
             <button
               onClick={handleSend}
               disabled={loading || !selectedMonth}
-              className={`mt-4 px-6 py-2 rounded text-white text-sm font-medium ${
-                loading || !selectedMonth
-                  ? "bg-gray-400 cursor-not-allowed"
-                  : "bg-orange-500 hover:bg-orange-600"
-              }`}
+              className="mt-4 px-6 py-2 rounded-[var(--r-sm)] text-sm font-medium transition-colors"
+              style={loading || !selectedMonth
+                ? { background: "var(--ct-text-muted)", color: "#ffffff", cursor: "not-allowed" }
+                : { background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
             >
               {loading ? "Sending..." : "Send Commission Emails"}
             </button>
@@ -137,15 +138,16 @@ export default function EmailCommission() {
       {result && (
         <div className="space-y-3">
           {result.sent.length > 0 && (
-            <div className="bg-green-50 border border-green-200 rounded p-4">
-              <p className="text-sm font-medium text-green-800 mb-2">
+            <div className="rounded-[var(--r-md)] border p-4" style={{ background: "var(--success-light-tint)", borderColor: "var(--success-light-tint)" }}>
+              <p className="text-sm font-medium mb-2" style={{ color: "var(--success-light)" }}>
                 ✓ Sent successfully ({result.sent.length})
               </p>
               <div className="flex flex-wrap gap-1">
                 {result.sent.map((name) => (
                   <span
                     key={name}
-                    className="bg-green-100 text-green-700 px-2 py-0.5 rounded text-xs"
+                    className="px-2 py-0.5 rounded-[var(--r-sm)] text-xs"
+                    style={{ background: "var(--success-light-tint)", color: "var(--success-light)" }}
                   >
                     {name}
                   </span>
@@ -154,15 +156,16 @@ export default function EmailCommission() {
             </div>
           )}
           {result.failed.length > 0 && (
-            <div className="bg-red-50 border border-red-200 rounded p-4">
-              <p className="text-sm font-medium text-red-800 mb-2">
+            <div className="rounded-[var(--r-md)] border p-4" style={{ background: "var(--danger-light-tint)", borderColor: "var(--danger-light-tint)" }}>
+              <p className="text-sm font-medium mb-2" style={{ color: "var(--danger-light)" }}>
                 ✗ Failed ({result.failed.length})
               </p>
               <div className="flex flex-wrap gap-1">
                 {result.failed.map((name, i) => (
                   <span
                     key={i}
-                    className="bg-red-100 text-red-700 px-2 py-0.5 rounded text-xs"
+                    className="px-2 py-0.5 rounded-[var(--r-sm)] text-xs"
+                    style={{ background: "var(--danger-light-tint)", color: "var(--danger-light)" }}
                   >
                     {name}
                   </span>
