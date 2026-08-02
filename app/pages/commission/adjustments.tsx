@@ -100,35 +100,35 @@ export default function Adjustments() {
 
   return (
     <div className="p-6">
-      <h2 className="text-lg font-semibold text-orange-600 mb-4">
+      <h2 className="text-lg font-semibold mb-4" style={{ color: "var(--accent-light)" }}>
         Adjustments
       </h2>
 
       {msg && (
         <div
-          className={`mb-4 px-4 py-2 rounded text-sm ${
-            msg.type === "success"
-              ? "bg-green-50 text-green-800 border border-green-200"
-              : "bg-red-50 text-red-800 border border-red-200"
-          }`}
+          className="mb-4 px-4 py-2 rounded-[var(--r-md)] text-sm border"
+          style={msg.type === "success"
+            ? { background: "var(--success-light-tint)", borderColor: "var(--success-light-tint)", color: "var(--success-light)" }
+            : { background: "var(--danger-light-tint)", borderColor: "var(--danger-light-tint)", color: "var(--danger-light)" }}
         >
           {msg.text}
         </div>
       )}
 
-      <div className="bg-white border border-gray-200 rounded p-5 mb-6">
-        <h3 className="text-sm font-semibold text-gray-700 mb-4">
+      <div className="rounded-[var(--r-md)] border p-5 mb-6" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
+        <h3 className="text-sm font-semibold mb-4" style={{ color: "var(--ct-text-secondary)" }}>
           Insert Adjustment
         </h3>
         <form onSubmit={handleAdd} className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs text-gray-500 mb-1">Vendor</label>
+            <label className="block text-xs mb-1" style={{ color: "var(--ct-text-muted)" }}>Vendor</label>
             <select
               value={form.vendor}
               onChange={(e) =>
                 setForm((p) => ({ ...p, vendor: e.target.value }))
               }
-              className="border border-gray-300 rounded px-3 py-1.5 text-sm w-full text-black"
+              className="rounded-[var(--r-sm)] border px-3 py-1.5 text-sm w-full focus:outline-none focus:border-[var(--accent-light)]"
+              style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-primary)" }}
               required
             >
               <option value="">Select vendor</option>
@@ -141,13 +141,14 @@ export default function Adjustments() {
           </div>
 
           <div>
-            <label className="block text-xs text-gray-500 mb-1">Month</label>
+            <label className="block text-xs mb-1" style={{ color: "var(--ct-text-muted)" }}>Month</label>
             <select
               value={form.month}
               onChange={(e) =>
                 setForm((p) => ({ ...p, month: e.target.value }))
               }
-              className="border border-gray-300 rounded px-3 py-1.5 text-sm w-full text-black"
+              className="rounded-[var(--r-sm)] border px-3 py-1.5 text-sm w-full focus:outline-none focus:border-[var(--accent-light)]"
+              style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-primary)" }}
               required
             >
               <option value="">Select month</option>
@@ -160,7 +161,7 @@ export default function Adjustments() {
           </div>
 
           <div>
-            <label className="block text-xs text-gray-500 mb-1">
+            <label className="block text-xs mb-1" style={{ color: "var(--ct-text-muted)" }}>
               Owed Amount
             </label>
             <input
@@ -168,21 +169,23 @@ export default function Adjustments() {
               step="0.01"
               value={form.owed}
               onChange={(e) => setForm((p) => ({ ...p, owed: e.target.value }))}
-              className="border border-gray-300 rounded px-3 py-1.5 text-sm w-full text-black"
+              className="rounded-[var(--r-sm)] border px-3 py-1.5 text-sm w-full focus:outline-none focus:border-[var(--accent-light)]"
+              style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-primary)" }}
               placeholder="e.g. -500.00"
               required
             />
           </div>
 
           <div>
-            <label className="block text-xs text-gray-500 mb-1">Comments</label>
+            <label className="block text-xs mb-1" style={{ color: "var(--ct-text-muted)" }}>Comments</label>
             <input
               type="text"
               value={form.comments}
               onChange={(e) =>
                 setForm((p) => ({ ...p, comments: e.target.value }))
               }
-              className="border border-gray-300 rounded px-3 py-1.5 text-sm w-full text-black"
+              className="rounded-[var(--r-sm)] border px-3 py-1.5 text-sm w-full focus:outline-none focus:border-[var(--accent-light)]"
+              style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-primary)" }}
               placeholder="Reason for adjustment"
             />
           </div>
@@ -190,7 +193,8 @@ export default function Adjustments() {
           <div className="col-span-2">
             <button
               type="submit"
-              className="bg-orange-500 text-white px-6 py-1.5 rounded text-sm hover:bg-orange-600"
+              className="px-6 py-1.5 rounded-[var(--r-sm)] text-sm transition-colors"
+              style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
             >
               Add Adjustment
             </button>
@@ -198,15 +202,16 @@ export default function Adjustments() {
         </form>
       </div>
 
-      <div className="bg-white border border-gray-200 rounded overflow-auto">
+      <div className="rounded-[var(--r-md)] border overflow-auto" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
         <table className="w-full text-sm">
           <thead>
-            <tr className="bg-gray-100 border-b border-gray-200">
+            <tr className="border-b" style={{ background: "var(--ct-surface-hover)", borderColor: "var(--ct-border-default)" }}>
               {["#", "Vendor", "Month", "Owed", "Comments", "Action"].map(
                 (h) => (
                   <th
                     key={h}
-                    className="px-3 py-2 text-left text-xs font-medium text-gray-600 uppercase"
+                    className="px-3 py-2 text-left text-xs font-medium uppercase"
+                    style={{ color: "var(--ct-text-muted)" }}
                   >
                     {h}
                   </th>
@@ -219,7 +224,8 @@ export default function Adjustments() {
               <tr>
                 <td
                   colSpan={6}
-                  className="px-3 py-6 text-center text-gray-400 text-sm"
+                  className="px-3 py-6 text-center text-sm"
+                  style={{ color: "var(--ct-text-muted)" }}
                 >
                   No adjustments yet.
                 </td>
@@ -228,23 +234,26 @@ export default function Adjustments() {
               rows.map((row, i) => (
                 <tr
                   key={row.sid}
-                  className="border-b border-gray-100 hover:bg-gray-50"
+                  className="border-b hover:bg-[var(--ct-surface-hover)]"
+                  style={{ borderColor: "var(--ct-border-subtle)" }}
                 >
-                  <td className="px-3 py-2 text-gray-400 text-xs">{i + 1}</td>
-                  <td className="px-3 py-2 font-medium text-black">
+                  <td className="px-3 py-2 text-xs" style={{ color: "var(--ct-text-muted)" }}>{i + 1}</td>
+                  <td className="px-3 py-2 font-medium" style={{ color: "var(--ct-text-primary)" }}>
                     {row.vendor}
                   </td>
-                  <td className="px-3 py-2 text-black">{row.month}</td>
+                  <td className="px-3 py-2" style={{ color: "var(--ct-text-primary)" }}>{row.month}</td>
                   <td
-                    className={`px-3 py-2 font-medium ${parseFloat(String(row.owed)) < 0 ? "text-red-600" : "text-green-700"}`}
+                    className="px-3 py-2 font-medium"
+                    style={{ color: parseFloat(String(row.owed)) < 0 ? "var(--danger-light)" : "var(--success-light)" }}
                   >
                     ${parseFloat(String(row.owed || 0)).toFixed(2)}
                   </td>
-                  <td className="px-3 py-2 text-gray-500">{row.comments}</td>
+                  <td className="px-3 py-2" style={{ color: "var(--ct-text-secondary)" }}>{row.comments}</td>
                   <td className="px-3 py-2">
                     <button
                       onClick={() => handleDelete(row.sid)}
-                      className="bg-red-500 text-white px-2 py-0.5 rounded text-xs hover:bg-red-600"
+                      className="px-2 py-0.5 rounded-[var(--r-sm)] text-xs transition-colors"
+                      style={{ background: "var(--danger-light)", color: "var(--danger-light-on-solid)" }}
                     >
                       Delete
                     </button>
