@@ -62,40 +62,39 @@ export default function InsertPayments() {
 
   return (
     <div className="max-w-lg p-6">
-      <h2 className="text-lg font-semibold text-orange-600 mb-4">
+      <h2 className="text-lg font-semibold mb-4" style={{ color: "var(--accent-light)" }}>
         Insert Payments
       </h2>
 
-      <div className="bg-white border border-gray-200 rounded p-6 shadow-sm">
-        <p className="text-sm text-gray-600 mb-5">
+      <div className="rounded-[var(--r-md)] border p-6 shadow-sm" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
+        <p className="text-sm mb-5" style={{ color: "var(--ct-text-secondary)" }}>
           Upload the monthly payment summary Excel file. The file must contain
           the current month in the header row.
           <br />
           <br />
-          <span className="font-mono text-xs bg-gray-50 p-1">
+          <span className="font-mono text-xs p-1 rounded-[var(--r-sm)]" style={{ background: "var(--ct-surface-hover)" }}>
             Column 2 = Vendor Code
           </span>
           <br />
-          <span className="font-mono text-xs bg-gray-50 p-1">
+          <span className="font-mono text-xs p-1 rounded-[var(--r-sm)]" style={{ background: "var(--ct-surface-hover)" }}>
             Column 4 = Payment Amount
           </span>
         </p>
 
         {msg && (
           <div
-            className={`mb-4 p-3 rounded text-sm border ${
-              msg.type === "success"
-                ? "bg-green-50 border-green-200 text-green-800"
-                : "bg-red-50 border-red-200 text-red-800"
-            }`}
+            className="mb-4 p-3 rounded-[var(--r-md)] text-sm border"
+            style={msg.type === "success"
+              ? { background: "var(--success-light-tint)", borderColor: "var(--success-light-tint)", color: "var(--success-light)" }
+              : { background: "var(--danger-light-tint)", borderColor: "var(--danger-light-tint)", color: "var(--danger-light)" }}
           >
             {msg.text}
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="border-2 border-dashed border-gray-200 rounded-lg p-4 hover:border-orange-300 transition-colors">
-            <label className="block text-xs font-bold text-gray-400 uppercase mb-2">
+          <div className="border-2 border-dashed rounded-[var(--r-lg)] p-4 transition-colors hover:border-[var(--accent-light)]" style={{ borderColor: "var(--ct-border-default)" }}>
+            <label className="block text-xs font-bold uppercase mb-2" style={{ color: "var(--ct-text-muted)" }}>
               Select Excel File (.xlsx, .xls)
             </label>
             <input
@@ -103,17 +102,19 @@ export default function InsertPayments() {
               ref={fileInputRef}
               accept=".xlsx,.xls"
               onChange={(e) => setFile(e.target.files?.[0] || null)}
-              className="text-sm text-gray-700 w-full file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100 cursor-pointer"
+              className="text-sm w-full file:mr-4 file:py-2 file:px-4 file:rounded-[var(--r-md)] file:border-0 file:text-sm file:font-semibold cursor-pointer file:bg-[var(--accent-light-tint)] file:text-[var(--accent-light)] hover:file:bg-[var(--accent-light-tint)]"
+              style={{ color: "var(--ct-text-secondary)" }}
               required
             />
             <div>
-              <label className="block text-sm text-gray-700 mb-1">
+              <label className="block text-sm mb-1" style={{ color: "var(--ct-text-secondary)" }}>
                 Select Month :
               </label>
               <select
                 value={selectedMonth}
                 onChange={(e) => setSelectedMonth(e.target.value)}
-                className="border border-gray-300 rounded px-3 py-1.5 text-sm min-w-[180px]"
+                className="rounded-[var(--r-sm)] border px-3 py-1.5 text-sm min-w-[180px]"
+                style={{ borderColor: "var(--ct-border-default)" }}
                 required
               >
                 <option value="">Select month...</option>
@@ -129,11 +130,10 @@ export default function InsertPayments() {
           <button
             type="submit"
             disabled={loading}
-            className={`w-full py-2 rounded text-white text-sm font-bold uppercase tracking-wider transition-all ${
-              loading
-                ? "bg-gray-400 cursor-not-allowed"
-                : "bg-orange-500 hover:bg-orange-600 active:transform active:scale-95"
-            }`}
+            className="w-full py-2 rounded-[var(--r-sm)] text-sm font-bold uppercase tracking-wider transition-all disabled:cursor-not-allowed active:scale-95"
+            style={loading
+              ? { background: "var(--ct-text-muted)", color: "#ffffff" }
+              : { background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
           >
             {loading ? "Processing..." : "Submit Payments"}
           </button>
