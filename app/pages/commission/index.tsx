@@ -21,64 +21,49 @@ const NAV_MODULES = [
     href: "/commission/upload",
     icon: "↑",
     desc: "Upload monthly commission Excel file",
-    color: "#2563eb",
-    bg: "#eff6ff",
   },
   {
     label: "View Data",
     href: "/commission/view",
     icon: "⊞",
     desc: "Review, audit, edit and download commission records",
-    color: "#0891b2",
-    bg: "#ecfeff",
   },
   {
     label: "Delete Data",
     href: "/commission/delete",
     icon: "✕",
     desc: "Clear prior month data before recalculation",
-    color: "#dc2626",
-    bg: "#fef2f2",
+    danger: true,
   },
   {
     label: "Insert Payments",
     href: "/commission/payments",
     icon: "$",
     desc: "Upload monthly payment summary sheet",
-    color: "#16a34a",
-    bg: "#f0fdf4",
   },
   {
     label: "Adjustments",
     href: "/commission/adjustments",
     icon: "±",
     desc: "Add manual credit or debit adjustments",
-    color: "#d97706",
-    bg: "#fffbeb",
   },
   {
     label: "Review Summary",
     href: "/commission/summary",
     icon: "≡",
     desc: "Broker-level payments, owed and balance overview",
-    color: "#7c3aed",
-    bg: "#f5f3ff",
   },
   {
     label: "Calculate Commission",
     href: "/commission/calculate",
     icon: "∑",
     desc: "Run final commission calculation for the month",
-    color: "#059669",
-    bg: "#ecfdf5",
   },
   {
     label: "Upload Files for Brokers",
     href: "/commission/broker-files",
     icon: "⊙",
     desc: "Push commission files to individual brokers",
-    color: "#0284c7",
-    bg: "#f0f9ff",
     comingSoon: true,
   },
   {
@@ -86,8 +71,6 @@ const NAV_MODULES = [
     href: "/commission/upfront",
     icon: "⚡",
     desc: "Track brokers paid on upfront mills terms",
-    color: "#b45309",
-    bg: "#fefce8",
     comingSoon: true,
   },
   {
@@ -95,8 +78,6 @@ const NAV_MODULES = [
     href: "/commission/email-list",
     icon: "@",
     desc: "Update broker commission email addresses",
-    color: "#4f46e5",
-    bg: "#eef2ff",
     comingSoon: true,
   },
   {
@@ -104,8 +85,6 @@ const NAV_MODULES = [
     href: "/commission/email-log",
     icon: "✉",
     desc: "History of commission emails sent to brokers",
-    color: "#0369a1",
-    bg: "#f0f9ff",
     comingSoon: true,
   },
   {
@@ -113,16 +92,12 @@ const NAV_MODULES = [
     href: "/commission/user-log",
     icon: "⌚",
     desc: "Full audit trail of all actions in this module",
-    color: "#475569",
-    bg: "#f8fafc",
   },
   {
     label: "Download Commission Files",
     href: "/commission/download",
     icon: "↓",
     desc: "Manually download commission files per broker",
-    color: "#15803d",
-    bg: "#f0fdf4",
   },
 ];
 
@@ -215,18 +190,21 @@ export default function CommissionIndex() {
   return (
     <Layout>
       {
-        <div className="min-h-screen bg-gray-50 p-6">
+        <div className="min-h-screen p-6" style={{ background: "var(--ct-canvas)" }}>
           <div className="max-w-7xl mx-auto">
-            <header className="bg-white border-b border-gray-200 rounded-t-lg px-6 py-4 flex items-center justify-between shadow-sm">
+            <header
+              className="rounded-t-[var(--r-lg)] px-6 py-4 flex items-center justify-between border-b"
+              style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)", boxShadow: "var(--shadow-content)" }}
+            >
               <div>
-                <h1 className="text-xl font-semibold text-gray-800">
+                <h1 className="text-xl font-semibold" style={{ color: "var(--ct-text-primary)" }}>
                   Commission Dashboard
                 </h1>
-                <p className="text-sm text-gray-500 mt-0.5">
+                <p className="text-sm mt-0.5" style={{ color: "var(--ct-text-secondary)" }}>
                   ORBIC Portfolio Management
                 </p>
               </div>
-              <span className="text-sm text-gray-400 font-mono">
+              <span className="text-sm font-mono" style={{ color: "var(--ct-text-muted)" }}>
                 {new Date().toLocaleString("en-US", {
                   month: "long",
                   year: "numeric",
@@ -234,14 +212,18 @@ export default function CommissionIndex() {
               </span>
             </header>
 
-            <div className="bg-white border-x border-b border-gray-200 rounded-b-lg p-6 mb-6 shadow-sm">
+            <div
+              className="rounded-b-[var(--r-lg)] p-6 mb-6 border-x border-b"
+              style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)", boxShadow: "var(--shadow-content)" }}
+            >
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-sm font-bold text-gray-700 uppercase tracking-wider">
+                <h2 className="text-sm font-bold uppercase tracking-wider" style={{ color: "var(--ct-text-secondary)" }}>
                   {status?.month || "Current Month"} — Pipeline
                 </h2>
                 <button
                   onClick={loadStatus}
-                  className="text-xs font-bold text-blue-600 hover:text-blue-800 uppercase"
+                  className="text-xs font-bold uppercase transition-colors hover:text-[var(--accent-light)]"
+                  style={{ color: "var(--accent-light)" }}
                 >
                   Refresh Data
                 </button>
@@ -249,7 +231,7 @@ export default function CommissionIndex() {
 
               {loading ? (
                 <div className="animate-pulse flex space-x-4">
-                  <div className="h-4 bg-gray-200 rounded w-full"></div>
+                  <div className="h-4 rounded-[var(--r-sm)] w-full" style={{ background: "var(--ct-surface-hover)" }}></div>
                 </div>
               ) : (
                 <div className="flex items-center">
@@ -257,23 +239,24 @@ export default function CommissionIndex() {
                     <div key={step.label} className="flex items-center">
                       <div className="flex items-center gap-3">
                         <div
-                          className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black shadow-inner ${
-                            step.done
-                              ? "bg-green-500 text-white"
-                              : "bg-gray-100 text-gray-400"
-                          }`}
+                          className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-black shadow-inner"
+                          style={step.done
+                            ? { background: "var(--success-light)", color: "#ffffff" }
+                            : { background: "var(--ct-surface-hover)", color: "var(--ct-text-muted)" }}
                         >
                           {step.done ? "✓" : i + 1}
                         </div>
                         <span
-                          className={`text-sm font-bold uppercase ${step.done ? "text-green-700" : "text-gray-400"}`}
+                          className="text-sm font-bold uppercase"
+                          style={{ color: step.done ? "var(--success-light)" : "var(--ct-text-muted)" }}
                         >
                           {step.label}
                         </span>
                       </div>
                       {i < steps.length - 1 && (
                         <div
-                          className={`h-1 w-16 mx-4 rounded-full ${step.done ? "bg-green-200" : "bg-gray-100"}`}
+                          className="h-1 w-16 mx-4 rounded-full"
+                          style={{ background: step.done ? "var(--success-light-tint)" : "var(--ct-surface-hover)" }}
                         />
                       )}
                     </div>
@@ -289,22 +272,22 @@ export default function CommissionIndex() {
                     label: "Active Vendors",
                     value: status.vendor_count.toString(),
                     sub: "In current cycle",
-                    color: "text-gray-800",
-                    bg: "bg-white",
+                    color: "var(--ct-text-primary)",
+                    bg: "var(--ct-surface)",
                   },
                   {
                     label: "Total Owed",
                     value: fmt(status.total_owed),
                     sub: "Earnings accrued",
-                    color: "text-blue-700",
-                    bg: "bg-blue-50/30",
+                    color: "var(--ct-text-primary)",
+                    bg: "var(--ct-surface)",
                   },
                   {
                     label: "Total Payments",
                     value: fmt(status.total_payment),
                     sub: "Supplier receipts",
-                    color: "text-green-700",
-                    bg: "bg-green-50/30",
+                    color: "var(--success-light)",
+                    bg: "var(--success-light-tint)",
                   },
                   {
                     label: "Net Balance",
@@ -312,22 +295,23 @@ export default function CommissionIndex() {
                     sub: status.total_balance < 0 ? "Credit due" : "Debit due",
                     color:
                       status.total_balance < 0
-                        ? "text-red-600"
-                        : "text-gray-800",
-                    bg: status.total_balance < 0 ? "bg-red-50/30" : "bg-white",
+                        ? "var(--danger-light)"
+                        : "var(--ct-text-primary)",
+                    bg: status.total_balance < 0 ? "var(--danger-light-tint)" : "var(--ct-surface)",
                   },
                 ].map((card) => (
                   <div
                     key={card.label}
-                    className={`border border-gray-200 rounded-xl p-5 shadow-sm transition-transform hover:scale-[1.02] ${card.bg}`}
+                    className="rounded-[var(--r-lg)] p-5 border transition-transform hover:scale-[1.02]"
+                    style={{ borderColor: "var(--ct-border-default)", background: card.bg, boxShadow: "var(--shadow-content)" }}
                   >
-                    <p className="text-[10px] font-black text-gray-400 uppercase mb-1 tracking-widest">
+                    <p className="text-[10px] font-black uppercase mb-1 tracking-widest" style={{ color: "var(--ct-text-muted)" }}>
                       {card.label}
                     </p>
-                    <p className={`text-2xl font-bold ${card.color}`}>
+                    <p className="text-2xl font-bold" style={{ color: card.color }}>
                       {card.value}
                     </p>
-                    <p className="text-xs text-gray-400 font-medium mt-1">
+                    <p className="text-xs font-medium mt-1" style={{ color: "var(--ct-text-muted)" }}>
                       {card.sub}
                     </p>
                   </div>
@@ -335,7 +319,7 @@ export default function CommissionIndex() {
               </div>
             )}
 
-            <h2 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em] mb-4">
+            <h2 className="text-xs font-black uppercase tracking-[0.2em] mb-4" style={{ color: "var(--ct-text-muted)" }}>
               Operations & Tools
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -345,43 +329,56 @@ export default function CommissionIndex() {
                   return (
                     <div
                       key={mod.href}
-                      className="bg-gray-50 border border-gray-100 rounded-xl p-4 flex items-center gap-4 cursor-not-allowed"
+                      className="rounded-[var(--r-lg)] border p-4 flex items-center gap-4 cursor-not-allowed"
+                      style={{ background: "var(--ct-surface-hover)", borderColor: "var(--ct-border-subtle)" }}
                     >
                       <div
-                        className="w-12 h-12 rounded-xl flex items-center justify-center text-xl flex-shrink-0 font-bold opacity-30"
-                        style={{ background: mod.bg, color: mod.color }}
+                        className="w-12 h-12 rounded-[var(--r-lg)] flex items-center justify-center text-xl flex-shrink-0 font-bold opacity-30"
+                        style={{ background: "var(--accent-light-tint)", color: "var(--accent-light)" }}
                       >
                         {mod.icon}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm font-bold text-gray-400 uppercase truncate">
+                        <p className="text-sm font-bold uppercase truncate" style={{ color: "var(--ct-text-muted)" }}>
                           {mod.label}
                         </p>
-                        <p className="text-[11px] text-gray-300 mt-0.5 leading-tight line-clamp-2">
+                        <p className="text-[11px] mt-0.5 leading-tight line-clamp-2" style={{ color: "var(--ct-text-muted)" }}>
                           {mod.desc}
                         </p>
                       </div>
-                      <span className="text-[9px] font-semibold text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded flex-shrink-0">SOON</span>
+                      <span
+                        className="text-[9px] font-semibold px-1.5 py-0.5 rounded-[var(--r-sm)] flex-shrink-0"
+                        style={{ color: "var(--ct-text-muted)", background: "var(--ct-surface)" }}
+                      >
+                        SOON
+                      </span>
                     </div>
                   );
                 }
+                const iconStyle = mod.danger
+                  ? { background: "var(--danger-light-tint)", color: "var(--danger-light)" }
+                  : { background: "var(--accent-light-tint)", color: "var(--accent-light)" };
                 return (
                   <a
                     key={mod.href}
                     href={mod.href}
-                    className="group bg-white border border-gray-200 rounded-xl p-4 hover:border-blue-400 hover:shadow-md transition-all flex items-center gap-4"
+                    className="group rounded-[var(--r-lg)] border p-4 hover:shadow-md transition-all flex items-center gap-4 hover:border-[var(--accent-light)]"
+                    style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}
                   >
                     <div
-                      className="w-12 h-12 rounded-xl flex items-center justify-center text-xl flex-shrink-0 font-bold transition-transform group-hover:rotate-6"
-                      style={{ background: mod.bg, color: mod.color }}
+                      className="w-12 h-12 rounded-[var(--r-lg)] flex items-center justify-center text-xl flex-shrink-0 font-bold transition-transform group-hover:rotate-6"
+                      style={iconStyle}
                     >
                       {mod.icon}
                     </div>
                     <div className="min-w-0">
-                      <p className="text-sm font-bold text-gray-800 group-hover:text-blue-600 transition-colors uppercase truncate">
+                      <p
+                        className="text-sm font-bold uppercase truncate transition-colors group-hover:text-[var(--accent-light)]"
+                        style={{ color: "var(--ct-text-primary)" }}
+                      >
                         {mod.label}
                       </p>
-                      <p className="text-[11px] text-gray-400 mt-0.5 leading-tight line-clamp-2">
+                      <p className="text-[11px] mt-0.5 leading-tight line-clamp-2" style={{ color: "var(--ct-text-muted)" }}>
                         {mod.desc}
                       </p>
                     </div>
