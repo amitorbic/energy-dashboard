@@ -65,11 +65,21 @@ const fmt = (n: number) =>
     n,
   );
 
-const TIER_STYLE: Record<string, string> = {
-  CRITICAL: "bg-red-100 text-red-700",
-  HIGH: "bg-orange-100 text-orange-700",
-  MEDIUM: "bg-amber-100 text-amber-700",
-  LOW: "bg-green-100 text-green-700",
+// Same danger/amber/success/info/neutral vocabulary used across the rest of
+// the past-due module (see index.tsx SEMANTIC / approvals.tsx SEMANTIC).
+const SEMANTIC: Record<string, { background: string; color: string }> = {
+  danger: { background: "var(--danger-light-tint)", color: "var(--danger-light)" },
+  amber: { background: "var(--amber-light-tint)", color: "var(--amber-light)" },
+  success: { background: "var(--success-light-tint)", color: "var(--success-light)" },
+  info: { background: "var(--info-light-tint)", color: "var(--info-light)" },
+  neutral: { background: "var(--ct-surface-hover)", color: "var(--ct-text-secondary)" },
+};
+
+const TIER_TONE: Record<string, keyof typeof SEMANTIC> = {
+  CRITICAL: "danger",
+  HIGH: "danger",
+  MEDIUM: "amber",
+  LOW: "success",
 };
 
 const EVENT_ICON: Record<string, string> = {
@@ -96,24 +106,20 @@ const EVENT_ICON: Record<string, string> = {
   BROKER_NOTIFIED: "🤝",
 };
 
-const EVENT_COLOR: Record<string, string> = {
-  PAYMENT_RECEIVED: "text-green-600",
-  PAYMENT_PARTIAL: "text-blue-600",
-  PAYMENT_BOUNCED: "text-red-600",
-  DNP_EXECUTED: "text-red-600",
-  DNP_NOTICE_SENT: "text-orange-600",
-  LEGAL_FILED: "text-red-700",
-  ETF_FLAGGED: "text-amber-600",
-  APPROVAL_DENIED: "text-red-600",
-  APPROVAL_GRANTED: "text-green-600",
-  STAGE_CHANGED: "text-indigo-600",
-  ACCOUNT_RESOLVED: "text-green-600",
-};
-
-const ACTOR_BADGE: Record<string, string> = {
-  HUMAN: "bg-blue-100 text-blue-700",
-  LLM_AGENT: "bg-purple-100 text-purple-700",
-  SYSTEM: "bg-gray-100 text-gray-500",
+// Icon color: genuine good/bad/caution signal per event, collapsed onto the
+// same 4-hue semantic vocabulary. STAGE_CHANGED/BROKER_NOTIFIED etc. are
+// purely informational (no status), so they fall back to muted neutral.
+const EVENT_TONE: Record<string, keyof typeof SEMANTIC> = {
+  PAYMENT_RECEIVED: "success",
+  PAYMENT_PARTIAL: "info",
+  PAYMENT_BOUNCED: "danger",
+  DNP_EXECUTED: "danger",
+  DNP_NOTICE_SENT: "amber",
+  LEGAL_FILED: "danger",
+  ETF_FLAGGED: "amber",
+  APPROVAL_DENIED: "danger",
+  APPROVAL_GRANTED: "success",
+  ACCOUNT_RESOLVED: "success",
 };
 
 // ── Stage Change Modal ────────────────────────────────────────────────────────
@@ -161,16 +167,17 @@ function StageModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6 space-y-4">
-        <h3 className="text-base font-semibold text-gray-900">Change stage</h3>
+      <div className="rounded-[var(--r-lg)] shadow-xl w-full max-w-md p-6 space-y-4" style={{ background: "var(--ct-surface)" }}>
+        <h3 className="text-base font-semibold" style={{ color: "var(--ct-text-primary)" }}>Change stage</h3>
         <div>
-          <label className="text-xs font-medium text-gray-600 block mb-1">
+          <label className="text-xs font-medium block mb-1" style={{ color: "var(--ct-text-secondary)" }}>
             New stage
           </label>
           <select
             value={newStage}
             onChange={(e) => setNewStage(e.target.value)}
-            className="w-full border border-gray-300 rounded px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-sky-500"
+            className="w-full rounded-[var(--r-sm)] border px-3 py-2 text-sm outline-none focus:border-[var(--accent-light)]"
+            style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-primary)" }}
           >
             {STAGES.map((s) => (
               <option key={s} value={s}>
@@ -180,7 +187,7 @@ function StageModal({
           </select>
         </div>
         <div>
-          <label className="text-xs font-medium text-gray-600 block mb-1">
+          <label className="text-xs font-medium block mb-1" style={{ color: "var(--ct-text-secondary)" }}>
             Reason
           </label>
           <textarea
@@ -188,23 +195,26 @@ function StageModal({
             onChange={(e) => setReason(e.target.value)}
             rows={3}
             placeholder="Why is this stage changing?"
-            className="w-full border border-gray-300 rounded px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-sky-500 resize-none"
+            className="w-full rounded-[var(--r-sm)] border px-3 py-2 text-sm outline-none resize-none focus:border-[var(--accent-light)]"
+            style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-primary)" }}
           />
         </div>
         {error && (
-          <p className="text-sm text-red-600">Failed to save: {error}</p>
+          <p className="text-sm" style={{ color: "var(--danger-light)" }}>Failed to save: {error}</p>
         )}
         <div className="flex gap-2">
           <button
             onClick={onClose}
-            className="flex-1 py-2 text-sm border border-gray-300 rounded text-gray-600 hover:bg-gray-50"
+            className="flex-1 py-2 text-sm rounded-[var(--r-sm)] border transition-colors hover:bg-[var(--ct-surface-hover)]"
+            style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-secondary)" }}
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
             disabled={!reason.trim() || saving}
-            className="flex-1 py-2 text-sm bg-sky-500 text-white rounded hover:bg-sky-600 disabled:opacity-40"
+            className="flex-1 py-2 text-sm rounded-[var(--r-sm)] font-medium disabled:opacity-40 transition-colors"
+            style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
           >
             {saving ? "Saving..." : "Save"}
           </button>
@@ -246,29 +256,32 @@ function NoteModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6 space-y-4">
-        <h3 className="text-base font-semibold text-gray-900">Add note</h3>
+      <div className="rounded-[var(--r-lg)] shadow-xl w-full max-w-md p-6 space-y-4" style={{ background: "var(--ct-surface)" }}>
+        <h3 className="text-base font-semibold" style={{ color: "var(--ct-text-primary)" }}>Add note</h3>
         <textarea
           value={note}
           onChange={(e) => setNote(e.target.value)}
           rows={4}
           placeholder="Enter note..."
-          className="w-full border border-gray-300 rounded px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-sky-500 resize-none"
+          className="w-full rounded-[var(--r-sm)] border px-3 py-2 text-sm outline-none resize-none focus:border-[var(--accent-light)]"
+          style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-primary)" }}
         />
         {error && (
-          <p className="text-sm text-red-600">Failed to save: {error}</p>
+          <p className="text-sm" style={{ color: "var(--danger-light)" }}>Failed to save: {error}</p>
         )}
         <div className="flex gap-2">
           <button
             onClick={onClose}
-            className="flex-1 py-2 text-sm border border-gray-300 rounded text-gray-600 hover:bg-gray-50"
+            className="flex-1 py-2 text-sm rounded-[var(--r-sm)] border transition-colors hover:bg-[var(--ct-surface-hover)]"
+            style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-secondary)" }}
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
             disabled={!note.trim() || saving}
-            className="flex-1 py-2 text-sm bg-sky-500 text-white rounded hover:bg-sky-600 disabled:opacity-40"
+            className="flex-1 py-2 text-sm rounded-[var(--r-sm)] font-medium disabled:opacity-40 transition-colors"
+            style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
           >
             {saving ? "Saving..." : "Add note"}
           </button>
@@ -335,21 +348,29 @@ export default function AccountDetailPage() {
   if (loading)
     return (
       <PastDueLayout title="Account">
-        <div className="py-20 text-center text-gray-400">Loading...</div>
+        <div className="py-20 text-center" style={{ color: "var(--ct-text-muted)" }}>Loading...</div>
       </PastDueLayout>
     );
   if (error)
     return (
       <PastDueLayout title="Account">
-        <div className="py-20 text-center text-red-500">Failed to load account: {error}</div>
+        <div className="py-20 text-center" style={{ color: "var(--danger-light)" }}>Failed to load account: {error}</div>
       </PastDueLayout>
     );
   if (!account)
     return (
       <PastDueLayout title="Account">
-        <div className="py-20 text-center text-gray-400">Account not found</div>
+        <div className="py-20 text-center" style={{ color: "var(--ct-text-muted)" }}>Account not found</div>
       </PastDueLayout>
     );
+
+  const tierTone = SEMANTIC[TIER_TONE[account.delinquency_tier]] || SEMANTIC.neutral;
+  const daysOverdueStyle =
+    account.days_overdue > 90
+      ? { color: "var(--danger-light)" }
+      : account.days_overdue > 30
+        ? { color: "var(--amber-light)" }
+        : { color: "var(--ct-text-secondary)" };
 
   return (
     <PastDueLayout title={account.customer_name}>
@@ -371,7 +392,8 @@ export default function AccountDetailPage() {
       {/* Back */}
       <button
         onClick={() => router.push("/past-due")}
-        className="text-sm text-gray-400 hover:text-gray-700 mb-4 flex items-center gap-1"
+        className="text-sm mb-4 flex items-center gap-1 transition-colors hover:text-[var(--ct-text-secondary)]"
+        style={{ color: "var(--ct-text-muted)" }}
       >
         ← Back to portal
       </button>
@@ -380,44 +402,47 @@ export default function AccountDetailPage() {
         {/* ── Left: Account info + actions ── */}
         <div className="space-y-4">
           {/* Identity card */}
-          <div className="bg-white rounded-lg border border-gray-200 p-5">
+          <div className="rounded-[var(--r-lg)] border p-5" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
             <div className="flex items-start justify-between mb-3">
               <div>
-                <h2 className="text-base font-semibold text-gray-900">
+                <h2 className="text-base font-semibold" style={{ color: "var(--ct-text-primary)" }}>
                   {account.customer_name}
                 </h2>
-                <p className="text-xs text-gray-400 font-mono mt-0.5">
+                <p className="text-xs font-mono mt-0.5" style={{ color: "var(--ct-text-muted)" }}>
                   {account.esiid}
                 </p>
               </div>
               <span
-                className={`px-2 py-0.5 rounded text-xs font-medium ${TIER_STYLE[account.delinquency_tier]}`}
+                className="px-2 py-0.5 rounded-[var(--r-sm)] text-xs font-medium"
+                style={tierTone}
               >
                 {account.delinquency_tier}
               </span>
             </div>
-            <div className="space-y-1.5 text-xs text-gray-600">
+            <div className="space-y-1.5 text-xs" style={{ color: "var(--ct-text-secondary)" }}>
               <div className="flex justify-between">
-                <span className="text-gray-400">Account #</span>
+                <span style={{ color: "var(--ct-text-muted)" }}>Account #</span>
                 <span>{account.account_number}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-400">Track</span>
+                <span style={{ color: "var(--ct-text-muted)" }}>Track</span>
                 <span
-                  className={`px-1.5 py-0.5 rounded font-medium ${account.track === "ACTIVE" ? "bg-blue-100 text-blue-700" : "bg-indigo-100 text-indigo-700"}`}
+                  className="px-1.5 py-0.5 rounded-[var(--r-sm)] font-medium"
+                  style={{ background: "var(--accent-light-tint)", color: "var(--accent-light)" }}
                 >
                   {account.track}
                 </span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-gray-400">Stage</span>
+                <span style={{ color: "var(--ct-text-muted)" }}>Stage</span>
                 <div className="flex items-center gap-1">
-                  <span className="font-medium text-gray-700">
+                  <span className="font-medium" style={{ color: "var(--ct-text-secondary)" }}>
                     {account.stage.replace(/_/g, " ")}
                   </span>
                   <button
                     onClick={() => setShowStage(true)}
-                    className="text-sky-500 hover:text-sky-700 text-xs"
+                    className="text-xs transition-colors hover:opacity-80"
+                    style={{ color: "var(--accent-light)" }}
                   >
                     Edit
                   </button>
@@ -425,13 +450,13 @@ export default function AccountDetailPage() {
               </div>
               {account.broker_name && (
                 <div className="flex justify-between">
-                  <span className="text-gray-400">Broker</span>
+                  <span style={{ color: "var(--ct-text-muted)" }}>Broker</span>
                   <span>{account.broker_name}</span>
                 </div>
               )}
               {account.customer_email && (
                 <div className="flex justify-between">
-                  <span className="text-gray-400">Email</span>
+                  <span style={{ color: "var(--ct-text-muted)" }}>Email</span>
                   <span className="truncate max-w-[140px]">
                     {account.customer_email}
                   </span>
@@ -439,21 +464,19 @@ export default function AccountDetailPage() {
               )}
               {account.customer_phone && (
                 <div className="flex justify-between">
-                  <span className="text-gray-400">Phone</span>
+                  <span style={{ color: "var(--ct-text-muted)" }}>Phone</span>
                   <span>{account.customer_phone}</span>
                 </div>
               )}
               <div className="flex justify-between">
-                <span className="text-gray-400">Days overdue</span>
-                <span
-                  className={`font-semibold ${account.days_overdue > 90 ? "text-red-600" : account.days_overdue > 60 ? "text-orange-600" : account.days_overdue > 30 ? "text-amber-600" : "text-gray-700"}`}
-                >
+                <span style={{ color: "var(--ct-text-muted)" }}>Days overdue</span>
+                <span className="font-semibold" style={daysOverdueStyle}>
                   {account.days_overdue}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-400">Priority</span>
-                <span className="font-medium">{account.priority}</span>
+                <span style={{ color: "var(--ct-text-muted)" }}>Priority</span>
+                <span className="font-medium" style={{ color: "var(--ct-text-primary)" }}>{account.priority}</span>
               </div>
             </div>
 
@@ -462,24 +485,24 @@ export default function AccountDetailPage() {
               account.is_dnp_active ||
               account.is_flagged ||
               account.is_disputed) && (
-              <div className="flex flex-wrap gap-1 mt-3 pt-3 border-t border-gray-100">
+              <div className="flex flex-wrap gap-1 mt-3 pt-3 border-t" style={{ borderColor: "var(--ct-border-subtle)" }}>
                 {account.is_legal && (
-                  <span className="px-2 py-0.5 rounded text-xs bg-red-100 text-red-700">
+                  <span className="px-2 py-0.5 rounded-[var(--r-sm)] text-xs" style={SEMANTIC.danger}>
                     In Legal
                   </span>
                 )}
                 {account.is_dnp_active && (
-                  <span className="px-2 py-0.5 rounded text-xs bg-orange-100 text-orange-700">
+                  <span className="px-2 py-0.5 rounded-[var(--r-sm)] text-xs" style={SEMANTIC.danger}>
                     DNP Active
                   </span>
                 )}
                 {account.is_flagged && (
-                  <span className="px-2 py-0.5 rounded text-xs bg-yellow-100 text-yellow-700">
+                  <span className="px-2 py-0.5 rounded-[var(--r-sm)] text-xs" style={SEMANTIC.amber}>
                     Flagged
                   </span>
                 )}
                 {account.is_disputed && (
-                  <span className="px-2 py-0.5 rounded text-xs bg-purple-100 text-purple-700">
+                  <span className="px-2 py-0.5 rounded-[var(--r-sm)] text-xs" style={SEMANTIC.amber}>
                     Disputed
                   </span>
                 )}
@@ -488,46 +511,47 @@ export default function AccountDetailPage() {
           </div>
 
           {/* Balance card */}
-          <div className="bg-white rounded-lg border border-gray-200 p-5">
-            <h3 className="text-sm font-medium text-gray-700 mb-3">Balance</h3>
+          <div className="rounded-[var(--r-lg)] border p-5" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
+            <h3 className="text-sm font-medium mb-3" style={{ color: "var(--ct-text-secondary)" }}>Balance</h3>
             <div className="space-y-2">
               <div className="flex justify-between items-center">
-                <span className="text-xs text-gray-400">Usage balance</span>
-                <span className="text-sm font-semibold text-gray-900">
+                <span className="text-xs" style={{ color: "var(--ct-text-muted)" }}>Usage balance</span>
+                <span className="text-sm font-semibold" style={{ color: "var(--ct-text-primary)" }}>
                   {fmt(account.usage_balance)}
                 </span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-xs text-gray-400">ETF</span>
+                <span className="text-xs" style={{ color: "var(--ct-text-muted)" }}>ETF</span>
                 <span
-                  className={`text-sm font-semibold ${account.etf_flag ? "text-amber-600" : "text-gray-900"}`}
+                  className="text-sm font-semibold"
+                  style={{ color: account.etf_flag ? "var(--amber-light)" : "var(--ct-text-primary)" }}
                 >
                   {fmt(account.etf_amount)}
                   {account.etf_flag && (
-                    <span className="ml-1 text-xs bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded">
+                    <span className="ml-1 text-xs px-1.5 py-0.5 rounded-[var(--r-sm)]" style={SEMANTIC.amber}>
                       OPEN
                     </span>
                   )}
                 </span>
               </div>
-              <div className="border-t border-gray-100 pt-2 flex justify-between items-center">
-                <span className="text-xs font-medium text-gray-600">
+              <div className="border-t pt-2 flex justify-between items-center" style={{ borderColor: "var(--ct-border-subtle)" }}>
+                <span className="text-xs font-medium" style={{ color: "var(--ct-text-secondary)" }}>
                   Total due
                 </span>
-                <span className="text-base font-bold text-gray-900">
+                <span className="text-base font-bold" style={{ color: "var(--ct-text-primary)" }}>
                   {fmt(account.total_due)}
                 </span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-xs text-gray-400">Total paid</span>
-                <span className="text-sm text-green-600 font-medium">
+                <span className="text-xs" style={{ color: "var(--ct-text-muted)" }}>Total paid</span>
+                <span className="text-sm font-medium" style={{ color: "var(--success-light)" }}>
                   {fmt(account.amount_paid)}
                 </span>
               </div>
               {account.last_payment_date && (
                 <div className="flex justify-between items-center">
-                  <span className="text-xs text-gray-400">Last payment</span>
-                  <span className="text-xs text-gray-600">
+                  <span className="text-xs" style={{ color: "var(--ct-text-muted)" }}>Last payment</span>
+                  <span className="text-xs" style={{ color: "var(--ct-text-secondary)" }}>
                     {fmt(account.last_payment_amount || 0)} ·{" "}
                     {new Date(account.last_payment_date).toLocaleDateString()}
                   </span>
@@ -537,33 +561,35 @@ export default function AccountDetailPage() {
           </div>
 
           {/* Actions card */}
-          <div className="bg-white rounded-lg border border-gray-200 p-5">
-            <h3 className="text-sm font-medium text-gray-700 mb-3">Actions</h3>
+          <div className="rounded-[var(--r-lg)] border p-5" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
+            <h3 className="text-sm font-medium mb-3" style={{ color: "var(--ct-text-secondary)" }}>Actions</h3>
             <div className="space-y-2">
               <button
                 onClick={() => setShowNote(true)}
-                className="w-full py-2 text-sm border border-gray-300 rounded text-gray-700 hover:bg-gray-50 transition-colors"
+                className="w-full py-2 text-sm rounded-[var(--r-sm)] border transition-colors hover:bg-[var(--ct-surface-hover)]"
+                style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-secondary)" }}
               >
                 + Add note
               </button>
               <button
                 onClick={() => setShowStage(true)}
-                className="w-full py-2 text-sm border border-gray-300 rounded text-gray-700 hover:bg-gray-50 transition-colors"
+                className="w-full py-2 text-sm rounded-[var(--r-sm)] border transition-colors hover:bg-[var(--ct-surface-hover)]"
+                style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-secondary)" }}
               >
                 Change stage
               </button>
 
               {/* DNP Notice — active track only */}
               {account.track === "ACTIVE" && !account.is_dnp_active && (
-                <div className="border border-orange-200 rounded p-3 space-y-2 bg-orange-50">
-                  <p className="text-xs font-medium text-orange-700">
+                <div className="rounded-[var(--r-md)] border p-3 space-y-2" style={{ borderColor: "var(--amber-light-tint)", background: "var(--amber-light-tint)" }}>
+                  <p className="text-xs font-medium" style={{ color: "var(--amber-light)" }}>
                     Queue DNP Notice
                   </p>
-                  <p className="text-xs text-orange-600">
+                  <p className="text-xs" style={{ color: "var(--amber-light)" }}>
                     PUC 10-day rule enforced. Goes to approval queue.
                   </p>
                   {dnpSent ? (
-                    <p className="text-xs text-green-600 font-medium">
+                    <p className="text-xs font-medium" style={{ color: "var(--success-light)" }}>
                       ✓ Queued for approval
                     </p>
                   ) : (
@@ -572,15 +598,17 @@ export default function AccountDetailPage() {
                         value={dnpReason}
                         onChange={(e) => setDnpReason(e.target.value)}
                         placeholder="Reason for DNP..."
-                        className="w-full border border-orange-300 rounded px-2 py-1.5 text-xs outline-none focus:ring-1 focus:ring-orange-400"
+                        className="w-full rounded-[var(--r-sm)] border px-2 py-1.5 text-xs outline-none focus:border-[var(--accent-light)]"
+                        style={{ borderColor: "var(--amber-light)", color: "var(--ct-text-primary)" }}
                       />
                       {dnpError && (
-                        <p className="text-xs text-red-600">{dnpError}</p>
+                        <p className="text-xs" style={{ color: "var(--danger-light)" }}>{dnpError}</p>
                       )}
                       <button
                         onClick={handleDNPNotice}
                         disabled={!dnpReason.trim() || dnpLoading}
-                        className="w-full py-1.5 text-xs bg-orange-500 text-white rounded hover:bg-orange-600 disabled:opacity-40"
+                        className="w-full py-1.5 text-xs rounded-[var(--r-sm)] font-medium disabled:opacity-40 transition-colors"
+                        style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
                       >
                         {dnpLoading ? "Queuing..." : "Queue DNP notice"}
                       </button>
@@ -591,7 +619,7 @@ export default function AccountDetailPage() {
 
               {/* DNP eligible info */}
               {account.dnp_eligible_after && (
-                <div className="bg-blue-50 border border-blue-200 rounded p-2 text-xs text-blue-700">
+                <div className="rounded-[var(--r-md)] border p-2 text-xs" style={{ background: "var(--info-light-tint)", borderColor: "var(--info-light-tint)", color: "var(--info-light)" }}>
                   DNP eligible after:{" "}
                   <strong>
                     {new Date(account.dnp_eligible_after).toLocaleDateString()}
@@ -601,11 +629,11 @@ export default function AccountDetailPage() {
 
               {/* ETF actions */}
               {account.etf_flag && (
-                <div className="border border-amber-200 rounded p-3 bg-amber-50">
-                  <p className="text-xs font-medium text-amber-700 mb-1">
+                <div className="rounded-[var(--r-md)] border p-3" style={{ borderColor: "var(--amber-light-tint)", background: "var(--amber-light-tint)" }}>
+                  <p className="text-xs font-medium mb-1" style={{ color: "var(--amber-light)" }}>
                     ETF open — {fmt(account.etf_amount)}
                   </p>
-                  <p className="text-xs text-amber-600">
+                  <p className="text-xs" style={{ color: "var(--amber-light)" }}>
                     ETF status: {account.etf_status}
                   </p>
                 </div>
@@ -616,54 +644,63 @@ export default function AccountDetailPage() {
 
         {/* ── Right: Timeline ── */}
         <div className="lg:col-span-2">
-          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-            <div className="px-5 py-4 border-b border-gray-200 flex items-center justify-between">
-              <h3 className="text-sm font-medium text-gray-700">
+          <div className="rounded-[var(--r-lg)] border overflow-hidden" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
+            <div className="px-5 py-4 border-b flex items-center justify-between" style={{ borderColor: "var(--ct-border-default)" }}>
+              <h3 className="text-sm font-medium" style={{ color: "var(--ct-text-secondary)" }}>
                 Activity timeline
               </h3>
-              <span className="text-xs text-gray-400">
+              <span className="text-xs" style={{ color: "var(--ct-text-muted)" }}>
                 {timeline.length} events
               </span>
             </div>
 
-            <div className="divide-y divide-gray-100 max-h-[700px] overflow-y-auto">
+            <div className="max-h-[700px] overflow-y-auto">
               {timeline.length === 0 ? (
-                <div className="py-12 text-center text-gray-400 text-sm">
+                <div className="py-12 text-center text-sm" style={{ color: "var(--ct-text-muted)" }}>
                   No activity yet
                 </div>
               ) : (
-                timeline.map((entry) => (
-                  <div key={entry.id} className="px-5 py-3 hover:bg-gray-50">
-                    <div className="flex items-start gap-3">
-                      <span
-                        className={`text-base mt-0.5 ${EVENT_COLOR[entry.event_type] || "text-gray-400"}`}
-                      >
-                        {EVENT_ICON[entry.event_type] || "·"}
-                      </span>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-sm font-medium text-gray-800">
-                            {entry.subject ||
-                              entry.event_type.replace(/_/g, " ").toLowerCase()}
-                          </span>
-                          <span
-                            className={`px-1.5 py-0.5 rounded text-xs ${ACTOR_BADGE[entry.actor_type] || "bg-gray-100 text-gray-500"}`}
-                          >
-                            {entry.actor_name}
-                          </span>
-                        </div>
-                        {entry.body && (
-                          <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">
-                            {entry.body}
+                timeline.map((entry) => {
+                  const tone = EVENT_TONE[entry.event_type];
+                  return (
+                    <div
+                      key={entry.id}
+                      className="px-5 py-3 border-b last:border-0 hover:bg-[var(--ct-surface-hover)]"
+                      style={{ borderColor: "var(--ct-border-subtle)" }}
+                    >
+                      <div className="flex items-start gap-3">
+                        <span
+                          className="text-base mt-0.5"
+                          style={{ color: tone ? SEMANTIC[tone].color : "var(--ct-text-muted)" }}
+                        >
+                          {EVENT_ICON[entry.event_type] || "·"}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-sm font-medium" style={{ color: "var(--ct-text-primary)" }}>
+                              {entry.subject ||
+                                entry.event_type.replace(/_/g, " ").toLowerCase()}
+                            </span>
+                            <span
+                              className="px-1.5 py-0.5 rounded-[var(--r-sm)] text-xs"
+                              style={{ background: "var(--accent-light-tint)", color: "var(--accent-light)" }}
+                            >
+                              {entry.actor_name}
+                            </span>
+                          </div>
+                          {entry.body && (
+                            <p className="text-xs mt-0.5 leading-relaxed" style={{ color: "var(--ct-text-secondary)" }}>
+                              {entry.body}
+                            </p>
+                          )}
+                          <p className="text-xs mt-1" style={{ color: "var(--ct-text-muted)" }}>
+                            {new Date(entry.created_at).toLocaleString()}
                           </p>
-                        )}
-                        <p className="text-xs text-gray-300 mt-1">
-                          {new Date(entry.created_at).toLocaleString()}
-                        </p>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
           </div>
