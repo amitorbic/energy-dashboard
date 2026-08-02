@@ -32,12 +32,13 @@ const STATUS_OPTIONS = [
   { value: "invoiced", label: "Invoiced"     },
 ];
 
-const STATUS_COLORS: Record<string, string> = {
-  draft:    "bg-gray-100 text-gray-600",
-  reviewed: "bg-blue-50 text-blue-700",
-  approved: "bg-green-50 text-green-700",
-  invoiced: "bg-purple-50 text-purple-700",
+const STATUS_COLORS: Record<string, { background: string; color: string }> = {
+  draft: { background: "var(--ct-surface-hover)", color: "var(--ct-text-secondary)" },
+  reviewed: { background: "var(--info-light-tint)", color: "var(--info-light)" },
+  approved: { background: "var(--success-light-tint)", color: "var(--success-light)" },
+  invoiced: { background: "var(--accent-light-tint)", color: "var(--accent-light)" },
 };
+const DEFAULT_STATUS_COLOR = { background: "var(--ct-surface-hover)", color: "var(--ct-text-secondary)" };
 
 function fmt2(v: number | null | undefined): string {
   if (v == null) return "—";
@@ -46,7 +47,7 @@ function fmt2(v: number | null | undefined): string {
 
 function Spinner() {
   return (
-    <svg className="w-4 h-4 animate-spin text-gray-400" viewBox="0 0 24 24" fill="none">
+    <svg className="w-4 h-4 animate-spin" style={{ color: "var(--ct-text-muted)" }} viewBox="0 0 24 24" fill="none">
       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
     </svg>
@@ -55,7 +56,10 @@ function Spinner() {
 
 function FlagTag({ label }: { label: string }) {
   return (
-    <span className="inline-flex px-1.5 py-0.5 rounded text-xs font-medium bg-yellow-50 text-yellow-700 border border-yellow-200">
+    <span
+      className="inline-flex px-1.5 py-0.5 rounded-[var(--r-sm)] text-xs font-medium border"
+      style={{ background: "var(--amber-light-tint)", color: "var(--amber-light)", borderColor: "var(--amber-light-border)" }}
+    >
       {label.replace(/_/g, " ")}
     </span>
   );
@@ -122,8 +126,8 @@ export default function BillingPeriodsPage() {
       {/* header */}
       <div className="mb-5 flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h2 className="text-base font-semibold text-gray-800">Billing Periods</h2>
-          <p className="text-xs text-gray-400 mt-0.5">Click a row to view detail and approve.</p>
+          <h2 className="text-base font-semibold" style={{ color: "var(--ct-text-primary)" }}>Billing Periods</h2>
+          <p className="text-xs mt-0.5" style={{ color: "var(--ct-text-muted)" }}>Click a row to view detail and approve.</p>
         </div>
 
         {/* filters */}
@@ -132,7 +136,8 @@ export default function BillingPeriodsPage() {
           <select
             value={statusFilter}
             onChange={(e) => handleStatusChange(e.target.value)}
-            className="text-sm border border-gray-200 rounded px-2.5 py-1.5 text-gray-700 bg-white focus:outline-none focus:ring-1 focus:ring-green-400"
+            className="text-sm rounded-[var(--r-sm)] px-2.5 py-1.5 border focus:outline-none focus:border-[var(--accent-light)]"
+            style={{ background: "var(--ct-surface)", color: "var(--ct-text-secondary)", borderColor: "var(--ct-border-default)" }}
           >
             {STATUS_OPTIONS.map((o) => (
               <option key={o.value} value={o.value}>{o.label}</option>
@@ -148,18 +153,21 @@ export default function BillingPeriodsPage() {
               value={esiInput}
               onChange={(e) => setEsiInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && applyEsiSearch()}
-              className="text-sm border border-gray-200 rounded px-2.5 py-1.5 text-gray-700 w-44 focus:outline-none focus:ring-1 focus:ring-green-400"
+              className="text-sm rounded-[var(--r-sm)] px-2.5 py-1.5 w-44 border focus:outline-none focus:border-[var(--accent-light)]"
+              style={{ background: "var(--ct-surface)", color: "var(--ct-text-secondary)", borderColor: "var(--ct-border-default)" }}
             />
             <button
               onClick={applyEsiSearch}
-              className="px-3 py-1.5 text-xs bg-gray-100 text-gray-600 rounded border border-gray-200 hover:bg-gray-200 transition-colors"
+              className="px-3 py-1.5 text-xs rounded-[var(--r-sm)] border transition-colors hover:bg-[var(--ct-surface-hover)]"
+              style={{ background: "var(--ct-surface-hover)", color: "var(--ct-text-secondary)", borderColor: "var(--ct-border-default)" }}
             >
               Search
             </button>
             {esiFilter && (
               <button
                 onClick={() => { setEsiInput(""); setEsiFilter(""); setOffset(0); }}
-                className="px-2 py-1.5 text-xs text-gray-400 hover:text-gray-600"
+                className="px-2 py-1.5 text-xs transition-colors hover:text-[var(--ct-text-secondary)]"
+                style={{ color: "var(--ct-text-muted)" }}
                 title="Clear search"
               >
                 ✕
@@ -171,7 +179,8 @@ export default function BillingPeriodsPage() {
           <button
             onClick={() => fetchPeriods(offset, statusFilter, esiFilter)}
             disabled={loading}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-gray-500 border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-40 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-[var(--r-sm)] border disabled:opacity-40 transition-colors hover:bg-[var(--ct-surface-hover)]"
+            style={{ color: "var(--ct-text-muted)", borderColor: "var(--ct-border-default)" }}
           >
             {loading ? <Spinner /> : (
               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -185,39 +194,39 @@ export default function BillingPeriodsPage() {
       </div>
 
       {error && (
-        <div className="mb-4 px-4 py-3 bg-red-50 border border-red-200 rounded text-sm text-red-600">
+        <div className="mb-4 px-4 py-3 rounded-[var(--r-md)] text-sm" style={{ background: "var(--danger-light-tint)", color: "var(--danger-light)" }}>
           {error}
         </div>
       )}
 
       {/* table */}
-      <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+      <div className="rounded-[var(--r-lg)] border overflow-hidden" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
-            <thead className="bg-gray-50 border-b border-gray-100">
+            <thead className="border-b" style={{ background: "var(--ct-surface-hover)", borderColor: "var(--ct-border-subtle)" }}>
               <tr>
-                <th className="px-3 py-2.5 text-left text-gray-500 font-medium">ESI ID</th>
-                <th className="px-3 py-2.5 text-left text-gray-500 font-medium whitespace-nowrap">Service Period</th>
-                <th className="px-3 py-2.5 text-right text-gray-500 font-medium">Usage kWh</th>
-                <th className="px-3 py-2.5 text-right text-gray-500 font-medium">Rate ¢/kWh</th>
-                <th className="px-3 py-2.5 text-right text-gray-500 font-medium">TDSP Total</th>
-                <th className="px-3 py-2.5 text-right text-gray-500 font-medium">Total Charge</th>
-                <th className="px-3 py-2.5 text-center text-gray-500 font-medium">810</th>
-                <th className="px-3 py-2.5 text-left text-gray-500 font-medium">Status</th>
-                <th className="px-3 py-2.5 text-left text-gray-500 font-medium">Flags</th>
-                <th className="px-3 py-2.5 text-left text-gray-500 font-medium whitespace-nowrap">Created</th>
+                <th className="px-3 py-2.5 text-left font-medium" style={{ color: "var(--ct-text-muted)" }}>ESI ID</th>
+                <th className="px-3 py-2.5 text-left font-medium whitespace-nowrap" style={{ color: "var(--ct-text-muted)" }}>Service Period</th>
+                <th className="px-3 py-2.5 text-right font-medium" style={{ color: "var(--ct-text-muted)" }}>Usage kWh</th>
+                <th className="px-3 py-2.5 text-right font-medium" style={{ color: "var(--ct-text-muted)" }}>Rate ¢/kWh</th>
+                <th className="px-3 py-2.5 text-right font-medium" style={{ color: "var(--ct-text-muted)" }}>TDSP Total</th>
+                <th className="px-3 py-2.5 text-right font-medium" style={{ color: "var(--ct-text-muted)" }}>Total Charge</th>
+                <th className="px-3 py-2.5 text-center font-medium" style={{ color: "var(--ct-text-muted)" }}>810</th>
+                <th className="px-3 py-2.5 text-left font-medium" style={{ color: "var(--ct-text-muted)" }}>Status</th>
+                <th className="px-3 py-2.5 text-left font-medium" style={{ color: "var(--ct-text-muted)" }}>Flags</th>
+                <th className="px-3 py-2.5 text-left font-medium whitespace-nowrap" style={{ color: "var(--ct-text-muted)" }}>Created</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
+            <tbody className="divide-y" style={{ borderColor: "var(--ct-border-subtle)" }}>
               {loading ? (
                 <tr>
-                  <td colSpan={10} className="px-4 py-8 text-center text-sm text-gray-400">
+                  <td colSpan={10} className="px-4 py-8 text-center text-sm" style={{ color: "var(--ct-text-muted)" }}>
                     Loading…
                   </td>
                 </tr>
               ) : rows.length === 0 ? (
                 <tr>
-                  <td colSpan={10} className="px-4 py-8 text-center text-sm text-gray-400">
+                  <td colSpan={10} className="px-4 py-8 text-center text-sm" style={{ color: "var(--ct-text-muted)" }}>
                     No billing periods found.
                   </td>
                 </tr>
@@ -235,29 +244,29 @@ export default function BillingPeriodsPage() {
                     <tr
                       key={r.id}
                       onClick={() => router.push(`/billing/periods/${r.id}`)}
-                      className="hover:bg-green-50 cursor-pointer transition-colors"
+                      className="cursor-pointer transition-colors hover:bg-[var(--ct-surface-hover)]"
                     >
-                      <td className="px-3 py-2 text-gray-800 font-mono text-xs">{r.esi_id}</td>
-                      <td className="px-3 py-2 text-gray-600 whitespace-nowrap">
+                      <td className="px-3 py-2 font-mono text-xs" style={{ color: "var(--ct-text-primary)" }}>{r.esi_id}</td>
+                      <td className="px-3 py-2 whitespace-nowrap" style={{ color: "var(--ct-text-secondary)" }}>
                         {r.service_start} – {r.service_end}
                       </td>
-                      <td className="px-3 py-2 text-right text-gray-700">
+                      <td className="px-3 py-2 text-right" style={{ color: "var(--ct-text-secondary)" }}>
                         {fmt2(r.usage_kwh)}
                       </td>
-                      <td className="px-3 py-2 text-right text-gray-700">{rateCents}</td>
-                      <td className="px-3 py-2 text-right text-gray-700">${fmt2(r.tdsp_total)}</td>
-                      <td className="px-3 py-2 text-right font-medium text-gray-800">
+                      <td className="px-3 py-2 text-right" style={{ color: "var(--ct-text-secondary)" }}>{rateCents}</td>
+                      <td className="px-3 py-2 text-right" style={{ color: "var(--ct-text-secondary)" }}>${fmt2(r.tdsp_total)}</td>
+                      <td className="px-3 py-2 text-right font-medium" style={{ color: "var(--ct-text-primary)" }}>
                         ${fmt2(r.total_charge)}
                       </td>
                       <td className="px-3 py-2 text-center">
                         {r.has_810 ? (
-                          <span className="text-green-600 font-bold">✓</span>
+                          <span className="font-bold" style={{ color: "var(--success-light)" }}>✓</span>
                         ) : (
-                          <span className="text-gray-300">—</span>
+                          <span style={{ color: "var(--ct-text-muted)", opacity: 0.5 }}>—</span>
                         )}
                       </td>
                       <td className="px-3 py-2">
-                        <span className={`inline-flex px-1.5 py-0.5 rounded text-xs font-medium ${STATUS_COLORS[r.status] ?? "bg-gray-100 text-gray-600"}`}>
+                        <span className="inline-flex px-1.5 py-0.5 rounded-[var(--r-sm)] text-xs font-medium" style={STATUS_COLORS[r.status] ?? DEFAULT_STATUS_COLOR}>
                           {r.status}
                         </span>
                       </td>
@@ -266,7 +275,7 @@ export default function BillingPeriodsPage() {
                           {flags.map((f) => <FlagTag key={f} label={f} />)}
                         </div>
                       </td>
-                      <td className="px-3 py-2 text-gray-400 whitespace-nowrap">
+                      <td className="px-3 py-2 whitespace-nowrap" style={{ color: "var(--ct-text-muted)" }}>
                         {r.created_at ? new Date(r.created_at).toLocaleDateString() : "—"}
                       </td>
                     </tr>
@@ -279,7 +288,7 @@ export default function BillingPeriodsPage() {
 
         {/* pagination */}
         {!loading && rows.length > 0 && (
-          <div className="px-4 py-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500 bg-gray-50">
+          <div className="px-4 py-3 border-t flex items-center justify-between text-xs" style={{ borderColor: "var(--ct-border-subtle)", background: "var(--ct-surface-hover)", color: "var(--ct-text-muted)" }}>
             <span>
               Showing {offset + 1}–{offset + rows.length}
               {hasMore ? "+" : ""}
@@ -288,7 +297,8 @@ export default function BillingPeriodsPage() {
               <button
                 onClick={handlePrev}
                 disabled={offset === 0}
-                className="px-2.5 py-1 rounded border border-gray-200 bg-white hover:bg-gray-100 disabled:opacity-40 transition-colors"
+                className="px-2.5 py-1 rounded-[var(--r-sm)] border disabled:opacity-40 transition-colors hover:bg-[var(--ct-surface-hover)]"
+                style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}
               >
                 ← Prev
               </button>
@@ -296,7 +306,8 @@ export default function BillingPeriodsPage() {
               <button
                 onClick={handleNext}
                 disabled={!hasMore}
-                className="px-2.5 py-1 rounded border border-gray-200 bg-white hover:bg-gray-100 disabled:opacity-40 transition-colors"
+                className="px-2.5 py-1 rounded-[var(--r-sm)] border disabled:opacity-40 transition-colors hover:bg-[var(--ct-surface-hover)]"
+                style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}
               >
                 Next →
               </button>
