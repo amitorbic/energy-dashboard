@@ -79,41 +79,49 @@ const GasStripPage: React.FC = () => {
     <Layout>
       <div className="p-6 max-w-4xl mx-auto">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-800">
+          <h1 className="text-2xl font-bold" style={{ color: "var(--ct-text-primary)" }}>
             Gas Strip Management
           </h1>
           {lastUpdated && (
-            <div className="text-sm bg-blue-50 text-blue-700 px-3 py-1 rounded-full border border-blue-200">
+            <div
+              className="text-sm px-3 py-1 rounded-[var(--r-full)] border"
+              style={{ background: "var(--info-light-tint)", color: "var(--info-light)", borderColor: "var(--info-light)" }}
+            >
               <strong>Last Updated:</strong> {lastUpdated}
             </div>
           )}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-white p-6 rounded-lg shadow">
+        <div
+          className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 rounded-[var(--r-lg)] border"
+          style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)", boxShadow: "var(--shadow-content)" }}
+        >
           {/* Section 1: Configuration */}
-          <div className="border-r pr-6">
-            <h2 className="text-lg font-semibold mb-4 text-gray-700">
+          <div className="border-r pr-6" style={{ borderColor: "var(--ct-border-default)" }}>
+            <h2 className="text-lg font-semibold mb-4" style={{ color: "var(--ct-text-primary)" }}>
               1. Configuration
             </h2>
-            <label className="block text-sm font-medium text-gray-600 mb-1">
+            <label className="block text-sm font-medium mb-1" style={{ color: "var(--ct-text-secondary)" }}>
               Select Start Date
             </label>
             <input
               type="date"
               value={startDate}
               onChange={handleDateChange}
-              className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none"
+              className="w-full p-2 rounded-[var(--r-md)] border focus:outline-none focus:border-[var(--accent-light)]"
+              style={{ background: "var(--ct-canvas)", color: "var(--ct-text-primary)", borderColor: "var(--ct-border-default)" }}
             />
           </div>
 
           {/* Section 2: Upload */}
           <div>
-            <h2 className="text-lg font-semibold mb-4 text-gray-700">
+            <h2 className="text-lg font-semibold mb-4" style={{ color: "var(--ct-text-primary)" }}>
               2. Upload Latest Strip
             </h2>
             <button
               onClick={handleDownloadSample}
-              className="text-blue-600 hover:underline text-sm mb-4 block"
+              className="hover:underline text-sm mb-4 block"
+              style={{ color: "var(--accent-light)" }}
             >
               Download Excel Sample
             </button>
@@ -121,15 +129,19 @@ const GasStripPage: React.FC = () => {
             <input
               type="file"
               onChange={handleFileChange}
-              className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+              className="block w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-[var(--accent-light-tint)] file:text-[var(--accent-light)]"
+              style={{
+                color: "var(--ct-text-secondary)",
+              }}
             />
 
             <button
               onClick={handleSubmit}
               disabled={!selectedFile}
-              className="mt-6 w-full bg-green-600 text-white font-bold py-2 px-4 rounded hover:bg-green-700 disabled:bg-gray-300 transition-colors"
+              className="mt-6 w-full font-bold py-2 px-4 rounded-[var(--r-md)] transition-colors disabled:opacity-50"
+              style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
             >
-              Upload & Update Tables
+              Upload &amp; Update Tables
             </button>
           </div>
         </div>
