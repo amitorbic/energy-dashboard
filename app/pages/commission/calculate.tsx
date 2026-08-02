@@ -40,13 +40,13 @@ export default function CalculateCommission() {
 
   return (
     <div className="max-w-lg p-6">
-      <h2 className="text-lg font-semibold text-orange-600 mb-4">
+      <h2 className="text-lg font-semibold mb-4" style={{ color: "var(--accent-light)" }}>
         Calculate Commission
       </h2>
 
-      <div className="bg-white border border-gray-200 rounded p-6">
+      <div className="rounded-[var(--r-md)] border p-6" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
         {/* 3. Fixed the unescaped apostrophe by using &apos; */}
-        <p className="text-sm text-gray-600 mb-6">
+        <p className="text-sm mb-6" style={{ color: "var(--ct-text-secondary)" }}>
           Run final commission calculation after uploading the payment summary.
           This updates owed and balance with actual payment amounts received.
           Note: Commission is also calculated automatically on file upload — use
@@ -54,20 +54,21 @@ export default function CalculateCommission() {
         </p>
 
         {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded text-red-800 text-sm">
+          <div className="mb-4 p-3 rounded-[var(--r-md)] border text-sm" style={{ background: "var(--danger-light-tint)", borderColor: "var(--danger-light-tint)", color: "var(--danger-light)" }}>
             {error}
           </div>
         )}
 
         {result && (
-          <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded text-green-800 text-sm">
+          <div className="mb-4 p-3 rounded-[var(--r-md)] border text-sm" style={{ background: "var(--success-light-tint)", borderColor: "var(--success-light-tint)", color: "var(--success-light)" }}>
             <p className="font-medium">Commission calculated successfully!</p>
             <p className="mt-1">
               Month: {result.month} — {result.vendors_updated} vendors updated
             </p>
             <a
               href="/commission/summary"
-              className="mt-2 inline-block text-blue-600 underline text-xs"
+              className="mt-2 inline-block underline text-xs"
+              style={{ color: "var(--accent-light)" }}
             >
               View Review Summary →
             </a>
@@ -77,11 +78,10 @@ export default function CalculateCommission() {
         <button
           onClick={handleCalculate}
           disabled={loading}
-          className={`px-6 py-2 rounded text-white text-sm font-medium transition-colors ${
-            loading
-              ? "bg-gray-400 cursor-not-allowed"
-              : "bg-orange-500 hover:bg-orange-600"
-          }`}
+          className="px-6 py-2 rounded-[var(--r-sm)] text-sm font-medium transition-colors"
+          style={loading
+            ? { background: "var(--ct-text-muted)", color: "#ffffff", cursor: "not-allowed" }
+            : { background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
         >
           {loading ? "Calculating..." : "Calculate Commission"}
         </button>
