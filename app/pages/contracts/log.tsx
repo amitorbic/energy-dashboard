@@ -14,13 +14,14 @@ interface LogEntry {
   notes: string;
 }
 
-const ACTION_COLORS: Record<string, string> = {
-  created: "bg-green-50 text-green-700",
-  sent: "bg-sky-50 text-sky-700",
-  edited: "bg-amber-50 text-amber-700",
-  revised: "bg-purple-50 text-purple-700",
-  deleted: "bg-red-50 text-red-700",
+const ACTION_STYLES: Record<string, { background: string; color: string }> = {
+  created: { background: "var(--success-light-tint)", color: "var(--success-light)" },
+  sent: { background: "var(--info-light-tint)", color: "var(--info-light)" },
+  edited: { background: "var(--amber-light-tint)", color: "var(--amber-light)" },
+  revised: { background: "var(--accent-light-tint)", color: "var(--accent-light)" },
+  deleted: { background: "var(--danger-light-tint)", color: "var(--danger-light)" },
 };
+const DEFAULT_ACTION_STYLE = { background: "var(--ct-surface-hover)", color: "var(--ct-text-secondary)" };
 
 export default function ConfirmationLog() {
   const [rows, setRows] = useState<LogEntry[]>([]);
@@ -53,16 +54,19 @@ export default function ConfirmationLog() {
     <ContractLayout title="User Log">
       <div className="max-w-5xl">
         <div className="flex items-center justify-between mb-4">
-          <p className="text-sm text-gray-500">
+          <p className="text-sm" style={{ color: "var(--ct-text-muted)" }}>
             Complete audit trail of all confirmation activity.
           </p>
-          <span className="text-xs text-gray-400">{total} entries</span>
+          <span className="text-xs" style={{ color: "var(--ct-text-muted)" }}>{total} entries</span>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+        <div
+          className="rounded-[var(--r-lg)] border overflow-hidden"
+          style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}
+        >
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-gray-50 border-b border-gray-200">
+              <tr className="border-b" style={{ background: "var(--ct-surface-hover)", borderColor: "var(--ct-border-default)" }}>
                 {[
                   "Date & Time",
                   "User",
@@ -73,7 +77,8 @@ export default function ConfirmationLog() {
                 ].map((h) => (
                   <th
                     key={h}
-                    className="text-left px-3 py-2.5 text-xs font-semibold text-gray-500 uppercase tracking-wide"
+                    className="text-left px-3 py-2.5 text-xs font-semibold uppercase tracking-wide"
+                    style={{ color: "var(--ct-text-muted)" }}
                   >
                     {h}
                   </th>
@@ -85,7 +90,8 @@ export default function ConfirmationLog() {
                 <tr>
                   <td
                     colSpan={6}
-                    className="text-center py-8 text-sm text-gray-400"
+                    className="text-center py-8 text-sm"
+                    style={{ color: "var(--ct-text-muted)" }}
                   >
                     Loading...
                   </td>
@@ -94,7 +100,8 @@ export default function ConfirmationLog() {
                 <tr>
                   <td
                     colSpan={6}
-                    className="text-center py-8 text-sm text-gray-400"
+                    className="text-center py-8 text-sm"
+                    style={{ color: "var(--ct-text-muted)" }}
                   >
                     No log entries found
                   </td>
@@ -103,28 +110,30 @@ export default function ConfirmationLog() {
                 rows.map((r, i) => (
                   <tr
                     key={r.log_id}
-                    className={`border-b border-gray-100 ${i % 2 === 0 ? "" : "bg-gray-50/50"}`}
+                    className="border-b"
+                    style={{ borderColor: "var(--ct-border-subtle)", background: i % 2 === 0 ? "transparent" : "var(--ct-canvas)" }}
                   >
-                    <td className="px-3 py-2 text-xs text-gray-500 whitespace-nowrap">
+                    <td className="px-3 py-2 text-xs whitespace-nowrap" style={{ color: "var(--ct-text-muted)" }}>
                       {r.action_at}
                     </td>
-                    <td className="px-3 py-2 text-gray-700 font-medium">
+                    <td className="px-3 py-2 font-medium" style={{ color: "var(--ct-text-secondary)" }}>
                       {r.user_name || r.action_by}
                     </td>
                     <td className="px-3 py-2">
                       <span
-                        className={`text-xs px-2 py-0.5 rounded font-medium capitalize ${ACTION_COLORS[r.action] || "bg-gray-100 text-gray-600"}`}
+                        className="text-xs px-2 py-0.5 rounded-[var(--r-sm)] font-medium capitalize"
+                        style={ACTION_STYLES[r.action] || DEFAULT_ACTION_STYLE}
                       >
                         {r.action}
                       </span>
                     </td>
-                    <td className="px-3 py-2 font-mono text-xs text-sky-700">
+                    <td className="px-3 py-2 font-mono text-xs" style={{ color: "var(--accent-light)" }}>
                       {r.contract_no}
                     </td>
-                    <td className="px-3 py-2 text-xs text-gray-400">
+                    <td className="px-3 py-2 text-xs" style={{ color: "var(--ct-text-muted)" }}>
                       #{r.sid}
                     </td>
-                    <td className="px-3 py-2 text-xs text-gray-500">
+                    <td className="px-3 py-2 text-xs" style={{ color: "var(--ct-text-muted)" }}>
                       {r.notes || "—"}
                     </td>
                   </tr>
@@ -139,17 +148,19 @@ export default function ConfirmationLog() {
             <button
               disabled={page === 1}
               onClick={() => load(page - 1)}
-              className="px-3 py-1 text-sm border rounded disabled:opacity-40 hover:bg-gray-50"
+              className="px-3 py-1 text-sm rounded-[var(--r-md)] border disabled:opacity-40 transition-colors hover:bg-[var(--ct-surface-hover)]"
+              style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-primary)" }}
             >
               ← Prev
             </button>
-            <span className="text-sm text-gray-500">
+            <span className="text-sm" style={{ color: "var(--ct-text-muted)" }}>
               Page {page} of {totalPages}
             </span>
             <button
               disabled={page === totalPages}
               onClick={() => load(page + 1)}
-              className="px-3 py-1 text-sm border rounded disabled:opacity-40 hover:bg-gray-50"
+              className="px-3 py-1 text-sm rounded-[var(--r-md)] border disabled:opacity-40 transition-colors hover:bg-[var(--ct-surface-hover)]"
+              style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-primary)" }}
             >
               Next →
             </button>
