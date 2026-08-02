@@ -36,6 +36,30 @@ interface CalcResult {
 
 const DEFAULT_TERMS = "6,12,18,24";
 
+const panelCls = "rounded-[var(--r-lg)] border p-5 space-y-4";
+const panelStyle = {
+  background: "var(--ct-surface)",
+  borderColor: "var(--ct-border-default)",
+};
+const panelHeadingCls = "text-xs font-bold uppercase tracking-wide";
+const panelHeadingStyle = { color: "var(--ct-text-muted)" };
+const inputCls =
+  "w-full px-3 py-2 rounded-[var(--r-md)] border focus:outline-none focus:border-[var(--accent-light)] text-sm";
+const inputStyle = {
+  background: "var(--ct-canvas)",
+  color: "var(--ct-text-primary)",
+  borderColor: "var(--ct-border-default)",
+};
+const labelCls = "text-xs mb-1 block";
+const labelStyle = { color: "var(--ct-text-muted)" };
+const secondaryBtnCls =
+  "w-full py-2.5 rounded-[var(--r-md)] text-sm font-bold uppercase transition-colors border disabled:opacity-50";
+const secondaryBtnStyle = {
+  background: "var(--ct-surface)",
+  borderColor: "var(--ct-border-default)",
+  color: "var(--ct-text-primary)",
+};
+
 const BlendExtend = () => {
   const router = useRouter();
   const { sid: urlSid } = router.query;
@@ -333,26 +357,29 @@ const BlendExtend = () => {
       .catch(() => {});
   }, [urlSid, router.isReady]);
 
-  const inputCls =
-    "w-full bg-slate-800 text-white px-3 py-2 rounded-lg border border-slate-600 focus:outline-none focus:border-red-500 text-sm";
-  const labelCls = "text-xs text-slate-400 mb-1 block";
-
   return (
     <Layout title="Blend & Extend Pricing">
       <div className="max-w-6xl mx-auto p-6 space-y-6">
         {/* Header */}
-        <div className="flex items-center gap-4 border-b border-slate-800 pb-5">
+        <div
+          className="flex items-center gap-4 border-b pb-5"
+          style={{ borderColor: "var(--ct-border-subtle)" }}
+        >
           <button
             onClick={() => router.push("/pricing")}
-            className="text-slate-400 hover:text-white text-sm"
+            className="text-sm transition-colors"
+            style={{ color: "var(--ct-text-muted)" }}
           >
             ← Pricing
           </button>
           <div>
-            <h1 className="text-2xl font-black text-white uppercase tracking-tighter">
+            <h1
+              className="text-2xl font-black uppercase tracking-tighter"
+              style={{ color: "var(--ct-text-primary)" }}
+            >
               Blend &amp; Extend Pricing
             </h1>
-            <p className="text-slate-400 text-xs mt-0.5">
+            <p className="text-xs mt-0.5" style={{ color: "var(--ct-text-muted)" }}>
               Calculate blended rates across multiple extension terms
             </p>
           </div>
@@ -362,8 +389,8 @@ const BlendExtend = () => {
           {/* ── LEFT PANEL ── */}
           <div className="space-y-5">
             {/* Customer Search */}
-            <div className="bg-slate-900 rounded-xl border border-slate-700 p-5 space-y-4">
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">
+            <div className={panelCls} style={panelStyle}>
+              <p className={panelHeadingCls} style={panelHeadingStyle}>
                 Customer
               </p>
               <div className="relative" ref={dropdownRef}>
@@ -375,22 +402,30 @@ const BlendExtend = () => {
                   onFocus={() => searchResults.length && setShowDropdown(true)}
                   placeholder="Search by company name or ESI ID..."
                   className={inputCls}
+                  style={inputStyle}
                 />
                 {searching && (
-                  <div className="absolute right-3 top-2.5 w-4 h-4 border-2 border-red-500 border-t-transparent rounded-full animate-spin" />
+                  <div
+                    className="absolute right-3 top-2.5 w-4 h-4 border-2 border-t-transparent rounded-full animate-spin"
+                    style={{ borderColor: "var(--accent-light)" }}
+                  />
                 )}
                 {showDropdown && searchResults.length > 0 && (
-                  <div className="absolute top-full left-0 right-0 mt-1 bg-slate-800 border border-slate-600 rounded-lg z-20 max-h-60 overflow-y-auto shadow-xl">
+                  <div
+                    className="absolute top-full left-0 right-0 mt-1 rounded-[var(--r-md)] border z-20 max-h-60 overflow-y-auto"
+                    style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)", boxShadow: "var(--shadow-content)" }}
+                  >
                     {searchResults.map((r) => (
                       <div
                         key={r.cust_id}
                         onClick={() => selectCustomer(r)}
-                        className="px-4 py-3 hover:bg-slate-700 cursor-pointer border-b border-slate-700 last:border-0"
+                        className="px-4 py-3 cursor-pointer border-b last:border-0 hover:bg-[var(--ct-surface-hover)]"
+                        style={{ borderColor: "var(--ct-border-subtle)" }}
                       >
-                        <p className="text-white text-sm font-semibold">
+                        <p className="text-sm font-semibold" style={{ color: "var(--ct-text-primary)" }}>
                           {r.company_name}
                         </p>
-                        <p className="text-slate-400 text-xs mt-0.5 font-mono">
+                        <p className="text-xs mt-0.5 font-mono" style={{ color: "var(--ct-text-muted)" }}>
                           ESI: {r.premise_id} &nbsp;·&nbsp; Rate:{" "}
                           {r.contract_rate_cents?.toFixed(4)}¢ &nbsp;·&nbsp;
                           Ends: {r.contract_end_date} &nbsp;·&nbsp;
@@ -400,14 +435,15 @@ const BlendExtend = () => {
                     ))}
                   </div>
                 )}
-                <div className="bg-slate-900 rounded-xl border border-slate-700 p-5 space-y-3">
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">
+                <div className={panelCls + " mt-4"} style={panelStyle}>
+                  <p className={panelHeadingCls} style={panelHeadingStyle}>
                     Broker
                   </p>
                   <select
                     value={selectedBroker}
                     onChange={(e) => setSelectedBroker(e.target.value)}
-                    className="w-full bg-slate-800 text-white px-3 py-2 rounded-lg border border-slate-600 focus:outline-none focus:border-red-500 text-sm"
+                    className={inputCls}
+                    style={inputStyle}
                   >
                     <option value="">Select broker</option>
                     {brokerList.map((b) => (
@@ -421,7 +457,10 @@ const BlendExtend = () => {
                   !searching &&
                   searchResults.length === 0 &&
                   searchQuery.length >= 2 && (
-                    <div className="absolute top-full left-0 right-0 mt-1 bg-slate-800 border border-slate-600 rounded-lg z-20 px-4 py-3 text-slate-400 text-sm">
+                    <div
+                      className="absolute top-full left-0 right-0 mt-1 rounded-[var(--r-md)] border z-20 px-4 py-3 text-sm"
+                      style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)", color: "var(--ct-text-muted)" }}
+                    >
                       No active fixed-rate customers found
                     </div>
                   )}
@@ -433,12 +472,13 @@ const BlendExtend = () => {
                   {selected.map((s) => (
                     <span
                       key={s.cust_id}
-                      className="flex items-center gap-1.5 bg-slate-700 border border-slate-600 rounded-full px-3 py-1 text-xs text-white"
+                      className="flex items-center gap-1.5 rounded-[var(--r-full)] border px-3 py-1 text-xs"
+                      style={{ background: "var(--ct-surface-hover)", borderColor: "var(--ct-border-default)", color: "var(--ct-text-primary)" }}
                     >
                       {s.company_name}
                       <button
                         onClick={() => removeCustomer(s.cust_id)}
-                        className="text-slate-400 hover:text-white"
+                        style={{ color: "var(--ct-text-muted)" }}
                       >
                         ×
                       </button>
@@ -449,35 +489,37 @@ const BlendExtend = () => {
             </div>
 
             {/* Extension Settings */}
-            <div className="bg-slate-900 rounded-xl border border-slate-700 p-5 space-y-4">
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">
+            <div className={panelCls} style={panelStyle}>
+              <p className={panelHeadingCls} style={panelHeadingStyle}>
                 Extension settings
               </p>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className={labelCls}>Extension terms (months)</label>
+                  <label className={labelCls} style={labelStyle}>Extension terms (months)</label>
                   <input
                     type="text"
                     value={extensionTerms}
                     onChange={(e) => setExtensionTerms(e.target.value)}
                     className={inputCls}
+                    style={inputStyle}
                     placeholder="6,12,18,24"
                   />
-                  <p className="text-xs text-slate-500 mt-1">Comma separated</p>
+                  <p className="text-xs mt-1" style={{ color: "var(--ct-text-muted)" }}>Comma separated</p>
                 </div>
                 <div>
-                  <label className={labelCls}>Start date</label>
+                  <label className={labelCls} style={labelStyle}>Start date</label>
                   <input
                     type="date"
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
                     className={inputCls}
+                    style={inputStyle}
                   />
                 </div>
                 <div className="col-span-2">
-                  <label className={labelCls}>
+                  <label className={labelCls} style={labelStyle}>
                     Current rate (¢/kWh)
-                    <span className="text-slate-500 ml-1">
+                    <span className="ml-1" style={{ color: "var(--ct-text-muted)" }}>
                       — auto-filled from DB, editable
                     </span>
                   </label>
@@ -487,6 +529,7 @@ const BlendExtend = () => {
                     value={currentRateOverride}
                     onChange={(e) => setCurrentRateOverride(e.target.value)}
                     className={inputCls}
+                    style={inputStyle}
                     placeholder={
                       selected.length
                         ? "Will auto-fill after first calculate"
@@ -499,14 +542,14 @@ const BlendExtend = () => {
 
             {/* Profiles & Volumes */}
             {Object.keys(profiles).length > 0 && (
-              <div className="bg-slate-900 rounded-xl border border-slate-700 p-5 space-y-3">
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">
+              <div className={panelCls} style={panelStyle}>
+                <p className={panelHeadingCls} style={panelHeadingStyle}>
                   Profiles &amp; volumes — editable
                 </p>
                 <div className="space-y-2">
                   {Object.entries(profiles).map(([key, val]) => (
                     <div key={key} className="flex items-center gap-3">
-                      <span className="text-xs font-mono text-slate-300 flex-1 truncate">
+                      <span className="text-xs font-mono flex-1 truncate" style={{ color: "var(--ct-text-secondary)" }}>
                         {key}
                       </span>
                       <input
@@ -515,15 +558,16 @@ const BlendExtend = () => {
                         onChange={(e) =>
                           handleProfileChange(key, e.target.value)
                         }
-                        className="w-36 bg-slate-800 text-white px-3 py-1.5 rounded-lg border border-slate-600 focus:outline-none focus:border-red-500 text-sm text-right font-mono"
+                        className="w-36 px-3 py-1.5 rounded-[var(--r-md)] border focus:outline-none focus:border-[var(--accent-light)] text-sm text-right font-mono"
+                        style={inputStyle}
                       />
-                      <span className="text-xs text-slate-500">kWh/yr</span>
+                      <span className="text-xs" style={{ color: "var(--ct-text-muted)" }}>kWh/yr</span>
                     </div>
                   ))}
                 </div>
-                <div className="flex justify-between text-xs pt-2 border-t border-slate-700">
-                  <span className="text-slate-400">Total annual usage</span>
-                  <span className="text-white font-mono font-bold">
+                <div className="flex justify-between text-xs pt-2 border-t" style={{ borderColor: "var(--ct-border-default)" }}>
+                  <span style={{ color: "var(--ct-text-muted)" }}>Total annual usage</span>
+                  <span className="font-mono font-bold" style={{ color: "var(--ct-text-primary)" }}>
                     {Object.values(profiles)
                       .reduce((a, b) => a + b, 0)
                       .toLocaleString()}{" "}
@@ -533,25 +577,26 @@ const BlendExtend = () => {
               </div>
             )}
 
-            {error && <p className="text-red-400 text-xs">{error}</p>}
+            {error && <p className="text-xs" style={{ color: "var(--danger-light)" }}>{error}</p>}
 
             <button
               onClick={handleCalculate}
               disabled={calculating}
-              className="w-full bg-red-600 hover:bg-red-700 disabled:bg-slate-600 text-white py-3 rounded-lg text-sm font-bold uppercase tracking-wide transition"
+              className="w-full py-3 rounded-[var(--r-md)] text-sm font-bold uppercase tracking-wide transition-colors disabled:opacity-50"
+              style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
             >
               {calculating ? "Calculating..." : "Calculate B&E Rates"}
             </button>
           </div>
 
           {/* ── RIGHT PANEL — Results ── */}
-          <div className="bg-slate-900 rounded-xl border border-slate-700 p-5">
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-4">
+          <div className={panelCls} style={panelStyle}>
+            <p className={panelHeadingCls + " mb-4"} style={panelHeadingStyle}>
               B&amp;E Pricing results
             </p>
 
             {!result ? (
-              <div className="text-center py-16 text-slate-500 text-sm space-y-2">
+              <div className="text-center py-16 text-sm space-y-2" style={{ color: "var(--ct-text-muted)" }}>
                 <p className="text-3xl">📊</p>
                 <p>Select a customer and calculate to see blended rates</p>
               </div>
@@ -575,10 +620,11 @@ const BlendExtend = () => {
                   ].map(({ label, val }) => (
                     <div
                       key={label}
-                      className="bg-slate-800 rounded-lg p-3 text-center"
+                      className="rounded-[var(--r-md)] p-3 text-center"
+                      style={{ background: "var(--ct-surface-hover)" }}
                     >
-                      <p className="text-xs text-slate-400 mb-1">{label}</p>
-                      <p className="text-white font-bold text-sm font-mono">
+                      <p className="text-xs mb-1" style={{ color: "var(--ct-text-muted)" }}>{label}</p>
+                      <p className="font-bold text-sm font-mono" style={{ color: "var(--ct-text-primary)" }}>
                         {val}
                       </p>
                     </div>
@@ -589,17 +635,17 @@ const BlendExtend = () => {
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm border-collapse">
                     <thead>
-                      <tr className="bg-slate-800">
-                        <th className="text-left px-4 py-2.5 text-xs text-slate-400 uppercase tracking-wide rounded-tl-lg">
+                      <tr style={{ background: "var(--ct-surface-hover)" }}>
+                        <th className="text-left px-4 py-2.5 text-xs uppercase tracking-wide rounded-tl-[var(--r-md)]" style={{ color: "var(--ct-text-muted)" }}>
                           Extension
                         </th>
-                        <th className="text-center px-4 py-2.5 text-xs text-slate-400 uppercase tracking-wide">
+                        <th className="text-center px-4 py-2.5 text-xs uppercase tracking-wide" style={{ color: "var(--ct-text-muted)" }}>
                           Ext / Total months
                         </th>
-                        <th className="text-right px-4 py-2.5 text-xs text-slate-400 uppercase tracking-wide">
+                        <th className="text-right px-4 py-2.5 text-xs uppercase tracking-wide" style={{ color: "var(--ct-text-muted)" }}>
                           New rate (¢)
                         </th>
-                        <th className="text-right px-4 py-2.5 text-xs text-slate-400 uppercase tracking-wide rounded-tr-lg">
+                        <th className="text-right px-4 py-2.5 text-xs uppercase tracking-wide rounded-tr-[var(--r-md)]" style={{ color: "var(--ct-text-muted)" }}>
                           Blended rate (¢)
                         </th>
                       </tr>
@@ -608,24 +654,28 @@ const BlendExtend = () => {
                       {result.quotes.map((q, i) => (
                         <tr
                           key={q.ext_term}
-                          className={`border-t border-slate-800 ${i % 2 === 0 ? "" : "bg-slate-800/30"}`}
+                          className="border-t"
+                          style={{
+                            borderColor: "var(--ct-border-subtle)",
+                            background: i % 2 === 0 ? "transparent" : "var(--ct-surface-hover)",
+                          }}
                         >
-                          <td className="px-4 py-3 text-white font-semibold">
+                          <td className="px-4 py-3 font-semibold" style={{ color: "var(--ct-text-primary)" }}>
                             {q.ext_term} month ext.
                           </td>
-                          <td className="px-4 py-3 text-center text-slate-300 font-mono">
+                          <td className="px-4 py-3 text-center font-mono" style={{ color: "var(--ct-text-secondary)" }}>
                             {q.ext_term} / {q.total_term}
                           </td>
-                          <td className="px-4 py-3 text-right text-slate-300 font-mono">
+                          <td className="px-4 py-3 text-right font-mono" style={{ color: "var(--ct-text-secondary)" }}>
                             {q.new_rate !== null ? q.new_rate.toFixed(4) : "—"}
                           </td>
                           <td className="px-4 py-3 text-right font-mono">
                             {q.blended_rate !== null ? (
-                              <span className="text-green-400 font-bold text-base">
+                              <span className="font-bold text-base" style={{ color: "var(--accent-light)" }}>
                                 {q.blended_rate.toFixed(4)}
                               </span>
                             ) : (
-                              <span className="text-slate-500">N/A</span>
+                              <span style={{ color: "var(--ct-text-muted)" }}>N/A</span>
                             )}
                           </td>
                         </tr>
@@ -635,13 +685,13 @@ const BlendExtend = () => {
                 </div>
                 {/* Offer PDF section */}
                 {result && (
-                  <div className="bg-slate-800 rounded-lg p-4 space-y-3 mt-4">
-                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">
+                  <div className={panelCls + " !p-4 mt-4"} style={{ background: "var(--ct-surface-hover)" }}>
+                    <p className={panelHeadingCls} style={panelHeadingStyle}>
                       Generate offer PDF
                     </p>
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="text-xs text-slate-400 mb-1 block">
+                        <label className={labelCls} style={labelStyle}>
                           {millsLabel}
                         </label>
                         <input
@@ -654,12 +704,13 @@ const BlendExtend = () => {
                               mills: e.target.value,
                             }))
                           }
-                          className="w-full bg-slate-700 text-white px-3 py-2 rounded-lg border border-slate-600 focus:outline-none focus:border-red-500 text-sm"
+                          className={inputCls}
+                          style={inputStyle}
                           placeholder="0"
                         />
                       </div>
                       <div>
-                        <label className="text-xs text-slate-400 mb-1 block">
+                        <label className={labelCls} style={labelStyle}>
                           Broker mills
                         </label>
                         <input
@@ -672,12 +723,13 @@ const BlendExtend = () => {
                               broker_mills: e.target.value,
                             }))
                           }
-                          className="w-full bg-slate-700 text-white px-3 py-2 rounded-lg border border-slate-600 focus:outline-none focus:border-red-500 text-sm"
+                          className={inputCls}
+                          style={inputStyle}
                           placeholder="0"
                         />
                       </div>
                       <div className="col-span-2">
-                        <label className="text-xs text-slate-400 mb-1 block">
+                        <label className={labelCls} style={labelStyle}>
                           Message (optional)
                         </label>
                         <input
@@ -689,7 +741,8 @@ const BlendExtend = () => {
                               message: e.target.value,
                             }))
                           }
-                          className="w-full bg-slate-700 text-white px-3 py-2 rounded-lg border border-slate-600 focus:outline-none focus:border-red-500 text-sm"
+                          className={inputCls}
+                          style={inputStyle}
                           placeholder="Custom message for offer..."
                         />
                       </div>
@@ -697,7 +750,8 @@ const BlendExtend = () => {
                     <button
                       onClick={handleOfferDownload}
                       disabled={generatingPdf}
-                      className="w-full bg-amber-600 hover:bg-amber-700 disabled:bg-slate-600 text-white py-2.5 rounded-lg text-sm font-bold uppercase transition"
+                      className={secondaryBtnCls}
+                      style={secondaryBtnStyle}
                     >
                       {generatingPdf ? "Generating..." : "Download Offer PDF"}
                     </button>
@@ -707,7 +761,8 @@ const BlendExtend = () => {
                   <button
                     onClick={handleSave}
                     disabled={saving}
-                    className="w-full bg-slate-700 hover:bg-slate-600 disabled:bg-slate-600 text-white py-2.5 rounded-lg text-sm font-bold uppercase transition mt-2"
+                    className={secondaryBtnCls + " mt-2"}
+                    style={secondaryBtnStyle}
                   >
                     {saving
                       ? "Saving..."
@@ -735,27 +790,28 @@ const BlendExtend = () => {
                         setError(err.response?.data?.detail || "Send failed.");
                       }
                     }}
-                    className="w-full bg-blue-700 hover:bg-blue-600 text-white py-2.5 rounded-lg text-sm font-bold uppercase transition mt-2"
+                    className="w-full py-2.5 rounded-[var(--r-md)] text-sm font-bold uppercase transition-colors mt-2"
+                    style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
                   >
                     Send Pricing Email
                   </button>
                 )}
 
                 {/* Formula note */}
-                <p className="text-xs text-slate-500 text-center">
+                <p className="text-xs text-center" style={{ color: "var(--ct-text-muted)" }}>
                   Formula: (current_rate × rem_vol + new_rate × ext_vol) /
                   total_vol
                 </p>
 
                 {/* Per customer breakdown if multiple */}
                 {result.customers.length > 1 && (
-                  <div className="bg-slate-800 rounded-lg p-4">
-                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-3">
+                  <div className="rounded-[var(--r-md)] p-4" style={{ background: "var(--ct-surface-hover)" }}>
+                    <p className="text-xs font-bold uppercase tracking-wide mb-3" style={{ color: "var(--ct-text-muted)" }}>
                       Customer breakdown
                     </p>
                     <table className="w-full text-xs">
                       <thead>
-                        <tr className="text-slate-500 uppercase">
+                        <tr className="uppercase" style={{ color: "var(--ct-text-muted)" }}>
                           <th className="text-left py-1">Customer</th>
                           <th className="text-right py-1">Rate (¢)</th>
                           <th className="text-right py-1">Rem. months</th>
@@ -766,18 +822,19 @@ const BlendExtend = () => {
                         {result.customers.map((c: any) => (
                           <tr
                             key={c.cust_id}
-                            className="border-t border-slate-700"
+                            className="border-t"
+                            style={{ borderColor: "var(--ct-border-default)" }}
                           >
-                            <td className="py-1.5 text-white">
+                            <td className="py-1.5" style={{ color: "var(--ct-text-primary)" }}>
                               {c.company_name}
                             </td>
-                            <td className="py-1.5 text-right text-slate-300 font-mono">
+                            <td className="py-1.5 text-right font-mono" style={{ color: "var(--ct-text-secondary)" }}>
                               {c.contract_rate_cents?.toFixed(4)}
                             </td>
-                            <td className="py-1.5 text-right text-slate-300">
+                            <td className="py-1.5 text-right" style={{ color: "var(--ct-text-secondary)" }}>
                               {c.remaining_months}
                             </td>
-                            <td className="py-1.5 text-right text-slate-300">
+                            <td className="py-1.5 text-right" style={{ color: "var(--ct-text-secondary)" }}>
                               {Number(c.annual_usage).toLocaleString()}
                             </td>
                           </tr>
