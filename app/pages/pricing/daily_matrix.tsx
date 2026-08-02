@@ -58,12 +58,15 @@ const DailyMatrixPage = () => {
   return (
     <Layout title="Daily Pricing Matrix">
       <div className="max-w-7xl mx-auto p-6 space-y-8">
-        <header className="flex justify-between items-end border-b border-slate-800 pb-6">
+        <header
+          className="flex justify-between items-end border-b pb-6"
+          style={{ borderColor: "var(--ct-border-default)" }}
+        >
           <div>
-            <h1 className="text-3xl font-black text-white uppercase tracking-tighter">
+            <h1 className="text-3xl font-black uppercase tracking-tighter" style={{ color: "var(--ct-text-primary)" }}>
               Daily Matrix
             </h1>
-            <p className="text-slate-500 font-mono text-sm uppercase">
+            <p className="font-mono text-sm uppercase" style={{ color: "var(--ct-text-muted)" }}>
               Run Time: {currentTime || "Initializing..."}
             </p>
           </div>
@@ -71,7 +74,8 @@ const DailyMatrixPage = () => {
             {terms.map((t) => (
               <span
                 key={t}
-                className="bg-slate-800 text-slate-300 px-3 py-1 rounded text-xs font-bold uppercase"
+                className="px-3 py-1 rounded-[var(--r-md)] text-xs font-bold uppercase"
+                style={{ background: "var(--accent-light-tint)", color: "var(--accent-light)" }}
               >
                 {t} MO
               </span>
@@ -80,23 +84,27 @@ const DailyMatrixPage = () => {
         </header>
 
         {/* Controls */}
-        <div className="bg-slate-800 rounded-lg p-5 flex flex-wrap gap-6 items-end">
+        <div
+          className="rounded-[var(--r-lg)] p-5 flex flex-wrap gap-6 items-end border"
+          style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}
+        >
           {/* Start Date */}
           <div className="flex flex-col gap-1">
-            <label className="text-slate-400 text-xs uppercase font-bold">
+            <label className="text-xs uppercase font-bold" style={{ color: "var(--ct-text-muted)" }}>
               Start Date
             </label>
             <input
               type="date"
               value={startDateInput}
               onChange={(e) => setStartDateInput(e.target.value)}
-              className="bg-slate-700 text-white px-3 py-2 rounded text-sm border border-slate-600 focus:outline-none focus:border-red-500"
+              className="px-3 py-2 rounded-[var(--r-md)] text-sm border focus:outline-none focus:border-[var(--accent-light)]"
+              style={{ background: "var(--ct-canvas)", color: "var(--ct-text-primary)", borderColor: "var(--ct-border-default)" }}
             />
           </div>
 
           {/* Number of months to show */}
           <div className="flex flex-col gap-1">
-            <label className="text-slate-400 text-xs uppercase font-bold">
+            <label className="text-xs uppercase font-bold" style={{ color: "var(--ct-text-muted)" }}>
               Months to Show
             </label>
             <input
@@ -105,13 +113,14 @@ const DailyMatrixPage = () => {
               max={24}
               value={numMonths}
               onChange={(e) => setNumMonths(parseInt(e.target.value))}
-              className="bg-slate-700 text-white px-3 py-2 rounded text-sm border border-slate-600 w-24 focus:outline-none focus:border-red-500"
+              className="px-3 py-2 rounded-[var(--r-md)] text-sm w-24 border focus:outline-none focus:border-[var(--accent-light)]"
+              style={{ background: "var(--ct-canvas)", color: "var(--ct-text-primary)", borderColor: "var(--ct-border-default)" }}
             />
           </div>
 
           {/* Terms */}
           <div className="flex flex-col gap-1">
-            <label className="text-slate-400 text-xs uppercase font-bold">
+            <label className="text-xs uppercase font-bold" style={{ color: "var(--ct-text-muted)" }}>
               Terms (comma separated, max 6)
             </label>
             <input
@@ -120,22 +129,24 @@ const DailyMatrixPage = () => {
               onChange={(e) => setTermsInput(e.target.value)}
               disabled={priceType === "sweetspot"}
               placeholder="e.g. 6,12,18,24,36"
-              className={`bg-slate-700 text-white px-3 py-2 rounded text-sm border border-slate-600 w-48 focus:outline-none focus:border-red-500 ${priceType === "sweetspot" ? "opacity-50 cursor-not-allowed" : ""}`}
+              className={`px-3 py-2 rounded-[var(--r-md)] text-sm w-48 border focus:outline-none focus:border-[var(--accent-light)] ${priceType === "sweetspot" ? "opacity-50 cursor-not-allowed" : ""}`}
+              style={{ background: "var(--ct-canvas)", color: "var(--ct-text-primary)", borderColor: "var(--ct-border-default)" }}
             />
             {termsError && (
-              <span className="text-red-400 text-xs">{termsError}</span>
+              <span className="text-xs" style={{ color: "var(--danger-light)" }}>{termsError}</span>
             )}
           </div>
 
           {/* Price Type */}
           <div className="flex flex-col gap-1">
-            <label className="text-slate-400 text-xs uppercase font-bold">
+            <label className="text-xs uppercase font-bold" style={{ color: "var(--ct-text-muted)" }}>
               Price Type
             </label>
             <select
               value={priceType}
               onChange={(e) => setPriceType(e.target.value)}
-              className="bg-slate-700 text-white px-3 py-2 rounded text-sm border border-slate-600 focus:outline-none focus:border-red-500"
+              className="px-3 py-2 rounded-[var(--r-md)] text-sm border focus:outline-none focus:border-[var(--accent-light)]"
+              style={{ background: "var(--ct-canvas)", color: "var(--ct-text-primary)", borderColor: "var(--ct-border-default)" }}
             >
               <option value="commercial">Commercial</option>
               <option value="residential">Residential</option>
@@ -146,7 +157,8 @@ const DailyMatrixPage = () => {
           {/* Apply Button */}
           <button
             onClick={applySettings}
-            className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded text-sm font-bold uppercase transition-colors"
+            className="px-6 py-2 rounded-[var(--r-md)] text-sm font-bold uppercase transition-colors"
+            style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
           >
             Apply
           </button>
