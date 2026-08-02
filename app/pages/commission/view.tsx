@@ -168,19 +168,19 @@ export default function ViewCommissionData() {
     URL.revokeObjectURL(url);
   }
 
-  const auditFlagColor = (row: CommissionRow) => {
-    if (row.double_payment) return "bg-red-50";
-    if (row.variance_pct) return "bg-amber-50";
-    return "";
+  const auditFlagStyle = (row: CommissionRow): React.CSSProperties | undefined => {
+    if (row.double_payment) return { background: "var(--danger-light-tint)" };
+    if (row.variance_pct) return { background: "var(--amber-light-tint)" };
+    return undefined;
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-white border-b border-gray-200 px-6 py-4 shadow-sm">
-        <h1 className="text-xl font-bold text-gray-800 uppercase tracking-tighter">
+    <div className="min-h-screen" style={{ background: "var(--ct-canvas)" }}>
+      <div className="border-b px-6 py-4" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)", boxShadow: "var(--shadow-content)" }}>
+        <h1 className="text-xl font-bold uppercase tracking-tighter" style={{ color: "var(--ct-text-primary)" }}>
           Commission Data
         </h1>
-        <p className="text-xs text-gray-400 font-bold">
+        <p className="text-xs font-bold" style={{ color: "var(--ct-text-muted)" }}>
           AUDIT & VIEW INTERFACE
         </p>
       </div>
@@ -188,13 +188,14 @@ export default function ViewCommissionData() {
       <div className="flex">
         <main className="flex-1 p-8 overflow-auto">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-lg font-black text-gray-800 uppercase tracking-widest">
+            <h2 className="text-lg font-black uppercase tracking-widest" style={{ color: "var(--ct-text-primary)" }}>
               Data Repository
             </h2>
             {rows.length > 0 && (
               <button
                 onClick={downloadCSV}
-                className="bg-green-600 text-white px-5 py-2 rounded shadow-md text-xs font-bold uppercase hover:bg-green-700"
+                className="px-5 py-2 rounded-[var(--r-sm)] shadow-md text-xs font-bold uppercase transition-colors"
+                style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
               >
                 Export to CSV
               </button>
@@ -203,21 +204,20 @@ export default function ViewCommissionData() {
 
           {msg && (
             <div
-              className={`mb-6 p-4 rounded text-sm font-medium border-l-4 shadow-sm ${
-                msg.type === "success"
-                  ? "bg-green-50 text-green-800 border-green-500"
-                  : "bg-red-50 text-red-800 border-red-500"
-              }`}
+              className="mb-6 p-4 rounded-[var(--r-md)] text-sm font-medium border-l-4 shadow-sm"
+              style={msg.type === "success"
+                ? { background: "var(--success-light-tint)", color: "var(--success-light)", borderColor: "var(--success-light)" }
+                : { background: "var(--danger-light-tint)", color: "var(--danger-light)", borderColor: "var(--danger-light)" }}
             >
               {msg.text}
             </div>
           )}
 
           {/* Filters */}
-          <div className="bg-white border border-gray-200 rounded p-4 mb-4">
+          <div className="rounded-[var(--r-md)] border p-4 mb-4" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
             <div className="flex flex-wrap gap-6 items-start">
               <div>
-                <label className="block text-xs text-gray-500 mb-1">
+                <label className="block text-xs mb-1" style={{ color: "var(--ct-text-muted)" }}>
                   Vendor IDs
                 </label>
                 <select
@@ -228,7 +228,8 @@ export default function ViewCommissionData() {
                       Array.from(e.target.selectedOptions, (o) => o.value),
                     )
                   }
-                  className="border border-gray-300 rounded px-2 py-1 text-sm h-28 min-w-[200px]"
+                  className="rounded-[var(--r-sm)] border px-2 py-1 text-sm h-28 min-w-[200px]"
+                  style={{ borderColor: "var(--ct-border-default)" }}
                 >
                   {brokers.map((b) => (
                     <option key={b.vendor} value={b.vendor}>
@@ -239,7 +240,7 @@ export default function ViewCommissionData() {
               </div>
 
               <div>
-                <label className="block text-xs text-gray-500 mb-1">
+                <label className="block text-xs mb-1" style={{ color: "var(--ct-text-muted)" }}>
                   Period Range
                 </label>
                 <div className="flex items-center gap-2">
@@ -249,7 +250,8 @@ export default function ViewCommissionData() {
                       setFromMonth(e.target.value);
                       setQuickPeriod("");
                     }}
-                    className="border border-gray-300 rounded px-2 py-1.5 text-sm min-w-[160px]"
+                    className="rounded-[var(--r-sm)] border px-2 py-1.5 text-sm min-w-[160px]"
+                    style={{ borderColor: "var(--ct-border-default)" }}
                   >
                     {months.map((m: MonthOption) => (
                       <option key={m.value} value={m.value}>
@@ -257,14 +259,15 @@ export default function ViewCommissionData() {
                       </option>
                     ))}
                   </select>
-                  <span className="text-gray-400 text-sm">to</span>
+                  <span className="text-sm" style={{ color: "var(--ct-text-muted)" }}>to</span>
                   <select
                     value={toMonth}
                     onChange={(e) => {
                       setToMonth(e.target.value);
                       setQuickPeriod("");
                     }}
-                    className="border border-gray-300 rounded px-2 py-1.5 text-sm min-w-[160px]"
+                    className="rounded-[var(--r-sm)] border px-2 py-1.5 text-sm min-w-[160px]"
+                    style={{ borderColor: "var(--ct-border-default)" }}
                   >
                     {months.map((m: MonthOption) => (
                       <option key={m.value} value={m.value}>
@@ -275,7 +278,7 @@ export default function ViewCommissionData() {
                 </div>
 
                 <div className="flex gap-1 mt-2">
-                  <span className="text-xs text-gray-500 self-center mr-1">
+                  <span className="text-xs self-center mr-1" style={{ color: "var(--ct-text-muted)" }}>
                     Quick:
                   </span>
                   {[2, 3, 6, 9, 12].map((n) => (
@@ -286,11 +289,10 @@ export default function ViewCommissionData() {
                         setFromMonth("");
                         setToMonth("");
                       }}
-                      className={`px-2 py-0.5 rounded text-xs border transition-colors ${
-                        quickPeriod === String(n)
-                          ? "bg-blue-600 text-white border-blue-600"
-                          : "bg-white text-gray-600 border-gray-300 hover:border-blue-400"
-                      }`}
+                      className="px-2 py-0.5 rounded-[var(--r-sm)] text-xs border transition-colors hover:border-[var(--accent-light)]"
+                      style={quickPeriod === String(n)
+                        ? { background: "var(--accent-light)", color: "var(--accent-light-on-solid)", borderColor: "var(--accent-light)" }
+                        : { background: "var(--ct-surface)", color: "var(--ct-text-secondary)", borderColor: "var(--ct-border-default)" }}
                     >
                       {n}mo
                     </button>
@@ -299,7 +301,7 @@ export default function ViewCommissionData() {
               </div>
 
               <div>
-                <label className="block text-xs text-gray-500 mb-2">
+                <label className="block text-xs mb-2" style={{ color: "var(--ct-text-muted)" }}>
                   Audit Options
                 </label>
                 <div className="space-y-1.5">
@@ -331,7 +333,8 @@ export default function ViewCommissionData() {
                   ].map((opt) => (
                     <label
                       key={opt.key}
-                      className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer"
+                      className="flex items-center gap-2 text-sm cursor-pointer"
+                      style={{ color: "var(--ct-text-secondary)" }}
                     >
                       <input
                         type="checkbox"
@@ -343,7 +346,8 @@ export default function ViewCommissionData() {
                           setCheckInactive(false);
                           opt.set(e.target.checked);
                         }}
-                        className="rounded"
+                        className="rounded-[var(--r-sm)]"
+                        style={{ accentColor: "var(--accent-light)" }}
                       />
                       {opt.label}
                     </label>
@@ -354,7 +358,8 @@ export default function ViewCommissionData() {
               <div className="self-end flex gap-2">
                 <button
                   onClick={fetchData}
-                  className="bg-blue-600 text-white px-5 py-1.5 rounded text-sm hover:bg-blue-700"
+                  className="px-5 py-1.5 rounded-[var(--r-sm)] text-sm transition-colors"
+                  style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
                 >
                   Search
                 </button>
@@ -370,7 +375,8 @@ export default function ViewCommissionData() {
                     setCheckInactive(false);
                     setRows([]);
                   }}
-                  className="bg-gray-200 text-gray-700 px-5 py-1.5 rounded text-sm hover:bg-gray-300"
+                  className="px-5 py-1.5 rounded-[var(--r-sm)] text-sm transition-colors hover:bg-[var(--ct-surface-hover)]"
+                  style={{ background: "var(--ct-surface-hover)", color: "var(--ct-text-secondary)" }}
                 >
                   Clear
                 </button>
@@ -379,38 +385,40 @@ export default function ViewCommissionData() {
           </div>
 
           {/* Table */}
-          <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+          <div className="rounded-[var(--r-lg)] border shadow-sm overflow-hidden" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
             {loading ? (
-              <div className="p-20 text-center text-gray-400 font-bold animate-pulse">
+              <div className="p-20 text-center font-bold animate-pulse" style={{ color: "var(--ct-text-muted)" }}>
                 Scanning ORBIC Database...
               </div>
             ) : rows.length === 0 ? (
-              <div className="p-20 text-center text-gray-400">
+              <div className="p-20 text-center" style={{ color: "var(--ct-text-muted)" }}>
                 No records found for current criteria.
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-[11px] min-w-[1500px]">
-                  <thead className="bg-gray-50 border-b border-gray-200">
+                  <thead className="border-b" style={{ background: "var(--ct-surface-hover)", borderColor: "var(--ct-border-default)" }}>
                     <tr>
                       {DISPLAY_COLUMNS.map((col) => (
                         <th
                           key={col.key}
-                          className="px-4 py-3 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest whitespace-nowrap"
+                          className="px-4 py-3 text-left text-[10px] font-black uppercase tracking-widest whitespace-nowrap"
+                          style={{ color: "var(--ct-text-muted)" }}
                         >
                           {col.label}
                         </th>
                       ))}
-                      <th className="px-4 py-3 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                      <th className="px-4 py-3 text-left text-[10px] font-black uppercase tracking-widest" style={{ color: "var(--ct-text-muted)" }}>
                         Actions
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-100">
+                  <tbody className="divide-y" style={{ borderColor: "var(--ct-border-subtle)" }}>
                     {rows.map((row) => (
                       <tr
                         key={row.sid}
-                        className={`hover:bg-blue-50/30 transition-colors ${auditFlagColor(row)}`}
+                        className="transition-colors hover:bg-[var(--ct-surface-hover)]"
+                        style={auditFlagStyle(row)}
                       >
                         {editingSid === row.sid ? (
                           <>
@@ -437,10 +445,11 @@ export default function ViewCommissionData() {
                                         }),
                                       )
                                     }
-                                    className="border border-orange-300 rounded px-2 py-1 w-full text-xs font-bold"
+                                    className="rounded-[var(--r-sm)] border px-2 py-1 w-full text-xs font-bold"
+                                    style={{ borderColor: "var(--accent-light)" }}
                                   />
                                 ) : (
-                                  <span className="text-gray-400">
+                                  <span style={{ color: "var(--ct-text-muted)" }}>
                                     {row[col.key]}
                                   </span>
                                 )}
@@ -449,13 +458,15 @@ export default function ViewCommissionData() {
                             <td className="px-4 py-2 flex gap-2">
                               <button
                                 onClick={() => saveEdit(row.sid)}
-                                className="bg-green-600 text-white px-3 py-1 rounded text-[10px] font-bold uppercase"
+                                className="px-3 py-1 rounded-[var(--r-sm)] text-[10px] font-bold uppercase"
+                                style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
                               >
                                 Save
                               </button>
                               <button
                                 onClick={() => setEditingSid(null)}
-                                className="bg-gray-400 text-white px-3 py-1 rounded text-[10px] font-bold uppercase"
+                                className="px-3 py-1 rounded-[var(--r-sm)] text-[10px] font-bold uppercase"
+                                style={{ background: "var(--ct-text-muted)", color: "#ffffff" }}
                               >
                                 Esc
                               </button>
@@ -466,14 +477,15 @@ export default function ViewCommissionData() {
                             {DISPLAY_COLUMNS.map((col) => (
                               <td
                                 key={col.key}
-                                className="px-4 py-3 text-gray-700 whitespace-nowrap"
+                                className="px-4 py-3 whitespace-nowrap"
+                                style={{ color: "var(--ct-text-secondary)" }}
                               >
                                 {col.key === "commission_amount"
                                   ? Number(row[col.key] ?? 0).toFixed(4)
                                   : (row[col.key] ?? "")}
                                 {col.key === "commission_amount" &&
                                   row.variance_pct && (
-                                    <span className="ml-2 text-amber-600 font-bold">
+                                    <span className="ml-2 font-bold" style={{ color: "var(--amber-light)" }}>
                                       (+{row.variance_pct}%)
                                     </span>
                                   )}
@@ -482,13 +494,15 @@ export default function ViewCommissionData() {
                             <td className="px-4 py-3 flex gap-2">
                               <button
                                 onClick={() => startEdit(row)}
-                                className="text-blue-600 font-bold uppercase text-[10px] hover:underline"
+                                className="font-bold uppercase text-[10px] hover:underline"
+                                style={{ color: "var(--accent-light)" }}
                               >
                                 Edit
                               </button>
                               <button
                                 onClick={() => deleteRow(row.sid)}
-                                className="text-red-600 font-bold uppercase text-[10px] hover:underline"
+                                className="font-bold uppercase text-[10px] hover:underline"
+                                style={{ color: "var(--danger-light)" }}
                               >
                                 Del
                               </button>
