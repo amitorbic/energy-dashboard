@@ -63,13 +63,13 @@ export default function DeleteCommissionData() {
     <>
       {
         <div className="max-w-lg p-6">
-          <h2 className="text-lg font-semibold text-orange-600 mb-4">
+          <h2 className="text-lg font-semibold mb-4" style={{ color: "var(--accent-light)" }}>
             Delete Commission Data
           </h2>
 
-          <div className="bg-white border border-gray-200 rounded p-6 shadow-sm">
+          <div className="rounded-[var(--r-md)] border p-6 shadow-sm" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
             {/* 2. Fixed unescaped apostrophe for 'month's' */}
-            <p className="text-sm text-gray-600 mb-5">
+            <p className="text-sm mb-5" style={{ color: "var(--ct-text-secondary)" }}>
               Select a month to delete all commission data for that period. This
               is typically done to clear the previous month&apos;s data before
               recalculating with the current payment summary.
@@ -77,11 +77,10 @@ export default function DeleteCommissionData() {
 
             {msg && (
               <div
-                className={`mb-4 p-3 rounded text-sm border ${
-                  msg.type === "success"
-                    ? "bg-green-50 border-green-200 text-green-800"
-                    : "bg-red-50 border-red-200 text-red-800"
-                }`}
+                className="mb-4 p-3 rounded-[var(--r-md)] text-sm border"
+                style={msg.type === "success"
+                  ? { background: "var(--success-light-tint)", borderColor: "var(--success-light-tint)", color: "var(--success-light)" }
+                  : { background: "var(--danger-light-tint)", borderColor: "var(--danger-light-tint)", color: "var(--danger-light)" }}
               >
                 {msg.text}
               </div>
@@ -89,13 +88,14 @@ export default function DeleteCommissionData() {
 
             <div className="flex items-end gap-4">
               <div className="flex-1">
-                <label className="block text-xs text-gray-500 mb-1 font-bold uppercase">
+                <label className="block text-xs mb-1 font-bold uppercase" style={{ color: "var(--ct-text-muted)" }}>
                   Select Month
                 </label>
                 <select
                   value={month}
                   onChange={(e) => setMonth(e.target.value)}
-                  className="border border-gray-300 rounded px-3 py-2 text-sm w-full text-black focus:border-orange-500 outline-none"
+                  className="rounded-[var(--r-sm)] border px-3 py-2 text-sm w-full outline-none focus:border-[var(--accent-light)]"
+                  style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-primary)" }}
                 >
                   <option value="">Choose month...</option>
                   {MONTHS.map((m) => (
@@ -109,18 +109,17 @@ export default function DeleteCommissionData() {
               <button
                 onClick={handleDelete}
                 disabled={loading || !month}
-                className={`px-5 py-2 rounded text-white text-sm font-bold uppercase transition-all ${
-                  loading || !month
-                    ? "bg-gray-400 cursor-not-allowed"
-                    : "bg-red-600 hover:bg-red-700 active:scale-95"
-                }`}
+                className="px-5 py-2 rounded-[var(--r-sm)] text-sm font-bold uppercase transition-all disabled:cursor-not-allowed active:scale-95"
+                style={loading || !month
+                  ? { background: "var(--ct-text-muted)", color: "#ffffff" }
+                  : { background: "var(--danger-light)", color: "var(--danger-light-on-solid)" }}
               >
                 {loading ? "Deleting..." : "Delete Data"}
               </button>
             </div>
 
-            <div className="mt-6 p-3 bg-red-50 border-l-4 border-red-500">
-              <p className="text-xs text-red-700 font-semibold">
+            <div className="mt-6 p-3 border-l-4" style={{ background: "var(--danger-light-tint)", borderColor: "var(--danger-light)" }}>
+              <p className="text-xs font-semibold" style={{ color: "var(--danger-light)" }}>
                 Warning: This action is irreversible. Ensure you have reviewed
                 the data in View Data before deleting.
               </p>
