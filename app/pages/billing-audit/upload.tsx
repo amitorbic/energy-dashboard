@@ -102,16 +102,17 @@ export default function BillingUploadPage() {
   return (
     <BillingLayout title="Billing Audit">
       <div className="max-w-xl">
-        <h2 className="text-base font-semibold text-gray-800 mb-6">
+        <h2 className="text-base font-semibold mb-6" style={{ color: "var(--ct-text-primary)" }}>
           Upload Billing File
         </h2>
 
         {/* ── success state ── */}
         {uploadState === "success" ? (
-          <div className="rounded-lg border border-green-200 bg-green-50 p-6 text-center space-y-4">
-            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-green-100 mx-auto">
+          <div className="rounded-[var(--r-lg)] border p-6 text-center space-y-4" style={{ borderColor: "var(--success-light-tint)", background: "var(--success-light-tint)" }}>
+            <div className="flex items-center justify-center w-12 h-12 rounded-full mx-auto" style={{ background: "var(--ct-surface)" }}>
               <svg
-                className="w-6 h-6 text-green-600"
+                className="w-6 h-6"
+                style={{ color: "var(--success-light)" }}
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -125,23 +126,25 @@ export default function BillingUploadPage() {
               </svg>
             </div>
             <div>
-              <p className="text-sm font-medium text-green-800">
+              <p className="text-sm font-medium" style={{ color: "var(--success-light)" }}>
                 File uploaded successfully
               </p>
-              <p className="text-xs text-green-600 mt-1">
+              <p className="text-xs mt-1" style={{ color: "var(--success-light)" }}>
                 {file?.name} — Upload ID #{uploadId}
               </p>
             </div>
             <div className="flex gap-3 justify-center pt-2">
               <button
                 onClick={() => router.push("/billing-audit/exceptions/last")}
-                className="px-4 py-2 bg-green-600 text-white text-sm rounded hover:bg-green-700 transition-colors"
+                className="px-4 py-2 text-sm rounded-[var(--r-sm)] font-medium transition-colors"
+                style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
               >
                 View Exceptions
               </button>
               <button
                 onClick={reset}
-                className="px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm rounded hover:bg-gray-50 transition-colors"
+                className="px-4 py-2 text-sm rounded-[var(--r-sm)] border transition-colors hover:bg-[var(--ct-surface-hover)]"
+                style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)", color: "var(--ct-text-secondary)" }}
               >
                 Upload Another
               </button>
@@ -155,13 +158,10 @@ export default function BillingUploadPage() {
               onDragLeave={onDragLeave}
               onDrop={onDrop}
               onClick={() => fileInputRef.current?.click()}
-              className={`relative border-2 border-dashed rounded-lg p-10 text-center cursor-pointer transition-colors ${
-                dragOver
-                  ? "border-green-400 bg-green-50"
-                  : file
-                    ? "border-green-300 bg-green-50"
-                    : "border-gray-300 bg-white hover:border-gray-400 hover:bg-gray-50"
-              }`}
+              className="relative border-2 border-dashed rounded-[var(--r-lg)] p-10 text-center cursor-pointer transition-colors"
+              style={dragOver || file
+                ? { borderColor: "var(--accent-light)", background: "var(--accent-light-tint)" }
+                : { borderColor: "var(--ct-border-default)", background: "var(--ct-surface)" }}
             >
               <input
                 ref={fileInputRef}
@@ -175,7 +175,8 @@ export default function BillingUploadPage() {
                 <div className="space-y-1">
                   <div className="flex items-center justify-center gap-2">
                     <svg
-                      className="w-5 h-5 text-green-500"
+                      className="w-5 h-5"
+                      style={{ color: "var(--accent-light)" }}
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -187,18 +188,19 @@ export default function BillingUploadPage() {
                         d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                       />
                     </svg>
-                    <span className="text-sm font-medium text-gray-800">
+                    <span className="text-sm font-medium" style={{ color: "var(--ct-text-primary)" }}>
                       {file.name}
                     </span>
                   </div>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs" style={{ color: "var(--ct-text-muted)" }}>
                     {(file.size / 1024).toFixed(1)} KB — click to change
                   </p>
                 </div>
               ) : (
                 <div className="space-y-2">
                   <svg
-                    className="w-10 h-10 text-gray-300 mx-auto"
+                    className="w-10 h-10 mx-auto"
+                    style={{ color: "var(--ct-text-muted)" }}
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -210,18 +212,18 @@ export default function BillingUploadPage() {
                       d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
                     />
                   </svg>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm" style={{ color: "var(--ct-text-secondary)" }}>
                     Drag & drop your billing extract here
                   </p>
-                  <p className="text-xs text-gray-400">or click to browse</p>
-                  <p className="text-xs text-gray-400">.xls or .xlsx only</p>
+                  <p className="text-xs" style={{ color: "var(--ct-text-muted)" }}>or click to browse</p>
+                  <p className="text-xs" style={{ color: "var(--ct-text-muted)" }}>.xls or .xlsx only</p>
                 </div>
               )}
             </div>
 
             {/* ── error ── */}
             {errorMsg && (
-              <p className="mt-3 text-sm text-red-600">{errorMsg}</p>
+              <p className="mt-3 text-sm" style={{ color: "var(--danger-light)" }}>{errorMsg}</p>
             )}
 
             {/* ── submit ── */}
@@ -229,7 +231,8 @@ export default function BillingUploadPage() {
               <button
                 onClick={handleSubmit}
                 disabled={!file || uploadState === "uploading"}
-                className="px-5 py-2 bg-green-600 text-white text-sm rounded hover:bg-green-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+                className="px-5 py-2 text-sm rounded-[var(--r-sm)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+                style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
               >
                 {uploadState === "uploading" ? (
                   <>
@@ -262,7 +265,8 @@ export default function BillingUploadPage() {
               {file && uploadState === "idle" && (
                 <button
                   onClick={reset}
-                  className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+                  className="px-4 py-2 text-sm transition-colors hover:text-[var(--ct-text-secondary)]"
+                  style={{ color: "var(--ct-text-muted)" }}
                 >
                   Clear
                 </button>
@@ -272,10 +276,11 @@ export default function BillingUploadPage() {
         )}
 
         {/* ── upload history toggle ── */}
-        <div className="mt-8 border-t border-gray-200 pt-6">
+        <div className="mt-8 border-t pt-6" style={{ borderColor: "var(--ct-border-default)" }}>
           <button
             onClick={loadHistory}
-            className="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1 transition-colors"
+            className="text-sm flex items-center gap-1 transition-colors hover:text-[var(--ct-text-secondary)]"
+            style={{ color: "var(--ct-text-muted)" }}
           >
             <svg
               className={`w-4 h-4 transition-transform ${showHistory ? "rotate-90" : ""}`}
@@ -298,53 +303,53 @@ export default function BillingUploadPage() {
           </button>
 
           {showHistory && history.length > 0 && (
-            <div className="mt-4 rounded-lg border border-gray-200 overflow-hidden">
+            <div className="mt-4 rounded-[var(--r-lg)] border overflow-hidden" style={{ borderColor: "var(--ct-border-default)" }}>
               <table className="w-full text-sm">
-                <thead className="bg-gray-50 border-b border-gray-200">
+                <thead className="border-b" style={{ background: "var(--ct-surface-hover)", borderColor: "var(--ct-border-default)" }}>
                   <tr>
-                    <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500">
+                    <th className="px-4 py-2.5 text-left text-xs font-medium" style={{ color: "var(--ct-text-muted)" }}>
                       Date
                     </th>
-                    <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500">
+                    <th className="px-4 py-2.5 text-left text-xs font-medium" style={{ color: "var(--ct-text-muted)" }}>
                       File
                     </th>
-                    <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500">
+                    <th className="px-4 py-2.5 text-left text-xs font-medium" style={{ color: "var(--ct-text-muted)" }}>
                       Uploaded by
                     </th>
-                    <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500">
+                    <th className="px-4 py-2.5 text-left text-xs font-medium" style={{ color: "var(--ct-text-muted)" }}>
                       Rows
                     </th>
-                    <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500">
+                    <th className="px-4 py-2.5 text-left text-xs font-medium" style={{ color: "var(--ct-text-muted)" }}>
                       Email
                     </th>
-                    <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500"></th>
+                    <th className="px-4 py-2.5 text-left text-xs font-medium" style={{ color: "var(--ct-text-muted)" }}></th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100 bg-white">
+                <tbody style={{ background: "var(--ct-surface)" }}>
                   {history.map((h: any) => (
-                    <tr key={h.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-2.5 text-gray-800 whitespace-nowrap">
+                    <tr key={h.id} className="border-t hover:bg-[var(--ct-surface-hover)]" style={{ borderColor: "var(--ct-border-subtle)" }}>
+                      <td className="px-4 py-2.5 whitespace-nowrap" style={{ color: "var(--ct-text-primary)" }}>
                         {h.upload_date}
                       </td>
                       <td
-                        className="px-4 py-2.5 text-gray-600 max-w-[160px] truncate"
+                        className="px-4 py-2.5 max-w-[160px] truncate"
+                        style={{ color: "var(--ct-text-secondary)" }}
                         title={h.filename}
                       >
                         {h.filename}
                       </td>
-                      <td className="px-4 py-2.5 text-gray-600">
+                      <td className="px-4 py-2.5" style={{ color: "var(--ct-text-secondary)" }}>
                         {h.uploaded_by}
                       </td>
-                      <td className="px-4 py-2.5 text-gray-600">
+                      <td className="px-4 py-2.5" style={{ color: "var(--ct-text-secondary)" }}>
                         {h.total_rows}
                       </td>
                       <td className="px-4 py-2.5">
                         <span
-                          className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                            h.email_sent
-                              ? "bg-green-100 text-green-700"
-                              : "bg-gray-100 text-gray-500"
-                          }`}
+                          className="inline-flex items-center px-2 py-0.5 rounded-[var(--r-sm)] text-xs font-medium"
+                          style={h.email_sent
+                            ? { background: "var(--success-light-tint)", color: "var(--success-light)" }
+                            : { background: "var(--ct-surface-hover)", color: "var(--ct-text-muted)" }}
                         >
                           {h.email_sent ? "Sent" : "Pending"}
                         </span>
@@ -356,7 +361,8 @@ export default function BillingUploadPage() {
                               `/billing-audit/exceptions?date=${h.upload_date}`,
                             )
                           }
-                          className="text-xs text-green-600 hover:text-green-800 font-medium"
+                          className="text-xs font-medium hover:underline"
+                          style={{ color: "var(--accent-light)" }}
                         >
                           View
                         </button>
@@ -369,7 +375,7 @@ export default function BillingUploadPage() {
           )}
 
           {showHistory && history.length === 0 && (
-            <p className="mt-4 text-sm text-gray-400">No uploads found.</p>
+            <p className="mt-4 text-sm" style={{ color: "var(--ct-text-muted)" }}>No uploads found.</p>
           )}
         </div>
       </div>
