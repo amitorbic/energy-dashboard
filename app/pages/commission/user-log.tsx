@@ -49,28 +49,28 @@ export default function UserLog() {
   return (
     <div className="p-6">
       <header className="mb-6">
-        <h2 className="text-xl font-bold text-orange-600 uppercase tracking-tight">
+        <h2 className="text-xl font-bold uppercase tracking-tight" style={{ color: "var(--accent-light)" }}>
           Audit Trail
         </h2>
-        <p className="text-sm text-gray-500 mt-1">
+        <p className="text-sm mt-1" style={{ color: "var(--ct-text-secondary)" }}>
           Full history of actions performed in the commission module: uploads,
           edits, deletes, and calculations.
         </p>
       </header>
 
-      <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+      <div className="rounded-[var(--r-lg)] border shadow-sm overflow-hidden" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
         {loading ? (
-          <div className="p-12 text-center text-gray-400 text-sm animate-pulse">
+          <div className="p-12 text-center text-sm animate-pulse" style={{ color: "var(--ct-text-muted)" }}>
             Fetching logs from database...
           </div>
         ) : logs.length === 0 ? (
-          <div className="p-12 text-center text-gray-400 text-sm">
+          <div className="p-12 text-center text-sm" style={{ color: "var(--ct-text-muted)" }}>
             No log entries found.
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b border-gray-200">
+              <thead className="border-b" style={{ background: "var(--ct-surface-hover)", borderColor: "var(--ct-border-default)" }}>
                 <tr>
                   {[
                     "#",
@@ -81,34 +81,35 @@ export default function UserLog() {
                   ].map((h) => (
                     <th
                       key={h}
-                      className="px-4 py-3 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest"
+                      className="px-4 py-3 text-left text-[10px] font-black uppercase tracking-widest"
+                      style={{ color: "var(--ct-text-muted)" }}
                     >
                       {h}
                     </th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y" style={{ borderColor: "var(--ct-border-subtle)" }}>
                 {logs.map((log, i) => (
                   <tr
                     key={log.sid}
-                    className="hover:bg-blue-50/30 transition-colors"
+                    className="transition-colors hover:bg-[var(--accent-light-tint)]"
                   >
-                    <td className="px-4 py-3 text-gray-300 font-mono text-xs">
+                    <td className="px-4 py-3 font-mono text-xs" style={{ color: "var(--ct-text-muted)" }}>
                       {i + 1}
                     </td>
-                    <td className="px-4 py-3 font-bold text-gray-800">
+                    <td className="px-4 py-3 font-bold" style={{ color: "var(--ct-text-primary)" }}>
                       {log.user_name}
                     </td>
-                    <td className="px-4 py-3 text-gray-600">
+                    <td className="px-4 py-3" style={{ color: "var(--ct-text-secondary)" }}>
                       {log.broker_name || (
-                        <span className="text-gray-300">—</span>
+                        <span style={{ color: "var(--ct-text-muted)" }}>—</span>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-gray-700 font-medium max-w-[400px]">
+                    <td className="px-4 py-3 font-medium max-w-[400px]" style={{ color: "var(--ct-text-secondary)" }}>
                       {log.action}
                     </td>
-                    <td className="px-4 py-3 text-gray-500 whitespace-nowrap tabular-nums">
+                    <td className="px-4 py-3 whitespace-nowrap tabular-nums" style={{ color: "var(--ct-text-muted)" }}>
                       {formatDate(log.date)}
                     </td>
                   </tr>
