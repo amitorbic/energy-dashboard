@@ -80,27 +80,39 @@ const MarginPage = () => {
   return (
     <Layout title="Margin Matrix">
       <div className="max-w-[1600px] mx-auto space-y-8 p-4">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900 p-6 rounded-2xl border border-slate-800 shadow-2xl">
+        <div
+          className="flex flex-col md:flex-row md:items-center justify-between gap-4 rounded-[var(--r-lg)] p-6 border"
+          style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)", boxShadow: "var(--shadow-content)" }}
+        >
           <div>
-            <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-              <Table className="text-sky-400" /> Margin Management
+            <h1 className="text-2xl font-bold flex items-center gap-2" style={{ color: "var(--ct-text-primary)" }}>
+              <Table style={{ color: "var(--accent-light)" }} /> Margin Management
             </h1>
-            <p className="text-slate-400 text-sm mt-1">
+            <p className="text-sm mt-1" style={{ color: "var(--ct-text-muted)" }}>
               Manage term-based margins across all load profiles
             </p>
           </div>
 
-          <div className="flex items-center gap-3 bg-slate-800 px-4 py-2 rounded-lg border border-slate-700">
-            <Clock size={16} className="text-amber-400" />
-            <span className="text-xs font-mono text-slate-300 uppercase">
+          <div
+            className="flex items-center gap-3 px-4 py-2 rounded-[var(--r-md)] border"
+            style={{ background: "var(--info-light-tint)", borderColor: "var(--info-light)" }}
+          >
+            <Clock size={16} style={{ color: "var(--info-light)" }} />
+            <span className="text-xs font-mono uppercase" style={{ color: "var(--info-light)" }}>
               LAST SYNC: {lastSync || "NEVER"}
             </span>
           </div>
         </div>
 
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
-          <div className="p-6 border-b border-slate-800 bg-slate-800/50">
-            <h2 className="text-sm font-semibold text-slate-300 uppercase tracking-wider">
+        <div
+          className="rounded-[var(--r-lg)] border overflow-hidden"
+          style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)", boxShadow: "var(--shadow-content)" }}
+        >
+          <div
+            className="p-6 border-b"
+            style={{ borderColor: "var(--ct-border-default)", background: "var(--ct-surface-hover)" }}
+          >
+            <h2 className="text-sm font-semibold uppercase tracking-wider" style={{ color: "var(--ct-text-secondary)" }}>
               Update Margin Matrix
             </h2>
           </div>
@@ -109,16 +121,19 @@ const MarginPage = () => {
             className="p-6 flex flex-col md:flex-row items-center gap-6"
           >
             <div className="flex-1 w-full">
-              <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-slate-700 border-dashed rounded-xl cursor-pointer bg-slate-800/30 hover:bg-slate-800 transition-all">
+              <label
+                className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-[var(--r-lg)] cursor-pointer transition-all hover:bg-[var(--ct-surface-hover)]"
+                style={{ borderColor: "var(--ct-border-default)", background: "var(--ct-canvas)" }}
+              >
                 <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                  <Upload className="w-8 h-8 mb-3 text-slate-500" />
-                  <p className="mb-2 text-sm text-slate-400">
+                  <Upload className="w-8 h-8 mb-3" style={{ color: "var(--ct-text-muted)" }} />
+                  <p className="mb-2 text-sm" style={{ color: "var(--ct-text-muted)" }}>
                     <span className="font-semibold">
                       {file ? file.name : "Click to upload Excel"}
                     </span>
                   </p>
                   {/* Fixed: Escaped single quote with &apos; */}
-                  <p className="text-xs text-slate-500 text-center px-4">
+                  <p className="text-xs text-center px-4" style={{ color: "var(--ct-text-muted)" }}>
                     Ensure first column is &apos;term&apos; and others match
                     profile names
                   </p>
@@ -133,11 +148,12 @@ const MarginPage = () => {
             <button
               type="submit"
               disabled={loading || !file}
-              className={`w-full md:w-auto px-8 py-4 rounded-xl font-bold text-white shadow-lg transition-all flex items-center justify-center gap-2 ${
+              className="w-full md:w-auto px-8 py-4 rounded-[var(--r-lg)] font-bold shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              style={
                 loading || !file
-                  ? "bg-slate-700 cursor-not-allowed"
-                  : "bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500"
-              }`}
+                  ? { background: "var(--ct-surface-hover)", color: "var(--ct-text-muted)" }
+                  : { background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }
+              }
             >
               {loading ? (
                 "Processing..."
@@ -150,14 +166,21 @@ const MarginPage = () => {
           </form>
         </div>
 
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl shadow-xl overflow-hidden">
-          <div className="p-6 border-b border-slate-800 flex justify-between items-center">
-            <h2 className="text-sm font-semibold text-slate-300 uppercase tracking-wider">
+        <div
+          className="rounded-[var(--r-lg)] border overflow-hidden"
+          style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)", boxShadow: "var(--shadow-content)" }}
+        >
+          <div
+            className="p-6 border-b flex justify-between items-center"
+            style={{ borderColor: "var(--ct-border-default)" }}
+          >
+            <h2 className="text-sm font-semibold uppercase tracking-wider" style={{ color: "var(--ct-text-secondary)" }}>
               Current Margin Data
             </h2>
             <button
               onClick={fetchData}
-              className="text-xs text-sky-400 hover:underline"
+              className="text-xs hover:underline"
+              style={{ color: "var(--accent-light)" }}
             >
               Refresh Table
             </button>
@@ -165,33 +188,42 @@ const MarginPage = () => {
 
           <div className="overflow-x-auto max-h-[600px]">
             {fetching ? (
-              <div className="p-20 text-center text-slate-500 animate-pulse">
+              <div className="p-20 text-center animate-pulse" style={{ color: "var(--ct-text-muted)" }}>
                 Loading matrix data...
               </div>
             ) : data.length > 0 ? (
               <table className="w-full text-left border-collapse">
-                <thead className="bg-slate-800/80 sticky top-0 backdrop-blur-md">
+                <thead
+                  className="sticky top-0 backdrop-blur-md"
+                  style={{ background: "var(--ct-surface-hover)" }}
+                >
                   <tr>
                     {headers.map((header) => (
                       <th
                         key={header}
-                        className="px-4 py-3 text-[10px] font-bold text-slate-400 uppercase border-b border-slate-700 whitespace-nowrap"
+                        className="px-4 py-3 text-[10px] font-bold uppercase border-b whitespace-nowrap"
+                        style={{ color: "var(--ct-text-muted)", borderColor: "var(--ct-border-default)" }}
                       >
                         {header.replace(/_/g, " ")}
                       </th>
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800">
+                <tbody className="divide-y" style={{ borderColor: "var(--ct-border-subtle)" }}>
                   {data.map((row, idx) => (
                     <tr
                       key={idx}
-                      className="hover:bg-slate-800/40 transition-colors"
+                      className="transition-colors hover:bg-[var(--ct-surface-hover)]"
                     >
                       {headers.map((header) => (
                         <td
                           key={header}
-                          className={`px-4 py-3 text-sm font-mono border-b border-slate-800/50 ${header === "term" ? "text-sky-400 font-bold" : "text-slate-300"}`}
+                          className="px-4 py-3 text-sm font-mono border-b"
+                          style={{
+                            borderColor: "var(--ct-border-subtle)",
+                            color: header === "term" ? "var(--accent-light)" : "var(--ct-text-secondary)",
+                            fontWeight: header === "term" ? 700 : 400,
+                          }}
                         >
                           {row[header]}
                         </td>
@@ -202,8 +234,8 @@ const MarginPage = () => {
               </table>
             ) : (
               <div className="p-20 text-center flex flex-col items-center gap-3">
-                <AlertCircle className="text-slate-600 w-12 h-12" />
-                <p className="text-slate-500">
+                <AlertCircle className="w-12 h-12" style={{ color: "var(--ct-text-muted)" }} />
+                <p style={{ color: "var(--ct-text-muted)" }}>
                   No margin data found. Please upload a spreadsheet.
                 </p>
               </div>
