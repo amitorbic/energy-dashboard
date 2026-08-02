@@ -98,13 +98,19 @@ const ConsumptionPage: React.FC = () => {
   return (
     <Layout>
       <div className="max-w-2xl mx-auto p-4">
-        <div className="bg-slate-800 border border-slate-700 rounded-xl p-6 shadow-xl">
+        <div
+          className="rounded-[var(--r-lg)] p-6 border"
+          style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)", boxShadow: "var(--shadow-content)" }}
+        >
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-white font-semibold text-lg">
+            <h2 className="font-semibold text-lg" style={{ color: "var(--ct-text-primary)" }}>
               Consumption Data Management
             </h2>
             {lastUpdated && (
-              <span className="text-xs font-mono bg-slate-900 border border-slate-700 text-slate-400 px-3 py-1 rounded-full">
+              <span
+                className="text-xs font-mono px-3 py-1 rounded-[var(--r-full)] border"
+                style={{ background: "var(--info-light-tint)", color: "var(--info-light)", borderColor: "var(--info-light)" }}
+              >
                 Sync: {lastUpdated}
               </span>
             )}
@@ -112,11 +118,12 @@ const ConsumptionPage: React.FC = () => {
 
           {message && (
             <div
-              className={`mb-4 px-4 py-3 rounded-lg text-sm font-medium ${
+              className="mb-4 px-4 py-3 rounded-[var(--r-md)] text-sm font-medium border"
+              style={
                 message.type === "success"
-                  ? "bg-emerald-500/10 border border-emerald-500/30 text-emerald-400"
-                  : "bg-red-500/10 border border-red-500/30 text-red-400"
-              }`}
+                  ? { background: "var(--success-light-tint)", borderColor: "var(--success-light)", color: "var(--success-light)" }
+                  : { background: "var(--danger-light-tint)", borderColor: "var(--danger-light)", color: "var(--danger-light)" }
+              }
             >
               {message.text}
             </div>
@@ -124,20 +131,20 @@ const ConsumptionPage: React.FC = () => {
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label className="block text-slate-400 text-xs font-bold mb-2 uppercase tracking-widest">
+              <label className="block text-xs font-bold mb-2 uppercase tracking-widest" style={{ color: "var(--ct-text-muted)" }}>
                 Select Usage File (.xlsx / .xls)
               </label>
               <input
                 type="file"
                 accept=".xlsx,.xls"
                 onChange={handleFileChange}
-                className="block w-full text-sm text-slate-400
+                className="block w-full text-sm cursor-pointer p-2 rounded-[var(--r-md)] border
                   file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0
-                  file:text-sm file:font-semibold file:bg-indigo-600 file:text-white
-                  hover:file:bg-indigo-500 cursor-pointer bg-slate-900/50 p-2 rounded-lg border border-slate-700"
+                  file:text-sm file:font-semibold file:bg-[var(--accent-light)] file:text-[var(--accent-light-on-solid)]"
+                style={{ background: "var(--ct-canvas)", color: "var(--ct-text-secondary)", borderColor: "var(--ct-border-default)" }}
               />
               {selectedFile && (
-                <p className="text-sky-400 text-xs mt-2 italic">
+                <p className="text-xs mt-2 italic" style={{ color: "var(--accent-light)" }}>
                   Ready to upload: {selectedFile.name}
                 </p>
               )}
@@ -147,8 +154,8 @@ const ConsumptionPage: React.FC = () => {
               <button
                 type="button"
                 onClick={handleDownload}
-                className="bg-slate-700 hover:bg-slate-600 text-slate-200 
-                  font-medium rounded-lg px-4 py-3 text-sm transition-all border border-slate-600"
+                className="font-medium rounded-[var(--r-md)] px-4 py-3 text-sm transition-colors border"
+                style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)", color: "var(--ct-text-primary)" }}
               >
                 ⬇ Download Current
               </button>
@@ -156,14 +163,14 @@ const ConsumptionPage: React.FC = () => {
               <button
                 type="submit"
                 disabled={!selectedFile || loading}
-                className="bg-sky-500 hover:bg-sky-400 disabled:bg-slate-700 disabled:text-slate-500
-                  text-white font-bold rounded-lg px-4 py-3 text-sm transition-all
-                  flex items-center justify-center gap-2 shadow-lg shadow-sky-500/20"
+                className="font-bold rounded-[var(--r-md)] px-4 py-3 text-sm transition-colors
+                  flex items-center justify-center gap-2 disabled:opacity-50"
+                style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
               >
                 {loading ? (
                   <>
                     <svg
-                      className="animate-spin h-4 w-4 text-white"
+                      className="animate-spin h-4 w-4"
                       fill="none"
                       viewBox="0 0 24 24"
                     >
