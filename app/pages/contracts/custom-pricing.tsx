@@ -70,18 +70,19 @@ export default function CustomPricingConfirmation() {
   return (
     <ContractLayout title="Custom Pricing Confirmation">
       <div className="max-w-2xl">
-        <p className="text-sm text-gray-500 mb-6">
+        <p className="text-sm mb-6" style={{ color: "var(--ct-text-muted)" }}>
           Select a customer from custom pricing — their details, profiles and
           volumes will auto-fill the confirmation form.
         </p>
 
         {/* Search */}
-        <div className="bg-white border border-gray-200 rounded-lg p-5 mb-4">
-          <label className="text-sm font-medium text-gray-600 block mb-2">
+        <div className="rounded-[var(--r-lg)] border p-5 mb-4" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
+          <label className="text-sm font-medium block mb-2" style={{ color: "var(--ct-text-secondary)" }}>
             Search Customer
           </label>
           <input
-            className="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-sky-400"
+            className="w-full rounded-[var(--r-sm)] px-3 py-1.5 text-sm border focus:outline-none focus:border-[var(--accent-light)]"
+            style={{ background: "var(--ct-surface)", color: "var(--ct-text-primary)", borderColor: "var(--ct-border-default)" }}
             placeholder="Type customer name..."
             value={search}
             onChange={(e) => {
@@ -92,25 +93,26 @@ export default function CustomPricingConfirmation() {
         </div>
 
         {/* Results */}
-        {loading && <p className="text-sm text-gray-400 px-2">Searching...</p>}
+        {loading && <p className="text-sm px-2" style={{ color: "var(--ct-text-muted)" }}>Searching...</p>}
 
         {customers.length > 0 && (
-          <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-            <div className="px-4 py-2.5 bg-gray-50 border-b border-gray-200">
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+          <div className="rounded-[var(--r-lg)] border overflow-hidden" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
+            <div className="px-4 py-2.5 border-b" style={{ background: "var(--ct-surface-hover)", borderColor: "var(--ct-border-default)" }}>
+              <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--ct-text-muted)" }}>
                 {customers.length} customers found
               </p>
             </div>
             {customers.map((c, i) => (
               <div
                 key={c.id}
-                className={`flex items-center justify-between px-4 py-3 ${i < customers.length - 1 ? "border-b border-gray-100" : ""}`}
+                className="flex items-center justify-between px-4 py-3"
+                style={i < customers.length - 1 ? { borderBottom: "1px solid var(--ct-border-subtle)" } : undefined}
               >
                 <div>
-                  <p className="text-sm font-medium text-gray-800">
+                  <p className="text-sm font-medium" style={{ color: "var(--ct-text-primary)" }}>
                     {c.company_name}
                   </p>
-                  <p className="text-xs text-gray-400 mt-0.5">
+                  <p className="text-xs mt-0.5" style={{ color: "var(--ct-text-muted)" }}>
                     {c.broker_code}
                     {c.num_esids ? ` · ${c.num_esids} ESIIDs` : ""}
                     {c.pricing_start_date
@@ -121,7 +123,8 @@ export default function CustomPricingConfirmation() {
                 <button
                   onClick={() => handleSelect(c.id)}
                   disabled={prefilling === c.id}
-                  className="px-4 py-1.5 text-xs bg-sky-600 text-white rounded hover:bg-sky-700 disabled:opacity-50 ml-4 flex-shrink-0"
+                  className="px-4 py-1.5 text-xs rounded-[var(--r-sm)] disabled:opacity-50 ml-4 flex-shrink-0 transition-colors"
+                  style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
                 >
                   {prefilling === c.id ? "Loading..." : "Select →"}
                 </button>
@@ -131,7 +134,7 @@ export default function CustomPricingConfirmation() {
         )}
 
         {search.length >= 2 && !loading && customers.length === 0 && (
-          <p className="text-sm text-gray-400 px-2">
+          <p className="text-sm px-2" style={{ color: "var(--ct-text-muted)" }}>
             No customers found for &quot;{search}&quot;
           </p>
         )}
