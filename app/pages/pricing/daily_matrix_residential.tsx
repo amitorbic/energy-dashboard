@@ -8,6 +8,15 @@ interface EmailBroker {
   broker_code: string;
   company_name: string;
 }
+
+const secondaryBtnCls =
+  "px-6 py-2 rounded text-sm font-bold uppercase transition-colors border";
+const secondaryBtnStyle = {
+  background: "var(--ct-surface)",
+  borderColor: "var(--ct-border-default)",
+  color: "var(--ct-text-primary)",
+};
+
 const DailyMatrixResidential = () => {
   const [currentTime, setCurrentTime] = useState<string>("");
   const [terms, setTerms] = useState([6, 12, 18, 24]);
@@ -130,26 +139,33 @@ const DailyMatrixResidential = () => {
   return (
     <Layout title="Residential Pricing Matrix">
       <div className="max-w-7xl mx-auto p-6 space-y-8">
-        <header className="flex justify-between items-end border-b border-slate-800 pb-6">
+        <header
+          className="flex justify-between items-end border-b pb-6"
+          style={{ borderColor: "var(--ct-border-default)" }}
+        >
           <div>
-            <h1 className="text-3xl font-black text-white uppercase tracking-tighter">
+            <h1 className="text-3xl font-black uppercase tracking-tighter" style={{ color: "var(--ct-text-primary)" }}>
               Residential Matrix
             </h1>
-            <p className="text-slate-500 font-mono text-sm uppercase">
+            <p className="font-mono text-sm uppercase" style={{ color: "var(--ct-text-muted)" }}>
               Run Time: {currentTime || "Initializing..."}
             </p>
           </div>
         </header>
 
-        <div className="bg-slate-800 rounded-lg p-5 flex flex-wrap gap-6 items-end">
+        <div
+          className="rounded-[var(--r-lg)] p-5 flex flex-wrap gap-6 items-end border"
+          style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}
+        >
           <div className="flex flex-col gap-1">
-            <label className="text-slate-400 text-xs uppercase font-bold">
+            <label className="text-xs uppercase font-bold" style={{ color: "var(--ct-text-muted)" }}>
               Price Type
             </label>
             <select
               value={priceType}
               onChange={(e) => setPriceType(e.target.value)}
-              className="bg-slate-700 text-white px-3 py-2 rounded text-sm border border-slate-600 focus:outline-none focus:border-red-500"
+              className="px-3 py-2 rounded-[var(--r-md)] text-sm border focus:outline-none focus:border-[var(--accent-light)]"
+              style={{ background: "var(--ct-canvas)", color: "var(--ct-text-primary)", borderColor: "var(--ct-border-default)" }}
             >
               <option value="residential">Residential</option>
               <option value="sweetspot_residential">Sweet Spot</option>
@@ -157,19 +173,20 @@ const DailyMatrixResidential = () => {
           </div>
 
           <div className="flex flex-col gap-1">
-            <label className="text-slate-400 text-xs uppercase font-bold">
+            <label className="text-xs uppercase font-bold" style={{ color: "var(--ct-text-muted)" }}>
               Start Date
             </label>
             <input
               type="date"
               value={startDateInput}
               onChange={(e) => setStartDateInput(e.target.value)}
-              className="bg-slate-700 text-white px-3 py-2 rounded text-sm border border-slate-600 focus:outline-none focus:border-red-500"
+              className="px-3 py-2 rounded-[var(--r-md)] text-sm border focus:outline-none focus:border-[var(--accent-light)]"
+              style={{ background: "var(--ct-canvas)", color: "var(--ct-text-primary)", borderColor: "var(--ct-border-default)" }}
             />
           </div>
 
           <div className="flex flex-col gap-1">
-            <label className="text-slate-400 text-xs uppercase font-bold">
+            <label className="text-xs uppercase font-bold" style={{ color: "var(--ct-text-muted)" }}>
               Months to Show
             </label>
             <input
@@ -178,12 +195,13 @@ const DailyMatrixResidential = () => {
               max={24}
               value={numMonths}
               onChange={(e) => setNumMonths(parseInt(e.target.value))}
-              className="bg-slate-700 text-white px-3 py-2 rounded text-sm border border-slate-600 w-24 focus:outline-none focus:border-red-500"
+              className="px-3 py-2 rounded-[var(--r-md)] text-sm w-24 border focus:outline-none focus:border-[var(--accent-light)]"
+              style={{ background: "var(--ct-canvas)", color: "var(--ct-text-primary)", borderColor: "var(--ct-border-default)" }}
             />
           </div>
 
           <div className="flex flex-col gap-1">
-            <label className="text-slate-400 text-xs uppercase font-bold">
+            <label className="text-xs uppercase font-bold" style={{ color: "var(--ct-text-muted)" }}>
               Terms (comma separated, max 6)
             </label>
             <input
@@ -191,10 +209,11 @@ const DailyMatrixResidential = () => {
               value={isSweetspot ? "Auto" : termsInput}
               onChange={(e) => setTermsInput(e.target.value)}
               disabled={isSweetspot}
-              className={`bg-slate-700 text-white px-3 py-2 rounded text-sm border border-slate-600 w-48 focus:outline-none focus:border-red-500 ${isSweetspot ? "opacity-50 cursor-not-allowed" : ""}`}
+              className={`px-3 py-2 rounded-[var(--r-md)] text-sm w-48 border focus:outline-none focus:border-[var(--accent-light)] ${isSweetspot ? "opacity-50 cursor-not-allowed" : ""}`}
+              style={{ background: "var(--ct-canvas)", color: "var(--ct-text-primary)", borderColor: "var(--ct-border-default)" }}
             />
             {termsError && (
-              <span className="text-red-400 text-xs">{termsError}</span>
+              <span className="text-xs" style={{ color: "var(--danger-light)" }}>{termsError}</span>
             )}
           </div>
           <button
@@ -206,20 +225,23 @@ const DailyMatrixResidential = () => {
               );
               applySettings();
             }}
-            className="bg-slate-600 hover:bg-slate-500 text-white px-6 py-2 rounded text-sm font-bold uppercase transition-colors"
+            className={secondaryBtnCls}
+            style={secondaryBtnStyle}
           >
             Sweet Spot
           </button>
 
           <button
             onClick={applySettings}
-            className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded text-sm font-bold uppercase transition-colors"
+            className="px-6 py-2 rounded text-sm font-bold uppercase transition-colors"
+            style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
           >
             Apply
           </button>
           <button
             onClick={handleExport}
-            className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded text-sm font-bold uppercase transition-colors flex items-center gap-2"
+            className={`${secondaryBtnCls} flex items-center gap-2`}
+            style={secondaryBtnStyle}
           >
             <svg
               className="w-4 h-4"
@@ -241,16 +263,20 @@ const DailyMatrixResidential = () => {
               setShowEmailModal(true);
               loadEmailBrokers("regular");
             }}
-            className="bg-slate-600 hover:bg-slate-500 text-white px-6 py-2 rounded text-sm font-bold uppercase transition-colors"
+            className={secondaryBtnCls}
+            style={secondaryBtnStyle}
           >
             Send Email
           </button>
         </div>
         {showEmailModal && (
           <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
-            <div className="bg-slate-800 rounded-lg w-full max-w-lg mx-4 space-y-4 p-6">
+            <div
+              className="rounded-[var(--r-lg)] w-full max-w-lg mx-4 space-y-4 p-6 border"
+              style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)", boxShadow: "var(--shadow-content)" }}
+            >
               <div className="flex justify-between items-center">
-                <h2 className="text-white font-bold uppercase">
+                <h2 className="font-bold uppercase" style={{ color: "var(--ct-text-primary)" }}>
                   Send Pricing Email
                 </h2>
                 <button
@@ -258,7 +284,8 @@ const DailyMatrixResidential = () => {
                     setShowEmailModal(false);
                     setSendResult(null);
                   }}
-                  className="text-slate-400 hover:text-white text-xl"
+                  className="text-xl transition-colors"
+                  style={{ color: "var(--ct-text-muted)" }}
                 >
                   ✕
                 </button>
@@ -269,7 +296,8 @@ const DailyMatrixResidential = () => {
                 {(["regular", "irregular"] as const).map((type) => (
                   <label
                     key={type}
-                    className="flex items-center gap-2 text-slate-300 text-sm cursor-pointer"
+                    className="flex items-center gap-2 text-sm cursor-pointer"
+                    style={{ color: "var(--ct-text-secondary)" }}
                   >
                     <input
                       type="radio"
@@ -278,7 +306,7 @@ const DailyMatrixResidential = () => {
                         setEmailBrokerType(type);
                         loadEmailBrokers(type);
                       }}
-                      className="accent-red-500"
+                      style={{ accentColor: "var(--accent-light)" }}
                     />
                     {type.charAt(0).toUpperCase() + type.slice(1)} Brokers
                   </label>
@@ -297,23 +325,25 @@ const DailyMatrixResidential = () => {
                           : [...prev, b.sid],
                       )
                     }
-                    className={`flex items-center gap-3 p-3 rounded cursor-pointer transition-colors ${
+                    className="flex items-center gap-3 p-3 rounded-[var(--r-md)] cursor-pointer transition-colors border"
+                    style={
                       selectedEmailBrokers.includes(b.sid)
-                        ? "bg-red-900/40 border border-red-500"
-                        : "bg-slate-700 hover:bg-slate-600"
-                    }`}
+                        ? { background: "var(--accent-light-tint)", borderColor: "var(--accent-light)" }
+                        : { background: "var(--ct-canvas)", borderColor: "var(--ct-border-default)" }
+                    }
                   >
                     <input
                       type="checkbox"
                       checked={selectedEmailBrokers.includes(b.sid)}
                       onChange={() => {}}
-                      className="accent-red-500 w-4 h-4"
+                      className="w-4 h-4"
+                      style={{ accentColor: "var(--accent-light)" }}
                     />
                     <div>
-                      <p className="text-white text-sm font-semibold">
+                      <p className="text-sm font-semibold" style={{ color: "var(--ct-text-primary)" }}>
                         {b.company_name}
                       </p>
-                      <p className="text-slate-400 text-xs font-mono">
+                      <p className="text-xs font-mono" style={{ color: "var(--ct-text-muted)" }}>
                         {b.broker_code}
                       </p>
                     </div>
@@ -325,12 +355,12 @@ const DailyMatrixResidential = () => {
               {sendResult && (
                 <div className="space-y-2">
                   {sendResult.sent.length > 0 && (
-                    <p className="text-green-400 text-xs">
+                    <p className="text-xs" style={{ color: "var(--success-light)" }}>
                       ✓ Sent to: {sendResult.sent.join(", ")}
                     </p>
                   )}
                   {sendResult.failed.length > 0 && (
-                    <p className="text-red-400 text-xs">
+                    <p className="text-xs" style={{ color: "var(--danger-light)" }}>
                       ✗ Failed: {sendResult.failed.join(", ")}
                     </p>
                   )}
@@ -345,7 +375,8 @@ const DailyMatrixResidential = () => {
                     selectedEmailBrokers.length === 0 ||
                     startMonths.length === 0
                   }
-                  className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded text-sm font-bold uppercase disabled:opacity-50"
+                  className="px-6 py-2 rounded text-sm font-bold uppercase disabled:opacity-50"
+                  style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
                 >
                   {sending
                     ? "Sending..."
