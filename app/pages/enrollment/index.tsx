@@ -33,15 +33,14 @@ const INTERNAL_TYPES = new Set(["Renewal", "Assignment", "B&E", "Blend & Extend"
 
 function typeBadge(t: string | null) {
   const v = t || "New";
-  if (v === "New" || v === "now")
-    return <span className="inline-block px-1.5 py-0.5 rounded text-xs bg-sky-100 text-sky-700 font-medium">{v === "now" ? "New" : v}</span>;
-  if (v === "Addition")
-    return <span className="inline-block px-1.5 py-0.5 rounded text-xs bg-teal-100 text-teal-700 font-medium">Addition</span>;
-  if (v === "Renewal")
-    return <span className="inline-block px-1.5 py-0.5 rounded text-xs bg-indigo-100 text-indigo-700 font-medium">Renewal</span>;
-  if (v === "Assignment")
-    return <span className="inline-block px-1.5 py-0.5 rounded text-xs bg-purple-100 text-purple-700 font-medium">Assignment</span>;
-  return <span className="inline-block px-1.5 py-0.5 rounded text-xs bg-gray-100 text-gray-600 font-medium">{v}</span>;
+  return (
+    <span
+      className="inline-block px-1.5 py-0.5 rounded-[var(--r-sm)] text-xs font-medium"
+      style={{ background: "var(--accent-light-tint)", color: "var(--accent-light)" }}
+    >
+      {v === "now" ? "New" : v}
+    </span>
+  );
 }
 
 function todayMinus(days: number): string {
@@ -57,25 +56,30 @@ function EnrollmentNav() {
     { label: "Batch History", href: "/enrollment/batches" },
   ];
   return (
-    <div className="flex gap-1 border-b border-gray-200 mb-5">
-      {links.map((l) => (
-        <Link
-          key={l.href}
-          href={l.href}
-          className={`px-4 py-2 text-sm font-medium rounded-t transition-colors ${
-            router.pathname === l.href
-              ? "bg-white border border-b-white border-gray-200 text-sky-700 -mb-px"
-              : "text-gray-500 hover:text-gray-800"
-          }`}
-        >
-          {l.label}
-        </Link>
-      ))}
+    <div className="flex gap-1 border-b mb-5" style={{ borderColor: "var(--ct-border-default)" }}>
+      {links.map((l) => {
+        const active = router.pathname === l.href;
+        return (
+          <Link
+            key={l.href}
+            href={l.href}
+            className="px-4 py-2 text-sm font-medium rounded-t transition-colors -mb-px"
+            style={
+              active
+                ? { background: "var(--ct-surface)", borderLeft: "1px solid var(--ct-border-default)", borderRight: "1px solid var(--ct-border-default)", borderTop: "1px solid var(--ct-border-default)", borderBottom: "1px solid var(--ct-surface)", color: "var(--accent-light)" }
+                : { color: "var(--ct-text-muted)" }
+            }
+          >
+            {l.label}
+          </Link>
+        );
+      })}
     </div>
   );
 }
 
-const TH = "px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider";
+const TH = "px-3 py-2 text-left font-medium uppercase tracking-wider";
+const thStyle = { color: "var(--ct-text-muted)" };
 
 function RecordTable({
   records,
@@ -103,34 +107,38 @@ function RecordTable({
   }
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-gray-200">
-      <table className="min-w-full text-xs text-gray-700">
-        <thead className="bg-gray-50 border-b border-gray-200">
+    <div className="overflow-x-auto rounded-[var(--r-lg)] border" style={{ borderColor: "var(--ct-border-default)" }}>
+      <table className="min-w-full text-xs" style={{ color: "var(--ct-text-secondary)" }}>
+        <thead className="border-b" style={{ background: "var(--ct-surface-hover)", borderColor: "var(--ct-border-default)" }}>
           <tr>
             <th className="px-3 py-2 text-left">
               <input ref={selectAllRef} type="checkbox" checked={allSelected} onChange={onToggleAll} className="rounded" />
             </th>
-            <th className={`${TH} whitespace-nowrap`}>ESI ID</th>
-            <th className={TH}>Customer</th>
-            <th className={TH}>Broker</th>
-            <th className={TH}>Type</th>
-            <th className={`${TH} whitespace-nowrap`}>Rate</th>
-            <th className={TH}>Term</th>
-            <th className={`${TH} whitespace-nowrap`}>Start Date</th>
-            <th className={`${TH} whitespace-nowrap`}>Meter Fee</th>
-            <th className={TH}>Plan</th>
-            <th className={`${TH} whitespace-nowrap`}>Paired Plan</th>
-            <th className={TH}>LMP</th>
+            <th className={`${TH} whitespace-nowrap`} style={thStyle}>ESI ID</th>
+            <th className={TH} style={thStyle}>Customer</th>
+            <th className={TH} style={thStyle}>Broker</th>
+            <th className={TH} style={thStyle}>Type</th>
+            <th className={`${TH} whitespace-nowrap`} style={thStyle}>Rate</th>
+            <th className={TH} style={thStyle}>Term</th>
+            <th className={`${TH} whitespace-nowrap`} style={thStyle}>Start Date</th>
+            <th className={`${TH} whitespace-nowrap`} style={thStyle}>Meter Fee</th>
+            <th className={TH} style={thStyle}>Plan</th>
+            <th className={`${TH} whitespace-nowrap`} style={thStyle}>Paired Plan</th>
+            <th className={TH} style={thStyle}>LMP</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-100 bg-white">
+        <tbody className="divide-y" style={{ background: "var(--ct-surface)" }}>
           {records.map((rec) => {
             const isSelected = selected.has(rec.sid);
             return (
               <tr
                 key={`${rec.sid}-${rec.esiid ?? ""}`}
                 onClick={() => onToggleRow(rec.sid)}
-                className={`cursor-pointer transition-colors ${isSelected ? "bg-sky-50" : "hover:bg-gray-50"}`}
+                className={`cursor-pointer transition-colors border-b ${isSelected ? "" : "hover:bg-[var(--ct-surface-hover)]"}`}
+                style={{
+                  borderColor: "var(--ct-border-subtle)",
+                  background: isSelected ? "var(--accent-light-tint)" : undefined,
+                }}
               >
                 <td className="px-3 py-2">
                   <input
@@ -147,7 +155,7 @@ function RecordTable({
                 </td>
                 <td className="px-3 py-2 whitespace-nowrap">
                   <span className="font-medium">{rec.broker_code}</span>
-                  {rec.broker_name && <span className="text-gray-400 ml-1">· {rec.broker_name}</span>}
+                  {rec.broker_name && <span className="ml-1" style={{ color: "var(--ct-text-muted)" }}>· {rec.broker_name}</span>}
                 </td>
                 <td className="px-3 py-2 whitespace-nowrap">{typeBadge(rec.type_of_contract)}</td>
                 <td className="px-3 py-2 whitespace-nowrap tabular-nums">{fmtRate(rec.contract_rate)}</td>
@@ -156,27 +164,32 @@ function RecordTable({
                 <td className="px-3 py-2 whitespace-nowrap tabular-nums">{fmtFee(rec.meter_fees)}</td>
                 <td className="px-3 py-2 whitespace-nowrap">
                   {rec.suggested_plan ? (
-                    <span title={rec.suggested_plan_name || ""} className="text-sky-700 font-medium">
+                    <span title={rec.suggested_plan_name || ""} className="font-medium" style={{ color: "var(--accent-light)" }}>
                       {rec.suggested_plan}
                     </span>
                   ) : (
-                    <span className="text-gray-400">—</span>
+                    <span style={{ color: "var(--ct-text-muted)" }}>—</span>
                   )}
                 </td>
                 <td className="px-3 py-2 whitespace-nowrap">
                   {rec.paired_plan ? (
-                    <span title={rec.paired_plan_name || ""} className="text-indigo-600">
+                    <span title={rec.paired_plan_name || ""} style={{ color: "var(--accent-light)" }}>
                       {rec.paired_plan}
                     </span>
                   ) : (
-                    <span className="text-gray-400">—</span>
+                    <span style={{ color: "var(--ct-text-muted)" }}>—</span>
                   )}
                 </td>
                 <td className="px-3 py-2">
                   {rec.lmp ? (
-                    <span className="inline-block px-1.5 py-0.5 rounded text-xs bg-amber-100 text-amber-700 font-medium">LMP</span>
+                    <span
+                      className="inline-block px-1.5 py-0.5 rounded-[var(--r-sm)] text-xs font-medium"
+                      style={{ background: "var(--accent-light-tint)", color: "var(--accent-light)" }}
+                    >
+                      LMP
+                    </span>
                   ) : (
-                    <span className="text-gray-400">—</span>
+                    <span style={{ color: "var(--ct-text-muted)" }}>—</span>
                   )}
                 </td>
               </tr>
@@ -380,29 +393,32 @@ export default function EnrollmentEngine() {
         <EnrollmentNav />
 
         {/* Filter bar */}
-        <div className="bg-white border border-gray-200 rounded-lg p-4 flex flex-wrap gap-3 items-end">
+        <div className="rounded-[var(--r-lg)] border p-4 flex flex-wrap gap-3 items-end" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
           <div>
-            <label className="block text-xs text-gray-500 mb-1">Start Date From</label>
+            <label className="block text-xs mb-1" style={{ color: "var(--ct-text-muted)" }}>Start Date From</label>
             <input
               type="date"
               value={dateFrom}
               onChange={(e) => setDateFrom(e.target.value)}
-              className="border border-gray-300 rounded px-2 py-1.5 text-sm"
+              className="rounded-[var(--r-sm)] px-2 py-1.5 text-sm border focus:outline-none focus:border-[var(--accent-light)]"
+              style={{ background: "var(--ct-surface)", color: "var(--ct-text-primary)", borderColor: "var(--ct-border-default)" }}
             />
           </div>
           <div>
-            <label className="block text-xs text-gray-500 mb-1">Start Date To</label>
+            <label className="block text-xs mb-1" style={{ color: "var(--ct-text-muted)" }}>Start Date To</label>
             <input
               type="date"
               value={dateTo}
               onChange={(e) => setDateTo(e.target.value)}
-              className="border border-gray-300 rounded px-2 py-1.5 text-sm"
+              className="rounded-[var(--r-sm)] px-2 py-1.5 text-sm border focus:outline-none focus:border-[var(--accent-light)]"
+              style={{ background: "var(--ct-surface)", color: "var(--ct-text-primary)", borderColor: "var(--ct-border-default)" }}
             />
           </div>
           <button
             onClick={loadRecords}
             disabled={loading}
-            className="px-4 py-1.5 bg-sky-600 text-white text-sm font-medium rounded hover:bg-sky-700 disabled:opacity-50"
+            className="px-4 py-1.5 text-sm font-medium rounded-[var(--r-md)] disabled:opacity-50 transition-colors"
+            style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
           >
             {loading ? "Loading…" : "Load Records"}
           </button>
@@ -410,17 +426,17 @@ export default function EnrollmentEngine() {
 
         {/* Status messages */}
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-2 rounded">
+          <div className="text-sm px-4 py-2 rounded-[var(--r-md)]" style={{ background: "var(--danger-light-tint)", color: "var(--danger-light)" }}>
             {error}
           </div>
         )}
         {successMsg && (
-          <div className="bg-green-50 border border-green-200 text-green-700 text-sm px-4 py-2 rounded">
+          <div className="text-sm px-4 py-2 rounded-[var(--r-md)]" style={{ background: "var(--success-light-tint)", color: "var(--success-light)" }}>
             {successMsg}
           </div>
         )}
         {skipped.length > 0 && (
-          <div className="bg-yellow-50 border border-yellow-300 text-yellow-800 text-sm px-4 py-3 rounded space-y-1">
+          <div className="text-sm px-4 py-3 rounded-[var(--r-md)] space-y-1" style={{ background: "var(--amber-light-tint)", color: "var(--amber-light)" }}>
             <div className="font-semibold">
               {skipped.length} ESI ID{skipped.length !== 1 ? "s" : ""} skipped — active contract already exists:
             </div>
@@ -431,7 +447,7 @@ export default function EnrollmentEngine() {
                 </li>
               ))}
             </ul>
-            <div className="text-xs text-yellow-600 mt-1">
+            <div className="text-xs mt-1" style={{ opacity: 0.85 }}>
               Cancel the existing contracts before re-enrolling these ESI IDs.
             </div>
           </div>
@@ -442,15 +458,16 @@ export default function EnrollmentEngine() {
           <>
             {/* Broker filter */}
             <div className="flex items-center gap-3">
-              <span className="text-sm text-gray-600">
-                <span className="font-semibold text-gray-900">{records.length}</span> record
+              <span className="text-sm" style={{ color: "var(--ct-text-secondary)" }}>
+                <span className="font-semibold" style={{ color: "var(--ct-text-primary)" }}>{records.length}</span> record
                 {records.length !== 1 ? "s" : ""} pending enrollment
               </span>
               {records.length > 0 && (
                 <select
                   value={brokerFilter}
                   onChange={(e) => { setBrokerFilter(e.target.value); setSelectedErcot(new Set()); setSelectedInternal(new Set()); }}
-                  className="border border-gray-300 rounded px-2 py-1 text-sm"
+                  className="rounded-[var(--r-sm)] px-2 py-1 text-sm border focus:outline-none focus:border-[var(--accent-light)]"
+                  style={{ background: "var(--ct-surface)", color: "var(--ct-text-primary)", borderColor: "var(--ct-border-default)" }}
                 >
                   <option value="">All brokers ({records.length})</option>
                   {brokers.map(([code, name]) => (
@@ -466,23 +483,24 @@ export default function EnrollmentEngine() {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-sm font-semibold text-gray-800 uppercase tracking-wide">
+                  <h2 className="text-sm font-semibold uppercase tracking-wide" style={{ color: "var(--ct-text-primary)" }}>
                     ERCOT Submissions
                   </h2>
-                  <p className="text-xs text-gray-400">New enrollments · Additions</p>
+                  <p className="text-xs" style={{ color: "var(--ct-text-muted)" }}>New enrollments · Additions</p>
                 </div>
                 {ercotSelectedCount > 0 && (
                   <button
                     onClick={generateMassRoll}
                     disabled={generating}
-                    className="px-4 py-1.5 bg-emerald-600 text-white text-sm font-medium rounded hover:bg-emerald-700 disabled:opacity-50"
+                    className="px-4 py-1.5 text-sm font-medium rounded-[var(--r-md)] disabled:opacity-50 transition-colors"
+                    style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
                   >
                     {generating ? "Generating…" : `Generate MassRoll (${ercotSelectedCount})`}
                   </button>
                 )}
               </div>
               {ercotVisible.length === 0 ? (
-                <p className="text-sm text-gray-400 py-3">No pending records.</p>
+                <p className="text-sm py-3" style={{ color: "var(--ct-text-muted)" }}>No pending records.</p>
               ) : (
                 <RecordTable
                   records={ercotVisible}
@@ -495,26 +513,27 @@ export default function EnrollmentEngine() {
             </div>
 
             {/* ── Internal Processing ───────────────────────────────── */}
-            <div className="space-y-2 pt-4 border-t border-gray-200">
+            <div className="space-y-2 pt-4 border-t" style={{ borderColor: "var(--ct-border-default)" }}>
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-sm font-semibold text-gray-800 uppercase tracking-wide">
+                  <h2 className="text-sm font-semibold uppercase tracking-wide" style={{ color: "var(--ct-text-primary)" }}>
                     Internal Processing
                   </h2>
-                  <p className="text-xs text-gray-400">Renewals · Assignments · Blend &amp; Extend</p>
+                  <p className="text-xs" style={{ color: "var(--ct-text-muted)" }}>Renewals · Assignments · Blend &amp; Extend</p>
                 </div>
                 {internalSelectedCount > 0 && (
                   <button
                     onClick={createInternalBatch}
                     disabled={creatingInternal}
-                    className="px-4 py-1.5 bg-indigo-600 text-white text-sm font-medium rounded hover:bg-indigo-700 disabled:opacity-50"
+                    className="px-4 py-1.5 text-sm font-medium rounded-[var(--r-md)] disabled:opacity-50 transition-colors"
+                    style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
                   >
                     {creatingInternal ? "Creating…" : `Create Internal Batch (${internalSelectedCount})`}
                   </button>
                 )}
               </div>
               {internalVisible.length === 0 ? (
-                <p className="text-sm text-gray-400 py-3">No pending records.</p>
+                <p className="text-sm py-3" style={{ color: "var(--ct-text-muted)" }}>No pending records.</p>
               ) : (
                 <RecordTable
                   records={internalVisible}
