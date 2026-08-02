@@ -47,13 +47,13 @@ export default function BillingRecipientsPage() {
   return (
     <BillingLayout title="Billing Audit">
       <div className="max-w-2xl">
-        <h2 className="text-base font-semibold text-gray-800 mb-6">
+        <h2 className="text-base font-semibold mb-6" style={{ color: "var(--ct-text-primary)" }}>
           Email Recipients
         </h2>
 
         {/* add form */}
-        <div className="bg-white border border-gray-200 rounded-lg p-4 mb-6">
-          <p className="text-sm font-medium text-gray-700 mb-3">
+        <div className="rounded-[var(--r-lg)] border p-4 mb-6" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
+          <p className="text-sm font-medium mb-3" style={{ color: "var(--ct-text-secondary)" }}>
             Add recipient
           </p>
           <div className="flex gap-3">
@@ -62,25 +62,29 @@ export default function BillingRecipientsPage() {
               placeholder="Name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="flex-1 text-sm border border-gray-200 rounded px-3 py-2 focus:outline-none focus:ring-1 focus:ring-green-400"
+              className="flex-1 text-sm rounded-[var(--r-sm)] border px-3 py-2 outline-none focus:border-[var(--accent-light)]"
+              style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-primary)" }}
             />
             <input
               type="email"
               placeholder="Email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="flex-1 text-sm border border-gray-200 rounded px-3 py-2 focus:outline-none focus:ring-1 focus:ring-green-400"
+              className="flex-1 text-sm rounded-[var(--r-sm)] border px-3 py-2 outline-none focus:border-[var(--accent-light)]"
+              style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-primary)" }}
             />
             <button
               onClick={handleAdd}
-              className="px-4 py-2 bg-green-600 text-white text-sm rounded hover:bg-green-700 transition-colors"
+              className="px-4 py-2 text-sm rounded-[var(--r-sm)] font-medium transition-colors"
+              style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
             >
               Add
             </button>
           </div>
           {msg && (
             <p
-              className={`text-xs mt-2 ${msg.includes("added") ? "text-green-600" : "text-red-500"}`}
+              className="text-xs mt-2"
+              style={{ color: msg.includes("added") ? "var(--success-light)" : "var(--danger-light)" }}
             >
               {msg}
             </p>
@@ -89,38 +93,37 @@ export default function BillingRecipientsPage() {
 
         {/* recipients table */}
         {loading ? (
-          <p className="text-sm text-gray-400">Loading...</p>
+          <p className="text-sm" style={{ color: "var(--ct-text-muted)" }}>Loading...</p>
         ) : recipients.length === 0 ? (
-          <p className="text-sm text-gray-400">No recipients yet.</p>
+          <p className="text-sm" style={{ color: "var(--ct-text-muted)" }}>No recipients yet.</p>
         ) : (
-          <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+          <div className="rounded-[var(--r-lg)] border overflow-hidden" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b border-gray-200">
+              <thead className="border-b" style={{ background: "var(--ct-surface-hover)", borderColor: "var(--ct-border-default)" }}>
                 <tr>
-                  <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500">
+                  <th className="px-4 py-2.5 text-left text-xs font-medium" style={{ color: "var(--ct-text-muted)" }}>
                     Name
                   </th>
-                  <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500">
+                  <th className="px-4 py-2.5 text-left text-xs font-medium" style={{ color: "var(--ct-text-muted)" }}>
                     Email
                   </th>
-                  <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500">
+                  <th className="px-4 py-2.5 text-left text-xs font-medium" style={{ color: "var(--ct-text-muted)" }}>
                     Status
                   </th>
-                  <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500"></th>
+                  <th className="px-4 py-2.5 text-left text-xs font-medium" style={{ color: "var(--ct-text-muted)" }}></th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody>
                 {recipients.map((r) => (
-                  <tr key={r.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-2.5 text-gray-800">{r.name}</td>
-                    <td className="px-4 py-2.5 text-gray-600">{r.email}</td>
+                  <tr key={r.id} className="border-t hover:bg-[var(--ct-surface-hover)]" style={{ borderColor: "var(--ct-border-subtle)" }}>
+                    <td className="px-4 py-2.5" style={{ color: "var(--ct-text-primary)" }}>{r.name}</td>
+                    <td className="px-4 py-2.5" style={{ color: "var(--ct-text-secondary)" }}>{r.email}</td>
                     <td className="px-4 py-2.5">
                       <span
-                        className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                          r.active
-                            ? "bg-green-100 text-green-700"
-                            : "bg-gray-100 text-gray-500"
-                        }`}
+                        className="inline-flex items-center px-2 py-0.5 rounded-[var(--r-sm)] text-xs font-medium"
+                        style={r.active
+                          ? { background: "var(--success-light-tint)", color: "var(--success-light)" }
+                          : { background: "var(--ct-surface-hover)", color: "var(--ct-text-muted)" }}
                       >
                         {r.active ? "Active" : "Inactive"}
                       </span>
@@ -129,13 +132,15 @@ export default function BillingRecipientsPage() {
                       <div className="flex items-center gap-3">
                         <button
                           onClick={() => handleToggle(r.id)}
-                          className="text-xs text-blue-600 hover:text-blue-800"
+                          className="text-xs hover:opacity-80"
+                          style={{ color: "var(--accent-light)" }}
                         >
                           {r.active ? "Deactivate" : "Activate"}
                         </button>
                         <button
                           onClick={() => handleDelete(r.id)}
-                          className="text-xs text-red-500 hover:text-red-700"
+                          className="text-xs hover:opacity-80"
+                          style={{ color: "var(--danger-light)" }}
                         >
                           Delete
                         </button>
