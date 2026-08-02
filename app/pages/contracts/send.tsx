@@ -46,10 +46,13 @@ const PROFILES_BY_ZONE: Record<string, string[]> = {
   ],
 };
 
-const INPUT =
-  "w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-sky-400";
-const LABEL = "text-sm font-medium text-gray-600 text-right pr-2";
-const ERR = "text-red-500 text-xs mt-0.5";
+const inputCls =
+  "w-full rounded-[var(--r-sm)] px-3 py-1.5 text-sm border focus:outline-none focus:border-[var(--accent-light)]";
+const inputStyle = { background: "var(--ct-surface)", color: "var(--ct-text-primary)", borderColor: "var(--ct-border-default)" };
+const labelCls = "text-sm font-medium text-right pr-2";
+const labelStyle = { color: "var(--ct-text-secondary)" };
+const errCls = "text-xs mt-0.5";
+const errStyle = { color: "var(--danger-light)" };
 
 interface Broker {
   sid: number;
@@ -351,10 +354,10 @@ export default function SendConfirmationPage() {
 
   const row = (label: string, content: React.ReactNode, errKey?: string) => (
     <div className="grid grid-cols-[220px_1fr] items-start gap-2 py-1.5">
-      <span className={LABEL}>{label}</span>
+      <span className={labelCls} style={labelStyle}>{label}</span>
       <div>
         {content}
-        {errKey && errors[errKey] && <p className={ERR}>{errors[errKey]}</p>}
+        {errKey && errors[errKey] && <p className={errCls} style={errStyle}>{errors[errKey]}</p>}
       </div>
     </div>
   );
@@ -371,12 +374,24 @@ export default function SendConfirmationPage() {
       ).map(([n, label], i) => (
         <div key={n} className="flex items-center">
           <div
-            className={`flex items-center gap-2 px-3 py-1.5 rounded text-xs font-medium
-            ${step === n ? "bg-sky-600 text-white" : step > n ? "bg-green-600 text-white" : "bg-gray-100 text-gray-400"}`}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-[var(--r-md)] text-xs font-medium"
+            style={
+              step === n
+                ? { background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }
+                : step > n
+                ? { background: "var(--success-light)", color: "#ffffff" }
+                : { background: "var(--ct-surface-hover)", color: "var(--ct-text-muted)" }
+            }
           >
             <span
-              className={`w-4 h-4 rounded-full flex items-center justify-center text-xs font-bold
-              ${step === n ? "bg-white text-sky-600" : step > n ? "bg-white text-green-600" : "bg-gray-300 text-gray-500"}`}
+              className="w-4 h-4 rounded-full flex items-center justify-center text-xs font-bold"
+              style={
+                step === n
+                  ? { background: "var(--ct-surface)", color: "var(--accent-light)" }
+                  : step > n
+                  ? { background: "var(--ct-surface)", color: "var(--success-light)" }
+                  : { background: "var(--ct-border-default)", color: "var(--ct-text-muted)" }
+              }
             >
               {step > n ? "✓" : n}
             </span>
@@ -384,7 +399,8 @@ export default function SendConfirmationPage() {
           </div>
           {i < 2 && (
             <div
-              className={`w-8 h-0.5 ${step > n ? "bg-green-400" : "bg-gray-200"}`}
+              className="w-8 h-0.5"
+              style={{ background: step > n ? "var(--success-light)" : "var(--ct-border-default)" }}
             />
           )}
         </div>
@@ -395,7 +411,7 @@ export default function SendConfirmationPage() {
   if (!opts)
     return (
       <ContractLayout title="Send Confirmation Emails">
-        <div className="text-sm text-gray-500 p-8">Loading...</div>
+        <div className="text-sm p-8" style={{ color: "var(--ct-text-muted)" }}>Loading...</div>
       </ContractLayout>
     );
 
@@ -409,21 +425,22 @@ export default function SendConfirmationPage() {
           <StepBar />
 
           {errors._general && (
-            <div className="text-sm text-red-600 bg-red-50 px-4 py-2 rounded mb-4">
+            <div className="text-sm px-4 py-2 rounded-[var(--r-md)] mb-4" style={{ background: "var(--danger-light-tint)", color: "var(--danger-light)" }}>
               {errors._general}
             </div>
           )}
 
           {/* Contract Details */}
-          <div className="bg-white border border-gray-200 rounded-lg p-5 mb-4">
-            <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-4">
+          <div className="rounded-[var(--r-lg)] border p-5 mb-4" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
+            <h2 className="text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: "var(--ct-text-muted)" }}>
               Contract Details
             </h2>
 
             {row(
               "Type of Contract",
               <select
-                className={INPUT}
+                className={inputCls}
+                style={inputStyle}
                 value={form.type_of_contract}
                 onChange={(e) => set("type_of_contract", e.target.value)}
               >
@@ -434,10 +451,11 @@ export default function SendConfirmationPage() {
 
             {form.type_of_contract === "renewal" && (
               <div className="grid grid-cols-[220px_1fr] items-start gap-2 py-1.5">
-                <span className={LABEL}>Search Customer / ESI ID</span>
+                <span className={labelCls} style={labelStyle}>Search Customer / ESI ID</span>
                 <div>
                   <input
-                    className={INPUT}
+                    className={inputCls}
+                    style={inputStyle}
                     placeholder="Type customer name or ESI ID..."
                     value={renewalSearch}
                     onChange={(e) => handleRenewalSearch(e.target.value)}
@@ -445,15 +463,19 @@ export default function SendConfirmationPage() {
 
                   {/* Search results */}
                   {renewalResults.length > 0 && (
-                    <div className="border border-gray-200 rounded mt-1 bg-white shadow-sm max-h-64 overflow-y-auto">
+                    <div
+                      className="rounded-[var(--r-md)] mt-1 shadow-sm max-h-64 overflow-y-auto border"
+                      style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}
+                    >
                       {renewalResults.map((c) => (
                         <div
                           key={c.id}
-                          className="border-b border-gray-100 last:border-0"
+                          className="border-b last:border-0"
+                          style={{ borderColor: "var(--ct-border-subtle)" }}
                         >
-                          <div className="px-3 py-2 bg-gray-50 text-xs font-medium text-gray-700">
+                          <div className="px-3 py-2 text-xs font-medium" style={{ background: "var(--ct-surface-hover)", color: "var(--ct-text-secondary)" }}>
                             {c.company_name}
-                            <span className="text-gray-400 ml-2">
+                            <span className="ml-2" style={{ color: "var(--ct-text-muted)" }}>
                               ({c.broker_code})
                             </span>
                           </div>
@@ -461,7 +483,8 @@ export default function SendConfirmationPage() {
                             (e: { esid: string; end_date: string }) => (
                               <label
                                 key={e.esid}
-                                className="flex items-center gap-2 px-4 py-1.5 text-xs text-gray-600 hover:bg-sky-50 cursor-pointer"
+                                className="flex items-center gap-2 px-4 py-1.5 text-xs cursor-pointer transition-colors hover:bg-[var(--accent-light-tint)]"
+                                style={{ color: "var(--ct-text-secondary)" }}
                               >
                                 <input
                                   type="checkbox"
@@ -472,7 +495,7 @@ export default function SendConfirmationPage() {
                                 />
                                 <span className="font-mono">{e.esid}</span>
                                 {e.end_date && (
-                                  <span className="text-gray-400 ml-auto">
+                                  <span className="ml-auto" style={{ color: "var(--ct-text-muted)" }}>
                                     exp: {e.end_date}
                                   </span>
                                 )}
@@ -486,8 +509,8 @@ export default function SendConfirmationPage() {
 
                   {/* Selected ESIDs */}
                   {selectedEsids.length > 0 && (
-                    <div className="mt-2 border border-sky-200 rounded bg-sky-50 p-2">
-                      <p className="text-xs font-medium text-sky-700 mb-1">
+                    <div className="mt-2 rounded-[var(--r-md)] p-2 border" style={{ background: "var(--accent-light-tint)", borderColor: "var(--accent-light)" }}>
+                      <p className="text-xs font-medium mb-1" style={{ color: "var(--accent-light)" }}>
                         {selectedEsids.length} ESI ID
                         {selectedEsids.length > 1 ? "s" : ""} selected
                       </p>
@@ -495,12 +518,14 @@ export default function SendConfirmationPage() {
                         {selectedEsids.map((s) => (
                           <span
                             key={s.esid}
-                            className="text-xs bg-white border border-sky-200 rounded px-2 py-0.5 flex items-center gap-1"
+                            className="text-xs rounded-[var(--r-sm)] px-2 py-0.5 flex items-center gap-1 border"
+                            style={{ background: "var(--ct-surface)", borderColor: "var(--accent-light)" }}
                           >
                             <span className="font-mono">{s.esid}</span>
                             <button
                               onClick={() => removeEsid(s.esid)}
-                              className="text-gray-400 hover:text-red-500 ml-1"
+                              className="ml-1 transition-colors hover:text-[var(--danger-light)]"
+                              style={{ color: "var(--ct-text-muted)" }}
                             >
                               ×
                             </button>
@@ -509,7 +534,8 @@ export default function SendConfirmationPage() {
                       </div>
                       <button
                         onClick={applySelectedEsids}
-                        className="mt-2 px-3 py-1 text-xs bg-sky-600 text-white rounded hover:bg-sky-700"
+                        className="mt-2 px-3 py-1 text-xs rounded-[var(--r-sm)] transition-colors"
+                        style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
                       >
                         Apply to form →
                       </button>
@@ -522,7 +548,8 @@ export default function SendConfirmationPage() {
             {row(
               "Deal Person",
               <select
-                className={INPUT}
+                className={inputCls}
+                style={inputStyle}
                 value={form.uid}
                 onChange={(e) => set("uid", e.target.value)}
               >
@@ -539,7 +566,8 @@ export default function SendConfirmationPage() {
             {row(
               "Contract Number",
               <input
-                className={INPUT}
+                className={inputCls}
+                style={inputStyle}
                 value={form.contract_no}
                 onChange={(e) => set("contract_no", e.target.value)}
               />,
@@ -548,7 +576,8 @@ export default function SendConfirmationPage() {
             {row(
               "Customer Name",
               <input
-                className={INPUT}
+                className={inputCls}
+                style={inputStyle}
                 value={form.customer_name}
                 onChange={(e) => set("customer_name", e.target.value)}
                 placeholder="Enter customer name"
@@ -559,7 +588,8 @@ export default function SendConfirmationPage() {
             {row(
               "Term (months)",
               <input
-                className={INPUT}
+                className={inputCls}
+                style={inputStyle}
                 type="number"
                 value={form.term}
                 onChange={(e) => set("term", e.target.value)}
@@ -570,7 +600,8 @@ export default function SendConfirmationPage() {
             {row(
               "Number of ESIIDs",
               <input
-                className={INPUT}
+                className={inputCls}
+                style={inputStyle}
                 type="number"
                 value={form.esid_count}
                 onChange={(e) => set("esid_count", e.target.value)}
@@ -580,7 +611,8 @@ export default function SendConfirmationPage() {
             {row(
               "Broker",
               <select
-                className={INPUT}
+                className={inputCls}
+                style={inputStyle}
                 value={form.broker_code}
                 onChange={(e) => handleBrokerChange(e.target.value)}
               >
@@ -597,7 +629,8 @@ export default function SendConfirmationPage() {
             {row(
               "Sender Name",
               <input
-                className={INPUT}
+                className={inputCls}
+                style={inputStyle}
                 value={form.sent_by}
                 onChange={(e) => set("sent_by", e.target.value)}
                 placeholder="ORBIC contract confirm..."
@@ -607,7 +640,8 @@ export default function SendConfirmationPage() {
             {row(
               "Contract Rate (¢/kWh)",
               <input
-                className={INPUT}
+                className={inputCls}
+                style={inputStyle}
                 type="number"
                 step="0.0001"
                 value={form.contract_rate}
@@ -620,13 +654,14 @@ export default function SendConfirmationPage() {
               millsLabel,
               <div>
                 <input
-                  className={INPUT}
+                  className={inputCls}
+                  style={inputStyle}
                   type="number"
                   step="0.01"
                   value={form.mill}
                   onChange={(e) => set("mill", e.target.value)}
                 />
-                <p className="text-xs text-gray-400 mt-0.5">
+                <p className="text-xs mt-0.5" style={{ color: "var(--ct-text-muted)" }}>
                   NOTE: This is a required field if there is a discount.
                 </p>
               </div>,
@@ -635,7 +670,8 @@ export default function SendConfirmationPage() {
             {row(
               "Company Quote ($/kWh)",
               <input
-                className={INPUT}
+                className={inputCls}
+                style={inputStyle}
                 type="number"
                 step="0.000001"
                 value={form.ap_quote}
@@ -647,7 +683,8 @@ export default function SendConfirmationPage() {
             {row(
               "Comments",
               <textarea
-                className={INPUT}
+                className={inputCls}
+                style={inputStyle}
                 rows={3}
                 value={form.comment}
                 onChange={(e) => set("comment", e.target.value)}
@@ -657,8 +694,8 @@ export default function SendConfirmationPage() {
           </div>
 
           {/* Dates & Flags */}
-          <div className="bg-white border border-gray-200 rounded-lg p-5 mb-4">
-            <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-4">
+          <div className="rounded-[var(--r-lg)] border p-5 mb-4" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
+            <h2 className="text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: "var(--ct-text-muted)" }}>
               Dates & Flags
             </h2>
 
@@ -666,13 +703,14 @@ export default function SendConfirmationPage() {
               "Start Date",
               <div className="flex items-center gap-4">
                 <input
-                  className={`${INPUT} w-40`}
+                  className={`${inputCls} w-40`}
+                  style={inputStyle}
                   type="date"
                   value={form.start_date}
                   disabled={form.asap}
                   onChange={(e) => set("start_date", e.target.value)}
                 />
-                <label className="flex items-center gap-1.5 text-sm text-gray-600">
+                <label className="flex items-center gap-1.5 text-sm" style={{ color: "var(--ct-text-secondary)" }}>
                   <input
                     type="checkbox"
                     checked={form.asap}
@@ -683,7 +721,7 @@ export default function SendConfirmationPage() {
                   />
                   ASAP
                 </label>
-                <label className="flex items-center gap-1.5 text-sm text-gray-600">
+                <label className="flex items-center gap-1.5 text-sm" style={{ color: "var(--ct-text-secondary)" }}>
                   <input
                     type="checkbox"
                     checked={form.meter_read}
@@ -709,7 +747,8 @@ export default function SendConfirmationPage() {
               ).map(([key, label]) => (
                 <label
                   key={key}
-                  className="flex items-center gap-2 text-sm text-gray-600"
+                  className="flex items-center gap-2 text-sm"
+                  style={{ color: "var(--ct-text-secondary)" }}
                 >
                   <input
                     type="checkbox"
@@ -722,7 +761,7 @@ export default function SendConfirmationPage() {
             </div>
 
             <div className="mt-4 ml-4">
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-2">
+              <p className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: "var(--ct-text-muted)" }}>
                 Check which applies
               </p>
               <div className="flex gap-6">
@@ -735,7 +774,8 @@ export default function SendConfirmationPage() {
                 ).map(([key, label]) => (
                   <label
                     key={key}
-                    className="flex items-center gap-2 text-sm text-gray-600"
+                    className="flex items-center gap-2 text-sm"
+                    style={{ color: "var(--ct-text-secondary)" }}
                   >
                     <input
                       type="checkbox"
@@ -750,15 +790,16 @@ export default function SendConfirmationPage() {
           </div>
 
           {/* Customer & Billing */}
-          <div className="bg-white border border-gray-200 rounded-lg p-5 mb-4">
-            <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-4">
+          <div className="rounded-[var(--r-lg)] border p-5 mb-4" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
+            <h2 className="text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: "var(--ct-text-muted)" }}>
               Customer & Billing
             </h2>
 
             {row(
               "ESIID(s)",
               <textarea
-                className={INPUT}
+                className={inputCls}
+                style={inputStyle}
                 rows={2}
                 value={form.esiid}
                 onChange={(e) => set("esiid", e.target.value)}
@@ -780,7 +821,8 @@ export default function SendConfirmationPage() {
             {row(
               "Customer email",
               <input
-                className={INPUT}
+                className={inputCls}
+                style={inputStyle}
                 type="email"
                 value={form.customer_email}
                 onChange={(e) => set("customer_email", e.target.value)}
@@ -800,7 +842,8 @@ export default function SendConfirmationPage() {
                 ).map(([val, label]) => (
                   <label
                     key={val}
-                    className="flex items-center gap-2 text-sm text-gray-600"
+                    className="flex items-center gap-2 text-sm"
+                    style={{ color: "var(--ct-text-secondary)" }}
                   >
                     <input
                       type="radio"
@@ -818,7 +861,8 @@ export default function SendConfirmationPage() {
             {row(
               "Meter fees",
               <input
-                className={`${INPUT} w-48`}
+                className={`${inputCls} w-48`}
+                style={inputStyle}
                 value={form.meter_fees}
                 onChange={(e) => set("meter_fees", e.target.value)}
                 placeholder="ex. 5.00, 7.00, 10.00"
@@ -829,7 +873,8 @@ export default function SendConfirmationPage() {
             {row(
               "Comments / Notes",
               <textarea
-                className={INPUT}
+                className={inputCls}
+                style={inputStyle}
                 rows={3}
                 value={form.comment_mail}
                 onChange={(e) => set("comment_mail", e.target.value)}
@@ -838,16 +883,17 @@ export default function SendConfirmationPage() {
           </div>
 
           {/* Customer Details (auto-populated on upload) */}
-          <div className="bg-white border border-gray-200 rounded-lg p-5 mb-4">
-            <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1">
+          <div className="rounded-[var(--r-lg)] border p-5 mb-4" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
+            <h2 className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: "var(--ct-text-muted)" }}>
               Customer Details
             </h2>
-            <p className="text-xs text-gray-400 mb-4">Auto-populated on upload — staff may fill manually</p>
+            <p className="text-xs mb-4" style={{ color: "var(--ct-text-muted)" }}>Auto-populated on upload — staff may fill manually</p>
 
             {row(
               "First Name",
               <input
-                className={INPUT}
+                className={inputCls}
+                style={inputStyle}
                 value={form.cust_first_name}
                 onChange={(e) => set("cust_first_name", e.target.value)}
                 placeholder="First name"
@@ -857,7 +903,8 @@ export default function SendConfirmationPage() {
             {row(
               "Last Name",
               <input
-                className={INPUT}
+                className={inputCls}
+                style={inputStyle}
                 value={form.cust_last_name}
                 onChange={(e) => set("cust_last_name", e.target.value)}
                 placeholder="Last name"
@@ -867,7 +914,8 @@ export default function SendConfirmationPage() {
             {row(
               "Billing Address",
               <input
-                className={INPUT}
+                className={inputCls}
+                style={inputStyle}
                 value={form.billing_address}
                 onChange={(e) => set("billing_address", e.target.value)}
                 placeholder="Street address"
@@ -878,19 +926,22 @@ export default function SendConfirmationPage() {
               "City / State / ZIP",
               <div className="flex gap-2">
                 <input
-                  className={INPUT}
+                  className={inputCls}
+                  style={inputStyle}
                   value={form.billing_city}
                   onChange={(e) => set("billing_city", e.target.value)}
                   placeholder="City"
                 />
                 <input
-                  className="w-20 border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-sky-400"
+                  className="w-20 rounded-[var(--r-sm)] px-3 py-1.5 text-sm border focus:outline-none focus:border-[var(--accent-light)]"
+                  style={inputStyle}
                   value={form.billing_state}
                   onChange={(e) => set("billing_state", e.target.value)}
                   placeholder="State"
                 />
                 <input
-                  className="w-28 border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-sky-400"
+                  className="w-28 rounded-[var(--r-sm)] px-3 py-1.5 text-sm border focus:outline-none focus:border-[var(--accent-light)]"
+                  style={inputStyle}
                   value={form.billing_zip}
                   onChange={(e) => set("billing_zip", e.target.value)}
                   placeholder="ZIP"
@@ -901,7 +952,8 @@ export default function SendConfirmationPage() {
             {row(
               "Plan Group",
               <input
-                className={INPUT}
+                className={inputCls}
+                style={inputStyle}
                 value={form.plan_group}
                 onChange={(e) => set("plan_group", e.target.value)}
                 placeholder="e.g. C1"
@@ -911,7 +963,8 @@ export default function SendConfirmationPage() {
             {row(
               "Plan ID",
               <input
-                className={INPUT}
+                className={inputCls}
+                style={inputStyle}
                 value={form.plan_id}
                 onChange={(e) => set("plan_id", e.target.value)}
                 placeholder="e.g. PNCPOSTPAY"
@@ -919,12 +972,12 @@ export default function SendConfirmationPage() {
             )}
           </div>
 
-          <div className="bg-white border border-gray-200 rounded-lg p-5 mb-6">
+          <div className="rounded-[var(--r-lg)] border p-5 mb-6" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-widest">
+              <h2 className="text-xs font-semibold uppercase tracking-widest" style={{ color: "var(--ct-text-muted)" }}>
                 Profile & Volume
               </h2>
-              <span className="text-xs text-gray-400">
+              <span className="text-xs" style={{ color: "var(--ct-text-muted)" }}>
                 Total:{" "}
                 {Object.values(profiles)
                   .reduce((s, v) => s + (parseFloat(v) || 0), 0)
@@ -935,7 +988,7 @@ export default function SendConfirmationPage() {
             <div className="grid grid-cols-2 gap-x-8 gap-y-4">
               {Object.entries(PROFILES_BY_ZONE).map(([zone, profs]) => (
                 <div key={zone}>
-                  <p className="text-xs font-bold text-red-600 mb-2">{zone}</p>
+                  <p className="text-xs font-bold mb-2" style={{ color: "var(--accent-light)" }}>{zone}</p>
                   {profs.map((p) => (
                     <div key={p} className="flex items-center gap-2 mb-1.5">
                       <input
@@ -946,14 +999,16 @@ export default function SendConfirmationPage() {
                       />
                       <label
                         htmlFor={`p_${p}`}
-                        className="text-xs text-gray-600 w-40 select-none"
+                        className="text-xs w-40 select-none"
+                        style={{ color: "var(--ct-text-secondary)" }}
                       >
                         {p}
                       </label>
                       {profiles[p] !== undefined && (
                         <input
                           type="number"
-                          className="border border-gray-300 rounded px-2 py-0.5 text-xs w-28 focus:outline-none focus:ring-1 focus:ring-sky-400"
+                          className="rounded-[var(--r-sm)] px-2 py-0.5 text-xs w-28 border focus:outline-none focus:border-[var(--accent-light)]"
+                          style={inputStyle}
                           placeholder="Volume"
                           value={profiles[p]}
                           onChange={(e) =>
@@ -976,11 +1031,12 @@ export default function SendConfirmationPage() {
             <button
               onClick={handlePreview}
               disabled={previewLoading}
-              className="px-6 py-2 text-sm font-medium rounded bg-sky-600 text-white hover:bg-sky-700 disabled:opacity-50 transition-colors"
+              className="px-6 py-2 text-sm font-medium rounded-[var(--r-md)] disabled:opacity-50 transition-colors"
+              style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
             >
               {previewLoading ? "Generating preview..." : "Preview Email →"}
             </button>
-            <span className="text-xs text-gray-400">
+            <span className="text-xs" style={{ color: "var(--ct-text-muted)" }}>
               Step 1 of 3 — fill the form, then preview before sending
             </span>
           </div>
@@ -997,39 +1053,43 @@ export default function SendConfirmationPage() {
         <div className="max-w-3xl">
           <StepBar />
 
-          <div className="bg-white border border-gray-200 rounded-lg overflow-hidden mb-4">
+          <div className="rounded-[var(--r-lg)] border overflow-hidden mb-4" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
             {/* Preview header */}
-            <div className="px-5 py-3 border-b border-gray-100 flex items-center justify-between">
+            <div className="px-5 py-3 border-b flex items-center justify-between" style={{ borderColor: "var(--ct-border-subtle)" }}>
               <div>
-                <p className="text-sm font-medium text-gray-800">
+                <p className="text-sm font-medium" style={{ color: "var(--ct-text-primary)" }}>
                   Email Preview
                 </p>
-                <p className="text-xs text-gray-400 mt-0.5">
+                <p className="text-xs mt-0.5" style={{ color: "var(--ct-text-muted)" }}>
                   Contract #{form.contract_no} — {form.customer_name} — to:{" "}
                   {form.send_to_email || "no recipient set"}
                 </p>
               </div>
               <button
                 onClick={() => setStep(1)}
-                className="text-xs text-sky-600 hover:underline"
+                className="text-xs hover:underline"
+                style={{ color: "var(--accent-light)" }}
               >
                 ← Edit form
               </button>
             </div>
 
             {/* Email HTML rendered in iframe */}
-            <div className="p-4 bg-gray-50">
+            <div className="p-4" style={{ background: "var(--ct-canvas)" }}>
               <iframe
                 srcDoc={previewHtml}
-                className="w-full rounded border border-gray-200 bg-white"
-                style={{ minHeight: "560px" }}
+                className="w-full rounded-[var(--r-md)] border"
+                style={{ minHeight: "560px", borderColor: "var(--ct-border-default)", background: "var(--ct-surface)" }}
                 title="Email Preview"
               />
             </div>
           </div>
 
           {/* Summary strip */}
-          <div className="bg-sky-50 border border-sky-100 rounded-lg px-5 py-3 mb-4 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+          <div
+            className="rounded-[var(--r-lg)] border px-5 py-3 mb-4 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs"
+            style={{ background: "var(--accent-light-tint)", borderColor: "var(--accent-light)" }}
+          >
             {[
               ["Customer", form.customer_name],
               ["Broker", form.broker_name],
@@ -1037,14 +1097,14 @@ export default function SendConfirmationPage() {
               ["Start Date", form.asap ? "ASAP" : form.start_date || "—"],
             ].map(([label, val]) => (
               <div key={label}>
-                <p className="text-gray-400 font-medium">{label}</p>
-                <p className="text-gray-800 font-semibold">{val}</p>
+                <p className="font-medium" style={{ color: "var(--accent-light)" }}>{label}</p>
+                <p className="font-semibold" style={{ color: "var(--ct-text-primary)" }}>{val}</p>
               </div>
             ))}
           </div>
 
           {errors._general && (
-            <div className="text-sm text-red-600 bg-red-50 px-4 py-2 rounded mb-4">
+            <div className="text-sm px-4 py-2 rounded-[var(--r-md)] mb-4" style={{ background: "var(--danger-light-tint)", color: "var(--danger-light)" }}>
               {errors._general}
             </div>
           )}
@@ -1056,18 +1116,20 @@ export default function SendConfirmationPage() {
                 setStep(1);
                 set("ap_quote", "");
               }}
-              className="px-5 py-2 text-sm rounded border border-gray-300 text-gray-600 hover:bg-gray-50"
+              className="px-5 py-2 text-sm rounded-[var(--r-md)] border transition-colors hover:bg-[var(--ct-surface-hover)]"
+              style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-secondary)" }}
             >
               ← Back to Form
             </button>
             <button
               onClick={handleSend}
               disabled={sending}
-              className="px-6 py-2 text-sm font-medium rounded bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 transition-colors"
+              className="px-6 py-2 text-sm font-medium rounded-[var(--r-md)] disabled:opacity-50 transition-colors"
+              style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
             >
               {sending ? "Sending..." : "Send Email →"}
             </button>
-            <span className="text-xs text-gray-400">
+            <span className="text-xs" style={{ color: "var(--ct-text-muted)" }}>
               Step 2 of 3 — verify details, then send
             </span>
           </div>
@@ -1083,43 +1145,45 @@ export default function SendConfirmationPage() {
       <div className="max-w-3xl">
         <StepBar />
 
-        <div className="bg-white border border-gray-200 rounded-lg px-8 py-10 text-center">
-          <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
-            <span className="text-green-600 text-xl font-bold">✓</span>
+        <div className="rounded-[var(--r-lg)] border px-8 py-10 text-center" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
+          <div className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: "var(--success-light-tint)" }}>
+            <span className="text-xl font-bold" style={{ color: "var(--success-light)" }}>✓</span>
           </div>
-          <h2 className="text-lg font-semibold text-gray-800 mb-1">
+          <h2 className="text-lg font-semibold mb-1" style={{ color: "var(--ct-text-primary)" }}>
             Confirmation Sent
           </h2>
-          <p className="text-sm text-gray-500 mb-1">
+          <p className="text-sm mb-1" style={{ color: "var(--ct-text-muted)" }}>
             Contract{" "}
-            <span className="font-medium text-gray-700">
+            <span className="font-medium" style={{ color: "var(--ct-text-secondary)" }}>
               #{sentResult?.contract_no}
             </span>{" "}
             confirmation saved.
           </p>
-          <p className="text-sm text-gray-500 mb-1">
+          <p className="text-sm mb-1" style={{ color: "var(--ct-text-muted)" }}>
             Email sent to:{" "}
-            <span className="font-medium text-gray-700">
+            <span className="font-medium" style={{ color: "var(--ct-text-secondary)" }}>
               {form.broker_name}
             </span>{" "}
-            <span className="text-gray-400">
+            <span style={{ color: "var(--ct-text-muted)" }}>
               &lt;{form.send_to_email}&gt;
             </span>
           </p>
-          <p className="text-xs text-gray-400 mb-6">
+          <p className="text-xs mb-6" style={{ color: "var(--ct-text-muted)" }}>
             Record ID: {sentResult?.sid}
           </p>
 
           <div className="flex justify-center gap-3">
             <button
               onClick={handleStartOver}
-              className="px-5 py-2 text-sm rounded bg-sky-600 text-white hover:bg-sky-700"
+              className="px-5 py-2 text-sm rounded-[var(--r-md)] transition-colors"
+              style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
             >
               Send Another Confirmation
             </button>
             <button
               onClick={() => (window.location.href = "/contracts/view")}
-              className="px-5 py-2 text-sm rounded border border-gray-300 text-gray-600 hover:bg-gray-50"
+              className="px-5 py-2 text-sm rounded-[var(--r-md)] border transition-colors hover:bg-[var(--ct-surface-hover)]"
+              style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-secondary)" }}
             >
               View All Confirmations
             </button>
