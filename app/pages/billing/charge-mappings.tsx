@@ -44,17 +44,6 @@ const CATEGORIES = [
   "surcharge", "tax", "misc", "excluded",
 ];
 
-const CAT_COLORS: Record<string, string> = {
-  transmission:    "bg-blue-50 text-blue-700",
-  distribution:    "bg-indigo-50 text-indigo-700",
-  customer_charge: "bg-purple-50 text-purple-700",
-  metering:        "bg-cyan-50 text-cyan-700",
-  surcharge:       "bg-orange-50 text-orange-700",
-  tax:             "bg-yellow-50 text-yellow-700",
-  misc:            "bg-gray-100 text-gray-600",
-  excluded:        "bg-red-50 text-red-600",
-};
-
 // ── helpers ───────────────────────────────────────────────────────────────────
 
 function Spinner() {
@@ -73,13 +62,15 @@ function Toggle({
     <label className="flex items-center gap-2 cursor-pointer">
       <div
         onClick={() => onChange(!checked)}
-        className={`relative w-8 h-4 rounded-full transition-colors ${checked ? "bg-green-500" : "bg-gray-200"}`}
+        className="relative w-8 h-4 rounded-full transition-colors"
+        style={{ background: checked ? "var(--accent-light)" : "var(--ct-border-default)" }}
       >
         <span
-          className={`absolute top-0.5 w-3 h-3 rounded-full bg-white shadow transition-transform ${checked ? "translate-x-4" : "translate-x-0.5"}`}
+          className={`absolute top-0.5 w-3 h-3 rounded-full shadow transition-transform ${checked ? "translate-x-4" : "translate-x-0.5"}`}
+          style={{ background: "var(--ct-surface)" }}
         />
       </div>
-      <span className="text-xs text-gray-600">{label}</span>
+      <span className="text-xs" style={{ color: "var(--ct-text-secondary)" }}>{label}</span>
     </label>
   );
 }
@@ -88,33 +79,36 @@ function Toggle({
 function TriState({
   value, onChange, label,
 }: { value: boolean | null; onChange: (v: boolean | null) => void; label: string }) {
-  const opt = (v: boolean | null, text: string, activeCls: string) => (
+  const opt = (v: boolean | null, text: string, activeStyle: { background: string; color: string }) => (
     <button
       type="button"
       onClick={() => onChange(v)}
-      className={`px-2.5 py-1 text-xs font-medium transition-colors border-r last:border-r-0 border-gray-200 ${
-        value === v ? activeCls : "bg-white text-gray-500 hover:bg-gray-50"
-      }`}
+      className="px-2.5 py-1 text-xs font-medium transition-colors border-r last:border-r-0"
+      style={
+        value === v
+          ? { ...activeStyle, borderColor: "var(--ct-border-default)" }
+          : { background: "var(--ct-surface)", color: "var(--ct-text-muted)", borderColor: "var(--ct-border-default)" }
+      }
     >
       {text}
     </button>
   );
   return (
     <div className="flex flex-col gap-1">
-      <span className="text-xs text-gray-500">{label}</span>
-      <div className="flex rounded border border-gray-200 overflow-hidden w-fit">
-        {opt(true,  "Yes",     "bg-blue-500 text-white")}
-        {opt(false, "No",      "bg-gray-400 text-white")}
-        {opt(null,  "Unknown", "bg-amber-400 text-white")}
+      <span className="text-xs" style={{ color: "var(--ct-text-muted)" }}>{label}</span>
+      <div className="flex rounded-[var(--r-sm)] border overflow-hidden w-fit" style={{ borderColor: "var(--ct-border-default)" }}>
+        {opt(true,  "Yes",     { background: "var(--accent-light)", color: "var(--accent-light-on-solid)" })}
+        {opt(false, "No",      { background: "var(--ct-text-muted)", color: "#ffffff" })}
+        {opt(null,  "Unknown", { background: "var(--amber-light)", color: "#ffffff" })}
       </div>
     </div>
   );
 }
 
 function PerUnitCell({ value }: { value: number | null }) {
-  if (value === null) return <span className="text-amber-500 text-xs font-medium">?</span>;
-  if (value)         return <span className="text-blue-500 font-bold">✓</span>;
-  return               <span className="text-gray-200">—</span>;
+  if (value === null) return <span className="text-xs font-medium" style={{ color: "var(--amber-light)" }}>?</span>;
+  if (value)         return <span className="font-bold" style={{ color: "var(--accent-light)" }}>✓</span>;
+  return               <span style={{ color: "var(--ct-text-muted)", opacity: 0.5 }}>—</span>;
 }
 
 // ── form panel ────────────────────────────────────────────────────────────────
@@ -133,54 +127,60 @@ function FormPanel({ form, editingId, saving, error, onChange, onSubmit, onCance
   const set = (k: keyof FormState, v: string | boolean | null) =>
     onChange({ ...form, [k]: v });
 
-  const labelCls = "block text-xs text-gray-500 mb-1";
-  const inputCls = "w-full text-xs border border-gray-200 rounded px-2.5 py-1.5 text-gray-800 focus:outline-none focus:ring-1 focus:ring-green-400";
+  const labelCls = "block text-xs mb-1";
+  const labelStyle = { color: "var(--ct-text-muted)" };
+  const inputCls = "w-full text-xs rounded-[var(--r-sm)] px-2.5 py-1.5 border focus:outline-none focus:border-[var(--accent-light)]";
+  const inputStyle = { background: "var(--ct-surface)", color: "var(--ct-text-primary)", borderColor: "var(--ct-border-default)" };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-4">
-      <h3 className="text-sm font-semibold text-gray-700 mb-4">
+    <div className="rounded-[var(--r-lg)] border p-4" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
+      <h3 className="text-sm font-semibold mb-4" style={{ color: "var(--ct-text-secondary)" }}>
         {editingId ? `Edit Mapping #${editingId}` : "Add Mapping"}
       </h3>
 
       <div className="grid grid-cols-2 gap-3 mb-3">
         <div>
-          <label className={labelCls}>Charge Code *</label>
+          <label className={labelCls} style={labelStyle}>Charge Code *</label>
           <input
             value={form.charge_code}
             onChange={(e) => set("charge_code", e.target.value.toUpperCase())}
             disabled={!!editingId}
             placeholder="e.g. DIST_CHARGE"
-            className={`${inputCls} ${editingId ? "bg-gray-50 text-gray-400" : ""}`}
+            className={inputCls}
+            style={editingId ? { ...inputStyle, background: "var(--ct-surface-hover)", color: "var(--ct-text-muted)" } : inputStyle}
           />
         </div>
         <div>
-          <label className={labelCls}>TDSP DUNS (blank = universal)</label>
+          <label className={labelCls} style={labelStyle}>TDSP DUNS (blank = universal)</label>
           <input
             value={form.tdsp_duns}
             onChange={(e) => set("tdsp_duns", e.target.value)}
             disabled={!!editingId}
             placeholder="Leave blank for all TDSPs"
-            className={`${inputCls} ${editingId ? "bg-gray-50 text-gray-400" : ""}`}
+            className={inputCls}
+            style={editingId ? { ...inputStyle, background: "var(--ct-surface-hover)", color: "var(--ct-text-muted)" } : inputStyle}
           />
         </div>
       </div>
 
       <div className="mb-3">
-        <label className={labelCls}>Description</label>
+        <label className={labelCls} style={labelStyle}>Description</label>
         <input
           value={form.charge_description}
           onChange={(e) => set("charge_description", e.target.value)}
           placeholder="Human-readable charge name"
           className={inputCls}
+          style={inputStyle}
         />
       </div>
 
       <div className="mb-3">
-        <label className={labelCls}>Billing Category *</label>
+        <label className={labelCls} style={labelStyle}>Billing Category *</label>
         <select
           value={form.billing_category}
           onChange={(e) => set("billing_category", e.target.value)}
           className={inputCls}
+          style={inputStyle}
         >
           {CATEGORIES.map((c) => (
             <option key={c} value={c}>{c.replace(/_/g, " ")}</option>
@@ -207,24 +207,26 @@ function FormPanel({ form, editingId, saving, error, onChange, onSubmit, onCance
       </div>
 
       <div className="mb-4">
-        <label className={labelCls}>Notes</label>
+        <label className={labelCls} style={labelStyle}>Notes</label>
         <input
           value={form.notes}
           onChange={(e) => set("notes", e.target.value)}
           placeholder="Optional notes"
           className={inputCls}
+          style={inputStyle}
         />
       </div>
 
       {error && (
-        <p className="text-xs text-red-500 mb-3">{error}</p>
+        <p className="text-xs mb-3" style={{ color: "var(--danger-light)" }}>{error}</p>
       )}
 
       <div className="flex items-center gap-2">
         <button
           onClick={onSubmit}
           disabled={saving || !form.charge_code.trim()}
-          className="flex items-center gap-2 px-4 py-1.5 bg-green-600 text-white text-xs font-medium rounded hover:bg-green-700 disabled:opacity-40 transition-colors"
+          className="flex items-center gap-2 px-4 py-1.5 text-xs font-medium rounded-[var(--r-sm)] disabled:opacity-40 transition-colors"
+          style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
         >
           {saving && <Spinner />}
           {editingId ? "Save Changes" : "Add Mapping"}
@@ -232,7 +234,8 @@ function FormPanel({ form, editingId, saving, error, onChange, onSubmit, onCance
         {editingId && (
           <button
             onClick={onCancel}
-            className="px-3 py-1.5 text-xs text-gray-500 border border-gray-200 rounded hover:bg-gray-50 transition-colors"
+            className="px-3 py-1.5 text-xs rounded-[var(--r-sm)] border transition-colors hover:bg-[var(--ct-surface-hover)]"
+            style={{ color: "var(--ct-text-muted)", borderColor: "var(--ct-border-default)" }}
           >
             Cancel
           </button>
@@ -335,8 +338,8 @@ export default function ChargeMappingsPage() {
   return (
     <BillingEngineLayout title="Charge Mappings">
       <div className="mb-6">
-        <h2 className="text-base font-semibold text-gray-800">TDSP Charge Mappings</h2>
-        <p className="text-xs text-gray-400 mt-0.5">
+        <h2 className="text-base font-semibold" style={{ color: "var(--ct-text-primary)" }}>TDSP Charge Mappings</h2>
+        <p className="text-xs mt-0.5" style={{ color: "var(--ct-text-muted)" }}>
           Map 810 charge codes to billing categories. Unmapped codes appear in the Review → Unknown Charges tab.
         </p>
       </div>
@@ -358,16 +361,17 @@ export default function ChargeMappingsPage() {
 
         {/* table */}
         <div className="col-span-2">
-          <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-            <div className="px-4 py-3 bg-gray-50 border-b border-gray-100 flex items-center justify-between">
-              <span className="text-sm font-semibold text-gray-700">
+          <div className="rounded-[var(--r-lg)] border overflow-hidden" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
+            <div className="px-4 py-3 border-b flex items-center justify-between" style={{ background: "var(--ct-surface-hover)", borderColor: "var(--ct-border-subtle)" }}>
+              <span className="text-sm font-semibold" style={{ color: "var(--ct-text-secondary)" }}>
                 Mappings
-                {!loading && <span className="ml-1.5 text-xs text-gray-400 font-normal">({rows.length})</span>}
+                {!loading && <span className="ml-1.5 text-xs font-normal" style={{ color: "var(--ct-text-muted)" }}>({rows.length})</span>}
               </span>
               <button
                 onClick={load}
                 disabled={loading}
-                className="flex items-center gap-1 text-xs text-gray-400 hover:text-gray-600 disabled:opacity-40"
+                className="flex items-center gap-1 text-xs disabled:opacity-40 transition-colors hover:text-[var(--ct-text-secondary)]"
+                style={{ color: "var(--ct-text-muted)" }}
               >
                 {loading ? <Spinner /> : (
                   <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -380,71 +384,74 @@ export default function ChargeMappingsPage() {
             </div>
 
             {fetchErr && (
-              <div className="px-4 py-3 text-sm text-red-500">{fetchErr}</div>
+              <div className="px-4 py-3 text-sm" style={{ color: "var(--danger-light)" }}>{fetchErr}</div>
             )}
 
             {loading ? (
-              <div className="px-4 py-8 text-center text-sm text-gray-400">Loading…</div>
+              <div className="px-4 py-8 text-center text-sm" style={{ color: "var(--ct-text-muted)" }}>Loading…</div>
             ) : rows.length === 0 ? (
-              <div className="px-4 py-8 text-center text-sm text-gray-400">No mappings yet.</div>
+              <div className="px-4 py-8 text-center text-sm" style={{ color: "var(--ct-text-muted)" }}>No mappings yet.</div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-xs">
-                  <thead className="bg-gray-50 border-b border-gray-100">
+                  <thead className="border-b" style={{ background: "var(--ct-surface-hover)", borderColor: "var(--ct-border-subtle)" }}>
                     <tr>
-                      <th className="px-3 py-2 text-left text-gray-500 font-medium">Code</th>
-                      <th className="px-3 py-2 text-left text-gray-500 font-medium">Description</th>
-                      <th className="px-3 py-2 text-left text-gray-500 font-medium">Category</th>
-                      <th className="px-3 py-2 text-left text-gray-500 font-medium">TDSP</th>
-                      <th className="px-3 py-2 text-center text-gray-500 font-medium">Tax</th>
-                      <th className="px-3 py-2 text-center text-gray-500 font-medium">Per-unit</th>
-                      <th className="px-3 py-2 text-center text-gray-500 font-medium">Pass-thru</th>
+                      <th className="px-3 py-2 text-left font-medium" style={{ color: "var(--ct-text-muted)" }}>Code</th>
+                      <th className="px-3 py-2 text-left font-medium" style={{ color: "var(--ct-text-muted)" }}>Description</th>
+                      <th className="px-3 py-2 text-left font-medium" style={{ color: "var(--ct-text-muted)" }}>Category</th>
+                      <th className="px-3 py-2 text-left font-medium" style={{ color: "var(--ct-text-muted)" }}>TDSP</th>
+                      <th className="px-3 py-2 text-center font-medium" style={{ color: "var(--ct-text-muted)" }}>Tax</th>
+                      <th className="px-3 py-2 text-center font-medium" style={{ color: "var(--ct-text-muted)" }}>Per-unit</th>
+                      <th className="px-3 py-2 text-center font-medium" style={{ color: "var(--ct-text-muted)" }}>Pass-thru</th>
                       <th className="px-3 py-2" />
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-50">
+                  <tbody className="divide-y" style={{ borderColor: "var(--ct-border-subtle)" }}>
                     {rows.map((m) => (
                       <tr
                         key={m.id}
-                        className={`hover:bg-gray-50 transition-colors ${editingId === m.id ? "bg-green-50" : ""}`}
+                        className="transition-colors hover:bg-[var(--ct-surface-hover)]"
+                        style={editingId === m.id ? { background: "var(--accent-light-tint)" } : undefined}
                       >
                         <td className="px-3 py-2">
-                          <span className="font-mono font-medium text-gray-800 bg-gray-100 px-1.5 py-0.5 rounded">
+                          <span className="font-mono font-medium px-1.5 py-0.5 rounded-[var(--r-sm)]" style={{ color: "var(--ct-text-primary)", background: "var(--ct-surface-hover)" }}>
                             {m.charge_code}
                           </span>
                         </td>
-                        <td className="px-3 py-2 text-gray-600 max-w-[12rem] truncate" title={m.charge_description ?? ""}>
-                          {m.charge_description ?? <span className="text-gray-300">—</span>}
+                        <td className="px-3 py-2 max-w-[12rem] truncate" style={{ color: "var(--ct-text-secondary)" }} title={m.charge_description ?? ""}>
+                          {m.charge_description ?? <span style={{ color: "var(--ct-text-muted)", opacity: 0.6 }}>—</span>}
                         </td>
                         <td className="px-3 py-2">
-                          <span className={`inline-flex px-1.5 py-0.5 rounded text-xs font-medium ${CAT_COLORS[m.billing_category] ?? "bg-gray-100 text-gray-600"}`}>
+                          <span className="inline-flex px-1.5 py-0.5 rounded-[var(--r-sm)] text-xs font-medium" style={{ background: "var(--accent-light-tint)", color: "var(--accent-light)" }}>
                             {m.billing_category.replace(/_/g, " ")}
                           </span>
                         </td>
-                        <td className="px-3 py-2 text-gray-500 font-mono">
-                          {m.tdsp_duns ?? <span className="text-gray-300 italic not-italic">universal</span>}
+                        <td className="px-3 py-2 font-mono" style={{ color: "var(--ct-text-muted)" }}>
+                          {m.tdsp_duns ?? <span style={{ opacity: 0.6, fontStyle: "italic" }}>universal</span>}
                         </td>
                         <td className="px-3 py-2 text-center">
-                          {m.is_taxable ? <span className="text-green-600 font-bold">✓</span> : <span className="text-gray-200">—</span>}
+                          {m.is_taxable ? <span className="font-bold" style={{ color: "var(--accent-light)" }}>✓</span> : <span style={{ color: "var(--ct-text-muted)", opacity: 0.5 }}>—</span>}
                         </td>
                         <td className="px-3 py-2 text-center">
                           <PerUnitCell value={m.is_per_unit} />
                         </td>
                         <td className="px-3 py-2 text-center">
-                          {m.is_passthrough ? <span className="text-green-600 font-bold">✓</span> : <span className="text-gray-200">—</span>}
+                          {m.is_passthrough ? <span className="font-bold" style={{ color: "var(--accent-light)" }}>✓</span> : <span style={{ color: "var(--ct-text-muted)", opacity: 0.5 }}>—</span>}
                         </td>
                         <td className="px-3 py-2">
                           <div className="flex items-center gap-2 justify-end">
                             <button
                               onClick={() => startEdit(m)}
-                              className="text-xs text-blue-500 hover:text-blue-700 transition-colors"
+                              className="text-xs transition-colors hover:opacity-80"
+                              style={{ color: "var(--accent-light)" }}
                             >
                               Edit
                             </button>
                             <button
                               onClick={() => deleteMapping(m.id)}
                               disabled={deletingId === m.id}
-                              className="text-xs text-red-400 hover:text-red-600 disabled:opacity-40 transition-colors"
+                              className="text-xs disabled:opacity-40 transition-colors hover:opacity-80"
+                              style={{ color: "var(--danger-light)" }}
                             >
                               {deletingId === m.id ? "…" : "Delete"}
                             </button>
