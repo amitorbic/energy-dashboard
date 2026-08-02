@@ -59,7 +59,7 @@ function period(start: string, end: string) {
 
 function Spinner() {
   return (
-    <svg className="w-4 h-4 animate-spin text-gray-400" viewBox="0 0 24 24" fill="none">
+    <svg className="w-4 h-4 animate-spin" style={{ color: "var(--ct-text-muted)" }} viewBox="0 0 24 24" fill="none">
       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
     </svg>
@@ -69,7 +69,7 @@ function Spinner() {
 function EmptyRow({ cols, msg }: { cols: number; msg: string }) {
   return (
     <tr>
-      <td colSpan={cols} className="px-4 py-8 text-center text-sm text-gray-400">
+      <td colSpan={cols} className="px-4 py-8 text-center text-sm" style={{ color: "var(--ct-text-muted)" }}>
         {msg}
       </td>
     </tr>
@@ -79,10 +79,13 @@ function EmptyRow({ cols, msg }: { cols: number; msg: string }) {
 // ── tab badge ─────────────────────────────────────────────────────────────────
 
 function Badge({ count, loading }: { count: number; loading: boolean }) {
-  if (loading) return <span className="ml-1.5 text-gray-300 text-xs">…</span>;
+  if (loading) return <span className="ml-1.5 text-xs" style={{ color: "var(--ct-text-muted)" }}>…</span>;
   if (count === 0) return null;
   return (
-    <span className="ml-1.5 inline-flex items-center justify-center px-1.5 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-600 min-w-[1.25rem]">
+    <span
+      className="ml-1.5 inline-flex items-center justify-center px-1.5 py-0.5 rounded-full text-xs font-semibold min-w-[1.25rem]"
+      style={{ background: "var(--accent-light-tint)", color: "var(--accent-light)" }}
+    >
       {count}
     </span>
   );
@@ -120,37 +123,37 @@ function UnmatchedTable({ rows, loading, onRefresh }: {
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-xs">
-        <thead className="bg-gray-50 border-b border-gray-100">
+        <thead className="border-b" style={{ background: "var(--ct-surface-hover)", borderColor: "var(--ct-border-subtle)" }}>
           <tr>
-            <th className="px-3 py-2.5 text-left text-gray-500 font-medium">ESI ID</th>
-            <th className="px-3 py-2.5 text-left text-gray-500 font-medium">Service Period</th>
-            <th className="px-3 py-2.5 text-right text-gray-500 font-medium">Usage (kWh)</th>
-            <th className="px-3 py-2.5 text-left text-gray-500 font-medium">TDSP</th>
-            <th className="px-3 py-2.5 text-left text-gray-500 font-medium">Source File</th>
-            <th className="px-3 py-2.5 text-left text-gray-500 font-medium whitespace-nowrap">Loaded At</th>
-            {admin && <th className="px-3 py-2.5 text-right text-gray-500 font-medium">&nbsp;</th>}
+            <th className="px-3 py-2.5 text-left font-medium" style={{ color: "var(--ct-text-muted)" }}>ESI ID</th>
+            <th className="px-3 py-2.5 text-left font-medium" style={{ color: "var(--ct-text-muted)" }}>Service Period</th>
+            <th className="px-3 py-2.5 text-right font-medium" style={{ color: "var(--ct-text-muted)" }}>Usage (kWh)</th>
+            <th className="px-3 py-2.5 text-left font-medium" style={{ color: "var(--ct-text-muted)" }}>TDSP</th>
+            <th className="px-3 py-2.5 text-left font-medium" style={{ color: "var(--ct-text-muted)" }}>Source File</th>
+            <th className="px-3 py-2.5 text-left font-medium whitespace-nowrap" style={{ color: "var(--ct-text-muted)" }}>Loaded At</th>
+            {admin && <th className="px-3 py-2.5 text-right font-medium" style={{ color: "var(--ct-text-muted)" }}>&nbsp;</th>}
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-50">
+        <tbody className="divide-y" style={{ borderColor: "var(--ct-border-subtle)" }}>
           {loading ? (
             <EmptyRow cols={admin ? 7 : 6} msg="Loading…" />
           ) : rows.length === 0 ? (
             <EmptyRow cols={admin ? 7 : 6} msg="No unmatched ESI IDs." />
           ) : (
             rows.map((r) => (
-              <tr key={r.id} className="hover:bg-gray-50">
-                <td className="px-3 py-2 text-gray-800 font-mono">{r.esi_id}</td>
-                <td className="px-3 py-2 text-gray-600 whitespace-nowrap">
+              <tr key={r.id} className="transition-colors hover:bg-[var(--ct-surface-hover)]">
+                <td className="px-3 py-2 font-mono" style={{ color: "var(--ct-text-primary)" }}>{r.esi_id}</td>
+                <td className="px-3 py-2 whitespace-nowrap" style={{ color: "var(--ct-text-secondary)" }}>
                   {period(r.service_start, r.service_end)}
                 </td>
-                <td className="px-3 py-2 text-right text-gray-700">
+                <td className="px-3 py-2 text-right" style={{ color: "var(--ct-text-secondary)" }}>
                   {fmt(r.usage_kwh, 2)}
                 </td>
-                <td className="px-3 py-2 text-gray-600">{r.tdsp_name ?? "—"}</td>
-                <td className="px-3 py-2 text-gray-500 max-w-xs truncate" title={r.original_filename ?? ""}>
+                <td className="px-3 py-2" style={{ color: "var(--ct-text-secondary)" }}>{r.tdsp_name ?? "—"}</td>
+                <td className="px-3 py-2 max-w-xs truncate" style={{ color: "var(--ct-text-muted)" }} title={r.original_filename ?? ""}>
                   {r.original_filename ?? "—"}
                 </td>
-                <td className="px-3 py-2 text-gray-400 whitespace-nowrap">
+                <td className="px-3 py-2 whitespace-nowrap" style={{ color: "var(--ct-text-muted)" }}>
                   {r.created_at ? new Date(r.created_at).toLocaleString() : "—"}
                 </td>
                 {admin && (
@@ -158,13 +161,14 @@ function UnmatchedTable({ rows, loading, onRefresh }: {
                     <button
                       onClick={() => handleDelete(r)}
                       disabled={deletingId === r.id}
-                      className="text-xs text-red-500 hover:text-red-700 disabled:opacity-40"
+                      className="text-xs disabled:opacity-40 transition-colors hover:text-[var(--danger-light)]"
+                      style={{ color: "var(--danger-light)" }}
                       title="Delete this record (blocked if already matched to a billing period)"
                     >
                       {deletingId === r.id ? "…" : "Delete"}
                     </button>
                     {rowError?.id === r.id && (
-                      <p className="text-xs text-red-500 mt-1 max-w-[220px] ml-auto text-right">{rowError.msg}</p>
+                      <p className="text-xs mt-1 max-w-[220px] ml-auto text-right" style={{ color: "var(--danger-light)" }}>{rowError.msg}</p>
                     )}
                   </td>
                 )}
@@ -181,40 +185,43 @@ function UnknownChargesTable({ rows, loading }: { rows: UnknownCharge[]; loading
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-xs">
-        <thead className="bg-gray-50 border-b border-gray-100">
+        <thead className="border-b" style={{ background: "var(--ct-surface-hover)", borderColor: "var(--ct-border-subtle)" }}>
           <tr>
-            <th className="px-3 py-2.5 text-left text-gray-500 font-medium">Charge Code</th>
-            <th className="px-3 py-2.5 text-left text-gray-500 font-medium">Description</th>
-            <th className="px-3 py-2.5 text-left text-gray-500 font-medium">ESI ID</th>
-            <th className="px-3 py-2.5 text-right text-gray-500 font-medium">Amount ($)</th>
-            <th className="px-3 py-2.5 text-left text-gray-500 font-medium">Service Period</th>
-            <th className="px-3 py-2.5 text-left text-gray-500 font-medium">TDSP</th>
-            <th className="px-3 py-2.5 text-left text-gray-500 font-medium">Source File</th>
+            <th className="px-3 py-2.5 text-left font-medium" style={{ color: "var(--ct-text-muted)" }}>Charge Code</th>
+            <th className="px-3 py-2.5 text-left font-medium" style={{ color: "var(--ct-text-muted)" }}>Description</th>
+            <th className="px-3 py-2.5 text-left font-medium" style={{ color: "var(--ct-text-muted)" }}>ESI ID</th>
+            <th className="px-3 py-2.5 text-right font-medium" style={{ color: "var(--ct-text-muted)" }}>Amount ($)</th>
+            <th className="px-3 py-2.5 text-left font-medium" style={{ color: "var(--ct-text-muted)" }}>Service Period</th>
+            <th className="px-3 py-2.5 text-left font-medium" style={{ color: "var(--ct-text-muted)" }}>TDSP</th>
+            <th className="px-3 py-2.5 text-left font-medium" style={{ color: "var(--ct-text-muted)" }}>Source File</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-50">
+        <tbody className="divide-y" style={{ borderColor: "var(--ct-border-subtle)" }}>
           {loading ? (
             <EmptyRow cols={7} msg="Loading…" />
           ) : rows.length === 0 ? (
             <EmptyRow cols={7} msg="No unknown charge codes." />
           ) : (
             rows.map((r) => (
-              <tr key={r.id} className="hover:bg-gray-50">
+              <tr key={r.id} className="transition-colors hover:bg-[var(--ct-surface-hover)]">
                 <td className="px-3 py-2">
-                  <span className="font-mono font-medium text-orange-700 bg-orange-50 px-1.5 py-0.5 rounded">
+                  <span
+                    className="font-mono font-medium px-1.5 py-0.5 rounded-[var(--r-sm)]"
+                    style={{ background: "var(--amber-light-tint)", color: "var(--amber-light)" }}
+                  >
                     {r.charge_code}
                   </span>
                 </td>
-                <td className="px-3 py-2 text-gray-600">{r.charge_description ?? "—"}</td>
-                <td className="px-3 py-2 text-gray-700 font-mono">{r.esi_id}</td>
-                <td className="px-3 py-2 text-right text-gray-700">
+                <td className="px-3 py-2" style={{ color: "var(--ct-text-secondary)" }}>{r.charge_description ?? "—"}</td>
+                <td className="px-3 py-2 font-mono" style={{ color: "var(--ct-text-primary)" }}>{r.esi_id}</td>
+                <td className="px-3 py-2 text-right" style={{ color: "var(--ct-text-secondary)" }}>
                   {Number(r.charge_amount).toFixed(2)}
                 </td>
-                <td className="px-3 py-2 text-gray-600 whitespace-nowrap">
+                <td className="px-3 py-2 whitespace-nowrap" style={{ color: "var(--ct-text-secondary)" }}>
                   {period(r.service_start, r.service_end)}
                 </td>
-                <td className="px-3 py-2 text-gray-600">{r.tdsp_name ?? "—"}</td>
-                <td className="px-3 py-2 text-gray-500 max-w-xs truncate" title={r.original_filename ?? ""}>
+                <td className="px-3 py-2" style={{ color: "var(--ct-text-secondary)" }}>{r.tdsp_name ?? "—"}</td>
+                <td className="px-3 py-2 max-w-xs truncate" style={{ color: "var(--ct-text-muted)" }} title={r.original_filename ?? ""}>
                   {r.original_filename ?? "—"}
                 </td>
               </tr>
@@ -230,18 +237,18 @@ function ReadyToBillTable({ rows, loading }: { rows: ReadyToBill[]; loading: boo
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-xs">
-        <thead className="bg-gray-50 border-b border-gray-100">
+        <thead className="border-b" style={{ background: "var(--ct-surface-hover)", borderColor: "var(--ct-border-subtle)" }}>
           <tr>
-            <th className="px-3 py-2.5 text-left text-gray-500 font-medium">ESI ID</th>
-            <th className="px-3 py-2.5 text-left text-gray-500 font-medium">Service Period</th>
-            <th className="px-3 py-2.5 text-right text-gray-500 font-medium">Days</th>
-            <th className="px-3 py-2.5 text-right text-gray-500 font-medium">Usage (kWh)</th>
-            <th className="px-3 py-2.5 text-right text-gray-500 font-medium">Rate (¢/kWh)</th>
-            <th className="px-3 py-2.5 text-right text-gray-500 font-medium">Meter Fee ($)</th>
-            <th className="px-3 py-2.5 text-left text-gray-500 font-medium">Status</th>
+            <th className="px-3 py-2.5 text-left font-medium" style={{ color: "var(--ct-text-muted)" }}>ESI ID</th>
+            <th className="px-3 py-2.5 text-left font-medium" style={{ color: "var(--ct-text-muted)" }}>Service Period</th>
+            <th className="px-3 py-2.5 text-right font-medium" style={{ color: "var(--ct-text-muted)" }}>Days</th>
+            <th className="px-3 py-2.5 text-right font-medium" style={{ color: "var(--ct-text-muted)" }}>Usage (kWh)</th>
+            <th className="px-3 py-2.5 text-right font-medium" style={{ color: "var(--ct-text-muted)" }}>Rate (¢/kWh)</th>
+            <th className="px-3 py-2.5 text-right font-medium" style={{ color: "var(--ct-text-muted)" }}>Meter Fee ($)</th>
+            <th className="px-3 py-2.5 text-left font-medium" style={{ color: "var(--ct-text-muted)" }}>Status</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-50">
+        <tbody className="divide-y" style={{ borderColor: "var(--ct-border-subtle)" }}>
           {loading ? (
             <EmptyRow cols={7} msg="Loading…" />
           ) : rows.length === 0 ? (
@@ -251,27 +258,28 @@ function ReadyToBillTable({ rows, loading }: { rows: ReadyToBill[]; loading: boo
               // contract_rate is stored as decimal (e.g. 0.054321) — display as ¢/kWh
               const rateCents = Number(r.contract_rate) * 100;
               return (
-                <tr key={r.id} className="hover:bg-gray-50">
-                  <td className="px-3 py-2 text-gray-800 font-mono">{r.esi_id}</td>
-                  <td className="px-3 py-2 text-gray-600 whitespace-nowrap">
+                <tr key={r.id} className="transition-colors hover:bg-[var(--ct-surface-hover)]">
+                  <td className="px-3 py-2 font-mono" style={{ color: "var(--ct-text-primary)" }}>{r.esi_id}</td>
+                  <td className="px-3 py-2 whitespace-nowrap" style={{ color: "var(--ct-text-secondary)" }}>
                     {period(r.service_start, r.service_end)}
                   </td>
-                  <td className="px-3 py-2 text-right text-gray-700">{r.billing_days}</td>
-                  <td className="px-3 py-2 text-right text-gray-700">
+                  <td className="px-3 py-2 text-right" style={{ color: "var(--ct-text-secondary)" }}>{r.billing_days}</td>
+                  <td className="px-3 py-2 text-right" style={{ color: "var(--ct-text-secondary)" }}>
                     {fmt(r.usage_kwh, 2)}
                   </td>
-                  <td className="px-3 py-2 text-right text-gray-700">
+                  <td className="px-3 py-2 text-right" style={{ color: "var(--ct-text-secondary)" }}>
                     {rateCents.toFixed(4)}
                   </td>
-                  <td className="px-3 py-2 text-right text-gray-700">
+                  <td className="px-3 py-2 text-right" style={{ color: "var(--ct-text-secondary)" }}>
                     {r.meter_fee != null ? Number(r.meter_fee).toFixed(2) : "—"}
                   </td>
                   <td className="px-3 py-2">
-                    <span className={`inline-flex px-1.5 py-0.5 rounded text-xs font-medium ${
-                      r.status === "reviewed"
-                        ? "bg-blue-50 text-blue-700"
-                        : "bg-gray-100 text-gray-600"
-                    }`}>
+                    <span
+                      className="inline-flex px-1.5 py-0.5 rounded-[var(--r-sm)] text-xs font-medium"
+                      style={r.status === "reviewed"
+                        ? { background: "var(--info-light-tint)", color: "var(--info-light)" }
+                        : { background: "var(--ct-surface-hover)", color: "var(--ct-text-secondary)" }}
+                    >
                       {r.status}
                     </span>
                   </td>
@@ -328,15 +336,16 @@ export default function BillingReviewPage() {
       {/* header */}
       <div className="mb-6 flex items-start justify-between">
         <div>
-          <h2 className="text-base font-semibold text-gray-800">Billing Review</h2>
-          <p className="text-xs text-gray-400 mt-0.5">
+          <h2 className="text-base font-semibold" style={{ color: "var(--ct-text-primary)" }}>Billing Review</h2>
+          <p className="text-xs mt-0.5" style={{ color: "var(--ct-text-muted)" }}>
             Resolve exceptions before approving billing periods.
           </p>
         </div>
         <button
           onClick={loadAll}
           disabled={loading}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-gray-500 border border-gray-200 rounded hover:bg-gray-50 disabled:opacity-40 transition-colors"
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-[var(--r-sm)] border disabled:opacity-40 transition-colors hover:bg-[var(--ct-surface-hover)]"
+          style={{ color: "var(--ct-text-secondary)", borderColor: "var(--ct-border-default)" }}
         >
           {loading ? <Spinner /> : (
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -349,24 +358,23 @@ export default function BillingReviewPage() {
       </div>
 
       {error && (
-        <div className="mb-4 px-4 py-3 bg-red-50 border border-red-200 rounded text-sm text-red-600">
+        <div className="mb-4 px-4 py-3 rounded-[var(--r-md)] border text-sm" style={{ background: "var(--danger-light-tint)", borderColor: "var(--danger-light-tint)", color: "var(--danger-light)" }}>
           {error}
         </div>
       )}
 
       {/* tabs */}
-      <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+      <div className="rounded-[var(--r-lg)] border overflow-hidden" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
         {/* tab bar */}
-        <div className="flex border-b border-gray-200 bg-gray-50">
+        <div className="flex border-b" style={{ borderColor: "var(--ct-border-default)", background: "var(--ct-surface-hover)" }}>
           {TABS.map((tab) => (
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className={`flex items-center px-5 py-3 text-sm font-medium transition-colors border-b-2 -mb-px ${
-                activeTab === tab.key
-                  ? "border-green-600 text-green-700 bg-white"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-100"
-              }`}
+              className="flex items-center px-5 py-3 text-sm font-medium transition-colors border-b-2 -mb-px"
+              style={activeTab === tab.key
+                ? { borderColor: "var(--accent-light)", color: "var(--accent-light)", background: "var(--ct-surface)" }
+                : { borderColor: "transparent", color: "var(--ct-text-muted)" }}
             >
               {tab.label}
               <Badge count={tab.count} loading={loading} />
