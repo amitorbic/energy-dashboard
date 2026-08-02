@@ -51,20 +51,19 @@ const fmt = (n: number) =>
     n,
   );
 
-const STATUS_STYLE: Record<string, string> = {
-  POSTED: "bg-green-100 text-green-700",
-  BOUNCED: "bg-red-100 text-red-700",
-  REVERSED: "bg-amber-100 text-amber-700",
-  UNDER_REVIEW: "bg-purple-100 text-purple-700",
+// Status carries genuine meaning (posted/bounced/reversed/under review) so it
+// keeps semantic tokens; UNDER_REVIEW has no dedicated hue in the design
+// system, so it borrows info (a neutral "needs attention" signal).
+const STATUS_STYLE: Record<string, { background: string; color: string }> = {
+  POSTED: { background: "var(--success-light-tint)", color: "var(--success-light)" },
+  BOUNCED: { background: "var(--danger-light-tint)", color: "var(--danger-light)" },
+  REVERSED: { background: "var(--amber-light-tint)", color: "var(--amber-light)" },
+  UNDER_REVIEW: { background: "var(--info-light-tint)", color: "var(--info-light)" },
 };
 
-const METHOD_STYLE: Record<string, string> = {
-  ACH: "bg-blue-100 text-blue-700",
-  CC: "bg-indigo-100 text-indigo-700",
-  CHECK: "bg-amber-100 text-amber-700",
-  WIRE: "bg-green-100 text-green-700",
-  OTHER: "bg-gray-100 text-gray-600",
-};
+// Payment method is a category label, not a status — collapses to the shared
+// accent tint (same treatment as the Track badge in past-due/index.tsx).
+const METHOD_TINT = { background: "var(--accent-light-tint)", color: "var(--accent-light)" };
 
 // ── Bounce Modal ──────────────────────────────────────────────────────────────
 
@@ -82,34 +81,36 @@ function BounceModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6 space-y-4">
-        <h3 className="text-base font-semibold text-gray-900">
+      <div className="rounded-[var(--r-lg)] shadow-xl w-full max-w-md p-6 space-y-4" style={{ background: "var(--ct-surface)" }}>
+        <h3 className="text-base font-semibold" style={{ color: "var(--ct-text-primary)" }}>
           Mark payment as bounced
         </h3>
-        <div className="text-sm text-gray-600 space-y-1 bg-gray-50 rounded p-3">
-          <p className="font-medium text-gray-800">{payment.customer_name}</p>
+        <div className="text-sm space-y-1 rounded-[var(--r-md)] p-3" style={{ color: "var(--ct-text-secondary)", background: "var(--ct-surface-hover)" }}>
+          <p className="font-medium" style={{ color: "var(--ct-text-primary)" }}>{payment.customer_name}</p>
           <p>
             {fmt(payment.amount)} via {payment.method}
           </p>
-          <p className="text-red-600 text-xs mt-2">
+          <p className="text-xs mt-2" style={{ color: "var(--danger-light)" }}>
             This will reverse the balance update on the account.
           </p>
         </div>
         <div>
-          <label className="text-xs font-medium text-gray-600 block mb-1">
+          <label className="text-xs font-medium block mb-1" style={{ color: "var(--ct-text-secondary)" }}>
             Bounce reason
           </label>
           <input
             value={reason}
             onChange={(e) => setReason(e.target.value)}
             placeholder="NSF, Account closed, Stop payment..."
-            className="w-full border border-gray-300 rounded px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+            className="w-full rounded-[var(--r-sm)] border px-3 py-2 text-sm outline-none focus:border-[var(--accent-light)]"
+            style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-primary)" }}
           />
         </div>
         <div className="flex gap-2 pt-1">
           <button
             onClick={onClose}
-            className="flex-1 py-2 text-sm border border-gray-300 rounded text-gray-600 hover:bg-gray-50 transition-colors"
+            className="flex-1 py-2 text-sm rounded-[var(--r-sm)] border transition-colors hover:bg-[var(--ct-surface-hover)]"
+            style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-secondary)" }}
           >
             Cancel
           </button>
@@ -120,7 +121,8 @@ function BounceModal({
               await onConfirm(reason);
               setLoading(false);
             }}
-            className="flex-1 py-2 text-sm bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            className="flex-1 py-2 text-sm rounded-[var(--r-sm)] font-medium disabled:opacity-40 transition-colors"
+            style={{ background: "var(--danger-light)", color: "#ffffff" }}
           >
             {loading ? "Recording..." : "Mark bounced"}
           </button>
@@ -224,43 +226,43 @@ export default function PaymentsPage() {
       )}
 
       {error && (
-        <div className="mb-4 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+        <div className="mb-4 rounded-[var(--r-lg)] border px-4 py-3 text-sm" style={{ background: "var(--danger-light-tint)", borderColor: "var(--danger-light-tint)", color: "var(--danger-light)" }}>
           Failed to load payments: {error}
         </div>
       )}
 
       {/* Today's summary bar */}
       {summary && (
-        <div className="bg-white rounded-lg border border-gray-200 px-5 py-3 mb-5 flex flex-wrap items-center gap-6 text-sm">
-          <span className="font-medium text-gray-500">Today</span>
+        <div className="rounded-[var(--r-lg)] border px-5 py-3 mb-5 flex flex-wrap items-center gap-6 text-sm" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
+          <span className="font-medium" style={{ color: "var(--ct-text-muted)" }}>Today</span>
           <span>
-            <span className="font-semibold text-gray-900">
+            <span className="font-semibold" style={{ color: "var(--ct-text-primary)" }}>
               {fmt(summary.total_received)}
             </span>
-            <span className="text-gray-400 ml-1">
+            <span className="ml-1" style={{ color: "var(--ct-text-muted)" }}>
               ({summary.payment_count} payments)
             </span>
           </span>
           {summary.bounced_count > 0 && (
-            <span className="text-red-600 font-medium">
+            <span className="font-medium" style={{ color: "var(--danger-light)" }}>
               {summary.bounced_count} bounced
-              <span className="text-red-400 font-normal ml-1">
+              <span className="font-normal ml-1" style={{ color: "var(--danger-light)" }}>
                 ({fmt(summary.bounced_amount)})
               </span>
             </span>
           )}
           {summary.etf_flags_triggered > 0 && (
-            <span className="text-amber-600 font-medium">
+            <span className="font-medium" style={{ color: "var(--amber-light)" }}>
               {summary.etf_flags_triggered} ETF flag
               {summary.etf_flags_triggered > 1 ? "s" : ""}
             </span>
           )}
           {summary.accounts_resolved > 0 && (
-            <span className="text-green-600 font-medium">
+            <span className="font-medium" style={{ color: "var(--success-light)" }}>
               {summary.accounts_resolved} resolved
             </span>
           )}
-          <div className="ml-auto flex gap-4 text-xs text-gray-400">
+          <div className="ml-auto flex gap-4 text-xs" style={{ color: "var(--ct-text-muted)" }}>
             {summary.by_method &&
               Object.entries(summary.by_method).map(([m, v]) => (
                 <span key={m}>
@@ -270,7 +272,8 @@ export default function PaymentsPage() {
           </div>
           <button
             onClick={() => router.push("/payments/upload")}
-            className="ml-2 px-4 py-1.5 text-sm bg-sky-500 hover:bg-sky-600 text-white rounded font-medium transition-colors"
+            className="ml-2 px-4 py-1.5 text-sm rounded-[var(--r-sm)] font-medium transition-colors"
+            style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
           >
             + Upload sheet
           </button>
@@ -278,7 +281,7 @@ export default function PaymentsPage() {
       )}
 
       {/* Filters */}
-      <div className="bg-white rounded-lg border border-gray-200 px-5 py-4 mb-4">
+      <div className="rounded-[var(--r-lg)] border px-5 py-4 mb-4" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
         <div className="flex flex-wrap gap-2 items-center">
           <input
             value={search}
@@ -287,7 +290,8 @@ export default function PaymentsPage() {
               setPage(1);
             }}
             placeholder="Search customer..."
-            className="border border-gray-300 rounded px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-sky-500 w-48"
+            className="rounded-[var(--r-sm)] border px-3 py-1.5 text-sm outline-none w-48 focus:border-[var(--accent-light)]"
+            style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-primary)" }}
           />
           <select
             value={statusFilter}
@@ -295,7 +299,8 @@ export default function PaymentsPage() {
               setStatusFilter(e.target.value);
               setPage(1);
             }}
-            className="border border-gray-300 rounded px-3 py-1.5 text-sm text-gray-600 outline-none focus:ring-2 focus:ring-sky-500"
+            className="rounded-[var(--r-sm)] border px-3 py-1.5 text-sm outline-none focus:border-[var(--accent-light)]"
+            style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-secondary)" }}
           >
             <option value="">All statuses</option>
             <option value="POSTED">Posted</option>
@@ -308,7 +313,8 @@ export default function PaymentsPage() {
               setMethodFilter(e.target.value);
               setPage(1);
             }}
-            className="border border-gray-300 rounded px-3 py-1.5 text-sm text-gray-600 outline-none focus:ring-2 focus:ring-sky-500"
+            className="rounded-[var(--r-sm)] border px-3 py-1.5 text-sm outline-none focus:border-[var(--accent-light)]"
+            style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-secondary)" }}
           >
             <option value="">All methods</option>
             {["ACH", "CC", "CHECK", "WIRE", "OTHER"].map((m) => (
@@ -323,7 +329,8 @@ export default function PaymentsPage() {
               setSourceFilter(e.target.value);
               setPage(1);
             }}
-            className="border border-gray-300 rounded px-3 py-1.5 text-sm text-gray-600 outline-none focus:ring-2 focus:ring-sky-500"
+            className="rounded-[var(--r-sm)] border px-3 py-1.5 text-sm outline-none focus:border-[var(--accent-light)]"
+            style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-secondary)" }}
           >
             <option value="">All sources</option>
             <option value="PAYMENT_SHEET">Payment sheet</option>
@@ -337,9 +344,10 @@ export default function PaymentsPage() {
               setDateFrom(e.target.value);
               setPage(1);
             }}
-            className="border border-gray-300 rounded px-3 py-1.5 text-sm text-gray-600 outline-none focus:ring-2 focus:ring-sky-500"
+            className="rounded-[var(--r-sm)] border px-3 py-1.5 text-sm outline-none focus:border-[var(--accent-light)]"
+            style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-secondary)" }}
           />
-          <span className="text-gray-400 text-sm">to</span>
+          <span className="text-sm" style={{ color: "var(--ct-text-muted)" }}>to</span>
           <input
             type="date"
             value={dateTo}
@@ -347,9 +355,10 @@ export default function PaymentsPage() {
               setDateTo(e.target.value);
               setPage(1);
             }}
-            className="border border-gray-300 rounded px-3 py-1.5 text-sm text-gray-600 outline-none focus:ring-2 focus:ring-sky-500"
+            className="rounded-[var(--r-sm)] border px-3 py-1.5 text-sm outline-none focus:border-[var(--accent-light)]"
+            style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-secondary)" }}
           />
-          <label className="flex items-center gap-1.5 text-sm text-gray-600 cursor-pointer">
+          <label className="flex items-center gap-1.5 text-sm cursor-pointer" style={{ color: "var(--ct-text-secondary)" }}>
             <input
               type="checkbox"
               checked={bouncedOnly}
@@ -357,11 +366,12 @@ export default function PaymentsPage() {
                 setBouncedOnly(e.target.checked);
                 setPage(1);
               }}
-              className="rounded accent-red-500"
+              className="rounded"
+              style={{ accentColor: "var(--accent-light)" }}
             />
             Bounced only
           </label>
-          <label className="flex items-center gap-1.5 text-sm text-gray-600 cursor-pointer">
+          <label className="flex items-center gap-1.5 text-sm cursor-pointer" style={{ color: "var(--ct-text-secondary)" }}>
             <input
               type="checkbox"
               checked={etfOnly}
@@ -369,22 +379,23 @@ export default function PaymentsPage() {
                 setEtfOnly(e.target.checked);
                 setPage(1);
               }}
-              className="rounded accent-amber-500"
+              className="rounded"
+              style={{ accentColor: "var(--accent-light)" }}
             />
             ETF flag only
           </label>
-          <span className="ml-auto text-sm text-gray-400">
+          <span className="ml-auto text-sm" style={{ color: "var(--ct-text-muted)" }}>
             {(total ?? 0).toLocaleString()} total
           </span>
         </div>
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+      <div className="rounded-[var(--r-lg)] border overflow-hidden" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-gray-50 border-b border-gray-200 text-xs text-gray-500 uppercase tracking-wide">
+              <tr className="border-b text-xs uppercase tracking-wide" style={{ background: "var(--ct-surface-hover)", borderColor: "var(--ct-border-default)", color: "var(--ct-text-muted)" }}>
                 <th className="text-left px-4 py-3 font-medium">Customer</th>
                 <th className="text-left px-4 py-3 font-medium">ESIID</th>
                 <th className="text-left px-4 py-3 font-medium">Date</th>
@@ -403,93 +414,92 @@ export default function PaymentsPage() {
                 <th className="px-4 py-3"></th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={12} className="py-16 text-center text-gray-400">
+                  <td colSpan={12} className="py-16 text-center" style={{ color: "var(--ct-text-muted)" }}>
                     Loading...
                   </td>
                 </tr>
               ) : payments.length === 0 ? (
                 <tr>
-                  <td colSpan={12} className="py-16 text-center text-gray-400">
+                  <td colSpan={12} className="py-16 text-center" style={{ color: "var(--ct-text-muted)" }}>
                     No payments found
                   </td>
                 </tr>
               ) : (
                 payments.map((p) => (
-                  <tr key={p.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-4 py-3 font-medium text-gray-800 max-w-[160px] truncate">
+                  <tr key={p.id} className="border-b last:border-0 hover:bg-[var(--ct-surface-hover)] transition-colors" style={{ borderColor: "var(--ct-border-subtle)" }}>
+                    <td className="px-4 py-3 font-medium max-w-[160px] truncate" style={{ color: "var(--ct-text-primary)" }}>
                       {p.customer_name}
                     </td>
-                    <td className="px-4 py-3 text-gray-400 font-mono text-xs">
+                    <td className="px-4 py-3 font-mono text-xs" style={{ color: "var(--ct-text-muted)" }}>
                       {p.esiid}
                     </td>
-                    <td className="px-4 py-3 text-gray-600 whitespace-nowrap">
+                    <td className="px-4 py-3 whitespace-nowrap" style={{ color: "var(--ct-text-secondary)" }}>
                       {new Date(p.payment_date).toLocaleDateString()}
                     </td>
-                    <td className="px-4 py-3 text-right font-semibold text-gray-900">
+                    <td className="px-4 py-3 text-right font-semibold" style={{ color: "var(--ct-text-primary)" }}>
                       {fmt(p.amount)}
                     </td>
                     <td className="px-4 py-3">
                       <span
-                        className={`px-2 py-0.5 rounded text-xs font-medium ${METHOD_STYLE[p.method] || "bg-gray-100 text-gray-600"}`}
+                        className="px-2 py-0.5 rounded-[var(--r-sm)] text-xs font-medium"
+                        style={METHOD_TINT}
                       >
                         {p.method}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-gray-500 text-xs">
+                    <td className="px-4 py-3 text-xs" style={{ color: "var(--ct-text-muted)" }}>
                       {p.applied_to}
                     </td>
                     <td className="px-4 py-3 text-right">
                       <span
-                        className={
-                          p.balance_after === 0
-                            ? "font-semibold text-green-600"
-                            : "text-gray-700"
-                        }
+                        style={p.balance_after === 0
+                          ? { fontWeight: 600, color: "var(--success-light)" }
+                          : { color: "var(--ct-text-secondary)" }}
                       >
                         {fmt(p.balance_after)}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-right text-gray-500">
+                    <td className="px-4 py-3 text-right" style={{ color: "var(--ct-text-muted)" }}>
                       {fmt(p.usage_balance_after)}
                     </td>
                     <td className="px-4 py-3 text-right">
                       {p.etf_balance_after > 0 ? (
                         <span
-                          className={
-                            p.triggered_etf_flag
-                              ? "text-amber-600 font-medium"
-                              : "text-gray-500"
-                          }
+                          style={p.triggered_etf_flag
+                            ? { fontWeight: 500, color: "var(--amber-light)" }
+                            : { color: "var(--ct-text-muted)" }}
                         >
                           {fmt(p.etf_balance_after)}
                           {p.triggered_etf_flag && (
-                            <span className="ml-1 text-xs bg-amber-100 text-amber-700 px-1 py-0.5 rounded">
+                            <span className="ml-1 text-xs px-1 py-0.5 rounded-[var(--r-sm)]" style={{ background: "var(--amber-light-tint)", color: "var(--amber-light)" }}>
                               ETF
                             </span>
                           )}
                         </span>
                       ) : (
-                        <span className="text-gray-300">—</span>
+                        <span style={{ color: "var(--ct-text-muted)" }}>—</span>
                       )}
                     </td>
                     <td className="px-4 py-3">
                       <span
-                        className={`px-2 py-0.5 rounded text-xs font-medium ${STATUS_STYLE[p.status] || "bg-gray-100 text-gray-600"}`}
+                        className="px-2 py-0.5 rounded-[var(--r-sm)] text-xs font-medium"
+                        style={STATUS_STYLE[p.status] || { background: "var(--ct-surface-hover)", color: "var(--ct-text-secondary)" }}
                       >
                         {p.status.toLowerCase()}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-xs text-gray-400">
+                    <td className="px-4 py-3 text-xs" style={{ color: "var(--ct-text-muted)" }}>
                       {p.source.replace(/_/g, " ").toLowerCase()}
                     </td>
                     <td className="px-4 py-3">
                       {p.status === "POSTED" && (
                         <button
                           onClick={() => setBounceTarget(p)}
-                          className="text-xs text-gray-400 hover:text-red-500 transition-colors"
+                          className="text-xs transition-colors hover:text-[var(--danger-light)]"
+                          style={{ color: "var(--ct-text-muted)" }}
                           title="Mark as bounced"
                         >
                           Bounce
@@ -505,7 +515,7 @@ export default function PaymentsPage() {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="border-t border-gray-200 px-4 py-3 flex items-center justify-between text-sm text-gray-500">
+          <div className="border-t px-4 py-3 flex items-center justify-between text-sm" style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-muted)" }}>
             <span>
               {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, total)}{" "}
               of {total.toLocaleString()}
@@ -514,7 +524,8 @@ export default function PaymentsPage() {
               <button
                 disabled={page === 1}
                 onClick={() => setPage((p) => p - 1)}
-                className="px-3 py-1 rounded border border-gray-200 hover:bg-gray-50 disabled:opacity-30 transition-colors"
+                className="px-3 py-1 rounded-[var(--r-sm)] border transition-colors disabled:opacity-30 hover:bg-[var(--ct-surface-hover)]"
+                style={{ borderColor: "var(--ct-border-default)" }}
               >
                 ←
               </button>
@@ -524,11 +535,10 @@ export default function PaymentsPage() {
                   <button
                     key={p}
                     onClick={() => setPage(p)}
-                    className={`px-3 py-1 rounded border transition-colors ${
-                      p === page
-                        ? "bg-sky-500 border-sky-500 text-white"
-                        : "border-gray-200 hover:bg-gray-50"
-                    }`}
+                    className="px-3 py-1 rounded-[var(--r-sm)] border transition-colors hover:bg-[var(--ct-surface-hover)]"
+                    style={p === page
+                      ? { background: "var(--accent-light)", borderColor: "var(--accent-light)", color: "var(--accent-light-on-solid)" }
+                      : { borderColor: "var(--ct-border-default)" }}
                   >
                     {p}
                   </button>
@@ -537,7 +547,8 @@ export default function PaymentsPage() {
               <button
                 disabled={page === totalPages}
                 onClick={() => setPage((p) => p + 1)}
-                className="px-3 py-1 rounded border border-gray-200 hover:bg-gray-50 disabled:opacity-30 transition-colors"
+                className="px-3 py-1 rounded-[var(--r-sm)] border transition-colors disabled:opacity-30 hover:bg-[var(--ct-surface-hover)]"
+                style={{ borderColor: "var(--ct-border-default)" }}
               >
                 →
               </button>
