@@ -97,34 +97,41 @@ const HeatRatePage: React.FC = () => {
       <div className="p-6 max-w-4xl mx-auto">
         <div className="flex justify-between items-center mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-gray-800">
+            <h1 className="text-2xl font-bold" style={{ color: "var(--ct-text-primary)" }}>
               Heat Rate Management
             </h1>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm mt-1" style={{ color: "var(--ct-text-muted)" }}>
               Manage ERCOT Market Matrix Profiles
             </p>
           </div>
 
           {lastUpdated && (
             <div className="text-right">
-              <div className="text-xs text-gray-400 uppercase font-semibold tracking-wider">
+              <div className="text-xs uppercase font-semibold tracking-wider" style={{ color: "var(--ct-text-muted)" }}>
                 Database Sync
               </div>
-              <div className="text-sm bg-green-50 text-green-700 px-4 py-2 rounded-lg border border-green-200 shadow-sm">
+              <div
+                className="text-sm px-4 py-2 rounded-[var(--r-md)] border"
+                style={{ background: "var(--info-light-tint)", color: "var(--info-light)", borderColor: "var(--info-light)", boxShadow: "var(--shadow-content)" }}
+              >
                 <strong>Last Updated:</strong> {lastUpdated}
               </div>
             </div>
           )}
         </div>
 
-        <div className="bg-white p-8 rounded-xl shadow-md border border-gray-100">
+        <div
+          className="p-8 rounded-[var(--r-lg)] border"
+          style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)", boxShadow: "var(--shadow-content)" }}
+        >
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-lg font-semibold text-gray-700">
+            <h2 className="text-lg font-semibold" style={{ color: "var(--ct-text-primary)" }}>
               Upload Market Matrix
             </h2>
             <button
               onClick={handleDownloadSample}
-              className="flex items-center text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors"
+              className="flex items-center text-sm font-medium transition-colors"
+              style={{ color: "var(--accent-light)" }}
             >
               <svg
                 className="w-4 h-4 mr-1"
@@ -143,7 +150,10 @@ const HeatRatePage: React.FC = () => {
             </button>
           </div>
 
-          <div className="border-2 border-dashed border-gray-200 rounded-lg p-8 text-center hover:border-blue-300 transition-all">
+          <div
+            className="border-2 border-dashed rounded-[var(--r-lg)] p-8 text-center transition-all hover:border-[var(--accent-light)]"
+            style={{ borderColor: "var(--ct-border-default)" }}
+          >
             <input
               type="file"
               id="file-upload"
@@ -152,12 +162,12 @@ const HeatRatePage: React.FC = () => {
               accept=".xls,.xlsx"
             />
             <label htmlFor="file-upload" className="cursor-pointer">
-              <div className="text-blue-600 font-medium hover:text-blue-700">
+              <div className="font-medium" style={{ color: "var(--accent-light)" }}>
                 {selectedFile
                   ? selectedFile.name
                   : "Click to choose Excel file"}
               </div>
-              <p className="text-xs text-gray-400 mt-1">
+              <p className="text-xs mt-1" style={{ color: "var(--ct-text-muted)" }}>
                 Supports .xls and .xlsx files
               </p>
             </label>
@@ -166,16 +176,13 @@ const HeatRatePage: React.FC = () => {
           <button
             onClick={handleSubmit}
             disabled={!selectedFile || isUploading}
-            className={`mt-8 w-full flex justify-center items-center py-3 px-4 rounded-lg font-bold text-white shadow-sm transition-all ${
-              isUploading
-                ? "bg-gray-400 cursor-not-allowed"
-                : "bg-indigo-600 hover:bg-indigo-700 active:transform active:scale-95"
-            }`}
+            className="mt-8 w-full flex justify-center items-center py-3 px-4 rounded-[var(--r-md)] font-bold shadow-sm transition-all disabled:opacity-50 active:scale-95"
+            style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
           >
             {isUploading ? (
               <>
                 <svg
-                  className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                  className="animate-spin -ml-1 mr-3 h-5 w-5"
                   fill="none"
                   viewBox="0 0 24 24"
                 >
