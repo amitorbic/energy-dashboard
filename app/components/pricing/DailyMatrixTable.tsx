@@ -56,45 +56,53 @@ const DailyMatrixTable: React.FC<TableProps> = ({
   // This replaces 'if (loading)'
   if (!data) {
     return (
-      <div className="p-10 text-slate-500 text-center animate-pulse italic">
+      <div className="p-10 text-center animate-pulse italic" style={{ color: "var(--ct-text-muted)" }}>
         Calculating {startMonthLabel} Matrix...
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden mb-10">
-      <div className="p-4 bg-white border-b flex justify-between items-center">
+    <div
+      className="rounded-[var(--r-lg)] border overflow-hidden mb-10"
+      style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)", boxShadow: "var(--shadow-content)" }}
+    >
+      <div
+        className="p-4 border-b flex justify-between items-center"
+        style={{ borderColor: "var(--ct-border-default)" }}
+      >
         <div>
-          <h2 className="text-red-600 font-bold text-lg">
+          <h2 className="font-bold text-lg" style={{ color: "var(--accent-light)" }}>
             {startMonthLabel} Start
           </h2>
-          <span className="text-slate-400 text-xs font-mono">{startDate}</span>
+          <span className="text-xs font-mono" style={{ color: "var(--ct-text-muted)" }}>{startDate}</span>
         </div>
-        <div className="h-1 bg-red-600 w-24 rounded-full"></div>
+        <div className="h-1 w-24 rounded-[var(--r-full)]" style={{ background: "var(--accent-light)" }}></div>
       </div>
 
       <table className="w-full text-xs text-center border-collapse">
         <thead>
-          <tr className="bg-white text-slate-800 font-bold">
-            <th className="p-3 text-left w-32 border-r"></th>
+          <tr className="font-bold" style={{ color: "var(--ct-text-primary)" }}>
+            <th className="p-3 text-left w-32 border-r" style={{ borderColor: "var(--ct-border-default)" }}></th>
             {lfs.map((lf) => (
               <th
                 key={lf}
                 colSpan={actualTerms.length}
-                className="border-b-2 border-slate-100 p-2 text-sm border-x"
+                className="border-b-2 p-2 text-sm border-x"
+                style={{ borderColor: "var(--ct-border-subtle)" }}
               >
                 {lf} Load Factor
               </th>
             ))}
           </tr>
-          <tr className="text-slate-500 border-b bg-slate-50/50">
-            <th className="p-2 border-r text-slate-400 font-normal">Zone</th>
+          <tr className="border-b" style={{ color: "var(--ct-text-muted)", background: "var(--ct-surface-hover)" }}>
+            <th className="p-2 border-r font-normal" style={{ color: "var(--ct-text-muted)", borderColor: "var(--ct-border-default)" }}>Zone</th>
             {lfs.map((lf) =>
               actualTerms.map((t) => (
                 <th
                   key={`${lf}-${t}`}
-                  className="p-2 w-12 font-bold underline decoration-slate-300 border-x"
+                  className="p-2 w-12 font-bold underline border-x"
+                  style={{ textDecorationColor: "var(--ct-border-default)", borderColor: "var(--ct-border-subtle)" }}
                 >
                   {t}
                 </th>
@@ -106,16 +114,21 @@ const DailyMatrixTable: React.FC<TableProps> = ({
           {data.map((row) => (
             <tr
               key={row.zone}
-              className="hover:bg-slate-50 transition-colors border-b last:border-0"
+              className="transition-colors border-b last:border-0 hover:bg-[var(--ct-surface-hover)]"
+              style={{ borderColor: "var(--ct-border-subtle)" }}
             >
-              <td className="p-3 text-left font-semibold text-slate-700 border-r bg-slate-50/30">
+              <td
+                className="p-3 text-left font-semibold border-r"
+                style={{ color: "var(--ct-text-secondary)", borderColor: "var(--ct-border-default)", background: "var(--ct-surface-hover)" }}
+              >
                 {row.zone}
               </td>
               {lfs.map((lf) =>
                 actualTerms.map((t) => (
                   <td
                     key={`val-${lf}-${t}`}
-                    className="p-2 text-slate-600 font-mono border-x"
+                    className="p-2 font-mono border-x"
+                    style={{ color: "var(--ct-text-secondary)", borderColor: "var(--ct-border-subtle)" }}
                   >
                     {row[`${lf}_${t}`] ?? "N/A"}
                   </td>
@@ -125,7 +138,7 @@ const DailyMatrixTable: React.FC<TableProps> = ({
           ))}
         </tbody>
       </table>
-      <div className="h-1.5 bg-red-600"></div>
+      <div className="h-1.5" style={{ background: "var(--accent-light)" }}></div>
     </div>
   );
 };
