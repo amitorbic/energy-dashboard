@@ -185,49 +185,50 @@ function ExceptionTable({ data }: { data: any[] }) {
   );
 
   return (
-    <div className="overflow-x-auto rounded border border-gray-200 mt-3">
+    <div className="overflow-x-auto rounded-[var(--r-md)] border mt-3" style={{ borderColor: "var(--ct-border-default)" }}>
       <table className="w-full text-xs">
-        <thead className="bg-gray-50 border-b border-gray-200">
+        <thead className="border-b" style={{ background: "var(--ct-surface-hover)", borderColor: "var(--ct-border-default)" }}>
           <tr>
-            <th className="px-3 py-2 text-left font-medium text-gray-500 whitespace-nowrap">
+            <th className="px-3 py-2 text-left font-medium whitespace-nowrap" style={{ color: "var(--ct-text-muted)" }}>
               #
             </th>
-            <th className="px-3 py-2 text-left font-medium text-gray-500 whitespace-nowrap">
+            <th className="px-3 py-2 text-left font-medium whitespace-nowrap" style={{ color: "var(--ct-text-muted)" }}>
               Cust ID
             </th>
-            <th className="px-3 py-2 text-left font-medium text-gray-500 whitespace-nowrap">
+            <th className="px-3 py-2 text-left font-medium whitespace-nowrap" style={{ color: "var(--ct-text-muted)" }}>
               Bill No
             </th>
-            <th className="px-3 py-2 text-left font-medium text-gray-500">
+            <th className="px-3 py-2 text-left font-medium" style={{ color: "var(--ct-text-muted)" }}>
               Company
             </th>
-            <th className="px-3 py-2 text-left font-medium text-gray-500">
+            <th className="px-3 py-2 text-left font-medium" style={{ color: "var(--ct-text-muted)" }}>
               Customer
             </th>
             {extraCols.map((c) => (
               <th
                 key={c}
-                className="px-3 py-2 text-left font-medium text-gray-500 whitespace-nowrap"
+                className="px-3 py-2 text-left font-medium whitespace-nowrap"
+                style={{ color: "var(--ct-text-muted)" }}
               >
                 {colLabel(c)}
               </th>
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-100 bg-white">
+        <tbody style={{ background: "var(--ct-surface)" }}>
           {data.map((row, i) => (
-            <tr key={i} className="hover:bg-gray-50">
-              <td className="px-3 py-2 text-gray-400">{i + 1}</td>
-              <td className="px-3 py-2 text-gray-800 font-mono">
+            <tr key={i} className="border-t hover:bg-[var(--ct-surface-hover)]" style={{ borderColor: "var(--ct-border-subtle)" }}>
+              <td className="px-3 py-2" style={{ color: "var(--ct-text-muted)" }}>{i + 1}</td>
+              <td className="px-3 py-2 font-mono" style={{ color: "var(--ct-text-primary)" }}>
                 {row.cust_id}
               </td>
-              <td className="px-3 py-2 text-gray-600 font-mono">
+              <td className="px-3 py-2 font-mono" style={{ color: "var(--ct-text-secondary)" }}>
                 {row.bill_no}
               </td>
-              <td className="px-3 py-2 text-gray-700">{row.company_name}</td>
-              <td className="px-3 py-2 text-gray-700">{row.cust_name}</td>
+              <td className="px-3 py-2" style={{ color: "var(--ct-text-secondary)" }}>{row.company_name}</td>
+              <td className="px-3 py-2" style={{ color: "var(--ct-text-secondary)" }}>{row.cust_name}</td>
               {extraCols.map((c) => (
-                <td key={c} className="px-3 py-2 text-gray-600">
+                <td key={c} className="px-3 py-2" style={{ color: "var(--ct-text-secondary)" }}>
                   {row[c]}
                 </td>
               ))}
@@ -368,7 +369,7 @@ export default function BillingExceptionsPage() {
   if (loading) {
     return (
       <BillingLayout title="Billing Audit">
-        <div className="flex items-center gap-2 text-gray-500 text-sm mt-10">
+        <div className="flex items-center gap-2 text-sm mt-10" style={{ color: "var(--ct-text-muted)" }}>
           <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
             <circle
               className="opacity-25"
@@ -395,11 +396,11 @@ export default function BillingExceptionsPage() {
       {/* ── header bar ── */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-base font-semibold text-gray-800">
+          <h2 className="text-base font-semibold" style={{ color: "var(--ct-text-primary)" }}>
             Billing Exceptions
           </h2>
           {uploadDate && (
-            <p className="text-xs text-gray-400 mt-0.5">
+            <p className="text-xs mt-0.5" style={{ color: "var(--ct-text-muted)" }}>
               Upload date: {uploadDate} — {totalExceptions} total exceptions
               across 36 checks
             </p>
@@ -410,7 +411,8 @@ export default function BillingExceptionsPage() {
         <div className="flex items-center gap-3">
           {sendMsg && (
             <span
-              className={`text-xs ${sendMsg.includes("success") ? "text-green-600" : "text-red-500"}`}
+              className="text-xs"
+              style={{ color: sendMsg.includes("success") ? "var(--success-light)" : "var(--danger-light)" }}
             >
               {sendMsg}
             </span>
@@ -418,7 +420,8 @@ export default function BillingExceptionsPage() {
           <button
             onClick={handleSendEmail}
             disabled={sending}
-            className="px-4 py-2 bg-slate-800 text-white text-sm rounded hover:bg-slate-700 disabled:opacity-40 transition-colors flex items-center gap-2"
+            className="px-4 py-2 text-sm rounded-[var(--r-sm)] disabled:opacity-40 transition-colors flex items-center gap-2"
+            style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
           >
             {sending ? (
               <>
@@ -464,7 +467,8 @@ export default function BillingExceptionsPage() {
           </button>
           <button
             onClick={handleRerun}
-            className="px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors"
+            className="px-4 py-2 text-sm rounded-[var(--r-sm)] border transition-colors hover:bg-[var(--ct-surface-hover)]"
+            style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-secondary)" }}
           >
             Re-run Checks
           </button>
@@ -480,23 +484,25 @@ export default function BillingExceptionsPage() {
           return (
             <div
               key={key}
-              className="bg-white rounded-lg border border-gray-200 overflow-hidden"
+              className="rounded-[var(--r-lg)] border overflow-hidden"
+              style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}
             >
               {/* check header */}
               <div
-                className={`flex items-center justify-between px-4 py-3 border-b border-gray-100 ${
-                  hasExceptions ? "bg-red-50" : "bg-green-50"
-                }`}
+                className="flex items-center justify-between px-4 py-3 border-b"
+                style={hasExceptions
+                  ? { background: "var(--danger-light-tint)", borderColor: "var(--ct-border-subtle)" }
+                  : { background: "var(--success-light-tint)", borderColor: "var(--ct-border-subtle)" }}
               >
-                <span className="text-sm font-medium text-gray-800">
+                <span className="text-sm font-medium" style={{ color: "var(--ct-text-primary)" }}>
                   {label}
                 </span>
                 {hasExceptions ? (
-                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-700">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-[var(--r-sm)] text-xs font-medium" style={{ background: "var(--danger-light-tint)", color: "var(--danger-light)" }}>
                     {rows.length} exception{rows.length > 1 ? "s" : ""}
                   </span>
                 ) : (
-                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-[var(--r-sm)] text-xs font-medium" style={{ background: "var(--success-light-tint)", color: "var(--success-light)" }}>
                     No exceptions
                   </span>
                 )}
@@ -507,18 +513,18 @@ export default function BillingExceptionsPage() {
                 {hasExceptions && <ExceptionTable data={rows} />}
                 {phpCounts && phpCounts[key] !== undefined && (
                   <div className="flex items-center gap-3 mt-2 px-1">
-                    <span className="text-xs text-gray-500">
+                    <span className="text-xs" style={{ color: "var(--ct-text-muted)" }}>
                       Our count: <strong>{rows.length}</strong>
                     </span>
-                    <span className="text-xs text-gray-500">
+                    <span className="text-xs" style={{ color: "var(--ct-text-muted)" }}>
                       PHP count: <strong>{phpCounts[key]}</strong>
                     </span>
                     {rows.length === phpCounts[key] ? (
-                      <span className="text-xs text-green-600 font-medium">
+                      <span className="text-xs font-medium" style={{ color: "var(--success-light)" }}>
                         ✅ Match
                       </span>
                     ) : (
-                      <span className="text-xs text-red-500 font-medium">
+                      <span className="text-xs font-medium" style={{ color: "var(--danger-light)" }}>
                         ⚠️ Diff: {Math.abs(rows.length - phpCounts[key])}
                       </span>
                     )}
@@ -537,7 +543,8 @@ export default function BillingExceptionsPage() {
                         [key]: e.target.value,
                       }))
                     }
-                    className="w-full text-sm border border-gray-200 rounded px-3 py-2 text-gray-700 placeholder-gray-300 focus:outline-none focus:ring-1 focus:ring-green-400 focus:border-green-400 resize-none"
+                    className="w-full text-sm rounded-[var(--r-sm)] border px-3 py-2 outline-none resize-none focus:border-[var(--accent-light)]"
+                    style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-secondary)" }}
                   />
                 </div>
               </div>
@@ -551,7 +558,8 @@ export default function BillingExceptionsPage() {
         <button
           onClick={handleSave}
           disabled={saving}
-          className="px-5 py-2 bg-green-600 text-white text-sm rounded hover:bg-green-700 disabled:opacity-40 transition-colors flex items-center gap-2"
+          className="px-5 py-2 text-sm rounded-[var(--r-sm)] disabled:opacity-40 transition-colors flex items-center gap-2"
+          style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
         >
           {saving ? (
             <>
@@ -582,7 +590,8 @@ export default function BillingExceptionsPage() {
         </button>
         {saveMsg && (
           <span
-            className={`text-sm ${saveMsg.includes("success") ? "text-green-600" : "text-red-500"}`}
+            className="text-sm"
+            style={{ color: saveMsg.includes("success") ? "var(--success-light)" : "var(--danger-light)" }}
           >
             {saveMsg}
           </span>
