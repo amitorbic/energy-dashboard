@@ -19,33 +19,33 @@ export default function EnrollmentUserLog() {
   return (
     <EnrollmentLayout title="Enrollment – User Log">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-base font-semibold text-gray-800">User Log</h2>
-        <span className="text-xs text-gray-400">{rows.length} entries</span>
+        <h2 className="text-base font-semibold" style={{ color: "var(--ct-text-primary)" }}>User Log</h2>
+        <span className="text-xs" style={{ color: "var(--ct-text-muted)" }}>{rows.length} entries</span>
       </div>
 
       {loading ? (
-        <p className="text-sm text-gray-400">Loading…</p>
+        <p className="text-sm" style={{ color: "var(--ct-text-muted)" }}>Loading…</p>
       ) : (
-        <div className="overflow-x-auto rounded border border-gray-200">
+        <div className="overflow-x-auto rounded-[var(--r-md)] border" style={{ borderColor: "var(--ct-border-default)" }}>
           <table className="w-full text-xs">
-            <thead className="bg-gray-50 border-b border-gray-200">
+            <thead className="border-b" style={{ background: "var(--ct-surface-hover)", borderColor: "var(--ct-border-default)" }}>
               <tr>
                 {["#","Date","User","ESID","ESIDs","Comments"].map((h) => (
-                  <th key={h} className="px-3 py-2 text-left font-medium text-gray-500 whitespace-nowrap">{h}</th>
+                  <th key={h} className="px-3 py-2 text-left font-medium whitespace-nowrap" style={{ color: "var(--ct-text-muted)" }}>{h}</th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 bg-white">
+            <tbody className="divide-y" style={{ background: "var(--ct-surface)" }}>
               {rows.length === 0 ? (
-                <tr><td colSpan={6} className="px-3 py-6 text-center text-gray-400">No log entries</td></tr>
+                <tr><td colSpan={6} className="px-3 py-6 text-center" style={{ color: "var(--ct-text-muted)" }}>No log entries</td></tr>
               ) : rows.map((r, i) => (
-                <tr key={r.sid} className="hover:bg-gray-50">
-                  <td className="px-3 py-2 text-gray-400">{i + 1}</td>
-                  <td className="px-3 py-2 text-gray-600 whitespace-nowrap">{fmtTs(r.date_modified)}</td>
-                  <td className="px-3 py-2 text-gray-700 font-medium">{r.user}</td>
-                  <td className="px-3 py-2 font-mono text-gray-600">{r.esid}</td>
-                  <td className="px-3 py-2 text-gray-600 text-center">{r.num_esid}</td>
-                  <td className="px-3 py-2 text-gray-600"
+                <tr key={r.sid} className="hover:bg-[var(--ct-surface-hover)]">
+                  <td className="px-3 py-2" style={{ color: "var(--ct-text-muted)" }}>{i + 1}</td>
+                  <td className="px-3 py-2 whitespace-nowrap" style={{ color: "var(--ct-text-secondary)" }}>{fmtTs(r.date_modified)}</td>
+                  <td className="px-3 py-2 font-medium" style={{ color: "var(--ct-text-primary)" }}>{r.user}</td>
+                  <td className="px-3 py-2 font-mono" style={{ color: "var(--ct-text-secondary)" }}>{r.esid}</td>
+                  <td className="px-3 py-2 text-center" style={{ color: "var(--ct-text-secondary)" }}>{r.num_esid}</td>
+                  <td className="px-3 py-2" style={{ color: "var(--ct-text-secondary)" }}
                     dangerouslySetInnerHTML={{ __html: (r.comments || "").replace(/<br\s*\/?>/gi, " ") }}
                   />
                 </tr>
