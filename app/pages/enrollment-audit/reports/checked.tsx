@@ -21,39 +21,39 @@ export default function CheckedEnrollments() {
   return (
     <EnrollmentLayout title="Enrollment – Check List">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-base font-semibold text-gray-800">Check List (Approved)</h2>
-        <span className="text-xs text-gray-400">{rows.length} records</span>
+        <h2 className="text-base font-semibold" style={{ color: "var(--ct-text-primary)" }}>Check List (Approved)</h2>
+        <span className="text-xs" style={{ color: "var(--ct-text-muted)" }}>{rows.length} records</span>
       </div>
 
       {loading ? (
-        <p className="text-sm text-gray-400">Loading…</p>
+        <p className="text-sm" style={{ color: "var(--ct-text-muted)" }}>Loading…</p>
       ) : (
-        <div className="overflow-x-auto rounded border border-gray-200">
+        <div className="overflow-x-auto rounded-[var(--r-md)] border" style={{ borderColor: "var(--ct-border-default)" }}>
           <table className="w-full text-xs">
-            <thead className="bg-gray-50 border-b border-gray-200">
+            <thead className="border-b" style={{ background: "var(--ct-surface-hover)", borderColor: "var(--ct-border-default)" }}>
               <tr>
                 {["#","ESID","Company","Broker","Rate","Term","Zone","Start","End","Meter","Status","Added"].map((h) => (
-                  <th key={h} className="px-3 py-2 text-left font-medium text-gray-500 whitespace-nowrap">{h}</th>
+                  <th key={h} className="px-3 py-2 text-left font-medium whitespace-nowrap" style={{ color: "var(--ct-text-muted)" }}>{h}</th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 bg-white">
+            <tbody className="divide-y" style={{ background: "var(--ct-surface)" }}>
               {rows.length === 0 ? (
-                <tr><td colSpan={12} className="px-3 py-6 text-center text-gray-400">No checked enrollments</td></tr>
+                <tr><td colSpan={12} className="px-3 py-6 text-center" style={{ color: "var(--ct-text-muted)" }}>No checked enrollments</td></tr>
               ) : rows.map((r, i) => (
-                <tr key={r.esid} className="hover:bg-gray-50">
-                  <td className="px-3 py-2 text-gray-400">{i + 1}</td>
-                  <td className="px-3 py-2 font-mono text-gray-800 whitespace-nowrap">{r.esid}</td>
-                  <td className="px-3 py-2 text-gray-700 max-w-[150px] truncate">{r.company_name}</td>
-                  <td className="px-3 py-2 text-gray-600">{r.broker_code}</td>
-                  <td className="px-3 py-2 text-gray-600">{dispRate(r.contract_rate)}</td>
-                  <td className="px-3 py-2 text-gray-600">{r.contract_term}</td>
-                  <td className="px-3 py-2 text-gray-600">{r.zone}</td>
-                  <td className="px-3 py-2 text-gray-600 whitespace-nowrap">{r.contract_start_date}</td>
-                  <td className="px-3 py-2 text-gray-600 whitespace-nowrap">{r.contract_end_date}</td>
-                  <td className="px-3 py-2 text-gray-600">{r.meter_fees}</td>
-                  <td className="px-3 py-2 text-gray-600 whitespace-nowrap">{r.enrollment_status}</td>
-                  <td className="px-3 py-2 text-gray-400 whitespace-nowrap">{fmtDate(r.date_added)}</td>
+                <tr key={r.esid} className="hover:bg-[var(--ct-surface-hover)]">
+                  <td className="px-3 py-2" style={{ color: "var(--ct-text-muted)" }}>{i + 1}</td>
+                  <td className="px-3 py-2 font-mono whitespace-nowrap" style={{ color: "var(--ct-text-primary)" }}>{r.esid}</td>
+                  <td className="px-3 py-2 max-w-[150px] truncate" style={{ color: "var(--ct-text-secondary)" }}>{r.company_name}</td>
+                  <td className="px-3 py-2" style={{ color: "var(--ct-text-secondary)" }}>{r.broker_code}</td>
+                  <td className="px-3 py-2" style={{ color: "var(--ct-text-secondary)" }}>{dispRate(r.contract_rate)}</td>
+                  <td className="px-3 py-2" style={{ color: "var(--ct-text-secondary)" }}>{r.contract_term}</td>
+                  <td className="px-3 py-2" style={{ color: "var(--ct-text-secondary)" }}>{r.zone}</td>
+                  <td className="px-3 py-2 whitespace-nowrap" style={{ color: "var(--ct-text-secondary)" }}>{r.contract_start_date}</td>
+                  <td className="px-3 py-2 whitespace-nowrap" style={{ color: "var(--ct-text-secondary)" }}>{r.contract_end_date}</td>
+                  <td className="px-3 py-2" style={{ color: "var(--ct-text-secondary)" }}>{r.meter_fees}</td>
+                  <td className="px-3 py-2 whitespace-nowrap" style={{ color: "var(--ct-text-secondary)" }}>{r.enrollment_status}</td>
+                  <td className="px-3 py-2 whitespace-nowrap" style={{ color: "var(--ct-text-muted)" }}>{fmtDate(r.date_added)}</td>
                 </tr>
               ))}
             </tbody>
