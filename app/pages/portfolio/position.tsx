@@ -101,11 +101,10 @@ function fmt(n: number, dec = 3) {
   });
 }
 function fmtNet(n: number) {
-  if (n === 0) return <span className="text-slate-300">—</span>;
-  const cls =
-    n > 0 ? "text-emerald-400 font-semibold" : "text-red-400 font-semibold";
+  if (n === 0) return <span style={{ color: "var(--ct-text-muted)" }}>—</span>;
+  const color = n > 0 ? "var(--success-light)" : "var(--danger-light)";
   return (
-    <span className={cls}>
+    <span style={{ color, fontWeight: 600 }}>
       {n > 0 ? "+" : ""}
       {n.toFixed(3)}
     </span>
@@ -165,23 +164,22 @@ function LoadTable({
   const [view, setView] = useState<"zone" | "hourly">("zone");
 
   return (
-    <div className="rounded-lg border border-slate-700 bg-slate-900 overflow-hidden">
+    <div className="rounded-[var(--r-lg)] border overflow-hidden" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 bg-slate-800 border-b border-slate-700">
+      <div className="flex items-center justify-between px-4 py-3 border-b" style={{ background: "var(--ct-surface-hover)", borderColor: "var(--ct-border-default)" }}>
         <div>
-          <span className="font-semibold text-white text-sm">{label}</span>
-          <span className="ml-3 text-xs text-slate-400">{subtitle}</span>
+          <span className="font-semibold text-sm" style={{ color: "var(--ct-text-primary)" }}>{label}</span>
+          <span className="ml-3 text-xs" style={{ color: "var(--ct-text-muted)" }}>{subtitle}</span>
         </div>
-        <div className="flex rounded overflow-hidden text-xs">
+        <div className="flex rounded-[var(--r-sm)] overflow-hidden text-xs">
           {(["zone", "hourly"] as const).map((v) => (
             <button
               key={v}
               onClick={() => setView(v)}
-              className={`px-3 py-1 capitalize ${
-                view === v
-                  ? "bg-blue-600 text-white"
-                  : "bg-slate-700 text-slate-300 hover:bg-slate-600"
-              }`}
+              className="px-3 py-1 capitalize transition-colors"
+              style={view === v
+                ? { background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }
+                : { background: "var(--ct-surface)", color: "var(--ct-text-secondary)" }}
             >
               {v}
             </button>
@@ -190,14 +188,14 @@ function LoadTable({
       </div>
 
       {view === "zone" ? (
-        <div className="grid grid-cols-4 divide-x divide-slate-700">
+        <div className="grid grid-cols-4 divide-x" style={{ borderColor: "var(--ct-border-subtle)" }}>
           {ZONES.map((zone) => (
             <div key={zone} className="p-4 text-center">
-              <div className="text-xs text-slate-400 mb-1">{zone}</div>
-              <div className="text-lg font-bold text-white">
+              <div className="text-xs mb-1" style={{ color: "var(--ct-text-muted)" }}>{zone}</div>
+              <div className="text-lg font-bold" style={{ color: "var(--ct-text-primary)" }}>
                 {(loadData.daily_totals[zone] ?? 0).toFixed(1)}
               </div>
-              <div className="text-xs text-slate-500">MWh</div>
+              <div className="text-xs" style={{ color: "var(--ct-text-muted)" }}>MWh</div>
             </div>
           ))}
         </div>
@@ -205,16 +203,16 @@ function LoadTable({
         <div className="overflow-x-auto">
           <table className="w-full text-xs font-mono">
             <thead>
-              <tr className="bg-slate-800">
-                <th className="px-3 py-2 text-left text-slate-400 sticky left-0 bg-slate-800">
+              <tr style={{ background: "var(--ct-surface-hover)" }}>
+                <th className="px-3 py-2 text-left sticky left-0" style={{ color: "var(--ct-text-muted)", background: "var(--ct-surface-hover)" }}>
                   Hour
                 </th>
                 {ZONES.map((z) => (
-                  <th key={z} className="px-3 py-2 text-right text-slate-400">
+                  <th key={z} className="px-3 py-2 text-right" style={{ color: "var(--ct-text-muted)" }}>
                     {z}
                   </th>
                 ))}
-                <th className="px-3 py-2 text-right text-slate-400">TOTAL</th>
+                <th className="px-3 py-2 text-right" style={{ color: "var(--ct-text-muted)" }}>TOTAL</th>
               </tr>
             </thead>
             <tbody>
@@ -226,20 +224,22 @@ function LoadTable({
                 return (
                   <tr
                     key={he}
-                    className="border-t border-slate-800 hover:bg-slate-800/40"
+                    className="border-t hover:bg-[var(--ct-surface-hover)]"
+                    style={{ borderColor: "var(--ct-border-subtle)" }}
                   >
-                    <td className="px-3 py-1.5 text-slate-400 sticky left-0 bg-slate-900 hover:bg-slate-800/40">
+                    <td className="px-3 py-1.5 sticky left-0" style={{ color: "var(--ct-text-muted)", background: "var(--ct-surface)" }}>
                       {he}
                     </td>
                     {ZONES.map((z) => (
                       <td
                         key={z}
-                        className="px-3 py-1.5 text-right text-slate-200 tabular-nums"
+                        className="px-3 py-1.5 text-right tabular-nums"
+                        style={{ color: "var(--ct-text-secondary)" }}
                       >
                         {(loadData.zones[z][idx] ?? 0).toFixed(3)}
                       </td>
                     ))}
-                    <td className="px-3 py-1.5 text-right text-blue-300 font-medium tabular-nums">
+                    <td className="px-3 py-1.5 text-right font-medium tabular-nums" style={{ color: "var(--accent-light)" }}>
                       {rowTotal.toFixed(3)}
                     </td>
                   </tr>
@@ -247,19 +247,20 @@ function LoadTable({
               })}
             </tbody>
             <tfoot>
-              <tr className="border-t-2 border-slate-600 bg-slate-800">
-                <td className="px-3 py-2 text-slate-400 font-semibold sticky left-0 bg-slate-800">
+              <tr className="border-t-2" style={{ borderColor: "var(--ct-border-strong)", background: "var(--ct-surface-hover)" }}>
+                <td className="px-3 py-2 font-semibold sticky left-0" style={{ color: "var(--ct-text-muted)", background: "var(--ct-surface-hover)" }}>
                   TOTAL
                 </td>
                 {ZONES.map((z) => (
                   <td
                     key={z}
-                    className="px-3 py-2 text-right text-white font-semibold tabular-nums"
+                    className="px-3 py-2 text-right font-semibold tabular-nums"
+                    style={{ color: "var(--ct-text-primary)" }}
                   >
                     {(loadData.daily_totals[z] ?? 0).toFixed(1)}
                   </td>
                 ))}
-                <td className="px-3 py-2 text-right text-blue-300 font-semibold tabular-nums">
+                <td className="px-3 py-2 text-right font-semibold tabular-nums" style={{ color: "var(--accent-light)" }}>
                   {ZONES.reduce(
                     (s, z) => s + (loadData.daily_totals[z] ?? 0),
                     0,
@@ -272,11 +273,11 @@ function LoadTable({
       )}
 
       {loadData.has_data && (
-        <div className="px-4 py-2 border-t border-slate-800 text-xs text-slate-600">
+        <div className="px-4 py-2 border-t text-xs" style={{ borderColor: "var(--ct-border-subtle)", color: "var(--ct-text-muted)" }}>
           Settlement run:{" "}
-          <span className="text-slate-400">{loadData.settlement_run}</span>
+          <span style={{ color: "var(--ct-text-secondary)" }}>{loadData.settlement_run}</span>
           &ensp;·&ensp;Date:{" "}
-          <span className="text-slate-400">{loadData.oper_date}</span>
+          <span style={{ color: "var(--ct-text-secondary)" }}>{loadData.oper_date}</span>
         </div>
       )}
     </div>
@@ -300,7 +301,7 @@ function ActualLoadSection({
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-8 text-slate-400 text-sm">
+      <div className="flex items-center justify-center py-8 text-sm" style={{ color: "var(--ct-text-muted)" }}>
         Loading actual load data…
       </div>
     );
@@ -308,7 +309,7 @@ function ActualLoadSection({
 
   if (error) {
     return (
-      <div className="rounded bg-red-900/20 border border-red-700 p-4 text-red-400 text-sm">
+      <div className="rounded-[var(--r-md)] border p-4 text-sm" style={{ background: "var(--danger-light-tint)", borderColor: "var(--danger-light-tint)", color: "var(--danger-light)" }}>
         Failed to load data: {error}
       </div>
     );
@@ -316,10 +317,10 @@ function ActualLoadSection({
 
   if (!data || (!data.with_losses.has_data && !data.unadjusted.has_data)) {
     return (
-      <div className="rounded bg-slate-800/40 border border-slate-700 p-6 text-center text-slate-500 text-sm">
+      <div className="rounded-[var(--r-md)] border p-6 text-center text-sm" style={{ background: "var(--ct-surface-hover)", borderColor: "var(--ct-border-default)", color: "var(--ct-text-muted)" }}>
         No settlement data loaded for {operDate} / {settlementRun}.
         <br />
-        <code className="text-slate-300 text-xs mt-1 block">
+        <code className="text-xs mt-1 block" style={{ color: "var(--ct-text-secondary)" }}>
           python process_settlement.py --date {operDate}
         </code>
       </div>
@@ -358,14 +359,15 @@ function LoadSelector({
   const uniqueDates = [...new Set(dates.map((d) => d.oper_date))];
 
   return (
-    <div className="flex items-center gap-3 mt-3 pt-3 border-t border-slate-200">
-      <span className="text-xs text-slate-500 font-semibold uppercase tracking-wide">
+    <div className="flex items-center gap-3 mt-3 pt-3 border-t" style={{ borderColor: "var(--ct-border-default)" }}>
+      <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--ct-text-muted)" }}>
         Settlement:
       </span>
       <div className="flex flex-col gap-0.5">
-        <label className="text-xs text-slate-400">Operating Date</label>
+        <label className="text-xs" style={{ color: "var(--ct-text-muted)" }}>Operating Date</label>
         <select
-          className="bg-white border border-slate-200 rounded px-2 py-1 text-xs text-slate-700"
+          className="border rounded-[var(--r-sm)] px-2 py-1 text-xs outline-none focus:border-[var(--accent-light)]"
+          style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)", color: "var(--ct-text-secondary)" }}
           value={operDate}
           onChange={(e) => onDateChange(e.target.value)}
           disabled={loading}
@@ -382,9 +384,10 @@ function LoadSelector({
         </select>
       </div>
       <div className="flex flex-col gap-0.5">
-        <label className="text-xs text-slate-400">Settlement Run</label>
+        <label className="text-xs" style={{ color: "var(--ct-text-muted)" }}>Settlement Run</label>
         <select
-          className="bg-white border border-slate-200 rounded px-2 py-1 text-xs text-slate-700"
+          className="border rounded-[var(--r-sm)] px-2 py-1 text-xs outline-none focus:border-[var(--accent-light)]"
+          style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)", color: "var(--ct-text-secondary)" }}
           value={settlementRun}
           onChange={(e) => onRunChange(e.target.value)}
         >
@@ -504,12 +507,15 @@ export default function PositionScreen() {
     }));
   }
 
-  const ROW_STYLES: Record<string, string> = {
-    net: "bg-slate-700 text-white font-bold",
-    net_zone: "bg-slate-600 text-slate-100",
-    header: "bg-slate-800 text-slate-200 font-semibold",
-    zone: "bg-slate-750 text-slate-300",
-    supply: "bg-slate-700/50 text-slate-200",
+  // Structural row-hierarchy shading (not status color): net/net_zone rows are
+  // calculated-result totals so they collapse to the shared accent tint per the
+  // calculated-result convention; header/zone/supply are plain structural rows.
+  const ROW_STYLES: Record<string, React.CSSProperties> = {
+    net: { background: "var(--accent-light-tint)", color: "var(--ct-text-primary)", fontWeight: 700 },
+    net_zone: { background: "var(--accent-light-tint)", color: "var(--ct-text-primary)" },
+    header: { background: "var(--ct-surface-hover)", color: "var(--ct-text-secondary)", fontWeight: 600 },
+    zone: { background: "var(--ct-surface)", color: "var(--ct-text-secondary)" },
+    supply: { background: "var(--ct-surface-hover)", color: "var(--ct-text-secondary)" },
   };
 
   // ── Render ─────────────────────────────────────────────────────────────────
@@ -519,24 +525,26 @@ export default function PositionScreen() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-bold text-slate-900">
+            <h1 className="text-xl font-bold" style={{ color: "var(--ct-text-primary)" }}>
               Position Screen
             </h1>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <p className="text-xs mt-0.5" style={{ color: "var(--ct-text-muted)" }}>
               Forecast · Supply · Net Position
             </p>
           </div>
           <div className="flex gap-2">
             <button
               onClick={() => setShowCriteria((v) => !v)}
-              className="px-3 py-1.5 text-xs border border-slate-300 rounded bg-white text-slate-600 hover:bg-slate-50"
+              className="px-3 py-1.5 text-xs border rounded-[var(--r-sm)] hover:bg-[var(--ct-surface-hover)]"
+              style={{ borderColor: "var(--ct-border-default)", background: "var(--ct-surface)", color: "var(--ct-text-secondary)" }}
             >
               {showCriteria ? "Hide" : "Show"} Criteria
             </button>
             {ran && (
               <button
                 onClick={runPosition}
-                className="px-3 py-1.5 text-xs border border-slate-300 rounded bg-white text-slate-600 hover:bg-slate-50"
+                className="px-3 py-1.5 text-xs border rounded-[var(--r-sm)] hover:bg-[var(--ct-surface-hover)]"
+                style={{ borderColor: "var(--ct-border-default)", background: "var(--ct-surface)", color: "var(--ct-text-secondary)" }}
               >
                 ↻ Refresh
               </button>
@@ -546,9 +554,9 @@ export default function PositionScreen() {
 
         {/* Selection Criteria Panel */}
         {showCriteria && (
-          <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-5">
+          <div className="rounded-[var(--r-lg)] border p-5 space-y-5" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
             <div className="flex items-center justify-between">
-              <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wide">
+              <h2 className="text-sm font-bold uppercase tracking-wide" style={{ color: "var(--ct-text-primary)" }}>
                 AMERI Position Screen — Selection Criteria
               </h2>
             </div>
@@ -556,7 +564,7 @@ export default function PositionScreen() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* Left column — Time Range */}
               <div className="space-y-3">
-                <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide border-b pb-1">
+                <p className="text-xs font-semibold uppercase tracking-wide border-b pb-1" style={{ color: "var(--ct-text-secondary)", borderColor: "var(--ct-border-subtle)" }}>
                   Time Range
                 </p>
                 <div className="space-y-1">
@@ -574,11 +582,10 @@ export default function PositionScreen() {
                       onClick={() =>
                         setCriteria((c) => ({ ...c, granularity: g }))
                       }
-                      className={`w-full text-left px-3 py-1.5 text-xs rounded transition-colors ${
-                        criteria.granularity === g
-                          ? "bg-blue-600 text-white font-semibold"
-                          : "text-slate-600 hover:bg-slate-100"
-                      }`}
+                      className="w-full text-left px-3 py-1.5 text-xs rounded-[var(--r-sm)] transition-colors hover:bg-[var(--ct-surface-hover)]"
+                      style={criteria.granularity === g
+                        ? { background: "var(--accent-light)", color: "var(--accent-light-on-solid)", fontWeight: 600 }
+                        : { color: "var(--ct-text-secondary)" }}
                     >
                       {g === "fifteen_min"
                         ? "Fifteen-Minute"
@@ -589,12 +596,12 @@ export default function PositionScreen() {
                   ))}
                 </div>
 
-                <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide border-b pb-1 pt-2">
+                <p className="text-xs font-semibold uppercase tracking-wide border-b pb-1 pt-2" style={{ color: "var(--ct-text-secondary)", borderColor: "var(--ct-border-subtle)" }}>
                   Date Range
                 </p>
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-slate-500 w-12">From</span>
+                    <span className="text-xs w-12" style={{ color: "var(--ct-text-muted)" }}>From</span>
                     <input
                       type="date"
                       value={criteria.from_date}
@@ -604,14 +611,16 @@ export default function PositionScreen() {
                           from_date: e.target.value,
                         }))
                       }
-                      className="flex-1 text-xs border border-slate-200 rounded px-2 py-1"
+                      className="flex-1 text-xs border rounded-[var(--r-sm)] px-2 py-1 outline-none focus:border-[var(--accent-light)]"
+                      style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-primary)" }}
                     />
                     <select
                       value={criteria.from_he}
                       onChange={(e) =>
                         setCriteria((c) => ({ ...c, from_he: +e.target.value }))
                       }
-                      className="text-xs border border-slate-200 rounded px-1 py-1"
+                      className="text-xs border rounded-[var(--r-sm)] px-1 py-1 outline-none focus:border-[var(--accent-light)]"
+                      style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-primary)" }}
                     >
                       {Array.from({ length: 24 }, (_, i) => i + 1).map((h) => (
                         <option key={h} value={h}>
@@ -621,7 +630,7 @@ export default function PositionScreen() {
                     </select>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-slate-500 w-12">Through</span>
+                    <span className="text-xs w-12" style={{ color: "var(--ct-text-muted)" }}>Through</span>
                     <input
                       type="date"
                       value={criteria.through_date}
@@ -631,7 +640,8 @@ export default function PositionScreen() {
                           through_date: e.target.value,
                         }))
                       }
-                      className="flex-1 text-xs border border-slate-200 rounded px-2 py-1"
+                      className="flex-1 text-xs border rounded-[var(--r-sm)] px-2 py-1 outline-none focus:border-[var(--accent-light)]"
+                      style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-primary)" }}
                     />
                     <select
                       value={criteria.through_he}
@@ -641,7 +651,8 @@ export default function PositionScreen() {
                           through_he: +e.target.value,
                         }))
                       }
-                      className="text-xs border border-slate-200 rounded px-1 py-1"
+                      className="text-xs border rounded-[var(--r-sm)] px-1 py-1 outline-none focus:border-[var(--accent-light)]"
+                      style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-primary)" }}
                     >
                       {Array.from({ length: 24 }, (_, i) => i + 1).map((h) => (
                         <option key={h} value={h}>
@@ -654,18 +665,17 @@ export default function PositionScreen() {
 
                 {criteria.granularity === "hour_blocks" && (
                   <div className="space-y-1">
-                    <p className="text-xs text-slate-500">Block Type</p>
+                    <p className="text-xs" style={{ color: "var(--ct-text-muted)" }}>Block Type</p>
                     {(["7x8", "7x16", "5x16", "7x24"] as const).map((b) => (
                       <button
                         key={b}
                         onClick={() =>
                           setCriteria((c) => ({ ...c, block_type: b }))
                         }
-                        className={`mr-2 px-2 py-1 text-xs rounded border ${
-                          criteria.block_type === b
-                            ? "bg-blue-600 text-white border-blue-600"
-                            : "border-slate-300 text-slate-600"
-                        }`}
+                        className="mr-2 px-2 py-1 text-xs rounded-[var(--r-sm)] border"
+                        style={criteria.block_type === b
+                          ? { background: "var(--accent-light)", color: "var(--accent-light-on-solid)", borderColor: "var(--accent-light)" }
+                          : { borderColor: "var(--ct-border-default)", color: "var(--ct-text-secondary)" }}
                       >
                         {b}
                       </button>
@@ -677,8 +687,8 @@ export default function PositionScreen() {
               {/* Middle column */}
               <div className="space-y-4">
                 <div>
-                  <div className="flex items-center justify-between border-b pb-1 mb-2">
-                    <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
+                  <div className="flex items-center justify-between border-b pb-1 mb-2" style={{ borderColor: "var(--ct-border-subtle)" }}>
+                    <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--ct-text-secondary)" }}>
                       Load Zones
                     </p>
                     <div className="flex gap-1">
@@ -686,16 +696,18 @@ export default function PositionScreen() {
                         onClick={() =>
                           setCriteria((c) => ({ ...c, zones: [...ALL_ZONES] }))
                         }
-                        className="text-xs text-blue-600 hover:underline"
+                        className="text-xs hover:underline"
+                        style={{ color: "var(--accent-light)" }}
                       >
                         ALL ON
                       </button>
-                      <span className="text-slate-300">|</span>
+                      <span style={{ color: "var(--ct-border-strong)" }}>|</span>
                       <button
                         onClick={() =>
                           setCriteria((c) => ({ ...c, zones: [] }))
                         }
-                        className="text-xs text-blue-600 hover:underline"
+                        className="text-xs hover:underline"
+                        style={{ color: "var(--accent-light)" }}
                       >
                         ALL OFF
                       </button>
@@ -705,21 +717,19 @@ export default function PositionScreen() {
                     <button
                       key={z}
                       onClick={() => toggleZone(z)}
-                      className={`w-full text-left px-3 py-1.5 text-xs rounded mb-1 flex items-center gap-2 transition-colors ${
-                        criteria.zones.includes(z)
-                          ? "bg-blue-600 text-white"
-                          : "bg-slate-100 text-slate-500"
-                      }`}
+                      className="w-full text-left px-3 py-1.5 text-xs rounded-[var(--r-sm)] mb-1 flex items-center gap-2 transition-colors"
+                      style={criteria.zones.includes(z)
+                        ? { background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }
+                        : { background: "var(--ct-surface-hover)", color: "var(--ct-text-muted)" }}
                     >
                       <span
-                        className={`w-3 h-3 rounded-sm border flex items-center justify-center ${
-                          criteria.zones.includes(z)
-                            ? "bg-white border-white"
-                            : "border-slate-400"
-                        }`}
+                        className="w-3 h-3 rounded-sm border flex items-center justify-center"
+                        style={criteria.zones.includes(z)
+                          ? { background: "var(--accent-light-on-solid)", borderColor: "var(--accent-light-on-solid)" }
+                          : { borderColor: "var(--ct-border-strong)" }}
                       >
                         {criteria.zones.includes(z) && (
-                          <span className="text-blue-600 text-xs">✓</span>
+                          <span className="text-xs" style={{ color: "var(--accent-light)" }}>✓</span>
                         )}
                       </span>
                       {z}
@@ -728,8 +738,8 @@ export default function PositionScreen() {
                 </div>
 
                 <div>
-                  <div className="flex items-center justify-between border-b pb-1 mb-2">
-                    <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
+                  <div className="flex items-center justify-between border-b pb-1 mb-2" style={{ borderColor: "var(--ct-border-subtle)" }}>
+                    <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--ct-text-secondary)" }}>
                       Categorization
                     </p>
                     <div className="flex gap-1">
@@ -740,16 +750,18 @@ export default function PositionScreen() {
                             categorization: [...CATEGORIES],
                           }))
                         }
-                        className="text-xs text-blue-600 hover:underline"
+                        className="text-xs hover:underline"
+                        style={{ color: "var(--accent-light)" }}
                       >
                         ALL ON
                       </button>
-                      <span className="text-slate-300">|</span>
+                      <span style={{ color: "var(--ct-border-strong)" }}>|</span>
                       <button
                         onClick={() =>
                           setCriteria((c) => ({ ...c, categorization: [] }))
                         }
-                        className="text-xs text-blue-600 hover:underline"
+                        className="text-xs hover:underline"
+                        style={{ color: "var(--accent-light)" }}
                       >
                         ALL OFF
                       </button>
@@ -759,11 +771,10 @@ export default function PositionScreen() {
                     <button
                       key={cat}
                       onClick={() => toggleCategory(cat)}
-                      className={`w-full text-left px-3 py-1.5 text-xs rounded mb-1 transition-colors ${
-                        criteria.categorization.includes(cat)
-                          ? "bg-blue-600 text-white"
-                          : "bg-slate-100 text-slate-500"
-                      }`}
+                      className="w-full text-left px-3 py-1.5 text-xs rounded-[var(--r-sm)] mb-1 transition-colors"
+                      style={criteria.categorization.includes(cat)
+                        ? { background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }
+                        : { background: "var(--ct-surface-hover)", color: "var(--ct-text-muted)" }}
                     >
                       {cat === "All Customers" ? cat : `Risk Category: ${cat}`}
                     </button>
@@ -774,7 +785,7 @@ export default function PositionScreen() {
               {/* Right column */}
               <div className="space-y-4">
                 <div>
-                  <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide border-b pb-1 mb-2">
+                  <p className="text-xs font-semibold uppercase tracking-wide border-b pb-1 mb-2" style={{ color: "var(--ct-text-secondary)", borderColor: "var(--ct-border-subtle)" }}>
                     Load Type
                   </p>
                   {LOAD_TYPES.map((lt) => (
@@ -783,18 +794,16 @@ export default function PositionScreen() {
                       onClick={() =>
                         setCriteria((c) => ({ ...c, load_type: lt }))
                       }
-                      className={`w-full text-left px-3 py-1.5 text-xs rounded mb-1 flex items-center gap-2 transition-colors ${
-                        criteria.load_type === lt
-                          ? "bg-blue-600 text-white"
-                          : "text-slate-600 hover:bg-slate-100"
-                      }`}
+                      className="w-full text-left px-3 py-1.5 text-xs rounded-[var(--r-sm)] mb-1 flex items-center gap-2 transition-colors hover:bg-[var(--ct-surface-hover)]"
+                      style={criteria.load_type === lt
+                        ? { background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }
+                        : { color: "var(--ct-text-secondary)" }}
                     >
                       <span
-                        className={`w-3 h-3 rounded-full border flex-shrink-0 ${
-                          criteria.load_type === lt
-                            ? "bg-white border-white"
-                            : "border-slate-400"
-                        }`}
+                        className="w-3 h-3 rounded-full border flex-shrink-0"
+                        style={criteria.load_type === lt
+                          ? { background: "var(--accent-light-on-solid)", borderColor: "var(--accent-light-on-solid)" }
+                          : { borderColor: "var(--ct-border-strong)" }}
                       />
                       {lt}
                     </button>
@@ -802,8 +811,8 @@ export default function PositionScreen() {
                 </div>
 
                 <div>
-                  <div className="flex items-center justify-between border-b pb-1 mb-2">
-                    <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
+                  <div className="flex items-center justify-between border-b pb-1 mb-2" style={{ borderColor: "var(--ct-border-subtle)" }}>
+                    <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--ct-text-secondary)" }}>
                       Sections
                     </p>
                     <div className="flex gap-1">
@@ -814,16 +823,18 @@ export default function PositionScreen() {
                             sections: [...SECTIONS],
                           }))
                         }
-                        className="text-xs text-blue-600 hover:underline"
+                        className="text-xs hover:underline"
+                        style={{ color: "var(--accent-light)" }}
                       >
                         ALL ON
                       </button>
-                      <span className="text-slate-300">|</span>
+                      <span style={{ color: "var(--ct-border-strong)" }}>|</span>
                       <button
                         onClick={() =>
                           setCriteria((c) => ({ ...c, sections: [] }))
                         }
-                        className="text-xs text-blue-600 hover:underline"
+                        className="text-xs hover:underline"
+                        style={{ color: "var(--accent-light)" }}
                       >
                         ALL OFF
                       </button>
@@ -833,11 +844,10 @@ export default function PositionScreen() {
                     <button
                       key={s}
                       onClick={() => toggleSection(s)}
-                      className={`w-full text-left px-3 py-1.5 text-xs rounded mb-1 transition-colors ${
-                        criteria.sections.includes(s)
-                          ? "bg-slate-200 text-slate-700 font-medium"
-                          : "text-slate-400"
-                      }`}
+                      className="w-full text-left px-3 py-1.5 text-xs rounded-[var(--r-sm)] mb-1 transition-colors"
+                      style={criteria.sections.includes(s)
+                        ? { background: "var(--accent-light-tint)", color: "var(--accent-light)", fontWeight: 500 }
+                        : { color: "var(--ct-text-muted)" }}
                     >
                       {s}
                     </button>
@@ -845,7 +855,7 @@ export default function PositionScreen() {
                 </div>
 
                 <div>
-                  <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide border-b pb-1 mb-2">
+                  <p className="text-xs font-semibold uppercase tracking-wide border-b pb-1 mb-2" style={{ color: "var(--ct-text-secondary)", borderColor: "var(--ct-border-subtle)" }}>
                     Loss Factors
                   </p>
                   {(["current", "override"] as const).map((lf) => (
@@ -854,18 +864,16 @@ export default function PositionScreen() {
                       onClick={() =>
                         setCriteria((c) => ({ ...c, loss_factors: lf }))
                       }
-                      className={`w-full text-left px-3 py-1.5 text-xs rounded mb-1 flex items-center gap-2 ${
-                        criteria.loss_factors === lf
-                          ? "bg-blue-600 text-white"
-                          : "text-slate-600 hover:bg-slate-100"
-                      }`}
+                      className="w-full text-left px-3 py-1.5 text-xs rounded-[var(--r-sm)] mb-1 flex items-center gap-2 hover:bg-[var(--ct-surface-hover)]"
+                      style={criteria.loss_factors === lf
+                        ? { background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }
+                        : { color: "var(--ct-text-secondary)" }}
                     >
                       <span
-                        className={`w-3 h-3 rounded-full border flex-shrink-0 ${
-                          criteria.loss_factors === lf
-                            ? "bg-white border-white"
-                            : "border-slate-400"
-                        }`}
+                        className="w-3 h-3 rounded-full border flex-shrink-0"
+                        style={criteria.loss_factors === lf
+                          ? { background: "var(--accent-light-on-solid)", borderColor: "var(--accent-light-on-solid)" }
+                          : { borderColor: "var(--ct-border-strong)" }}
                       />
                       {lf === "current"
                         ? "Use Current Loss Factors"
@@ -877,7 +885,7 @@ export default function PositionScreen() {
             </div>
 
             {/* Run button row — includes LoadSelector when Actual type selected */}
-            <div className="flex flex-col gap-3 pt-2 border-t">
+            <div className="flex flex-col gap-3 pt-2 border-t" style={{ borderColor: "var(--ct-border-default)" }}>
               {isActualLoadType && (
                 <LoadSelector
                   operDate={operDate}
@@ -890,7 +898,8 @@ export default function PositionScreen() {
                 <button
                   onClick={runPosition}
                   disabled={loading}
-                  className="px-6 py-2 bg-red-600 text-white text-sm font-semibold rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors"
+                  className="px-6 py-2 text-sm font-semibold rounded-[var(--r-lg)] disabled:opacity-50 transition-colors hover:opacity-90"
+                  style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
                 >
                   {loading ? "Loading..." : "▶  Run Position"}
                 </button>
@@ -901,21 +910,22 @@ export default function PositionScreen() {
 
         {/* Position Grid */}
         {ran && !loading && (
-          <div className="bg-slate-900 rounded-xl overflow-hidden border border-slate-700">
+          <div className="rounded-[var(--r-lg)] overflow-hidden border" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
             <div className="overflow-x-auto">
               <table className="w-full text-xs font-mono">
                 <thead>
-                  <tr className="bg-slate-800 border-b border-slate-600">
-                    <th className="text-left px-3 py-2 text-slate-400 font-medium sticky left-0 bg-slate-800 min-w-[180px]">
+                  <tr className="border-b" style={{ background: "var(--ct-surface-hover)", borderColor: "var(--ct-border-default)" }}>
+                    <th className="text-left px-3 py-2 font-medium sticky left-0 min-w-[180px]" style={{ color: "var(--ct-text-muted)", background: "var(--ct-surface-hover)" }}>
                       Name
                     </th>
-                    <th className="text-right px-2 py-2 text-slate-400 font-medium min-w-[80px]">
+                    <th className="text-right px-2 py-2 font-medium min-w-[80px]" style={{ color: "var(--ct-text-muted)" }}>
                       Total
                     </th>
                     {hours.map((h) => (
                       <th
                         key={h}
-                        className="text-right px-2 py-2 text-slate-400 font-medium min-w-[70px]"
+                        className="text-right px-2 py-2 font-medium min-w-[70px]"
+                        style={{ color: "var(--ct-text-muted)" }}
                       >
                         HE{String(h).padStart(2, "0")}
                       </th>
@@ -923,13 +933,17 @@ export default function PositionScreen() {
                   </tr>
                 </thead>
                 <tbody>
-                  {rows.map((row, i) => (
+                  {rows.map((row, i) => {
+                    const rowStyle = ROW_STYLES[row.type] || {};
+                    return (
                     <tr
                       key={i}
-                      className={`border-b border-slate-800 ${ROW_STYLES[row.type] || ""}`}
+                      className="border-b"
+                      style={{ borderColor: "var(--ct-border-subtle)", ...rowStyle }}
                     >
                       <td
-                        className={`px-3 py-1.5 sticky left-0 ${ROW_STYLES[row.type] || "bg-slate-900"}`}
+                        className="px-3 py-1.5 sticky left-0"
+                        style={rowStyle}
                       >
                         {row.name}
                       </td>
@@ -937,7 +951,7 @@ export default function PositionScreen() {
                         {row.type.includes("net") ? (
                           fmtNet(row.total)
                         ) : (
-                          <span className="text-slate-300">
+                          <span style={{ color: "var(--ct-text-muted)" }}>
                             {fmt(row.total)}
                           </span>
                         )}
@@ -947,14 +961,15 @@ export default function PositionScreen() {
                           {row.type.includes("net") ? (
                             fmtNet(v)
                           ) : (
-                            <span className="text-slate-400">
+                            <span style={{ color: "var(--ct-text-muted)" }}>
                               {v === 0 ? "—" : fmt(v)}
                             </span>
                           )}
                         </td>
                       ))}
                     </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -971,26 +986,26 @@ export default function PositionScreen() {
 
         {/* Graph placeholder */}
         {ran && !loading && (
-          <div className="bg-white border border-slate-200 rounded-xl p-6">
+          <div className="rounded-[var(--r-lg)] border p-6" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-semibold text-slate-700">
+              <h3 className="text-sm font-semibold" style={{ color: "var(--ct-text-primary)" }}>
                 Supply vs Load — {criteria.from_date}
               </h3>
               <div className="flex gap-3 text-xs">
-                <span className="flex items-center gap-1">
-                  <span className="w-3 h-0.5 bg-blue-500 inline-block" /> Load
+                <span className="flex items-center gap-1" style={{ color: "var(--ct-text-secondary)" }}>
+                  <span className="w-3 h-0.5 inline-block" style={{ background: "var(--accent-light)" }} /> Load
                 </span>
-                <span className="flex items-center gap-1">
-                  <span className="w-3 h-0.5 bg-emerald-500 inline-block" />{" "}
+                <span className="flex items-center gap-1" style={{ color: "var(--ct-text-secondary)" }}>
+                  <span className="w-3 h-0.5 inline-block" style={{ background: "var(--success-light)" }} />{" "}
                   Supply
                 </span>
-                <span className="flex items-center gap-1">
-                  <span className="w-3 h-0.5 bg-red-400 inline-block border-dashed border-t" />{" "}
+                <span className="flex items-center gap-1" style={{ color: "var(--ct-text-secondary)" }}>
+                  <span className="w-3 h-0.5 inline-block border-dashed border-t" style={{ background: "var(--danger-light)" }} />{" "}
                   Net Position
                 </span>
               </div>
             </div>
-            <div className="h-48 flex items-center justify-center text-slate-400 text-sm border border-dashed border-slate-200 rounded-lg">
+            <div className="h-48 flex items-center justify-center text-sm border border-dashed rounded-[var(--r-lg)]" style={{ color: "var(--ct-text-muted)", borderColor: "var(--ct-border-default)" }}>
               Graph renders after hedges are entered · Supply = 0 currently
             </div>
           </div>
