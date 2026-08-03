@@ -59,17 +59,6 @@ const LOCATIONS = [
   "LZ_WEST",
 ];
 
-const LOCATION_COLORS: Record<string, string> = {
-  HB_HOUSTON: "bg-emerald-100 text-emerald-700 border-emerald-200",
-  HB_NORTH: "bg-blue-100 text-blue-700 border-blue-200",
-  HB_SOUTH: "bg-orange-100 text-orange-700 border-orange-200",
-  HB_WEST: "bg-teal-100 text-teal-700 border-teal-200",
-  LZ_HOUSTON: "bg-emerald-50 text-emerald-600 border-emerald-100",
-  LZ_NORTH: "bg-blue-50 text-blue-600 border-blue-100",
-  LZ_SOUTH: "bg-orange-50 text-orange-600 border-orange-100",
-  LZ_WEST: "bg-teal-50 text-teal-600 border-teal-100",
-};
-
 function today() {
   return new Date().toISOString().split("T")[0];
 }
@@ -270,8 +259,8 @@ export default function DamPage() {
         {/* ── Header ── */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-bold text-slate-900">DAM Purchases</h1>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <h1 className="text-xl font-bold" style={{ color: "var(--ct-text-primary)" }}>DAM Purchases</h1>
+            <p className="text-xs mt-0.5" style={{ color: "var(--ct-text-muted)" }}>
               Day ahead market · Manual entry · File upload
             </p>
           </div>
@@ -280,10 +269,12 @@ export default function DamPage() {
               type="date"
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
-              className="text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:border-red-400"
+              className="text-sm border rounded-[var(--r-lg)] px-3 py-2 outline-none focus:border-[var(--accent-light)]"
+              style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-primary)" }}
             />
             <Link href="/portfolio/position">
-              <button className="px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white text-slate-600 hover:bg-slate-50">
+              <button className="px-3 py-2 text-sm border rounded-[var(--r-lg)] hover:bg-[var(--ct-surface-hover)]"
+                style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)", color: "var(--ct-text-secondary)" }}>
                 ← Position Screen
               </button>
             </Link>
@@ -293,64 +284,63 @@ export default function DamPage() {
         {/* ── KPIs ── */}
         {summary?.stats && (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-white rounded-xl border border-slate-200 p-4">
-              <p className="text-xs text-slate-500 uppercase tracking-wide">
+            <div className="rounded-[var(--r-lg)] border p-4" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
+              <p className="text-xs uppercase tracking-wide" style={{ color: "var(--ct-text-muted)" }}>
                 Total MW
               </p>
-              <p className="text-2xl font-bold text-slate-900 mt-1">
+              <p className="text-2xl font-bold mt-1" style={{ color: "var(--ct-text-primary)" }}>
                 {fmt(summary.stats.total_mw, 0)}
               </p>
-              <p className="text-xs text-slate-400 mt-1">
+              <p className="text-xs mt-1" style={{ color: "var(--ct-text-muted)" }}>
                 Across all locations
               </p>
             </div>
-            <div className="bg-white rounded-xl border border-slate-200 p-4">
-              <p className="text-xs text-slate-500 uppercase tracking-wide">
+            <div className="rounded-[var(--r-lg)] border p-4" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
+              <p className="text-xs uppercase tracking-wide" style={{ color: "var(--ct-text-muted)" }}>
                 Avg DAM Price
               </p>
-              <p className="text-2xl font-bold text-slate-900 mt-1">
+              <p className="text-2xl font-bold mt-1" style={{ color: "var(--ct-text-primary)" }}>
                 ${fmt(summary.stats.avg_dam_price)}
               </p>
-              <p className="text-xs text-slate-400 mt-1">
+              <p className="text-xs mt-1" style={{ color: "var(--ct-text-muted)" }}>
                 ${fmt(summary.stats.min_price)} – $
                 {fmt(summary.stats.max_price)}
               </p>
             </div>
-            <div className="bg-white rounded-xl border border-slate-200 p-4">
-              <p className="text-xs text-slate-500 uppercase tracking-wide">
+            <div className="rounded-[var(--r-lg)] border p-4" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
+              <p className="text-xs uppercase tracking-wide" style={{ color: "var(--ct-text-muted)" }}>
                 Total Cost
               </p>
-              <p className="text-2xl font-bold text-slate-900 mt-1">
+              <p className="text-2xl font-bold mt-1" style={{ color: "var(--ct-text-primary)" }}>
                 $
                 {Number(summary.stats.total_cost || 0).toLocaleString("en-US", {
                   maximumFractionDigits: 0,
                 })}
               </p>
             </div>
-            <div className="bg-white rounded-xl border border-slate-200 p-4">
-              <p className="text-xs text-slate-500 uppercase tracking-wide">
+            <div className="rounded-[var(--r-lg)] border p-4" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
+              <p className="text-xs uppercase tracking-wide" style={{ color: "var(--ct-text-muted)" }}>
                 Deals
               </p>
-              <p className="text-2xl font-bold text-slate-900 mt-1">
+              <p className="text-2xl font-bold mt-1" style={{ color: "var(--ct-text-primary)" }}>
                 {summary.stats.deals || 0}
               </p>
-              <p className="text-xs text-slate-400 mt-1">{selectedDate}</p>
+              <p className="text-xs mt-1" style={{ color: "var(--ct-text-muted)" }}>{selectedDate}</p>
             </div>
           </div>
         )}
 
         {/* ── Tabs ── */}
-        <div className="border-b border-slate-200">
+        <div className="border-b" style={{ borderColor: "var(--ct-border-default)" }}>
           <div className="flex gap-6">
             {(["entry", "book", "summary"] as const).map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`pb-3 text-sm font-medium capitalize transition-colors border-b-2 -mb-px ${
-                  activeTab === tab
-                    ? "border-red-600 text-red-600"
-                    : "border-transparent text-slate-500 hover:text-slate-700"
-                }`}
+                className="pb-3 text-sm font-medium capitalize transition-colors border-b-2 -mb-px"
+                style={activeTab === tab
+                  ? { borderColor: "var(--accent-light)", color: "var(--accent-light)" }
+                  : { borderColor: "transparent", color: "var(--ct-text-muted)" }}
               >
                 {tab === "entry"
                   ? "Manual Entry"
@@ -366,8 +356,8 @@ export default function DamPage() {
         {activeTab === "entry" && (
           <div className="space-y-4">
             {/* Upload section */}
-            <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
-              <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-3">
+            <div className="rounded-[var(--r-lg)] border p-4" style={{ background: "var(--ct-surface-hover)", borderColor: "var(--ct-border-default)" }}>
+              <p className="text-xs font-semibold uppercase tracking-wide mb-3" style={{ color: "var(--ct-text-secondary)" }}>
                 Upload DAM Spreadsheet
               </p>
               <div className="flex items-center gap-3">
@@ -375,35 +365,37 @@ export default function DamPage() {
                   type="date"
                   value={uploadDate}
                   onChange={(e) => setUploadDate(e.target.value)}
-                  className="text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:border-red-400"
+                  className="text-sm border rounded-[var(--r-lg)] px-3 py-2 outline-none focus:border-[var(--accent-light)]"
+                  style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-primary)" }}
                 />
                 <input
                   ref={fileRef}
                   type="file"
                   accept=".xlsx,.xls"
-                  className="text-sm text-slate-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-slate-200 file:text-slate-700 hover:file:bg-slate-300"
+                  className="text-sm file:mr-3 file:py-1.5 file:px-3 file:rounded-[var(--r-lg)] file:border-0 file:text-xs file:font-semibold hover:file:opacity-90"
+                  style={{ color: "var(--ct-text-secondary)" }}
                 />
                 <button
                   onClick={handleUpload}
                   disabled={uploading}
-                  className="px-4 py-2 text-sm bg-slate-700 text-white rounded-lg hover:bg-slate-800 disabled:opacity-50 transition-colors"
+                  className="px-4 py-2 text-sm rounded-[var(--r-lg)] disabled:opacity-50 transition-colors hover:opacity-90"
+                  style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
                 >
                   {uploading ? "Uploading..." : "↑ Upload"}
                 </button>
               </div>
               {uploadResult && (
                 <div
-                  className={`mt-3 p-3 rounded-lg text-xs ${
-                    uploadResult.error
-                      ? "bg-red-50 text-red-600 border border-red-200"
-                      : "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                  }`}
+                  className="mt-3 p-3 rounded-[var(--r-lg)] text-xs border"
+                  style={uploadResult.error
+                    ? { background: "var(--danger-light-tint)", color: "var(--danger-light)", borderColor: "var(--danger-light-tint)" }
+                    : { background: "var(--success-light-tint)", color: "var(--success-light)", borderColor: "var(--success-light-tint)" }}
                 >
                   {uploadResult.error
                     ? `Error: ${uploadResult.error}`
                     : `✓ ${uploadResult.inserted} inserted · ${uploadResult.updated} updated · ${uploadResult.skipped} skipped`}
                   {uploadResult.errors?.length > 0 && (
-                    <div className="mt-1 text-red-500">
+                    <div className="mt-1" style={{ color: "var(--danger-light)" }}>
                       {uploadResult.errors
                         .slice(0, 3)
                         .map((e: string, i: number) => (
@@ -416,32 +408,34 @@ export default function DamPage() {
             </div>
 
             {/* Manual entry form */}
-            <div className="bg-white rounded-xl border-2 border-red-100 p-5 space-y-4">
-              <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
+            <div className="rounded-[var(--r-lg)] border-2 p-5 space-y-4" style={{ background: "var(--ct-surface)", borderColor: "var(--accent-light-tint)" }}>
+              <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--ct-text-secondary)" }}>
                 Manual Entry
               </p>
 
               {/* Form header fields */}
               <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                 <div>
-                  <label className="text-xs text-slate-500 font-medium">
+                  <label className="text-xs font-medium" style={{ color: "var(--ct-text-muted)" }}>
                     Oper Date
                   </label>
                   <input
                     type="date"
                     value={entryDate}
                     onChange={(e) => setEntryDate(e.target.value)}
-                    className="mt-1 w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-400"
+                    className="mt-1 w-full border rounded-[var(--r-lg)] px-3 py-2 text-sm outline-none focus:border-[var(--accent-light)]"
+                    style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-primary)" }}
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-slate-500 font-medium">
+                  <label className="text-xs font-medium" style={{ color: "var(--ct-text-muted)" }}>
                     Location
                   </label>
                   <select
                     value={entryLocation}
                     onChange={(e) => setEntryLocation(e.target.value)}
-                    className="mt-1 w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-400"
+                    className="mt-1 w-full border rounded-[var(--r-lg)] px-3 py-2 text-sm outline-none focus:border-[var(--accent-light)]"
+                    style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-primary)" }}
                   >
                     {LOCATIONS.map((l) => (
                       <option key={l} value={l}>
@@ -451,7 +445,7 @@ export default function DamPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="text-xs text-slate-500 font-medium">
+                  <label className="text-xs font-medium" style={{ color: "var(--ct-text-muted)" }}>
                     Deal Number
                   </label>
                   <input
@@ -459,11 +453,12 @@ export default function DamPage() {
                     value={entryDeal}
                     onChange={(e) => setEntryDeal(e.target.value)}
                     placeholder="PW1467279NL"
-                    className="mt-1 w-full border border-slate-200 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:border-red-400"
+                    className="mt-1 w-full border rounded-[var(--r-lg)] px-3 py-2 text-sm font-mono outline-none focus:border-[var(--accent-light)]"
+                    style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-primary)" }}
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-slate-500 font-medium">
+                  <label className="text-xs font-medium" style={{ color: "var(--ct-text-muted)" }}>
                     Counterparty
                   </label>
                   <input
@@ -471,11 +466,12 @@ export default function DamPage() {
                     value={entryCP}
                     onChange={(e) => setEntryCP(e.target.value)}
                     placeholder="QLUMN"
-                    className="mt-1 w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-400"
+                    className="mt-1 w-full border rounded-[var(--r-lg)] px-3 py-2 text-sm outline-none focus:border-[var(--accent-light)]"
+                    style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-primary)" }}
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-slate-500 font-medium">
+                  <label className="text-xs font-medium" style={{ color: "var(--ct-text-muted)" }}>
                     Buy/Sell
                   </label>
                   <div className="mt-1 flex gap-2">
@@ -483,13 +479,12 @@ export default function DamPage() {
                       <button
                         key={bs}
                         onClick={() => setEntryBS(bs)}
-                        className={`flex-1 py-2 text-sm rounded-lg border transition-colors ${
-                          entryBS === bs
-                            ? bs === "Buy"
-                              ? "bg-emerald-600 text-white border-emerald-600"
-                              : "bg-red-600 text-white border-red-600"
-                            : "border-slate-200 text-slate-600 hover:bg-slate-50"
-                        }`}
+                        className="flex-1 py-2 text-sm rounded-[var(--r-lg)] border transition-colors"
+                        style={entryBS === bs
+                          ? bs === "Buy"
+                            ? { background: "var(--success-light)", color: "#ffffff", borderColor: "var(--success-light)" }
+                            : { background: "var(--danger-light)", color: "#ffffff", borderColor: "var(--danger-light)" }
+                          : { borderColor: "var(--ct-border-default)", color: "var(--ct-text-secondary)" }}
                       >
                         {bs}
                       </button>
@@ -499,8 +494,8 @@ export default function DamPage() {
               </div>
 
               {/* Quick fill */}
-              <div className="flex items-center gap-3 bg-slate-50 rounded-lg p-3">
-                <span className="text-xs text-slate-500 font-medium">
+              <div className="flex items-center gap-3 rounded-[var(--r-lg)] p-3" style={{ background: "var(--ct-surface-hover)" }}>
+                <span className="text-xs font-medium" style={{ color: "var(--ct-text-muted)" }}>
                   Quick Fill:
                 </span>
                 <input
@@ -508,7 +503,8 @@ export default function DamPage() {
                   placeholder="Volume MW"
                   step="0.01"
                   onWheel={(e) => e.currentTarget.blur()}
-                  className="w-28 border border-slate-200 rounded px-2 py-1 text-xs font-mono [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  className="w-28 border rounded-[var(--r-sm)] px-2 py-1 text-xs font-mono outline-none focus:border-[var(--accent-light)] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-primary)" }}
                   onBlur={(e) => {
                     if (e.target.value) fillVolume(e.target.value);
                     e.target.value = "";
@@ -519,13 +515,14 @@ export default function DamPage() {
                   placeholder="Price $/MWh"
                   step="0.01"
                   onWheel={(e) => e.currentTarget.blur()}
-                  className="w-28 border border-slate-200 rounded px-2 py-1 text-xs font-mono [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  className="w-28 border rounded-[var(--r-sm)] px-2 py-1 text-xs font-mono outline-none focus:border-[var(--accent-light)] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-primary)" }}
                   onBlur={(e) => {
                     if (e.target.value) fillPrice(e.target.value);
                     e.target.value = "";
                   }}
                 />
-                <span className="text-xs text-slate-400">
+                <span className="text-xs" style={{ color: "var(--ct-text-muted)" }}>
                   Fill all non-zero hours
                 </span>
               </div>
@@ -534,32 +531,32 @@ export default function DamPage() {
               <div className="overflow-x-auto">
                 <table className="w-full text-xs">
                   <thead>
-                    <tr className="bg-slate-50 border-b border-slate-200">
-                      <th className="text-left px-2 py-2 text-slate-500 font-medium w-16">
+                    <tr className="border-b" style={{ background: "var(--ct-surface-hover)", borderColor: "var(--ct-border-default)" }}>
+                      <th className="text-left px-2 py-2 font-medium w-16" style={{ color: "var(--ct-text-muted)" }}>
                         HE
                       </th>
-                      <th className="text-left px-2 py-2 text-slate-500 font-medium">
+                      <th className="text-left px-2 py-2 font-medium" style={{ color: "var(--ct-text-muted)" }}>
                         Volume (MW)
                       </th>
-                      <th className="text-left px-2 py-2 text-slate-500 font-medium">
+                      <th className="text-left px-2 py-2 font-medium" style={{ color: "var(--ct-text-muted)" }}>
                         DAM Price ($/MWh)
                       </th>
-                      <th className="text-left px-2 py-2 text-slate-500 font-medium w-16">
+                      <th className="text-left px-2 py-2 font-medium w-16" style={{ color: "var(--ct-text-muted)" }}>
                         HE
                       </th>
-                      <th className="text-left px-2 py-2 text-slate-500 font-medium">
+                      <th className="text-left px-2 py-2 font-medium" style={{ color: "var(--ct-text-muted)" }}>
                         Volume (MW)
                       </th>
-                      <th className="text-left px-2 py-2 text-slate-500 font-medium">
+                      <th className="text-left px-2 py-2 font-medium" style={{ color: "var(--ct-text-muted)" }}>
                         DAM Price ($/MWh)
                       </th>
                     </tr>
                   </thead>
                   <tbody>
                     {Array.from({ length: 12 }, (_, i) => i + 1).map((he) => (
-                      <tr key={he} className="border-b border-slate-100">
+                      <tr key={he} className="border-b" style={{ borderColor: "var(--ct-border-subtle)" }}>
                         {/* Left column HE01-12 */}
-                        <td className="px-2 py-1 font-mono text-slate-600 font-semibold">
+                        <td className="px-2 py-1 font-mono font-semibold" style={{ color: "var(--ct-text-secondary)" }}>
                           HE{String(he).padStart(2, "0")}
                         </td>
                         <td className="px-2 py-1">
@@ -580,7 +577,8 @@ export default function DamPage() {
                             placeholder="0.00"
                             step="0.01"
                             onWheel={(e) => e.currentTarget.blur()}
-                            className="w-full border border-slate-200 rounded px-2 py-1 font-mono focus:outline-none focus:border-red-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            className="w-full border rounded-[var(--r-sm)] px-2 py-1 font-mono outline-none focus:border-[var(--accent-light)] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-primary)" }}
                           />
                         </td>
                         <td className="px-2 py-1">
@@ -601,12 +599,13 @@ export default function DamPage() {
                             placeholder="0.00"
                             step="0.01"
                             onWheel={(e) => e.currentTarget.blur()}
-                            className="w-full border border-slate-200 rounded px-2 py-1 font-mono focus:outline-none focus:border-red-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            className="w-full border rounded-[var(--r-sm)] px-2 py-1 font-mono outline-none focus:border-[var(--accent-light)] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-primary)" }}
                           />
                         </td>
 
                         {/* Right column HE13-24 */}
-                        <td className="px-2 py-1 font-mono text-slate-600 font-semibold">
+                        <td className="px-2 py-1 font-mono font-semibold" style={{ color: "var(--ct-text-secondary)" }}>
                           HE{String(he + 12).padStart(2, "0")}
                         </td>
                         <td className="px-2 py-1">
@@ -627,7 +626,8 @@ export default function DamPage() {
                             placeholder="0.00"
                             step="0.01"
                             onWheel={(e) => e.currentTarget.blur()}
-                            className="w-full border border-slate-200 rounded px-2 py-1 font-mono focus:outline-none focus:border-red-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            className="w-full border rounded-[var(--r-sm)] px-2 py-1 font-mono outline-none focus:border-[var(--accent-light)] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-primary)" }}
                           />
                         </td>
                         <td className="px-2 py-1">
@@ -648,7 +648,8 @@ export default function DamPage() {
                             placeholder="0.00"
                             step="0.01"
                             onWheel={(e) => e.currentTarget.blur()}
-                            className="w-full border border-slate-200 rounded px-2 py-1 font-mono focus:outline-none focus:border-red-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            className="w-full border rounded-[var(--r-sm)] px-2 py-1 font-mono outline-none focus:border-[var(--accent-light)] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-primary)" }}
                           />
                         </td>
                       </tr>
@@ -659,22 +660,23 @@ export default function DamPage() {
 
               {/* Error / success */}
               {entryError && (
-                <p className="text-xs text-red-600 bg-red-50 border border-red-200 px-3 py-2 rounded-lg">
+                <p className="text-xs px-3 py-2 rounded-[var(--r-lg)] border" style={{ color: "var(--danger-light)", background: "var(--danger-light-tint)", borderColor: "var(--danger-light-tint)" }}>
                   ⚠ {entryError}
                 </p>
               )}
               {entrySuccess && (
-                <p className="text-xs text-emerald-600 bg-emerald-50 border border-emerald-200 px-3 py-2 rounded-lg">
+                <p className="text-xs px-3 py-2 rounded-[var(--r-lg)] border" style={{ color: "var(--success-light)", background: "var(--success-light-tint)", borderColor: "var(--success-light-tint)" }}>
                   ✓ {entrySuccess}
                 </p>
               )}
 
               {/* Save */}
-              <div className="flex justify-end pt-2 border-t">
+              <div className="flex justify-end pt-2 border-t" style={{ borderColor: "var(--ct-border-default)" }}>
                 <button
                   onClick={handleSave}
                   disabled={saving}
-                  className="px-6 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 font-semibold transition-colors"
+                  className="px-6 py-2 text-sm rounded-[var(--r-lg)] disabled:opacity-50 font-semibold transition-colors hover:opacity-90"
+                  style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
                 >
                   {saving ? "Saving..." : "Save DAM Entry"}
                 </button>
@@ -687,12 +689,12 @@ export default function DamPage() {
         {activeTab === "book" && (
           <div className="space-y-4">
             {loading ? (
-              <div className="text-center py-12 text-slate-400 text-sm">
+              <div className="text-center py-12 text-sm" style={{ color: "var(--ct-text-muted)" }}>
                 Loading...
               </div>
             ) : entries.length === 0 ? (
-              <div className="bg-white rounded-xl border border-dashed border-slate-300 p-12 text-center">
-                <p className="text-slate-400 text-sm">
+              <div className="rounded-[var(--r-lg)] border border-dashed p-12 text-center" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
+                <p className="text-sm" style={{ color: "var(--ct-text-muted)" }}>
                   No DAM entries for {selectedDate}
                 </p>
               </div>
@@ -700,19 +702,16 @@ export default function DamPage() {
               Object.entries(byLocation).map(([loc, locEntries]) => (
                 <div
                   key={loc}
-                  className="bg-white rounded-xl border border-slate-200 overflow-hidden"
+                  className="rounded-[var(--r-lg)] border overflow-hidden"
+                  style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}
                 >
-                  <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 bg-slate-50">
+                  <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: "var(--ct-border-subtle)", background: "var(--ct-surface-hover)" }}>
                     <div className="flex items-center gap-3">
-                      <span
-                        className={`text-xs font-semibold px-2 py-0.5 rounded border ${
-                          LOCATION_COLORS[loc] ||
-                          "bg-slate-100 text-slate-600 border-slate-200"
-                        }`}
-                      >
+                      <span className="text-xs font-semibold px-2 py-0.5 rounded-[var(--r-sm)]"
+                        style={{ background: "var(--accent-light-tint)", color: "var(--accent-light)" }}>
                         {loc}
                       </span>
-                      <span className="text-xs text-slate-500">
+                      <span className="text-xs" style={{ color: "var(--ct-text-muted)" }}>
                         {locEntries.length} hours ·{" "}
                         {fmt(
                           locEntries.reduce(
@@ -730,7 +729,7 @@ export default function DamPage() {
                         )}
                       </span>
                     </div>
-                    <span className="text-xs text-slate-400">
+                    <span className="text-xs" style={{ color: "var(--ct-text-muted)" }}>
                       {locEntries[0]?.deal_number} ·{" "}
                       {locEntries[0]?.counterparty}
                     </span>
@@ -738,20 +737,20 @@ export default function DamPage() {
                   <div className="overflow-x-auto">
                     <table className="w-full text-xs">
                       <thead>
-                        <tr className="border-b border-slate-100">
-                          <th className="text-left px-3 py-2 text-slate-400 font-medium">
+                        <tr className="border-b" style={{ borderColor: "var(--ct-border-subtle)" }}>
+                          <th className="text-left px-3 py-2 font-medium" style={{ color: "var(--ct-text-muted)" }}>
                             HE
                           </th>
-                          <th className="text-right px-3 py-2 text-slate-400 font-medium">
+                          <th className="text-right px-3 py-2 font-medium" style={{ color: "var(--ct-text-muted)" }}>
                             Volume MW
                           </th>
-                          <th className="text-right px-3 py-2 text-slate-400 font-medium">
+                          <th className="text-right px-3 py-2 font-medium" style={{ color: "var(--ct-text-muted)" }}>
                             DAM Price
                           </th>
-                          <th className="text-right px-3 py-2 text-slate-400 font-medium">
+                          <th className="text-right px-3 py-2 font-medium" style={{ color: "var(--ct-text-muted)" }}>
                             Total Cost
                           </th>
-                          <th className="text-left px-3 py-2 text-slate-400 font-medium">
+                          <th className="text-left px-3 py-2 font-medium" style={{ color: "var(--ct-text-muted)" }}>
                             Source
                           </th>
                           <th className="px-3 py-2"></th>
@@ -761,27 +760,29 @@ export default function DamPage() {
                         {locEntries.map((e) => (
                           <tr
                             key={e.id}
-                            className="border-b border-slate-50 hover:bg-slate-50"
+                            className="border-b hover:bg-[var(--ct-surface-hover)]"
+                            style={{ borderColor: "var(--ct-border-subtle)" }}
                           >
-                            <td className="px-3 py-1.5 font-mono font-semibold text-slate-700">
+                            <td className="px-3 py-1.5 font-mono font-semibold" style={{ color: "var(--ct-text-secondary)" }}>
                               HE{String(e.hour_ending).padStart(2, "0")}
                             </td>
-                            <td className="px-3 py-1.5 text-right font-mono text-slate-900">
+                            <td className="px-3 py-1.5 text-right font-mono" style={{ color: "var(--ct-text-primary)" }}>
                               {fmt(e.volume_mw)} MW
                             </td>
-                            <td className="px-3 py-1.5 text-right font-mono text-slate-900">
+                            <td className="px-3 py-1.5 text-right font-mono" style={{ color: "var(--ct-text-primary)" }}>
                               ${fmt(e.dam_price)}
                             </td>
-                            <td className="px-3 py-1.5 text-right font-mono text-slate-600">
+                            <td className="px-3 py-1.5 text-right font-mono" style={{ color: "var(--ct-text-secondary)" }}>
                               ${fmt(e.total_cost)}
                             </td>
-                            <td className="px-3 py-1.5 text-slate-400">
+                            <td className="px-3 py-1.5" style={{ color: "var(--ct-text-muted)" }}>
                               {e.source === "MIS_AUTO" ? "Upload" : "Manual"}
                             </td>
                             <td className="px-3 py-1.5">
                               <button
                                 onClick={() => handleDelete(e.id)}
-                                className="text-red-400 hover:text-red-600 text-xs"
+                                className="text-xs hover:opacity-80"
+                                style={{ color: "var(--danger-light)" }}
                               >
                                 Delete
                               </button>
@@ -801,77 +802,74 @@ export default function DamPage() {
         {activeTab === "summary" && summary && (
           <div className="space-y-4">
             {/* By location */}
-            <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-              <div className="px-4 py-3 border-b border-slate-100">
-                <h3 className="text-sm font-semibold text-slate-700">
+            <div className="rounded-[var(--r-lg)] border overflow-hidden" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
+              <div className="px-4 py-3 border-b" style={{ borderColor: "var(--ct-border-subtle)" }}>
+                <h3 className="text-sm font-semibold" style={{ color: "var(--ct-text-primary)" }}>
                   DAM Position by Location
                 </h3>
               </div>
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="bg-slate-50 border-b border-slate-100">
-                    <th className="text-left px-4 py-2 text-xs text-slate-500 uppercase font-medium">
+                  <tr className="border-b" style={{ background: "var(--ct-surface-hover)", borderColor: "var(--ct-border-subtle)" }}>
+                    <th className="text-left px-4 py-2 text-xs uppercase font-medium" style={{ color: "var(--ct-text-muted)" }}>
                       Location
                     </th>
-                    <th className="text-left px-4 py-2 text-xs text-slate-500 uppercase font-medium">
+                    <th className="text-left px-4 py-2 text-xs uppercase font-medium" style={{ color: "var(--ct-text-muted)" }}>
                       Zone
                     </th>
-                    <th className="text-right px-4 py-2 text-xs text-slate-500 uppercase font-medium">
+                    <th className="text-right px-4 py-2 text-xs uppercase font-medium" style={{ color: "var(--ct-text-muted)" }}>
                       Hours
                     </th>
-                    <th className="text-right px-4 py-2 text-xs text-slate-500 uppercase font-medium">
+                    <th className="text-right px-4 py-2 text-xs uppercase font-medium" style={{ color: "var(--ct-text-muted)" }}>
                       Total MW
                     </th>
-                    <th className="text-right px-4 py-2 text-xs text-slate-500 uppercase font-medium">
+                    <th className="text-right px-4 py-2 text-xs uppercase font-medium" style={{ color: "var(--ct-text-muted)" }}>
                       Avg MW
                     </th>
-                    <th className="text-right px-4 py-2 text-xs text-slate-500 uppercase font-medium">
+                    <th className="text-right px-4 py-2 text-xs uppercase font-medium" style={{ color: "var(--ct-text-muted)" }}>
                       Avg Price
                     </th>
-                    <th className="text-right px-4 py-2 text-xs text-slate-500 uppercase font-medium">
+                    <th className="text-right px-4 py-2 text-xs uppercase font-medium" style={{ color: "var(--ct-text-muted)" }}>
                       Total Cost
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y" style={{ borderColor: "var(--ct-border-subtle)" }}>
                   {summary.by_location.length === 0 ? (
                     <tr>
                       <td
                         colSpan={7}
-                        className="text-center py-8 text-slate-400 text-sm"
+                        className="text-center py-8 text-sm"
+                        style={{ color: "var(--ct-text-muted)" }}
                       >
                         No DAM entries for {selectedDate}
                       </td>
                     </tr>
                   ) : (
                     summary.by_location.map((r, i) => (
-                      <tr key={i} className="hover:bg-slate-50">
+                      <tr key={i} className="hover:bg-[var(--ct-surface-hover)]">
                         <td className="px-4 py-2">
-                          <span
-                            className={`text-xs font-medium px-2 py-0.5 rounded border ${
-                              LOCATION_COLORS[r.location] ||
-                              "bg-slate-100 text-slate-600 border-slate-200"
-                            }`}
-                          >
+                          <span className="text-xs font-medium px-2 py-0.5 rounded-[var(--r-sm)]"
+                            style={{ background: "var(--accent-light-tint)", color: "var(--accent-light)" }}>
                             {r.location}
                           </span>
                         </td>
-                        <td className="px-4 py-2 text-xs text-slate-500">
+                        <td className="px-4 py-2 text-xs" style={{ color: "var(--ct-text-muted)" }}>
                           {r.zone}
                         </td>
-                        <td className="px-4 py-2 text-right text-slate-700">
+                        <td className="px-4 py-2 text-right" style={{ color: "var(--ct-text-secondary)" }}>
                           {r.hours}
                         </td>
-                        <td className="px-4 py-2 text-right font-mono text-slate-900 font-medium">
+                        <td className="px-4 py-2 text-right font-mono font-medium" style={{ color: "var(--ct-text-primary)" }}>
                           {fmt(r.total_mw, 0)} MW
                         </td>
-                        <td className="px-4 py-2 text-right font-mono text-slate-600">
+                        <td className="px-4 py-2 text-right font-mono" style={{ color: "var(--ct-text-secondary)" }}>
                           {fmt(r.avg_mw)} MW
                         </td>
-                        <td className="px-4 py-2 text-right font-mono text-slate-900">
+                        <td className="px-4 py-2 text-right font-mono" style={{ color: "var(--ct-text-primary)" }}>
                           ${fmt(r.avg_price)}
                         </td>
-                        <td className="px-4 py-2 text-right font-mono text-slate-600">
+                        <td className="px-4 py-2 text-right font-mono" style={{ color: "var(--ct-text-secondary)" }}>
                           $
                           {Number(r.total_cost).toLocaleString("en-US", {
                             maximumFractionDigits: 0,
