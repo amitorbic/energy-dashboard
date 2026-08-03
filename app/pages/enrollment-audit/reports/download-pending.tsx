@@ -26,14 +26,15 @@ export default function DownloadPending() {
   return (
     <EnrollmentLayout title="Enrollment – Download Pending">
       <div className="max-w-sm">
-        <h2 className="text-base font-semibold text-gray-800 mb-5">Download Pending Enrollments</h2>
-        <div className="bg-white rounded-lg border border-gray-200 p-5">
-          <p className="text-sm text-gray-500 mb-4">
+        <h2 className="text-base font-semibold mb-5" style={{ color: "var(--ct-text-primary)" }}>Download Pending Enrollments</h2>
+        <div className="rounded-[var(--r-lg)] border p-5" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
+          <p className="text-sm mb-4" style={{ color: "var(--ct-text-muted)" }}>
             Downloads all unmatched pending confirmations as an Excel spreadsheet.
           </p>
-          {err && <p className="text-xs text-red-500 mb-3">{err}</p>}
+          {err && <p className="text-xs mb-3" style={{ color: "var(--danger-light)" }}>{err}</p>}
           <button onClick={download} disabled={loading}
-            className="w-full px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 disabled:opacity-40 transition-colors">
+            className="w-full px-4 py-2 text-sm rounded-[var(--r-sm)] disabled:opacity-40 transition-colors hover:opacity-90"
+            style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}>
             {loading ? "Preparing download…" : "Download XLSX"}
           </button>
         </div>
