@@ -9,11 +9,12 @@ const fmtTs = (ts: string) =>
 const dispRate = (r: string) =>
   r ? (parseFloat(r) / 100).toFixed(4) : "";
 
-function rowBg(r: any): string {
-  if (r.clean_record_flag === 1)  return "bg-green-50";
-  if (r.billed_flag === 1)        return "bg-orange-50";
-  if (r.flag_remarks === 1)       return "bg-red-50";
-  return "";
+// Row highlight reflects genuine reconciliation status, not decoration.
+function rowBg(r: any): string | undefined {
+  if (r.clean_record_flag === 1)  return "var(--success-light-tint)";
+  if (r.billed_flag === 1)        return "var(--amber-light-tint)";
+  if (r.flag_remarks === 1)       return "var(--danger-light-tint)";
+  return undefined;
 }
 
 // ── Approve Modal ─────────────────────────────────────────────────────────────
@@ -37,23 +38,23 @@ function ApproveModal({ row, onClose, onSaved }: { row: any; onClose: () => void
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-sm p-6">
-        <h3 className="text-sm font-semibold text-gray-800 mb-3">Approve — {row.esid}</h3>
-        <p className="text-xs text-gray-500 mb-3">{row.company_name}</p>
+      <div className="rounded-[var(--r-lg)] shadow-xl w-full max-w-sm p-6" style={{ background: "var(--ct-surface)" }}>
+        <h3 className="text-sm font-semibold mb-3" style={{ color: "var(--ct-text-primary)" }}>Approve — {row.esid}</h3>
+        <p className="text-xs mb-3" style={{ color: "var(--ct-text-muted)" }}>{row.company_name}</p>
         <div className="space-y-2 mb-4">
-          <label className="flex items-center gap-2 text-sm cursor-pointer">
-            <input type="radio" checked={type === "confirmation"} onChange={() => setType("confirmation")} />
+          <label className="flex items-center gap-2 text-sm cursor-pointer" style={{ color: "var(--ct-text-secondary)" }}>
+            <input type="radio" checked={type === "confirmation"} onChange={() => setType("confirmation")} style={{ accentColor: "var(--accent-light)" }} />
             Confirmation (SID: {row.sid})
           </label>
-          <label className="flex items-center gap-2 text-sm cursor-pointer">
-            <input type="radio" checked={type === "template"} onChange={() => setType("template")} />
+          <label className="flex items-center gap-2 text-sm cursor-pointer" style={{ color: "var(--ct-text-secondary)" }}>
+            <input type="radio" checked={type === "template"} onChange={() => setType("template")} style={{ accentColor: "var(--accent-light)" }} />
             Template
           </label>
         </div>
-        {err && <p className="text-xs text-red-500 mb-2">{err}</p>}
+        {err && <p className="text-xs mb-2" style={{ color: "var(--danger-light)" }}>{err}</p>}
         <div className="flex justify-end gap-2">
-          <button onClick={onClose} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800">Cancel</button>
-          <button onClick={save} disabled={saving} className="px-4 py-2 bg-green-600 text-white text-sm rounded hover:bg-green-700 disabled:opacity-40">
+          <button onClick={onClose} className="px-4 py-2 text-sm hover:opacity-80" style={{ color: "var(--ct-text-secondary)" }}>Cancel</button>
+          <button onClick={save} disabled={saving} className="px-4 py-2 text-sm rounded-[var(--r-sm)] disabled:opacity-40" style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}>
             {saving ? "Saving…" : "Approve"}
           </button>
         </div>
@@ -97,83 +98,88 @@ export default function ComparisonReport() {
   return (
     <EnrollmentLayout title="Enrollment – Comparison">
       <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
-        <h2 className="text-base font-semibold text-gray-800">Enrl / Confirmation Comparison</h2>
+        <h2 className="text-base font-semibold" style={{ color: "var(--ct-text-primary)" }}>Enrl / Confirmation Comparison</h2>
         <div className="flex items-center gap-2">
-          <input type="date" className="border border-gray-300 rounded px-2 py-1 text-xs"
+          <input type="date" className="border rounded-[var(--r-sm)] px-2 py-1 text-xs outline-none focus:border-[var(--accent-light)]"
+            style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-primary)" }}
             value={start} onChange={(e) => setStart(e.target.value)} />
-          <span className="text-xs text-gray-400">to</span>
-          <input type="date" className="border border-gray-300 rounded px-2 py-1 text-xs"
+          <span className="text-xs" style={{ color: "var(--ct-text-muted)" }}>to</span>
+          <input type="date" className="border rounded-[var(--r-sm)] px-2 py-1 text-xs outline-none focus:border-[var(--accent-light)]"
+            style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-primary)" }}
             value={end} onChange={(e) => setEnd(e.target.value)} />
           <button onClick={handleSearch}
-            className="px-3 py-1.5 bg-blue-600 text-white text-xs rounded hover:bg-blue-700">
+            className="px-3 py-1.5 text-xs rounded-[var(--r-sm)]" style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}>
             Search
           </button>
           <button onClick={() => { setStart(""); setEnd(""); load(); }}
-            className="px-3 py-1.5 bg-gray-100 text-gray-600 text-xs rounded hover:bg-gray-200">
+            className="px-3 py-1.5 text-xs rounded-[var(--r-sm)] hover:opacity-80" style={{ background: "var(--ct-surface-hover)", color: "var(--ct-text-secondary)" }}>
             Reset
           </button>
         </div>
       </div>
 
       <div className="flex gap-3 mb-4 text-xs">
-        <span className="flex items-center gap-1"><span className="w-3 h-3 bg-green-200 rounded-sm inline-block" /> Clean</span>
-        <span className="flex items-center gap-1"><span className="w-3 h-3 bg-orange-200 rounded-sm inline-block" /> Billed</span>
-        <span className="flex items-center gap-1"><span className="w-3 h-3 bg-red-200 rounded-sm inline-block" /> Remark</span>
+        <span className="flex items-center gap-1" style={{ color: "var(--ct-text-secondary)" }}><span className="w-3 h-3 rounded-[var(--r-sm)] inline-block" style={{ background: "var(--success-light)" }} /> Clean</span>
+        <span className="flex items-center gap-1" style={{ color: "var(--ct-text-secondary)" }}><span className="w-3 h-3 rounded-[var(--r-sm)] inline-block" style={{ background: "var(--amber-light)" }} /> Billed</span>
+        <span className="flex items-center gap-1" style={{ color: "var(--ct-text-secondary)" }}><span className="w-3 h-3 rounded-[var(--r-sm)] inline-block" style={{ background: "var(--danger-light)" }} /> Remark</span>
       </div>
 
       {loading ? (
-        <p className="text-sm text-gray-400">Loading…</p>
+        <p className="text-sm" style={{ color: "var(--ct-text-muted)" }}>Loading…</p>
       ) : (
-        <div className="overflow-x-auto rounded border border-gray-200">
+        <div className="overflow-x-auto rounded-[var(--r-md)] border" style={{ borderColor: "var(--ct-border-default)" }}>
           <table className="w-full text-xs">
-            <thead className="bg-gray-50 border-b border-gray-200">
+            <thead className="border-b" style={{ background: "var(--ct-surface-hover)", borderColor: "var(--ct-border-default)" }}>
               <tr>
                 {[
                   "#","ESID","Company","Broker","Enrl Rate","Term","Zone",
                   "Conf Name","Conf Rate","Conf Term","Profiles","Conf Date",
                   "Meter","Tax Exempt","Remarks","Status","Approve",
                 ].map((h) => (
-                  <th key={h} className="px-3 py-2 text-left font-medium text-gray-500 whitespace-nowrap">{h}</th>
+                  <th key={h} className="px-3 py-2 text-left font-medium whitespace-nowrap" style={{ color: "var(--ct-text-muted)" }}>{h}</th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y">
               {rows.length === 0 ? (
-                <tr><td colSpan={17} className="px-3 py-6 text-center text-gray-400">No records</td></tr>
+                <tr><td colSpan={17} className="px-3 py-6 text-center" style={{ color: "var(--ct-text-muted)" }}>No records</td></tr>
               ) : rows.map((r, i) => (
-                <tr key={`${r.esid}-${i}`} className={`hover:bg-opacity-80 ${rowBg(r)}`}>
-                  <td className="px-3 py-2 text-gray-400">{i + 1}</td>
-                  <td className="px-3 py-2 font-mono text-gray-800 whitespace-nowrap">{r.esid}</td>
-                  <td className="px-3 py-2 text-gray-700 max-w-[130px] truncate">{r.company_name}</td>
-                  <td className="px-3 py-2 text-gray-600">{r.broker_code}</td>
-                  <td className="px-3 py-2 text-gray-600">{dispRate(r.contract_rate)}</td>
-                  <td className="px-3 py-2 text-gray-600">{r.contract_term}</td>
-                  <td className="px-3 py-2 text-gray-600">{r.zone}</td>
-                  <td className="px-3 py-2 text-gray-700 max-w-[130px] truncate">{r.customer_name}</td>
-                  <td className="px-3 py-2 text-gray-600">{r.contract_rate_comm}</td>
-                  <td className="px-3 py-2 text-gray-600">{r.term}</td>
-                  <td className="px-3 py-2 text-gray-500 max-w-[120px]">
+                <tr key={`${r.esid}-${i}`} className="hover:opacity-90" style={{ background: rowBg(r) }}>
+                  <td className="px-3 py-2" style={{ color: "var(--ct-text-muted)" }}>{i + 1}</td>
+                  <td className="px-3 py-2 font-mono whitespace-nowrap" style={{ color: "var(--ct-text-primary)" }}>{r.esid}</td>
+                  <td className="px-3 py-2 max-w-[130px] truncate" style={{ color: "var(--ct-text-secondary)" }}>{r.company_name}</td>
+                  <td className="px-3 py-2" style={{ color: "var(--ct-text-secondary)" }}>{r.broker_code}</td>
+                  <td className="px-3 py-2" style={{ color: "var(--ct-text-secondary)" }}>{dispRate(r.contract_rate)}</td>
+                  <td className="px-3 py-2" style={{ color: "var(--ct-text-secondary)" }}>{r.contract_term}</td>
+                  <td className="px-3 py-2" style={{ color: "var(--ct-text-secondary)" }}>{r.zone}</td>
+                  <td className="px-3 py-2 max-w-[130px] truncate" style={{ color: "var(--ct-text-secondary)" }}>{r.customer_name}</td>
+                  <td className="px-3 py-2" style={{ color: "var(--ct-text-secondary)" }}>{r.contract_rate_comm}</td>
+                  <td className="px-3 py-2" style={{ color: "var(--ct-text-secondary)" }}>{r.term}</td>
+                  <td className="px-3 py-2 max-w-[120px]" style={{ color: "var(--ct-text-muted)" }}>
                     {(r.profiles || []).join(", ")}
                   </td>
-                  <td className="px-3 py-2 text-gray-400 whitespace-nowrap">{fmtTs(r.date_modified)}</td>
+                  <td className="px-3 py-2 whitespace-nowrap" style={{ color: "var(--ct-text-muted)" }}>{fmtTs(r.date_modified)}</td>
                   <td className="px-3 py-2">
-                    <span className={`px-1.5 py-0.5 rounded text-xs ${r.meter_fee_check === 1 ? "bg-green-100 text-green-700" : "bg-red-100 text-red-600"}`}>
+                    <span className="px-1.5 py-0.5 rounded-[var(--r-sm)] text-xs"
+                      style={r.meter_fee_check === 1
+                        ? { background: "var(--success-light-tint)", color: "var(--success-light)" }
+                        : { background: "var(--danger-light-tint)", color: "var(--danger-light)" }}>
                       {r.meter_fee_check === 1 ? "✓" : "✗"} {r.enrollment_meter}
                     </span>
                   </td>
                   <td className="px-3 py-2">
-                    {r.tax_error === 1 && <span className="text-red-500 font-medium">Error</span>}
-                    {r.tax_error_certificate === 1 && <span className="text-orange-500 font-medium">Cert?</span>}
+                    {r.tax_error === 1 && <span className="font-medium" style={{ color: "var(--danger-light)" }}>Error</span>}
+                    {r.tax_error_certificate === 1 && <span className="font-medium" style={{ color: "var(--amber-light)" }}>Cert?</span>}
                     {r.tax_certificate === 1 && !r.tax_error && !r.tax_error_certificate && (
-                      <span className="text-green-600">Cert ✓</span>
+                      <span style={{ color: "var(--success-light)" }}>Cert ✓</span>
                     )}
                   </td>
-                  <td className="px-3 py-2 text-red-600 font-medium">{r.remarks}</td>
-                  <td className="px-3 py-2 text-gray-600 whitespace-nowrap">{r.enrollment_status}</td>
+                  <td className="px-3 py-2 font-medium" style={{ color: "var(--danger-light)" }}>{r.remarks}</td>
+                  <td className="px-3 py-2 whitespace-nowrap" style={{ color: "var(--ct-text-secondary)" }}>{r.enrollment_status}</td>
                   <td className="px-3 py-2">
                     {r.sid && (
                       <button onClick={() => setApproveRow(r)}
-                        className="px-2 py-1 bg-green-100 text-green-700 rounded text-xs hover:bg-green-200 whitespace-nowrap">
+                        className="px-2 py-1 rounded-[var(--r-sm)] text-xs hover:opacity-80 whitespace-nowrap" style={{ background: "var(--accent-light-tint)", color: "var(--accent-light)" }}>
                         Approve
                       </button>
                     )}
