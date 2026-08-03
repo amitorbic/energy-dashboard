@@ -12,8 +12,8 @@ const dispRate = (r: string) =>
 
 function rowBg(r: any): string {
   const s = r.enrollment_status || "";
-  if (s.startsWith("Completed")) return "bg-green-50";
-  return "bg-gray-50";
+  if (s.startsWith("Completed")) return "var(--success-light-tint)";
+  return "var(--ct-surface-hover)";
 }
 
 // ── Status Modal (reused from view) ──────────────────────────────────────────
@@ -54,51 +54,54 @@ function StatusModal({ row, onClose, onSaved }: { row: any; onClose: () => void;
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
-        <h3 className="text-sm font-semibold text-gray-800 mb-4">Status Check — {row.esid}</h3>
-        <p className="text-xs text-gray-500 mb-3">Current: <strong>{row.enrollment_status || "—"}</strong></p>
+      <div className="rounded-[var(--r-lg)] shadow-xl w-full max-w-md p-6" style={{ background: "var(--ct-surface)" }}>
+        <h3 className="text-sm font-semibold mb-4" style={{ color: "var(--ct-text-primary)" }}>Status Check — {row.esid}</h3>
+        <p className="text-xs mb-3" style={{ color: "var(--ct-text-muted)" }}>Current: <strong>{row.enrollment_status || "—"}</strong></p>
         <div className="space-y-1 mb-3">
           {(admin ? STATUS_OPTIONS_ADMIN : STATUS_OPTIONS).map((o) => (
-            <label key={o} className="flex items-center gap-2 text-sm cursor-pointer">
-              <input type="radio" name="status" value={o} checked={radio1 === o} onChange={() => setRadio1(o)} />
+            <label key={o} className="flex items-center gap-2 text-sm cursor-pointer" style={{ color: "var(--ct-text-secondary)" }}>
+              <input type="radio" name="status" value={o} checked={radio1 === o} onChange={() => setRadio1(o)} style={{ accentColor: "var(--accent-light)" }} />
               {o}
             </label>
           ))}
         </div>
         {radio1 === "Scheduled" && (
           <div className="mb-3">
-            <label className="block text-xs font-medium text-gray-600 mb-1">Scheduled Date</label>
-            <input type="date" className="border border-gray-300 rounded px-2 py-1 text-sm w-full"
+            <label className="block text-xs font-medium mb-1" style={{ color: "var(--ct-text-secondary)" }}>Scheduled Date</label>
+            <input type="date" className="border rounded-[var(--r-sm)] px-2 py-1 text-sm w-full outline-none focus:border-[var(--accent-light)]"
+              style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-primary)" }}
               value={txtdate} onChange={(e) => setTxtdate(e.target.value)} />
           </div>
         )}
         {radio1 === "Completed" && (
           <div className="mb-3">
-            <label className="block text-xs font-medium text-gray-600 mb-1">Completed Date <span className="text-red-500">*</span></label>
-            <input type="date" className="border border-gray-300 rounded px-2 py-1 text-sm w-full"
+            <label className="block text-xs font-medium mb-1" style={{ color: "var(--ct-text-secondary)" }}>Completed Date <span style={{ color: "var(--danger-light)" }}>*</span></label>
+            <input type="date" className="border rounded-[var(--r-sm)] px-2 py-1 text-sm w-full outline-none focus:border-[var(--accent-light)]"
+              style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-primary)" }}
               value={txtdate1} onChange={(e) => setTxtdate1(e.target.value)} />
           </div>
         )}
         <div className="space-y-1 mb-3">
           {COMMENT_OPTIONS.map((o) => (
-            <label key={o} className="flex items-center gap-2 text-sm cursor-pointer">
-              <input type="radio" name="comment" value={o} checked={comment === o} onChange={() => setComment(o)} />
+            <label key={o} className="flex items-center gap-2 text-sm cursor-pointer" style={{ color: "var(--ct-text-secondary)" }}>
+              <input type="radio" name="comment" value={o} checked={comment === o} onChange={() => setComment(o)} style={{ accentColor: "var(--accent-light)" }} />
               {o}
             </label>
           ))}
         </div>
-        <label className="flex items-center gap-2 text-sm mb-2 cursor-pointer">
-          <input type="checkbox" checked={commentOthers} onChange={(e) => setCommentOthers(e.target.checked)} />
+        <label className="flex items-center gap-2 text-sm mb-2 cursor-pointer" style={{ color: "var(--ct-text-secondary)" }}>
+          <input type="checkbox" checked={commentOthers} onChange={(e) => setCommentOthers(e.target.checked)} style={{ accentColor: "var(--accent-light)" }} />
           Others
         </label>
         {commentOthers && (
-          <textarea rows={2} className="w-full border border-gray-300 rounded px-3 py-1.5 text-sm mb-2 resize-none"
+          <textarea rows={2} className="w-full border rounded-[var(--r-sm)] px-3 py-1.5 text-sm mb-2 resize-none outline-none focus:border-[var(--accent-light)]"
+            style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-primary)" }}
             placeholder="Enter other comment…" value={txtarea} onChange={(e) => setTxtarea(e.target.value)} />
         )}
-        {err && <p className="text-xs text-red-500 mb-2">{err}</p>}
+        {err && <p className="text-xs mb-2" style={{ color: "var(--danger-light)" }}>{err}</p>}
         <div className="flex justify-end gap-2 mt-2">
-          <button onClick={onClose} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800">Cancel</button>
-          <button onClick={save} disabled={saving} className="px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 disabled:opacity-40">
+          <button onClick={onClose} className="px-4 py-2 text-sm hover:opacity-80" style={{ color: "var(--ct-text-secondary)" }}>Cancel</button>
+          <button onClick={save} disabled={saving} className="px-4 py-2 text-sm rounded-[var(--r-sm)] disabled:opacity-40" style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}>
             {saving ? "Saving…" : "Save"}
           </button>
         </div>
@@ -119,26 +122,26 @@ function LogModal({ esid, onClose }: { esid: string; onClose: () => void }) {
   }, [esid]);
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl p-6 max-h-[80vh] flex flex-col">
+      <div className="rounded-[var(--r-lg)] shadow-xl w-full max-w-2xl p-6 max-h-[80vh] flex flex-col" style={{ background: "var(--ct-surface)" }}>
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-semibold text-gray-800">Log — {esid}</h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-lg leading-none">×</button>
+          <h3 className="text-sm font-semibold" style={{ color: "var(--ct-text-primary)" }}>Log — {esid}</h3>
+          <button onClick={onClose} className="text-lg leading-none hover:opacity-70" style={{ color: "var(--ct-text-muted)" }}>×</button>
         </div>
-        {loading ? <p className="text-sm text-gray-400">Loading…</p> : (
+        {loading ? <p className="text-sm" style={{ color: "var(--ct-text-muted)" }}>Loading…</p> : (
           <div className="overflow-y-auto flex-1">
-            {entries.length === 0 ? <p className="text-sm text-gray-400">No log entries.</p> : (
+            {entries.length === 0 ? <p className="text-sm" style={{ color: "var(--ct-text-muted)" }}>No log entries.</p> : (
               <table className="w-full text-xs">
-                <thead className="bg-gray-50 border-b border-gray-200 sticky top-0">
+                <thead className="sticky top-0 border-b" style={{ background: "var(--ct-surface-hover)", borderColor: "var(--ct-border-default)" }}>
                   <tr>{["Date","User","Comments"].map((h) => (
-                    <th key={h} className="px-3 py-2 text-left font-medium text-gray-500">{h}</th>
+                    <th key={h} className="px-3 py-2 text-left font-medium" style={{ color: "var(--ct-text-muted)" }}>{h}</th>
                   ))}</tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody className="divide-y">
                   {entries.map((e, i) => (
                     <tr key={i}>
-                      <td className="px-3 py-2 text-gray-500 whitespace-nowrap">{fmtTs(e.date_modified)}</td>
-                      <td className="px-3 py-2 text-gray-700">{e.user}</td>
-                      <td className="px-3 py-2 text-gray-600"
+                      <td className="px-3 py-2 whitespace-nowrap" style={{ color: "var(--ct-text-muted)" }}>{fmtTs(e.date_modified)}</td>
+                      <td className="px-3 py-2" style={{ color: "var(--ct-text-secondary)" }}>{e.user}</td>
+                      <td className="px-3 py-2" style={{ color: "var(--ct-text-secondary)" }}
                         dangerouslySetInnerHTML={{ __html: (e.comments || "").replace(/<br\s*\/?>/gi, "<br/>") }} />
                     </tr>
                   ))}
@@ -184,9 +187,10 @@ export default function CompletedEnrollments() {
 
   const sortBtn = (label: string, s: SortMode) => (
     <button key={s} onClick={() => load(s)}
-      className={`px-3 py-1.5 text-xs rounded border transition-colors ${
-        sort === s ? "bg-blue-600 text-white border-blue-600" : "bg-white text-gray-600 border-gray-300 hover:bg-gray-50"
-      }`}>
+      className="px-3 py-1.5 text-xs rounded-[var(--r-sm)] border transition-colors"
+      style={sort === s
+        ? { background: "var(--accent-light)", color: "var(--accent-light-on-solid)", borderColor: "var(--accent-light)" }
+        : { background: "var(--ct-surface)", color: "var(--ct-text-secondary)", borderColor: "var(--ct-border-default)" }}>
       {label}
     </button>
   );
@@ -194,7 +198,7 @@ export default function CompletedEnrollments() {
   return (
     <EnrollmentLayout title="Enrollment – Completed">
       <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-        <h2 className="text-base font-semibold text-gray-800">Completed Enrollments</h2>
+        <h2 className="text-base font-semibold" style={{ color: "var(--ct-text-primary)" }}>Completed Enrollments</h2>
         <div className="flex gap-2">
           {sortBtn("Last 8 months", "default")}
           {sortBtn("All by Date", "date")}
@@ -204,41 +208,41 @@ export default function CompletedEnrollments() {
       </div>
 
       {loading ? (
-        <p className="text-sm text-gray-400">Loading…</p>
+        <p className="text-sm" style={{ color: "var(--ct-text-muted)" }}>Loading…</p>
       ) : (
-        <div className="overflow-x-auto rounded border border-gray-200">
+        <div className="overflow-x-auto rounded-[var(--r-md)] border" style={{ borderColor: "var(--ct-border-default)" }}>
           <table className="w-full text-xs">
-            <thead className="bg-gray-50 border-b border-gray-200">
+            <thead className="border-b" style={{ background: "var(--ct-surface-hover)", borderColor: "var(--ct-border-default)" }}>
               <tr>
                 {["#","ESID","Company","Broker","Rate","Term","Comm","Meter","Status","Added","Actions"].map((h) => (
-                  <th key={h} className="px-3 py-2 text-left font-medium text-gray-500 whitespace-nowrap">{h}</th>
+                  <th key={h} className="px-3 py-2 text-left font-medium whitespace-nowrap" style={{ color: "var(--ct-text-muted)" }}>{h}</th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y">
               {rows.length === 0 ? (
-                <tr><td colSpan={11} className="px-3 py-6 text-center text-gray-400">No records</td></tr>
+                <tr><td colSpan={11} className="px-3 py-6 text-center" style={{ color: "var(--ct-text-muted)" }}>No records</td></tr>
               ) : rows.map((r, i) => (
-                <tr key={r.esid} className={`hover:bg-gray-50 ${rowBg(r)}`}>
-                  <td className="px-3 py-2 text-gray-400">{i + 1}</td>
-                  <td className="px-3 py-2 font-mono text-gray-800 whitespace-nowrap">{r.esid}</td>
-                  <td className="px-3 py-2 text-gray-700 max-w-[150px] truncate">{r.company_name}</td>
-                  <td className="px-3 py-2 text-gray-600">{r.broker_code}</td>
-                  <td className="px-3 py-2 text-gray-600">{dispRate(r.contract_rate)}</td>
-                  <td className="px-3 py-2 text-gray-600">{r.contract_term}</td>
-                  <td className="px-3 py-2 text-gray-600">{r.commission}</td>
-                  <td className="px-3 py-2 text-gray-600">{r.meter_fees}</td>
-                  <td className="px-3 py-2 text-gray-600 whitespace-nowrap">{r.enrollment_status}</td>
-                  <td className="px-3 py-2 text-gray-400 whitespace-nowrap">{fmtDate(r.date_added)}</td>
+                <tr key={r.esid} className="hover:opacity-90" style={{ background: rowBg(r) }}>
+                  <td className="px-3 py-2" style={{ color: "var(--ct-text-muted)" }}>{i + 1}</td>
+                  <td className="px-3 py-2 font-mono whitespace-nowrap" style={{ color: "var(--ct-text-primary)" }}>{r.esid}</td>
+                  <td className="px-3 py-2 max-w-[150px] truncate" style={{ color: "var(--ct-text-secondary)" }}>{r.company_name}</td>
+                  <td className="px-3 py-2" style={{ color: "var(--ct-text-secondary)" }}>{r.broker_code}</td>
+                  <td className="px-3 py-2" style={{ color: "var(--ct-text-secondary)" }}>{dispRate(r.contract_rate)}</td>
+                  <td className="px-3 py-2" style={{ color: "var(--ct-text-secondary)" }}>{r.contract_term}</td>
+                  <td className="px-3 py-2" style={{ color: "var(--ct-text-secondary)" }}>{r.commission}</td>
+                  <td className="px-3 py-2" style={{ color: "var(--ct-text-secondary)" }}>{r.meter_fees}</td>
+                  <td className="px-3 py-2 whitespace-nowrap" style={{ color: "var(--ct-text-secondary)" }}>{r.enrollment_status}</td>
+                  <td className="px-3 py-2 whitespace-nowrap" style={{ color: "var(--ct-text-muted)" }}>{fmtDate(r.date_added)}</td>
                   <td className="px-3 py-2">
                     <div className="flex gap-1 flex-wrap">
                       <button onClick={() => setModal({ type: "status", row: r })}
-                        className="px-2 py-1 bg-yellow-100 text-yellow-700 rounded text-xs hover:bg-yellow-200">Status</button>
+                        className="px-2 py-1 rounded-[var(--r-sm)] text-xs hover:opacity-80" style={{ background: "var(--accent-light-tint)", color: "var(--accent-light)" }}>Status</button>
                       <button onClick={() => setModal({ type: "log", esid: r.esid })}
-                        className="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs hover:bg-gray-200">Log</button>
+                        className="px-2 py-1 rounded-[var(--r-sm)] text-xs hover:opacity-80" style={{ background: "var(--ct-surface-hover)", color: "var(--ct-text-secondary)" }}>Log</button>
                       {admin && (
                         <button onClick={() => approveRow(r.esid)}
-                          className="px-2 py-1 bg-green-100 text-green-700 rounded text-xs hover:bg-green-200">Approve</button>
+                          className="px-2 py-1 rounded-[var(--r-sm)] text-xs hover:opacity-80" style={{ background: "var(--accent-light-tint)", color: "var(--accent-light)" }}>Approve</button>
                       )}
                     </div>
                   </td>
