@@ -117,14 +117,14 @@ function editsFromResult(result: ParseResult): Record<string, string> {
 // ── Sub-components ────────────────────────────────────────────────────────────
 
 function ConfidencePill({ score }: { score: number }) {
-  const cls =
+  const style =
     score >= 80
-      ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
+      ? { background: "var(--success-light-tint)", color: "var(--success-light)", borderColor: "var(--success-light-tint)" }
       : score >= 50
-        ? "bg-amber-500/15 text-amber-400 border-amber-500/30"
-        : "bg-red-500/15 text-red-400 border-red-500/30";
+        ? { background: "var(--amber-light-tint)", color: "var(--amber-light)", borderColor: "var(--amber-light-border)" }
+        : { background: "var(--danger-light-tint)", color: "var(--danger-light)", borderColor: "var(--danger-light-tint)" };
   return (
-    <span className={`text-xs px-1.5 py-0.5 rounded border font-mono shrink-0 ${cls}`}>
+    <span className="text-xs px-1.5 py-0.5 rounded-[var(--r-sm)] border font-mono shrink-0" style={style}>
       {score}%
     </span>
   );
@@ -133,18 +133,27 @@ function ConfidencePill({ score }: { score: number }) {
 function DocTypePill({ type }: { type: DocType }) {
   if (type === "utility_bill")
     return (
-      <span className="text-xs bg-amber-500/20 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded-full">
+      <span
+        className="text-xs px-2 py-0.5 rounded-[var(--r-full)] border"
+        style={{ background: "var(--accent-light-tint)", color: "var(--accent-light)", borderColor: "var(--accent-light-tint)" }}
+      >
         Utility Bill
       </span>
     );
   if (type === "contract")
     return (
-      <span className="text-xs bg-blue-500/20 text-blue-400 border border-blue-500/30 px-2 py-0.5 rounded-full">
+      <span
+        className="text-xs px-2 py-0.5 rounded-[var(--r-full)] border"
+        style={{ background: "var(--accent-light-tint)", color: "var(--accent-light)", borderColor: "var(--accent-light-tint)" }}
+      >
         Contract
       </span>
     );
   return (
-    <span className="text-xs bg-slate-500/20 text-slate-400 border border-slate-500/30 px-2 py-0.5 rounded-full">
+    <span
+      className="text-xs px-2 py-0.5 rounded-[var(--r-full)] border"
+      style={{ background: "var(--ct-surface-hover)", color: "var(--ct-text-muted)", borderColor: "var(--ct-border-default)" }}
+    >
       Unknown
     </span>
   );
@@ -154,42 +163,42 @@ function StatusPill({ status }: { status: ParseStatus }) {
   switch (status) {
     case "queued":
       return (
-        <span className="text-xs text-slate-500 flex items-center gap-1">
-          <span className="w-1.5 h-1.5 rounded-full bg-slate-600 inline-block" />
+        <span className="text-xs flex items-center gap-1" style={{ color: "var(--ct-text-muted)" }}>
+          <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ background: "var(--ct-border-strong)" }} />
           Queued
         </span>
       );
     case "parsing":
       return (
-        <span className="text-xs text-blue-400 flex items-center gap-1">
+        <span className="text-xs flex items-center gap-1" style={{ color: "var(--accent-light)" }}>
           <Loader2 size={11} className="animate-spin" />
           Analyzing…
         </span>
       );
     case "done":
       return (
-        <span className="text-xs text-emerald-400 flex items-center gap-1">
+        <span className="text-xs flex items-center gap-1" style={{ color: "var(--success-light)" }}>
           <CheckCircle2 size={11} />
           Ready
         </span>
       );
     case "error":
       return (
-        <span className="text-xs text-red-400 flex items-center gap-1">
+        <span className="text-xs flex items-center gap-1" style={{ color: "var(--danger-light)" }}>
           <AlertCircle size={11} />
           Error
         </span>
       );
     case "saving":
       return (
-        <span className="text-xs text-blue-400 flex items-center gap-1">
+        <span className="text-xs flex items-center gap-1" style={{ color: "var(--accent-light)" }}>
           <Loader2 size={11} className="animate-spin" />
           Saving…
         </span>
       );
     case "saved":
       return (
-        <span className="text-xs text-emerald-400 flex items-center gap-1">
+        <span className="text-xs flex items-center gap-1" style={{ color: "var(--success-light)" }}>
           <CheckCircle2 size={11} />
           Saved
         </span>
@@ -199,13 +208,14 @@ function StatusPill({ status }: { status: ParseStatus }) {
 
 function FileTypeIcon({ name }: { name: string }) {
   const ext = name.split(".").pop()?.toLowerCase() ?? "";
+  const style = { color: "var(--ct-text-muted)" };
   if (["jpg", "jpeg", "png"].includes(ext))
-    return <FileImage size={15} className="text-sky-400 shrink-0" />;
+    return <FileImage size={15} className="shrink-0" style={style} />;
   if (ext === "pdf")
-    return <FileText size={15} className="text-red-400 shrink-0" />;
+    return <FileText size={15} className="shrink-0" style={style} />;
   if (ext === "docx")
-    return <FileText size={15} className="text-blue-300 shrink-0" />;
-  return <FileIcon2 size={15} className="text-slate-400 shrink-0" />;
+    return <FileText size={15} className="shrink-0" style={style} />;
+  return <FileIcon2 size={15} className="shrink-0" style={style} />;
 }
 
 // ── Entry card ────────────────────────────────────────────────────────────────
@@ -232,20 +242,21 @@ function EntryCard({
   const isBusy = status === "parsing" || status === "saving";
 
   return (
-    <div className="border border-slate-700 rounded-xl overflow-hidden bg-slate-900/40">
+    <div className="border rounded-[var(--r-lg)] overflow-hidden" style={{ borderColor: "var(--ct-border-default)", background: "var(--ct-surface)" }}>
       {/* Card header */}
-      <div className="flex items-center gap-3 px-5 py-3 bg-slate-800/60">
+      <div className="flex items-center gap-3 px-5 py-3" style={{ background: "var(--ct-surface-hover)" }}>
         <FileTypeIcon name={file.name} />
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-white truncate">{file.name}</p>
-          <p className="text-xs text-slate-500 mt-0.5">{formatBytes(file.size)}</p>
+          <p className="text-sm font-medium truncate" style={{ color: "var(--ct-text-primary)" }}>{file.name}</p>
+          <p className="text-xs mt-0.5" style={{ color: "var(--ct-text-muted)" }}>{formatBytes(file.size)}</p>
         </div>
         {result && <DocTypePill type={result.doc_type} />}
         <StatusPill status={status} />
         {status === "error" && (
           <button
             onClick={() => onRetry(id)}
-            className="text-slate-500 hover:text-slate-300 transition-colors ml-1"
+            className="ml-1 transition-colors hover:opacity-80"
+            style={{ color: "var(--ct-text-muted)" }}
             title="Retry"
           >
             <RefreshCw size={13} />
@@ -253,7 +264,8 @@ function EntryCard({
         )}
         <button
           onClick={() => onRemove(id)}
-          className="text-slate-600 hover:text-slate-300 transition-colors ml-1"
+          className="ml-1 transition-colors hover:opacity-80"
+          style={{ color: "var(--ct-text-muted)" }}
           title="Remove"
         >
           <X size={14} />
@@ -262,15 +274,18 @@ function EntryCard({
 
       {/* Parsing skeleton */}
       {status === "parsing" && (
-        <div className="px-5 py-10 flex flex-col items-center gap-3 text-slate-500 text-sm">
-          <Loader2 size={20} className="animate-spin text-violet-400" />
+        <div className="px-5 py-10 flex flex-col items-center gap-3 text-sm" style={{ color: "var(--ct-text-muted)" }}>
+          <Loader2 size={20} className="animate-spin" style={{ color: "var(--accent-light)" }} />
           <p>AI is analyzing your document…</p>
         </div>
       )}
 
       {/* Error state */}
       {status === "error" && error && (
-        <div className="px-5 py-4 border-t border-red-500/20 bg-red-500/5 flex items-start gap-3 text-red-400 text-sm">
+        <div
+          className="px-5 py-4 border-t flex items-start gap-3 text-sm"
+          style={{ borderColor: "var(--danger-light-tint)", background: "var(--danger-light-tint)", color: "var(--danger-light)" }}
+        >
           <AlertCircle size={14} className="shrink-0 mt-0.5" />
           <p>{error}</p>
         </div>
@@ -278,20 +293,22 @@ function EntryCard({
 
       {/* Unknown doc type — ask user to select */}
       {result?.doc_type === "unknown" && status === "done" && (
-        <div className="px-5 py-4 border-t border-slate-700 bg-amber-500/5">
-          <p className="text-sm text-amber-400 mb-3">
+        <div className="px-5 py-4 border-t" style={{ borderColor: "var(--ct-border-default)", background: "var(--amber-light-tint)" }}>
+          <p className="text-sm mb-3" style={{ color: "var(--amber-light)" }}>
             Could not determine document type automatically. Select one to see fields:
           </p>
           <div className="flex gap-2">
             <button
               onClick={() => onSetDocType(id, "utility_bill")}
-              className="text-xs bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 border border-amber-500/30 px-3 py-1.5 rounded-lg transition-colors"
+              className="text-xs px-3 py-1.5 rounded-[var(--r-md)] border transition-colors hover:opacity-80"
+              style={{ background: "var(--accent-light-tint)", color: "var(--accent-light)", borderColor: "var(--accent-light-tint)" }}
             >
               Utility Bill
             </button>
             <button
               onClick={() => onSetDocType(id, "contract")}
-              className="text-xs bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 border border-blue-500/30 px-3 py-1.5 rounded-lg transition-colors"
+              className="text-xs px-3 py-1.5 rounded-[var(--r-md)] border transition-colors hover:opacity-80"
+              style={{ background: "var(--accent-light-tint)", color: "var(--accent-light)", borderColor: "var(--accent-light-tint)" }}
             >
               Contract
             </button>
@@ -301,10 +318,13 @@ function EntryCard({
 
       {/* Extracted fields */}
       {result && result.doc_type !== "unknown" && (
-        <div className="px-5 py-4 border-t border-slate-700/60">
+        <div className="px-5 py-4 border-t" style={{ borderColor: "var(--ct-border-subtle)" }}>
           {/* Template matched badge */}
           {entry.template_matched && (
-            <div className="flex items-center gap-2 mb-3 text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded-lg px-3 py-2">
+            <div
+              className="flex items-center gap-2 mb-3 text-xs border rounded-[var(--r-md)] px-3 py-2"
+              style={{ color: "var(--success-light)", background: "var(--success-light-tint)", borderColor: "var(--success-light-tint)" }}
+            >
               <CheckCircle2 size={12} />
               Provider template matched — extraction guided by past successful parses
             </div>
@@ -312,28 +332,30 @@ function EntryCard({
 
           {/* Doc type toggle */}
           <div className="flex items-center gap-2 mb-4">
-            <span className="text-xs text-slate-500">Type:</span>
+            <span className="text-xs" style={{ color: "var(--ct-text-muted)" }}>Type:</span>
             <button
               onClick={() => onSetDocType(id, "utility_bill")}
-              className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
+              className="text-xs px-2.5 py-1 rounded-[var(--r-full)] border transition-colors"
+              style={
                 result.doc_type === "utility_bill"
-                  ? "bg-amber-500/20 text-amber-400 border-amber-500/30"
-                  : "text-slate-500 border-slate-700 hover:border-slate-500"
-              }`}
+                  ? { background: "var(--accent-light-tint)", color: "var(--accent-light)", borderColor: "var(--accent-light-tint)" }
+                  : { color: "var(--ct-text-muted)", borderColor: "var(--ct-border-default)" }
+              }
             >
               Utility Bill
             </button>
             <button
               onClick={() => onSetDocType(id, "contract")}
-              className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
+              className="text-xs px-2.5 py-1 rounded-[var(--r-full)] border transition-colors"
+              style={
                 result.doc_type === "contract"
-                  ? "bg-blue-500/20 text-blue-400 border-blue-500/30"
-                  : "text-slate-500 border-slate-700 hover:border-slate-500"
-              }`}
+                  ? { background: "var(--accent-light-tint)", color: "var(--accent-light)", borderColor: "var(--accent-light-tint)" }
+                  : { color: "var(--ct-text-muted)", borderColor: "var(--ct-border-default)" }
+              }
             >
               Contract
             </button>
-            <span className="text-xs text-slate-600 ml-auto">
+            <span className="text-xs ml-auto" style={{ color: "var(--ct-text-muted)" }}>
               Edit any field before saving
             </span>
           </div>
@@ -342,19 +364,27 @@ function EntryCard({
             {fields.map(({ key, label, wide, multiline }) => {
               const field = result.fields[key] as ExtractedField | undefined;
               const confidence = field?.confidence ?? 0;
-              const borderColor =
+              const fieldBorderStyle: React.CSSProperties =
                 confidence >= 80
-                  ? "border-slate-700 focus:border-emerald-500"
+                  ? { borderColor: "var(--success-light-tint)" }
                   : confidence >= 50
-                    ? "border-amber-500/40 focus:border-amber-400"
+                    ? { borderColor: "var(--amber-light-border)" }
                     : confidence > 0
-                      ? "border-red-500/40 focus:border-red-400"
-                      : "border-slate-700 focus:border-blue-500";
+                      ? { borderColor: "var(--danger-light-tint)" }
+                      : { borderColor: "var(--ct-border-default)" };
+              const fieldFocusCls =
+                confidence >= 80
+                  ? "focus:border-[var(--success-light)]"
+                  : confidence >= 50
+                    ? "focus:border-[var(--amber-light)]"
+                    : confidence > 0
+                      ? "focus:border-[var(--danger-light)]"
+                      : "focus:border-[var(--accent-light)]";
 
               return (
                 <div key={key} className={wide ? "col-span-2" : ""}>
                   <div className="flex items-center justify-between mb-1">
-                    <label className="text-xs text-slate-400">{label}</label>
+                    <label className="text-xs" style={{ color: "var(--ct-text-muted)" }}>{label}</label>
                     {field && <ConfidencePill score={confidence} />}
                   </div>
                   {multiline ? (
@@ -364,7 +394,8 @@ function EntryCard({
                       onChange={(e) => onUpdateField(id, key, e.target.value)}
                       disabled={isBusy || status === "saved"}
                       placeholder={confidence === 0 ? "Not found — enter manually or leave blank" : ""}
-                      className={`w-full text-sm bg-slate-950 border rounded-lg px-3 py-1.5 text-white placeholder-slate-600 focus:outline-none transition-colors disabled:opacity-60 resize-none font-mono ${borderColor}`}
+                      className={`w-full text-sm border rounded-[var(--r-md)] px-3 py-1.5 outline-none transition-colors disabled:opacity-60 resize-none font-mono placeholder:text-[var(--ct-text-muted)] ${fieldFocusCls}`}
+                      style={{ background: "var(--ct-canvas)", color: "var(--ct-text-primary)", ...fieldBorderStyle }}
                     />
                   ) : (
                     <input
@@ -372,7 +403,8 @@ function EntryCard({
                       onChange={(e) => onUpdateField(id, key, e.target.value)}
                       disabled={isBusy || status === "saved"}
                       placeholder={confidence === 0 ? "Not found — enter manually" : ""}
-                      className={`w-full text-sm bg-slate-950 border rounded-lg px-3 py-1.5 text-white placeholder-slate-600 focus:outline-none transition-colors disabled:opacity-60 ${borderColor}`}
+                      className={`w-full text-sm border rounded-[var(--r-md)] px-3 py-1.5 outline-none transition-colors disabled:opacity-60 placeholder:text-[var(--ct-text-muted)] ${fieldFocusCls}`}
+                      style={{ background: "var(--ct-canvas)", color: "var(--ct-text-primary)", ...fieldBorderStyle }}
                     />
                   )}
                 </div>
@@ -381,22 +413,22 @@ function EntryCard({
           </div>
 
           {/* Confidence legend */}
-          <div className="flex items-center gap-4 mt-4 mb-3 text-xs text-slate-600">
+          <div className="flex items-center gap-4 mt-4 mb-3 text-xs" style={{ color: "var(--ct-text-muted)" }}>
             <span className="flex items-center gap-1">
-              <span className="text-emerald-400 font-mono">90%+</span> High confidence
+              <span className="font-mono" style={{ color: "var(--success-light)" }}>90%+</span> High confidence
             </span>
             <span className="flex items-center gap-1">
-              <span className="text-amber-400 font-mono">50–89%</span> Medium
+              <span className="font-mono" style={{ color: "var(--amber-light)" }}>50–89%</span> Medium
             </span>
             <span className="flex items-center gap-1">
-              <span className="text-red-400 font-mono">&lt;50%</span> Low / not found
+              <span className="font-mono" style={{ color: "var(--danger-light)" }}>&lt;50%</span> Low / not found
             </span>
           </div>
 
           {/* Confirm button */}
-          <div className="flex items-center justify-end gap-3 pt-1 border-t border-slate-800">
+          <div className="flex items-center justify-end gap-3 pt-1 border-t" style={{ borderColor: "var(--ct-border-subtle)" }}>
             {status === "saved" ? (
-              <div className="flex items-center gap-2 text-emerald-400 text-sm">
+              <div className="flex items-center gap-2 text-sm" style={{ color: "var(--success-light)" }}>
                 <CheckCircle2 size={15} />
                 Saved to database
               </div>
@@ -404,7 +436,8 @@ function EntryCard({
               <button
                 onClick={() => onSave(id)}
                 disabled={isBusy}
-                className="flex items-center gap-2 bg-violet-600 hover:bg-violet-700 disabled:bg-slate-700 disabled:text-slate-500 text-white text-sm px-4 py-2 rounded-lg transition-colors mt-3"
+                className="flex items-center gap-2 text-sm px-4 py-2 rounded-[var(--r-md)] transition-colors mt-3 disabled:opacity-50 hover:opacity-90"
+                style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
               >
                 {status === "saving" ? (
                   <Loader2 size={14} className="animate-spin" />
@@ -618,32 +651,33 @@ export default function DocumentParserPage() {
   // ── Render ──────────────────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white">
+    <div className="min-h-screen" style={{ background: "var(--ct-canvas)", color: "var(--ct-text-primary)" }}>
       {/* Header */}
-      <header className="sticky top-0 z-10 border-b border-slate-800 bg-slate-900/90 backdrop-blur-sm">
+      <header className="sticky top-0 z-10 border-b backdrop-blur-sm" style={{ borderColor: "var(--ct-border-default)", background: "rgba(255,255,255,0.9)" }}>
         <div className="max-w-3xl mx-auto px-6 h-14 flex items-center gap-3">
           <button
             onClick={() => router.back()}
-            className="text-slate-500 hover:text-white transition-colors p-1 rounded"
+            className="p-1 rounded-[var(--r-sm)] transition-colors hover:opacity-80"
+            style={{ color: "var(--ct-text-muted)" }}
           >
             <ArrowLeft size={17} />
           </button>
           <div className="flex items-center gap-2">
-            <div className="bg-violet-600 rounded-lg p-1.5">
+            <div className="rounded-[var(--r-md)] p-1.5" style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}>
               <Sparkles size={13} />
             </div>
             <span className="font-bold text-sm">Document Parser</span>
-            <span className="text-slate-500 text-xs">· ORBIC AI Vision</span>
+            <span className="text-xs" style={{ color: "var(--ct-text-muted)" }}>· ORBIC AI Vision</span>
           </div>
           <div className="ml-auto flex items-center gap-4">
             {entries.length > 0 && (
-              <span className="text-xs text-slate-500">
+              <span className="text-xs" style={{ color: "var(--ct-text-muted)" }}>
                 {doneCount}/{entries.length} parsed
                 {savedCount > 0 && ` · ${savedCount} saved`}
               </span>
             )}
             {username && (
-              <span className="text-xs text-slate-500">{username}</span>
+              <span className="text-xs" style={{ color: "var(--ct-text-muted)" }}>{username}</span>
             )}
           </div>
         </div>
@@ -653,40 +687,42 @@ export default function DocumentParserPage() {
         {/* Drop zone */}
         <div
           {...getRootProps()}
-          className={`border-2 border-dashed rounded-xl p-12 text-center cursor-pointer transition-all ${
+          className="border-2 border-dashed rounded-[var(--r-lg)] p-12 text-center cursor-pointer transition-all"
+          style={
             isDragActive
-              ? "border-violet-500 bg-violet-500/10"
-              : "border-slate-700 hover:border-slate-600 hover:bg-slate-800/20"
-          }`}
+              ? { borderColor: "var(--accent-light)", background: "var(--accent-light-tint)" }
+              : { borderColor: "var(--ct-border-default)" }
+          }
         >
           <input {...getInputProps()} />
           <Upload
             size={28}
-            className={`mx-auto mb-3 transition-colors ${isDragActive ? "text-violet-400" : "text-slate-500"}`}
+            className="mx-auto mb-3 transition-colors"
+            style={{ color: isDragActive ? "var(--accent-light)" : "var(--ct-text-muted)" }}
           />
           {isDragActive ? (
-            <p className="text-violet-300 font-medium">Drop to analyze…</p>
+            <p className="font-medium" style={{ color: "var(--accent-light)" }}>Drop to analyze…</p>
           ) : (
             <>
-              <p className="text-slate-300 font-medium">
+              <p className="font-medium" style={{ color: "var(--ct-text-secondary)" }}>
                 Drag & drop files here, or click to browse
               </p>
-              <p className="text-slate-500 text-sm mt-1">
+              <p className="text-sm mt-1" style={{ color: "var(--ct-text-muted)" }}>
                 PDF · JPG · PNG · DOCX · Multiple files supported
               </p>
-              <div className="flex items-center justify-center gap-6 mt-5 text-xs text-slate-600">
+              <div className="flex items-center justify-center gap-6 mt-5 text-xs" style={{ color: "var(--ct-text-muted)" }}>
                 <span className="flex items-center gap-1.5">
-                  <FileText size={12} className="text-amber-500/60" />
+                  <FileText size={12} style={{ color: "var(--ct-text-muted)" }} />
                   Utility Bills
                 </span>
-                <span className="text-slate-700">·</span>
+                <span style={{ color: "var(--ct-border-strong)" }}>·</span>
                 <span className="flex items-center gap-1.5">
-                  <FileText size={12} className="text-blue-500/60" />
+                  <FileText size={12} style={{ color: "var(--ct-text-muted)" }} />
                   Contracts
                 </span>
-                <span className="text-slate-700">·</span>
+                <span style={{ color: "var(--ct-border-strong)" }}>·</span>
                 <span className="flex items-center gap-1.5">
-                  <FileImage size={12} className="text-sky-500/60" />
+                  <FileImage size={12} style={{ color: "var(--ct-text-muted)" }} />
                   Images
                 </span>
               </div>
@@ -699,7 +735,8 @@ export default function DocumentParserPage() {
           <div className="flex justify-end">
             <button
               onClick={() => setEntries([])}
-              className="text-xs text-slate-600 hover:text-slate-400 transition-colors"
+              className="text-xs transition-colors hover:opacity-80"
+              style={{ color: "var(--ct-text-muted)" }}
             >
               Clear all ({entries.length})
             </button>
@@ -723,7 +760,7 @@ export default function DocumentParserPage() {
 
         {/* Empty hint */}
         {entries.length === 0 && (
-          <div className="text-center py-6 text-slate-600 text-xs space-y-1">
+          <div className="text-center py-6 text-xs space-y-1" style={{ color: "var(--ct-text-muted)" }}>
             <p>Supports utility bills (PDF, JPG, PNG) and contracts (PDF, DOCX)</p>
             <p>AI auto-detects document type and extracts key fields with confidence scores</p>
           </div>

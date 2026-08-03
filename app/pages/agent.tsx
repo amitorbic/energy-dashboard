@@ -124,18 +124,19 @@ function SortableTable({ headers, rows }: { headers: string[]; rows: string[][] 
   };
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-slate-700 my-3 text-xs">
+    <div className="overflow-x-auto rounded-[var(--r-md)] border my-3 text-xs" style={{ borderColor: "var(--ct-border-default)" }}>
       <table className="w-full">
         <thead>
-          <tr className="bg-slate-800/80">
+          <tr style={{ background: "var(--ct-surface-hover)" }}>
             {headers.map((h, i) => (
               <th
                 key={i}
                 onClick={() => toggle(i)}
-                className="px-3 py-2 text-left text-slate-300 font-semibold uppercase tracking-wide cursor-pointer select-none hover:text-white whitespace-nowrap"
+                className="px-3 py-2 text-left font-semibold uppercase tracking-wide cursor-pointer select-none whitespace-nowrap transition-colors"
+                style={{ color: "var(--ct-text-secondary)" }}
               >
                 {h}{" "}
-                <span className="text-slate-500 font-normal">
+                <span className="font-normal" style={{ color: "var(--ct-text-muted)" }}>
                   {sortCol === i ? (sortDir === "asc" ? "↑" : "↓") : "↕"}
                 </span>
               </th>
@@ -144,9 +145,9 @@ function SortableTable({ headers, rows }: { headers: string[]; rows: string[][] 
         </thead>
         <tbody>
           {sorted.map((row, ri) => (
-            <tr key={ri} className="border-t border-slate-700/50 hover:bg-slate-700/30 transition-colors">
+            <tr key={ri} className="border-t hover:bg-[var(--ct-surface-hover)] transition-colors" style={{ borderColor: "var(--ct-border-subtle)" }}>
               {row.map((cell, ci) => (
-                <td key={ci} className="px-3 py-2 text-slate-300 font-mono whitespace-nowrap">
+                <td key={ci} className="px-3 py-2 font-mono whitespace-nowrap" style={{ color: "var(--ct-text-secondary)" }}>
                   {cell}
                 </td>
               ))}
@@ -154,7 +155,7 @@ function SortableTable({ headers, rows }: { headers: string[]; rows: string[][] 
           ))}
         </tbody>
       </table>
-      <div className="px-3 py-1.5 bg-slate-800/40 border-t border-slate-700/50 text-slate-500 text-xs">
+      <div className="px-3 py-1.5 border-t text-xs" style={{ background: "var(--ct-surface-hover)", borderColor: "var(--ct-border-subtle)", color: "var(--ct-text-muted)" }}>
         {sorted.length} row{sorted.length !== 1 ? "s" : ""} · click column header to sort
       </div>
     </div>
@@ -166,17 +167,17 @@ function SortableTable({ headers, rows }: { headers: string[]; rows: string[][] 
 function renderLine(line: string, key: number) {
   const parts = line.split(/(\*\*[^*]+\*\*)/g).map((p, j) =>
     p.startsWith("**") && p.endsWith("**")
-      ? <strong key={j} className="text-white font-semibold">{p.slice(2, -2)}</strong>
+      ? <strong key={j} className="font-semibold" style={{ color: "var(--ct-text-primary)" }}>{p.slice(2, -2)}</strong>
       : <Fragment key={j}>{p}</Fragment>
   );
 
   if (/^#{1,3}\s/.test(line)) {
-    return <p key={key} className="font-bold text-white text-sm mt-3 mb-1">{line.replace(/^#+\s/, "")}</p>;
+    return <p key={key} className="font-bold text-sm mt-3 mb-1" style={{ color: "var(--ct-text-primary)" }}>{line.replace(/^#+\s/, "")}</p>;
   }
   if (/^[-*•]\s/.test(line.trim())) {
     return (
       <div key={key} className="flex gap-2 my-0.5 text-sm">
-        <span className="text-blue-400 shrink-0 mt-0.5">•</span>
+        <span className="shrink-0 mt-0.5" style={{ color: "var(--accent-light)" }}>•</span>
         <span>{parts}</span>
       </div>
     );
@@ -191,7 +192,7 @@ function MessageContent({ content, role }: { content: string; role: Role }) {
   }
   const segments = parseSegments(content);
   return (
-    <div className="text-slate-200 leading-relaxed">
+    <div className="leading-relaxed" style={{ color: "var(--ct-text-secondary)" }}>
       {segments.map((seg, i) =>
         seg.type === "table" ? (
           <SortableTable key={i} headers={seg.headers} rows={seg.rows} />
@@ -221,7 +222,8 @@ function SidebarCategory({
     <div className="mb-1">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center justify-between px-3 py-1.5 text-xs font-bold text-slate-500 uppercase tracking-widest hover:text-slate-400 transition-colors"
+        className="w-full flex items-center justify-between px-3 py-1.5 text-xs font-bold uppercase tracking-widest transition-colors hover:opacity-80"
+        style={{ color: "var(--ct-text-muted)" }}
       >
         {category}
         {open ? <ChevronDown size={11} /> : <ChevronRight size={11} />}
@@ -233,7 +235,8 @@ function SidebarCategory({
               key={item.label}
               onClick={() => onSelect(item.query)}
               disabled={disabled}
-              className="w-full text-left px-3 py-1.5 text-sm text-slate-400 rounded-lg hover:bg-slate-700/50 hover:text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              className="w-full text-left px-3 py-1.5 text-sm rounded-[var(--r-md)] hover:bg-[var(--ct-surface-hover)] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              style={{ color: "var(--ct-text-secondary)" }}
             >
               {item.label}
             </button>
@@ -300,29 +303,31 @@ export default function AgentPage() {
   if (!user) return null;
 
   return (
-    <div className="flex flex-col h-screen bg-slate-950 text-white overflow-hidden">
+    <div className="flex flex-col h-screen overflow-hidden" style={{ background: "var(--ct-canvas)", color: "var(--ct-text-primary)" }}>
 
       {/* Header */}
-      <header className="shrink-0 flex items-center gap-3 px-5 py-3 border-b border-slate-800 bg-slate-900">
+      <header className="shrink-0 flex items-center gap-3 px-5 py-3 border-b" style={{ borderColor: "var(--ct-border-default)", background: "var(--ct-surface)" }}>
         <button
           onClick={() => router.back()}
-          className="text-slate-500 hover:text-white transition-colors p-1 rounded"
+          className="p-1 rounded-[var(--r-sm)] transition-colors hover:opacity-80"
+          style={{ color: "var(--ct-text-muted)" }}
         >
           <ArrowLeft size={17} />
         </button>
         <div className="flex items-center gap-2">
-          <div className="bg-blue-600 rounded-full p-1.5">
+          <div className="rounded-full p-1.5" style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}>
             <Sparkles size={13} />
           </div>
           <span className="font-bold text-sm">Orbi</span>
-          <span className="text-slate-500 text-xs">· ORBIC AI Agent</span>
+          <span className="text-xs" style={{ color: "var(--ct-text-muted)" }}>· ORBIC AI Agent</span>
         </div>
         <div className="ml-auto flex items-center gap-3">
-          <span className="text-xs text-slate-500">{user.username}</span>
+          <span className="text-xs" style={{ color: "var(--ct-text-muted)" }}>{user.username}</span>
           {messages.length > 0 && (
             <button
               onClick={() => setMessages([])}
-              className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-300 transition-colors"
+              className="flex items-center gap-1.5 text-xs transition-colors hover:opacity-80"
+              style={{ color: "var(--ct-text-muted)" }}
             >
               <Trash2 size={12} />
               Clear
@@ -334,9 +339,9 @@ export default function AgentPage() {
       <div className="flex flex-1 overflow-hidden">
 
         {/* Sidebar */}
-        <aside className="w-52 shrink-0 flex flex-col border-r border-slate-800 bg-slate-900/60 overflow-y-auto">
+        <aside className="w-52 shrink-0 flex flex-col border-r overflow-y-auto" style={{ borderColor: "var(--ct-border-default)", background: "var(--ct-surface)" }}>
           <div className="px-2 pt-4 pb-6">
-            <p className="text-xs text-slate-600 font-semibold uppercase tracking-widest px-3 mb-3">
+            <p className="text-xs font-semibold uppercase tracking-widest px-3 mb-3" style={{ color: "var(--ct-text-muted)" }}>
               Quick Actions
             </p>
             {QUICK_ACTIONS.map((group) => (
@@ -360,16 +365,16 @@ export default function AgentPage() {
             {/* Empty state */}
             {messages.length === 0 && (
               <div className="flex flex-col items-center justify-center h-full gap-5 select-none text-center">
-                <div className="bg-blue-600/15 border border-blue-600/20 rounded-full p-6">
-                  <Sparkles size={36} className="text-blue-400" />
+                <div className="rounded-full p-6" style={{ background: "var(--accent-light-tint)", border: "1px solid var(--accent-light-tint)" }}>
+                  <Sparkles size={36} style={{ color: "var(--accent-light)" }} />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-white tracking-tight">Hi, I'm Orbi</p>
-                  <p className="text-slate-400 text-sm mt-1.5 max-w-sm">
+                  <p className="text-2xl font-bold tracking-tight" style={{ color: "var(--ct-text-primary)" }}>Hi, I'm Orbi</p>
+                  <p className="text-sm mt-1.5 max-w-sm" style={{ color: "var(--ct-text-muted)" }}>
                     Ask me anything about customers, contracts, pricing, portfolio data, or past-due accounts.
                   </p>
                 </div>
-                <p className="text-xs text-slate-600">
+                <p className="text-xs" style={{ color: "var(--ct-text-muted)" }}>
                   Use the quick actions on the left or type your question below.
                 </p>
               </div>
@@ -379,18 +384,24 @@ export default function AgentPage() {
             {messages.map((m, i) => (
               <div key={i} className={`flex gap-3 ${m.role === "user" ? "flex-row-reverse" : "flex-row"}`}>
                 <div
-                  className={`w-7 h-7 rounded-full shrink-0 flex items-center justify-center text-xs font-bold ${
-                    m.role === "user" ? "bg-slate-700 text-slate-300" : "bg-blue-600 text-white"
-                  }`}
+                  className="w-7 h-7 rounded-full shrink-0 flex items-center justify-center text-xs font-bold"
+                  style={
+                    m.role === "user"
+                      ? { background: "var(--ct-border-strong)", color: "var(--ct-text-primary)" }
+                      : { background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }
+                  }
                 >
                   {m.role === "user" ? user.username[0].toUpperCase() : "O"}
                 </div>
                 <div
-                  className={`rounded-2xl px-4 py-3 ${
-                    m.role === "user"
-                      ? "bg-blue-600 text-white rounded-br-sm max-w-xl"
-                      : "bg-slate-800/80 rounded-bl-sm flex-1 min-w-0"
+                  className={`rounded-[var(--r-lg)] px-4 py-3 ${
+                    m.role === "user" ? "rounded-br-sm max-w-xl" : "rounded-bl-sm flex-1 min-w-0"
                   }`}
+                  style={
+                    m.role === "user"
+                      ? { background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }
+                      : { background: "var(--ct-surface-hover)" }
+                  }
                 >
                   <MessageContent content={m.content} role={m.role} />
                 </div>
@@ -400,12 +411,12 @@ export default function AgentPage() {
             {/* Thinking indicator */}
             {loading && (
               <div className="flex gap-3">
-                <div className="w-7 h-7 rounded-full shrink-0 flex items-center justify-center bg-blue-600">
-                  <Sparkles size={12} />
+                <div className="w-7 h-7 rounded-full shrink-0 flex items-center justify-center" style={{ background: "var(--accent-light)" }}>
+                  <Sparkles size={12} style={{ color: "var(--accent-light-on-solid)" }} />
                 </div>
-                <div className="bg-slate-800/80 rounded-2xl rounded-bl-sm px-4 py-3 flex items-center gap-2">
-                  <Loader2 size={14} className="animate-spin text-blue-400" />
-                  <span className="text-sm text-slate-400">Orbi is thinking…</span>
+                <div className="rounded-[var(--r-lg)] rounded-bl-sm px-4 py-3 flex items-center gap-2" style={{ background: "var(--ct-surface-hover)" }}>
+                  <Loader2 size={14} className="animate-spin" style={{ color: "var(--accent-light)" }} />
+                  <span className="text-sm" style={{ color: "var(--ct-text-muted)" }}>Orbi is thinking…</span>
                 </div>
               </div>
             )}
@@ -414,7 +425,7 @@ export default function AgentPage() {
           </div>
 
           {/* Input bar */}
-          <div className="shrink-0 border-t border-slate-800 px-8 py-4 bg-slate-900/60">
+          <div className="shrink-0 border-t px-8 py-4" style={{ borderColor: "var(--ct-border-default)", background: "var(--ct-surface)" }}>
             <div className="flex gap-3 items-end max-w-4xl">
               <textarea
                 ref={inputRef}
@@ -423,12 +434,14 @@ export default function AgentPage() {
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKey}
                 placeholder="Ask Orbi anything… (Enter to send, Shift+Enter for new line)"
-                className="flex-1 resize-none bg-slate-800 text-white text-sm px-4 py-3 rounded-xl border border-slate-700 focus:outline-none focus:border-blue-500 placeholder-slate-600 transition-colors"
+                className="flex-1 resize-none text-sm px-4 py-3 rounded-[var(--r-md)] border outline-none focus:border-[var(--accent-light)] placeholder:text-[var(--ct-text-muted)] transition-colors"
+                style={{ background: "var(--ct-surface)", color: "var(--ct-text-primary)", borderColor: "var(--ct-border-default)" }}
               />
               <button
                 onClick={() => send()}
                 disabled={!input.trim() || loading}
-                className="bg-blue-600 hover:bg-blue-700 disabled:bg-slate-700 disabled:text-slate-600 text-white px-4 py-3 rounded-xl transition-colors shrink-0"
+                className="px-4 py-3 rounded-[var(--r-md)] transition-colors shrink-0 disabled:opacity-50 hover:opacity-90"
+                style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
               >
                 <Send size={16} />
               </button>
