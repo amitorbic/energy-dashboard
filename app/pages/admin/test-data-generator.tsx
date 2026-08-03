@@ -42,11 +42,12 @@ function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: 
     <label className="flex items-center gap-2 cursor-pointer select-none">
       <div
         onClick={() => onChange(!checked)}
-        className={`relative w-8 h-4 rounded-full transition-colors ${checked ? "bg-sky-500" : "bg-slate-600"}`}
+        className="relative w-8 h-4 rounded-full transition-colors"
+        style={{ background: checked ? "var(--accent-light)" : "var(--ct-border-strong)" }}
       >
         <span className={`absolute top-0.5 w-3 h-3 rounded-full bg-white shadow transition-transform ${checked ? "translate-x-4" : "translate-x-0.5"}`} />
       </div>
-      <span className="text-xs text-slate-400">{label}</span>
+      <span className="text-xs" style={{ color: "var(--ct-text-muted)" }}>{label}</span>
     </label>
   );
 }
@@ -145,13 +146,14 @@ export default function AdminTestDataGenerator() {
 
   if (!isAdmin()) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center" style={{ background: "var(--ct-canvas)" }}>
         <div className="text-center">
-          <p className="text-red-400 font-semibold text-lg">Access denied</p>
-          <p className="text-slate-500 text-sm mt-1">This section requires admin privileges.</p>
+          <p className="font-semibold text-lg" style={{ color: "var(--danger-light)" }}>Access denied</p>
+          <p className="text-sm mt-1" style={{ color: "var(--ct-text-muted)" }}>This section requires admin privileges.</p>
           <button
             onClick={() => router.push("/")}
-            className="mt-4 text-xs text-sky-400 hover:text-sky-300 underline"
+            className="mt-4 text-xs underline hover:opacity-80"
+            style={{ color: "var(--accent-light)" }}
           >
             Back to dashboard
           </button>
@@ -160,41 +162,50 @@ export default function AdminTestDataGenerator() {
     );
   }
 
+  const inputStyle: React.CSSProperties = {
+    background: "var(--ct-surface)",
+    borderColor: "var(--ct-border-default)",
+    color: "var(--ct-text-primary)",
+  };
   const inputCls =
-    "w-full bg-slate-700 border border-slate-600 text-white text-xs rounded px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-sky-500 placeholder-slate-500";
-  const labelCls = "block text-[10px] text-slate-400 uppercase tracking-wide mb-1";
+    "w-full border text-xs rounded-[var(--r-sm)] px-2.5 py-1.5 outline-none focus:border-[var(--accent-light)]";
+  const labelCls = "block text-[10px] uppercase tracking-wide mb-1";
 
   return (
-    <div className="min-h-screen bg-slate-900">
-      <div className="fixed inset-0 bg-[linear-gradient(rgba(56,189,248,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(56,189,248,0.02)_1px,transparent_1px)] bg-[size:48px_48px] pointer-events-none" />
+    <div className="min-h-screen" style={{ background: "var(--ct-canvas)" }}>
+      <div className="fixed inset-0 bg-[linear-gradient(rgba(16,23,40,0.025)_1px,transparent_1px),linear-gradient(90deg,rgba(16,23,40,0.025)_1px,transparent_1px)] bg-[size:48px_48px] pointer-events-none" />
 
       {/* header */}
-      <header className="relative z-10 border-b border-slate-800 bg-slate-900/90 backdrop-blur-sm">
+      <header className="relative z-10 border-b backdrop-blur-sm" style={{ borderColor: "var(--ct-border-default)", background: "rgba(255,255,255,0.9)" }}>
         <div className="max-w-screen-xl mx-auto px-6 h-14 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button
               onClick={() => router.push("/")}
-              className="text-slate-500 hover:text-white text-xs transition-colors"
+              className="text-xs transition-colors hover:opacity-80"
+              style={{ color: "var(--ct-text-muted)" }}
             >
               ← Dashboard
             </button>
-            <span className="text-slate-700">|</span>
-            <span className="text-xs text-slate-500 bg-red-500/10 border border-red-500/20 text-red-400 px-2 py-0.5 rounded font-medium">
+            <span style={{ color: "var(--ct-border-strong)" }}>|</span>
+            <span
+              className="text-xs px-2 py-0.5 rounded-[var(--r-sm)] font-medium border"
+              style={{ background: "var(--danger-light-tint)", borderColor: "var(--danger-light-tint)", color: "var(--danger-light)" }}
+            >
               Admin
             </span>
-            <span className="text-sm font-semibold text-white">EDI Test Data Generator</span>
+            <span className="text-sm font-semibold" style={{ color: "var(--ct-text-primary)" }}>EDI Test Data Generator</span>
           </div>
-          {user && <span className="text-slate-500 text-xs">{user.username}</span>}
+          {user && <span className="text-xs" style={{ color: "var(--ct-text-muted)" }}>{user.username}</span>}
         </div>
       </header>
 
       <main className="relative z-10 max-w-screen-xl mx-auto px-6 py-8">
         <div className="mb-6">
-          <h1 className="text-lg font-bold text-white">EDI Test Data Generator</h1>
-          <p className="text-slate-500 text-xs mt-0.5">
+          <h1 className="text-lg font-bold" style={{ color: "var(--ct-text-primary)" }}>EDI Test Data Generator</h1>
+          <p className="text-xs mt-0.5" style={{ color: "var(--ct-text-muted)" }}>
             Generates realistic synthetic 867_03 / 810_02 EDI files for real ESI IDs (matched against contract_renewal).
             Files are download-only — nothing is uploaded automatically. Test the real pipeline via the{" "}
-            <button onClick={() => router.push("/billing/upload")} className="text-sky-400 hover:text-sky-300 underline">
+            <button onClick={() => router.push("/billing/upload")} className="underline hover:opacity-80" style={{ color: "var(--accent-light)" }}>
               Billing Upload
             </button>{" "}
             page.
@@ -204,18 +215,19 @@ export default function AdminTestDataGenerator() {
         <div className="grid grid-cols-3 gap-5">
           {/* left: form */}
           <div className="col-span-1">
-            <div className="bg-slate-800 border border-slate-700 rounded-lg p-4">
-              <h3 className="text-sm font-semibold text-slate-200 mb-4">Generate Files</h3>
+            <div className="rounded-[var(--r-lg)] border p-4" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
+              <h3 className="text-sm font-semibold mb-4" style={{ color: "var(--ct-text-primary)" }}>Generate Files</h3>
 
               <div className="space-y-3">
                 <div>
-                  <label className={labelCls}>ESI IDs (one per line, or comma-separated) *</label>
+                  <label className={labelCls} style={{ color: "var(--ct-text-muted)" }}>ESI IDs (one per line, or comma-separated) *</label>
                   <textarea
                     value={esiText}
                     onChange={(e) => setEsiText(e.target.value)}
                     rows={6}
                     placeholder={"1008901001900201400108\n1008901003250611775100"}
                     className={`${inputCls} font-mono`}
+                    style={inputStyle}
                   />
                 </div>
 
@@ -226,38 +238,39 @@ export default function AdminTestDataGenerator() {
 
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className={labelCls}>Service start</label>
+                    <label className={labelCls} style={{ color: "var(--ct-text-muted)" }}>Service start</label>
                     <input
                       type="date"
                       value={dates.start}
                       onChange={(e) => setDates({ ...dates, start: e.target.value })}
                       className={inputCls}
+                      style={inputStyle}
                     />
                   </div>
                   <div>
-                    <label className={labelCls}>Service end</label>
+                    <label className={labelCls} style={{ color: "var(--ct-text-muted)" }}>Service end</label>
                     <input
                       type="date"
                       value={dates.end}
                       onChange={(e) => setDates({ ...dates, end: e.target.value })}
                       className={inputCls}
+                      style={inputStyle}
                     />
                   </div>
                 </div>
 
                 {want810 && (
                   <div>
-                    <label className={labelCls}>810 charge codes</label>
+                    <label className={labelCls} style={{ color: "var(--ct-text-muted)" }}>810 charge codes</label>
                     <div className="flex flex-wrap gap-1.5">
                       {DEFAULT_CHARGE_CODES.map((code) => (
                         <button
                           key={code}
                           onClick={() => toggleCode(code)}
-                          className={`text-[10px] font-mono px-1.5 py-0.5 rounded border transition-colors ${
-                            chargeCodes.includes(code)
-                              ? "border-sky-500/50 bg-sky-500/10 text-sky-300"
-                              : "border-slate-600 text-slate-500 hover:bg-slate-700"
-                          }`}
+                          className="text-[10px] font-mono px-1.5 py-0.5 rounded-[var(--r-sm)] border transition-colors hover:opacity-80"
+                          style={chargeCodes.includes(code)
+                            ? { borderColor: "var(--accent-light)", background: "var(--accent-light-tint)", color: "var(--accent-light)" }
+                            : { borderColor: "var(--ct-border-default)", color: "var(--ct-text-muted)" }}
                         >
                           {code}
                         </button>
@@ -267,13 +280,14 @@ export default function AdminTestDataGenerator() {
                 )}
               </div>
 
-              {err && <p className="mt-3 text-xs text-red-400">{err}</p>}
+              {err && <p className="mt-3 text-xs" style={{ color: "var(--danger-light)" }}>{err}</p>}
 
               <div className="flex items-center gap-2 mt-4">
                 <button
                   onClick={generate}
                   disabled={generating}
-                  className="flex items-center gap-2 px-4 py-1.5 bg-sky-600 hover:bg-sky-500 disabled:opacity-40 text-white text-xs font-semibold rounded transition-colors"
+                  className="flex items-center gap-2 px-4 py-1.5 text-xs font-semibold rounded-[var(--r-sm)] transition-colors disabled:opacity-40 hover:opacity-90"
+                  style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
                 >
                   {generating && <Spinner sm />}
                   Generate
@@ -284,9 +298,9 @@ export default function AdminTestDataGenerator() {
 
           {/* right: results */}
           <div className="col-span-2 space-y-4">
-            <div className="bg-slate-800 border border-slate-700 rounded-lg overflow-hidden">
-              <div className="px-4 py-3 bg-slate-700/30 border-b border-slate-700">
-                <span className="text-sm font-semibold text-slate-200">Results</span>
+            <div className="rounded-[var(--r-lg)] border overflow-hidden" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
+              <div className="px-4 py-3 border-b" style={{ background: "var(--ct-surface-hover)", borderColor: "var(--ct-border-default)" }}>
+                <span className="text-sm font-semibold" style={{ color: "var(--ct-text-primary)" }}>Results</span>
               </div>
 
               {generating ? (
@@ -294,31 +308,33 @@ export default function AdminTestDataGenerator() {
                   <Spinner />
                 </div>
               ) : !result ? (
-                <div className="px-4 py-8 text-center text-sm text-slate-500">
+                <div className="px-4 py-8 text-center text-sm" style={{ color: "var(--ct-text-muted)" }}>
                   No files generated yet.
                 </div>
               ) : (
-                <div className="divide-y divide-slate-700/40">
+                <div className="divide-y" style={{ borderColor: "var(--ct-border-subtle)" }}>
                   {result.files.length > 0 && (
                     <div className="px-4 py-3">
-                      <p className="text-[10px] font-medium text-slate-400 uppercase tracking-wide mb-2">
+                      <p className="text-[10px] font-medium uppercase tracking-wide mb-2" style={{ color: "var(--ct-text-muted)" }}>
                         Generated files ({result.matched_esi_ids.length} ESI{result.matched_esi_ids.length === 1 ? "" : "s"})
                       </p>
                       <div className="space-y-2">
                         {result.files.map((f) => (
                           <div
                             key={f.interchange_control}
-                            className="flex items-center justify-between bg-slate-900/40 border border-slate-700 rounded px-3 py-2"
+                            className="flex items-center justify-between rounded-[var(--r-sm)] border px-3 py-2"
+                            style={{ background: "var(--ct-surface-hover)", borderColor: "var(--ct-border-default)" }}
                           >
                             <div>
-                              <span className="font-mono text-xs text-sky-300">{f.filename}</span>
-                              <span className="ml-2 text-[10px] text-slate-500">
+                              <span className="font-mono text-xs" style={{ color: "var(--accent-light)" }}>{f.filename}</span>
+                              <span className="ml-2 text-[10px]" style={{ color: "var(--ct-text-muted)" }}>
                                 {f.edi_type} · interchange {f.interchange_control}
                               </span>
                             </div>
                             <button
                               onClick={() => downloadFile(f)}
-                              className="text-xs px-2.5 py-1 bg-sky-600 hover:bg-sky-500 text-white rounded transition-colors"
+                              className="text-xs px-2.5 py-1 rounded-[var(--r-sm)] transition-colors hover:opacity-90"
+                              style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
                             >
                               Download
                             </button>
@@ -330,14 +346,14 @@ export default function AdminTestDataGenerator() {
 
                   {result.skipped.length > 0 && (
                     <div className="px-4 py-3">
-                      <p className="text-[10px] font-medium text-amber-400 uppercase tracking-wide mb-2">
+                      <p className="text-[10px] font-medium uppercase tracking-wide mb-2" style={{ color: "var(--amber-light)" }}>
                         Skipped ({result.skipped.length})
                       </p>
                       <div className="space-y-1">
                         {result.skipped.map((s) => (
                           <div key={s.esi_id} className="text-xs flex items-start gap-2">
-                            <span className="font-mono text-slate-300">{s.esi_id}</span>
-                            <span className="text-slate-500">— {s.reason}</span>
+                            <span className="font-mono" style={{ color: "var(--ct-text-secondary)" }}>{s.esi_id}</span>
+                            <span style={{ color: "var(--ct-text-muted)" }}>— {s.reason}</span>
                           </div>
                         ))}
                       </div>
@@ -346,13 +362,16 @@ export default function AdminTestDataGenerator() {
 
                   {result.files.length > 0 && (
                     <div className="px-4 py-3">
-                      <p className="text-[10px] font-medium text-slate-400 uppercase tracking-wide mb-2">Preview</p>
+                      <p className="text-[10px] font-medium uppercase tracking-wide mb-2" style={{ color: "var(--ct-text-muted)" }}>Preview</p>
                       {result.files.map((f) => (
                         <details key={f.interchange_control} className="mb-2">
-                          <summary className="text-xs text-slate-400 cursor-pointer hover:text-slate-200">
+                          <summary className="text-xs cursor-pointer hover:opacity-80" style={{ color: "var(--ct-text-muted)" }}>
                             {f.filename}
                           </summary>
-                          <pre className="mt-1.5 text-[10px] font-mono text-slate-400 bg-black/30 border border-slate-700 rounded p-2 overflow-x-auto max-h-64 overflow-y-auto whitespace-pre">
+                          <pre
+                            className="mt-1.5 text-[10px] font-mono border rounded-[var(--r-sm)] p-2 overflow-x-auto max-h-64 overflow-y-auto whitespace-pre"
+                            style={{ color: "var(--ct-text-secondary)", background: "var(--ct-surface-hover)", borderColor: "var(--ct-border-default)" }}
+                          >
                             {f.content}
                           </pre>
                         </details>

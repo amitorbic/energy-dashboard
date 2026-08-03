@@ -65,11 +65,12 @@ function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: 
     <label className="flex items-center gap-2 cursor-pointer select-none">
       <div
         onClick={() => onChange(!checked)}
-        className={`relative w-8 h-4 rounded-full transition-colors ${checked ? "bg-sky-500" : "bg-slate-600"}`}
+        className="relative w-8 h-4 rounded-full transition-colors"
+        style={{ background: checked ? "var(--accent-light)" : "var(--ct-border-strong)" }}
       >
         <span className={`absolute top-0.5 w-3 h-3 rounded-full bg-white shadow transition-transform ${checked ? "translate-x-4" : "translate-x-0.5"}`} />
       </div>
-      <span className="text-xs text-slate-400">{label}</span>
+      <span className="text-xs" style={{ color: "var(--ct-text-muted)" }}>{label}</span>
     </label>
   );
 }
@@ -80,8 +81,8 @@ function fmtDate(d: string) {
 }
 
 function fmtRate(r: number | null) {
-  if (r === null) return <span className="text-slate-500 italic text-xs">No rate</span>;
-  return <span className="font-mono text-sky-300">${r.toFixed(6)}</span>;
+  if (r === null) return <span className="italic text-xs" style={{ color: "var(--ct-text-muted)" }}>No rate</span>;
+  return <span className="font-mono" style={{ color: "var(--accent-light)" }}>${r.toFixed(6)}</span>;
 }
 
 // ── Rate history panel ────────────────────────────────────────────────────────
@@ -105,40 +106,48 @@ function RatePanel({
   rateErr: string;
   onAddRate: () => void;
 }) {
+  const inputStyle: React.CSSProperties = {
+    background: "var(--ct-surface)",
+    borderColor: "var(--ct-border-default)",
+    color: "var(--ct-text-primary)",
+  };
   const inputCls =
-    "bg-slate-700 border border-slate-600 text-white text-xs rounded px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-sky-500 placeholder-slate-500";
+    "border text-xs rounded-[var(--r-sm)] px-2.5 py-1.5 outline-none focus:border-[var(--accent-light)]";
 
   return (
-    <div className="mt-1 border border-slate-700 rounded-lg bg-slate-800/60 overflow-hidden">
+    <div className="mt-1 rounded-[var(--r-lg)] border overflow-hidden" style={{ borderColor: "var(--ct-border-default)", background: "var(--ct-surface)" }}>
       {/* header */}
-      <div className="px-4 py-2.5 bg-slate-700/40 border-b border-slate-700 flex items-center justify-between">
-        <span className="text-xs font-semibold text-slate-300">
+      <div className="px-4 py-2.5 border-b flex items-center justify-between" style={{ background: "var(--ct-surface-hover)", borderColor: "var(--ct-border-default)" }}>
+        <span className="text-xs font-semibold" style={{ color: "var(--ct-text-secondary)" }}>
           Rate history —{" "}
-          <span className="font-mono text-sky-400">{type.code}</span>
-          <span className="ml-2 text-slate-500 font-normal">({type.calculation_basis === "flat" ? "$/month flat" : "$/kWh usage-based"})</span>
+          <span className="font-mono" style={{ color: "var(--accent-light)" }}>{type.code}</span>
+          <span className="ml-2 font-normal" style={{ color: "var(--ct-text-muted)" }}>({type.calculation_basis === "flat" ? "$/month flat" : "$/kWh usage-based"})</span>
         </span>
         {loadingRates && <Spinner sm />}
       </div>
 
       {/* rate table */}
-      <div className="divide-y divide-slate-700/50">
+      <div className="divide-y" style={{ borderColor: "var(--ct-border-subtle)" }}>
         {!loadingRates && rates.length === 0 && (
-          <p className="px-4 py-3 text-xs text-slate-500 italic">No rates yet. Add one below.</p>
+          <p className="px-4 py-3 text-xs italic" style={{ color: "var(--ct-text-muted)" }}>No rates yet. Add one below.</p>
         )}
         {rates.map((r) => (
           <div key={r.id} className="px-4 py-2.5 flex items-center justify-between text-xs">
             <div className="flex items-center gap-3">
-              <span className="font-mono text-sky-300">${r.rate.toFixed(6)}</span>
-              <span className="text-slate-400">
+              <span className="font-mono" style={{ color: "var(--accent-light)" }}>${r.rate.toFixed(6)}</span>
+              <span style={{ color: "var(--ct-text-secondary)" }}>
                 {fmtDate(r.effective_from)}
                 {" – "}
                 {r.effective_to ? fmtDate(r.effective_to) : (
-                  <span className="text-green-400 font-medium">current</span>
+                  <span className="font-medium" style={{ color: "var(--success-light)" }}>current</span>
                 )}
               </span>
             </div>
             {r.effective_to === null && (
-              <span className="text-green-500 text-[10px] bg-green-500/10 border border-green-500/30 px-1.5 py-0.5 rounded">
+              <span
+                className="text-[10px] px-1.5 py-0.5 rounded-[var(--r-sm)] border"
+                style={{ color: "var(--success-light)", background: "var(--success-light-tint)", borderColor: "var(--success-light-tint)" }}
+              >
                 OPEN
               </span>
             )}
@@ -147,11 +156,11 @@ function RatePanel({
       </div>
 
       {/* add rate form */}
-      <div className="px-4 py-3 bg-slate-900/40 border-t border-slate-700">
-        <p className="text-[10px] font-medium text-slate-400 uppercase tracking-wide mb-2">Add new rate</p>
+      <div className="px-4 py-3 border-t" style={{ background: "var(--ct-surface-hover)", borderColor: "var(--ct-border-default)" }}>
+        <p className="text-[10px] font-medium uppercase tracking-wide mb-2" style={{ color: "var(--ct-text-muted)" }}>Add new rate</p>
         <div className="flex items-end gap-2 flex-wrap">
           <div>
-            <label className="block text-[10px] text-slate-500 mb-1">Rate ({type.calculation_basis === "flat" ? "$/month" : "$/kWh"})</label>
+            <label className="block text-[10px] mb-1" style={{ color: "var(--ct-text-muted)" }}>Rate ({type.calculation_basis === "flat" ? "$/month" : "$/kWh"})</label>
             <input
               type="number"
               step="0.000001"
@@ -160,27 +169,30 @@ function RatePanel({
               onChange={(e) => setRateForm({ ...rateForm, rate: e.target.value })}
               placeholder="0.001234"
               className={`${inputCls} w-32`}
+              style={inputStyle}
             />
           </div>
           <div>
-            <label className="block text-[10px] text-slate-500 mb-1">Effective from</label>
+            <label className="block text-[10px] mb-1" style={{ color: "var(--ct-text-muted)" }}>Effective from</label>
             <input
               type="date"
               value={rateForm.effective_from}
               onChange={(e) => setRateForm({ ...rateForm, effective_from: e.target.value })}
               className={`${inputCls} w-36`}
+              style={inputStyle}
             />
           </div>
           <button
             onClick={onAddRate}
             disabled={addingRate || !rateForm.rate || !rateForm.effective_from}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-sky-600 hover:bg-sky-500 disabled:opacity-40 text-white text-xs font-medium rounded transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-[var(--r-sm)] transition-colors disabled:opacity-40 hover:opacity-90"
+            style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
           >
             {addingRate && <Spinner sm />}
             Add Rate
           </button>
         </div>
-        {rateErr && <p className="mt-2 text-xs text-red-400">{rateErr}</p>}
+        {rateErr && <p className="mt-2 text-xs" style={{ color: "var(--danger-light)" }}>{rateErr}</p>}
       </div>
     </div>
   );
@@ -205,44 +217,52 @@ function TypeForm({
   onSubmit: () => void;
   onCancel: () => void;
 }) {
+  const inputStyle: React.CSSProperties = {
+    background: "var(--ct-surface)",
+    borderColor: "var(--ct-border-default)",
+    color: "var(--ct-text-primary)",
+  };
   const inputCls =
-    "w-full bg-slate-700 border border-slate-600 text-white text-xs rounded px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-sky-500 placeholder-slate-500";
-  const labelCls = "block text-[10px] text-slate-400 uppercase tracking-wide mb-1";
+    "w-full border text-xs rounded-[var(--r-sm)] px-2.5 py-1.5 outline-none focus:border-[var(--accent-light)]";
+  const labelCls = "block text-[10px] uppercase tracking-wide mb-1";
 
   return (
-    <div className="bg-slate-800 border border-slate-700 rounded-lg p-4">
-      <h3 className="text-sm font-semibold text-slate-200 mb-4">
+    <div className="rounded-[var(--r-lg)] border p-4" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
+      <h3 className="text-sm font-semibold mb-4" style={{ color: "var(--ct-text-primary)" }}>
         {editingId ? `Edit Type #${editingId}` : "New Addon Charge Type"}
       </h3>
 
       <div className="space-y-3">
         <div>
-          <label className={labelCls}>Code *</label>
+          <label className={labelCls} style={{ color: "var(--ct-text-muted)" }}>Code *</label>
           <input
             value={form.code}
             onChange={(e) => onChange({ ...form, code: e.target.value.toUpperCase() })}
             disabled={!!editingId}
             placeholder="e.g. ANCSVC"
             className={`${inputCls} ${editingId ? "opacity-50 cursor-not-allowed" : ""}`}
+            style={inputStyle}
           />
         </div>
 
         <div>
-          <label className={labelCls}>Description *</label>
+          <label className={labelCls} style={{ color: "var(--ct-text-muted)" }}>Description *</label>
           <input
             value={form.description}
             onChange={(e) => onChange({ ...form, description: e.target.value })}
             placeholder="Ancillary Services Charge"
             className={inputCls}
+            style={inputStyle}
           />
         </div>
 
         <div>
-          <label className={labelCls}>Calculation Basis *</label>
+          <label className={labelCls} style={{ color: "var(--ct-text-muted)" }}>Calculation Basis *</label>
           <select
             value={form.calculation_basis}
             onChange={(e) => onChange({ ...form, calculation_basis: e.target.value as "flat" | "usage_based" })}
             className={inputCls}
+            style={inputStyle}
           >
             <option value="usage_based">Usage-based ($/kWh × kWh)</option>
             <option value="flat">Flat ($/month, prorated)</option>
@@ -256,19 +276,20 @@ function TypeForm({
         />
 
         {editingId && (
-          <div className="pt-1 border-t border-slate-700">
-            <p className="text-[10px] text-slate-500 mb-2">Code cannot be changed after creation. Use deactivation to retire a type.</p>
+          <div className="pt-1 border-t" style={{ borderColor: "var(--ct-border-subtle)" }}>
+            <p className="text-[10px] mb-2" style={{ color: "var(--ct-text-muted)" }}>Code cannot be changed after creation. Use deactivation to retire a type.</p>
           </div>
         )}
       </div>
 
-      {err && <p className="mt-3 text-xs text-red-400">{err}</p>}
+      {err && <p className="mt-3 text-xs" style={{ color: "var(--danger-light)" }}>{err}</p>}
 
       <div className="flex items-center gap-2 mt-4">
         <button
           onClick={onSubmit}
           disabled={saving || !form.code.trim() || !form.description.trim()}
-          className="flex items-center gap-2 px-4 py-1.5 bg-sky-600 hover:bg-sky-500 disabled:opacity-40 text-white text-xs font-semibold rounded transition-colors"
+          className="flex items-center gap-2 px-4 py-1.5 text-xs font-semibold rounded-[var(--r-sm)] transition-colors disabled:opacity-40 hover:opacity-90"
+          style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
         >
           {saving && <Spinner sm />}
           {editingId ? "Save Changes" : "Create Type"}
@@ -276,7 +297,8 @@ function TypeForm({
         {editingId && (
           <button
             onClick={onCancel}
-            className="px-3 py-1.5 text-xs text-slate-400 border border-slate-600 rounded hover:bg-slate-700 transition-colors"
+            className="px-3 py-1.5 text-xs rounded-[var(--r-sm)] border transition-colors hover:bg-[var(--ct-surface-hover)]"
+            style={{ color: "var(--ct-text-secondary)", borderColor: "var(--ct-border-default)" }}
           >
             Cancel
           </button>
@@ -447,13 +469,14 @@ export default function AdminAddonChargeTypes() {
 
   if (!isAdmin()) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center" style={{ background: "var(--ct-canvas)" }}>
         <div className="text-center">
-          <p className="text-red-400 font-semibold text-lg">Access denied</p>
-          <p className="text-slate-500 text-sm mt-1">This section requires admin privileges.</p>
+          <p className="font-semibold text-lg" style={{ color: "var(--danger-light)" }}>Access denied</p>
+          <p className="text-sm mt-1" style={{ color: "var(--ct-text-muted)" }}>This section requires admin privileges.</p>
           <button
             onClick={() => router.push("/")}
-            className="mt-4 text-xs text-sky-400 hover:text-sky-300 underline"
+            className="mt-4 text-xs underline hover:opacity-80"
+            style={{ color: "var(--accent-light)" }}
           >
             Back to dashboard
           </button>
@@ -465,35 +488,39 @@ export default function AdminAddonChargeTypes() {
   const selectedType = types.find((t) => t.id === selectedId) ?? null;
 
   return (
-    <div className="min-h-screen bg-slate-900">
-      <div className="fixed inset-0 bg-[linear-gradient(rgba(56,189,248,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(56,189,248,0.02)_1px,transparent_1px)] bg-[size:48px_48px] pointer-events-none" />
+    <div className="min-h-screen" style={{ background: "var(--ct-canvas)" }}>
+      <div className="fixed inset-0 bg-[linear-gradient(rgba(16,23,40,0.025)_1px,transparent_1px),linear-gradient(90deg,rgba(16,23,40,0.025)_1px,transparent_1px)] bg-[size:48px_48px] pointer-events-none" />
 
       {/* header */}
-      <header className="relative z-10 border-b border-slate-800 bg-slate-900/90 backdrop-blur-sm">
+      <header className="relative z-10 border-b backdrop-blur-sm" style={{ borderColor: "var(--ct-border-default)", background: "rgba(255,255,255,0.9)" }}>
         <div className="max-w-screen-xl mx-auto px-6 h-14 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button
               onClick={() => router.push("/")}
-              className="text-slate-500 hover:text-white text-xs transition-colors"
+              className="text-xs transition-colors hover:opacity-80"
+              style={{ color: "var(--ct-text-muted)" }}
             >
               ← Dashboard
             </button>
-            <span className="text-slate-700">|</span>
-            <span className="text-xs text-slate-500 bg-red-500/10 border border-red-500/20 text-red-400 px-2 py-0.5 rounded font-medium">
+            <span style={{ color: "var(--ct-border-strong)" }}>|</span>
+            <span
+              className="text-xs px-2 py-0.5 rounded-[var(--r-sm)] font-medium border"
+              style={{ background: "var(--danger-light-tint)", borderColor: "var(--danger-light-tint)", color: "var(--danger-light)" }}
+            >
               Admin
             </span>
-            <span className="text-sm font-semibold text-white">Addon Charge Types</span>
+            <span className="text-sm font-semibold" style={{ color: "var(--ct-text-primary)" }}>Addon Charge Types</span>
           </div>
           {user && (
-            <span className="text-slate-500 text-xs">{user.username}</span>
+            <span className="text-xs" style={{ color: "var(--ct-text-muted)" }}>{user.username}</span>
           )}
         </div>
       </header>
 
       <main className="relative z-10 max-w-screen-xl mx-auto px-6 py-8">
         <div className="mb-6">
-          <h1 className="text-lg font-bold text-white">Addon Charge Type Management</h1>
-          <p className="text-slate-500 text-xs mt-0.5">
+          <h1 className="text-lg font-bold" style={{ color: "var(--ct-text-primary)" }}>Addon Charge Type Management</h1>
+          <p className="text-xs mt-0.5" style={{ color: "var(--ct-text-muted)" }}>
             Define reusable supplier addon charges (ANCSVC, LINELOSS, etc.) and manage their effective-dated rate history.
             Rates are stored per calendar month; the close-out logic runs automatically when a new rate is added.
           </p>
@@ -517,18 +544,19 @@ export default function AdminAddonChargeTypes() {
           {/* right: type table + rate panel */}
           <div className="col-span-2 space-y-4">
             {/* type table */}
-            <div className="bg-slate-800 border border-slate-700 rounded-lg overflow-hidden">
-              <div className="px-4 py-3 bg-slate-700/30 border-b border-slate-700 flex items-center justify-between">
-                <span className="text-sm font-semibold text-slate-200">
+            <div className="rounded-[var(--r-lg)] border overflow-hidden" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
+              <div className="px-4 py-3 border-b flex items-center justify-between" style={{ background: "var(--ct-surface-hover)", borderColor: "var(--ct-border-default)" }}>
+                <span className="text-sm font-semibold" style={{ color: "var(--ct-text-primary)" }}>
                   Types
                   {!loading && (
-                    <span className="ml-1.5 text-xs text-slate-500 font-normal">({types.length})</span>
+                    <span className="ml-1.5 text-xs font-normal" style={{ color: "var(--ct-text-muted)" }}>({types.length})</span>
                   )}
                 </span>
                 <button
                   onClick={loadTypes}
                   disabled={loading}
-                  className="flex items-center gap-1 text-xs text-slate-400 hover:text-white disabled:opacity-40 transition-colors"
+                  className="flex items-center gap-1 text-xs transition-colors disabled:opacity-40 hover:opacity-80"
+                  style={{ color: "var(--ct-text-muted)" }}
                 >
                   {loading ? <Spinner sm /> : (
                     <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -541,7 +569,7 @@ export default function AdminAddonChargeTypes() {
               </div>
 
               {listErr && (
-                <div className="px-4 py-3 text-sm text-red-400">{listErr}</div>
+                <div className="px-4 py-3 text-sm" style={{ color: "var(--danger-light)" }}>{listErr}</div>
               )}
 
               {loading ? (
@@ -549,72 +577,75 @@ export default function AdminAddonChargeTypes() {
                   <Spinner />
                 </div>
               ) : types.length === 0 ? (
-                <div className="px-4 py-8 text-center text-sm text-slate-500">
+                <div className="px-4 py-8 text-center text-sm" style={{ color: "var(--ct-text-muted)" }}>
                   No addon charge types yet. Create one using the form.
                 </div>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-xs">
-                    <thead className="bg-slate-700/20 border-b border-slate-700">
+                    <thead className="border-b" style={{ background: "var(--ct-surface-hover)", borderColor: "var(--ct-border-default)" }}>
                       <tr>
-                        <th className="px-3 py-2.5 text-left text-slate-400 font-medium">Code</th>
-                        <th className="px-3 py-2.5 text-left text-slate-400 font-medium">Description</th>
-                        <th className="px-3 py-2.5 text-left text-slate-400 font-medium">Basis</th>
-                        <th className="px-3 py-2.5 text-center text-slate-400 font-medium">Tax</th>
-                        <th className="px-3 py-2.5 text-right text-slate-400 font-medium">Current Rate</th>
-                        <th className="px-3 py-2.5 text-left text-slate-400 font-medium">Effective</th>
-                        <th className="px-3 py-2.5 text-center text-slate-400 font-medium">Active</th>
+                        <th className="px-3 py-2.5 text-left font-medium" style={{ color: "var(--ct-text-muted)" }}>Code</th>
+                        <th className="px-3 py-2.5 text-left font-medium" style={{ color: "var(--ct-text-muted)" }}>Description</th>
+                        <th className="px-3 py-2.5 text-left font-medium" style={{ color: "var(--ct-text-muted)" }}>Basis</th>
+                        <th className="px-3 py-2.5 text-center font-medium" style={{ color: "var(--ct-text-muted)" }}>Tax</th>
+                        <th className="px-3 py-2.5 text-right font-medium" style={{ color: "var(--ct-text-muted)" }}>Current Rate</th>
+                        <th className="px-3 py-2.5 text-left font-medium" style={{ color: "var(--ct-text-muted)" }}>Effective</th>
+                        <th className="px-3 py-2.5 text-center font-medium" style={{ color: "var(--ct-text-muted)" }}>Active</th>
                         <th className="px-3 py-2.5" />
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-700/40">
+                    <tbody className="divide-y" style={{ borderColor: "var(--ct-border-subtle)" }}>
                       {types.map((t) => (
                         <>
                           <tr
                             key={t.id}
                             onClick={() => selectType(t)}
-                            className={`cursor-pointer transition-colors ${
-                              selectedId === t.id
-                                ? "bg-sky-500/10 border-l-2 border-l-sky-500"
-                                : "hover:bg-slate-700/30"
-                            } ${!t.is_active ? "opacity-50" : ""}`}
+                            className="cursor-pointer transition-colors hover:bg-[var(--ct-surface-hover)]"
+                            style={{
+                              ...(selectedId === t.id
+                                ? { background: "var(--accent-light-tint)", borderLeft: "2px solid var(--accent-light)" }
+                                : {}),
+                              opacity: t.is_active ? 1 : 0.5,
+                            }}
                           >
                             <td className="px-3 py-2.5">
-                              <span className="font-mono font-semibold text-slate-100 bg-slate-700 px-1.5 py-0.5 rounded text-[11px]">
+                              <span
+                                className="font-mono font-semibold px-1.5 py-0.5 rounded-[var(--r-sm)] text-[11px]"
+                                style={{ color: "var(--ct-text-primary)", background: "var(--ct-surface-hover)" }}
+                              >
                                 {t.code}
                               </span>
                             </td>
-                            <td className="px-3 py-2.5 text-slate-300 max-w-[10rem] truncate" title={t.description}>
+                            <td className="px-3 py-2.5 max-w-[10rem] truncate" style={{ color: "var(--ct-text-secondary)" }} title={t.description}>
                               {t.description}
                             </td>
                             <td className="px-3 py-2.5">
-                              <span className={`inline-flex px-1.5 py-0.5 rounded text-[10px] font-medium ${
-                                t.calculation_basis === "flat"
-                                  ? "bg-violet-500/15 text-violet-300"
-                                  : "bg-teal-500/15 text-teal-300"
-                              }`}>
+                              <span
+                                className="inline-flex px-1.5 py-0.5 rounded-[var(--r-sm)] text-[10px] font-medium"
+                                style={{ background: "var(--accent-light-tint)", color: "var(--accent-light)" }}
+                              >
                                 {t.calculation_basis === "flat" ? "flat" : "$/kWh"}
                               </span>
                             </td>
                             <td className="px-3 py-2.5 text-center">
                               {t.is_taxable
-                                ? <span className="text-green-400 font-bold">✓</span>
-                                : <span className="text-slate-600">—</span>}
+                                ? <span className="font-bold" style={{ color: "var(--success-light)" }}>✓</span>
+                                : <span style={{ color: "var(--ct-text-muted)" }}>—</span>}
                             </td>
                             <td className="px-3 py-2.5 text-right">
                               {fmtRate(t.current_rate)}
                             </td>
-                            <td className="px-3 py-2.5 text-slate-500">
+                            <td className="px-3 py-2.5" style={{ color: "var(--ct-text-muted)" }}>
                               {t.rate_effective_from ? fmtDate(t.rate_effective_from) : "—"}
                             </td>
                             <td className="px-3 py-2.5 text-center">
                               <button
                                 onClick={(e) => { e.stopPropagation(); toggleActive(t); }}
-                                className={`text-[10px] px-1.5 py-0.5 rounded border transition-colors ${
-                                  t.is_active
-                                    ? "border-green-600/40 text-green-400 hover:bg-green-500/10"
-                                    : "border-slate-600 text-slate-500 hover:bg-slate-700"
-                                }`}
+                                className="text-[10px] px-1.5 py-0.5 rounded-[var(--r-sm)] border transition-colors hover:opacity-80"
+                                style={t.is_active
+                                  ? { borderColor: "var(--success-light-tint)", color: "var(--success-light)" }
+                                  : { borderColor: "var(--ct-border-default)", color: "var(--ct-text-muted)" }}
                               >
                                 {t.is_active ? "Active" : "Inactive"}
                               </button>
@@ -623,11 +654,15 @@ export default function AdminAddonChargeTypes() {
                               <div className="flex items-center gap-2 justify-end" onClick={(e) => e.stopPropagation()}>
                                 <button
                                   onClick={() => startEdit(t)}
-                                  className="text-xs text-sky-400 hover:text-sky-300 transition-colors"
+                                  className="text-xs transition-colors hover:opacity-80"
+                                  style={{ color: "var(--accent-light)" }}
                                 >
                                   Edit
                                 </button>
-                                <span className={`text-[10px] transition-colors ${selectedId === t.id ? "text-sky-400" : "text-slate-600"}`}>
+                                <span
+                                  className="text-[10px] transition-colors"
+                                  style={{ color: selectedId === t.id ? "var(--accent-light)" : "var(--ct-text-muted)" }}
+                                >
                                   {selectedId === t.id ? "▲ rates" : "▼ rates"}
                                 </span>
                               </div>
@@ -637,7 +672,7 @@ export default function AdminAddonChargeTypes() {
                           {/* inline rate panel */}
                           {selectedId === t.id && selectedType && (
                             <tr key={`${t.id}-rates`}>
-                              <td colSpan={8} className="px-3 pb-3 pt-0 bg-sky-500/5">
+                              <td colSpan={8} className="px-3 pb-3 pt-0" style={{ background: "var(--accent-light-tint)" }}>
                                 <RatePanel
                                   type={selectedType}
                                   rates={rates}

@@ -37,13 +37,14 @@ export default function AdminIndex() {
 
   if (!isAdmin()) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center" style={{ background: "var(--ct-canvas)" }}>
         <div className="text-center">
-          <p className="text-red-400 font-semibold text-lg">Access denied</p>
-          <p className="text-slate-500 text-sm mt-1">This section requires admin privileges.</p>
+          <p className="font-semibold text-lg" style={{ color: "var(--danger-light)" }}>Access denied</p>
+          <p className="text-sm mt-1" style={{ color: "var(--ct-text-muted)" }}>This section requires admin privileges.</p>
           <button
             onClick={() => router.push("/")}
-            className="mt-4 text-xs text-sky-400 hover:text-sky-300 underline"
+            className="mt-4 text-xs underline hover:opacity-80"
+            style={{ color: "var(--accent-light)" }}
           >
             Back to dashboard
           </button>
@@ -53,33 +54,37 @@ export default function AdminIndex() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-900">
-      <div className="fixed inset-0 bg-[linear-gradient(rgba(56,189,248,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(56,189,248,0.02)_1px,transparent_1px)] bg-[size:48px_48px] pointer-events-none" />
+    <div className="min-h-screen" style={{ background: "var(--ct-canvas)" }}>
+      <div className="fixed inset-0 bg-[linear-gradient(rgba(16,23,40,0.025)_1px,transparent_1px),linear-gradient(90deg,rgba(16,23,40,0.025)_1px,transparent_1px)] bg-[size:48px_48px] pointer-events-none" />
 
       {/* header */}
-      <header className="relative z-10 border-b border-slate-800 bg-slate-900/90 backdrop-blur-sm">
+      <header className="relative z-10 border-b backdrop-blur-sm" style={{ borderColor: "var(--ct-border-default)", background: "rgba(255,255,255,0.9)" }}>
         <div className="max-w-screen-xl mx-auto px-6 h-14 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button
               onClick={() => router.push("/")}
-              className="text-slate-500 hover:text-white text-xs transition-colors"
+              className="text-xs transition-colors hover:opacity-80"
+              style={{ color: "var(--ct-text-muted)" }}
             >
               ← Dashboard
             </button>
-            <span className="text-slate-700">|</span>
-            <span className="text-xs text-slate-500 bg-red-500/10 border border-red-500/20 text-red-400 px-2 py-0.5 rounded font-medium">
+            <span style={{ color: "var(--ct-border-strong)" }}>|</span>
+            <span
+              className="text-xs px-2 py-0.5 rounded-[var(--r-sm)] font-medium border"
+              style={{ background: "var(--danger-light-tint)", borderColor: "var(--danger-light-tint)", color: "var(--danger-light)" }}
+            >
               Admin
             </span>
-            <span className="text-sm font-semibold text-white">Admin</span>
+            <span className="text-sm font-semibold" style={{ color: "var(--ct-text-primary)" }}>Admin</span>
           </div>
-          {user && <span className="text-slate-500 text-xs">{user.username}</span>}
+          {user && <span className="text-xs" style={{ color: "var(--ct-text-muted)" }}>{user.username}</span>}
         </div>
       </header>
 
       <main className="relative z-10 max-w-screen-xl mx-auto px-6 py-8">
         <div className="mb-6">
-          <h1 className="text-lg font-bold text-white">Admin Tools</h1>
-          <p className="text-slate-500 text-xs mt-0.5">
+          <h1 className="text-lg font-bold" style={{ color: "var(--ct-text-primary)" }}>Admin Tools</h1>
+          <p className="text-xs mt-0.5" style={{ color: "var(--ct-text-muted)" }}>
             Configuration and utilities for supplier data and testing.
           </p>
         </div>
@@ -89,12 +94,13 @@ export default function AdminIndex() {
             <button
               key={p.path}
               onClick={() => router.push(p.path)}
-              className="group text-left border border-red-500/20 hover:border-red-500/50 bg-red-500/5 hover:bg-red-500/10 rounded-xl p-5 transition-all duration-200"
+              className="group text-left rounded-[var(--r-lg)] p-5 border transition-all duration-200 hover:bg-[var(--ct-surface-hover)]"
+              style={{ borderColor: "var(--ct-border-default)", background: "var(--ct-surface)" }}
             >
-              <div className="text-2xl mb-3 text-red-400">{p.icon}</div>
-              <h3 className="text-white font-semibold text-sm mb-1">{p.title}</h3>
-              <p className="text-slate-400 text-xs leading-relaxed">{p.description}</p>
-              <div className="mt-4 text-xs font-medium text-red-400 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="text-2xl mb-3" style={{ color: "var(--accent-light)" }}>{p.icon}</div>
+              <h3 className="font-semibold text-sm mb-1" style={{ color: "var(--ct-text-primary)" }}>{p.title}</h3>
+              <p className="text-xs leading-relaxed" style={{ color: "var(--ct-text-secondary)" }}>{p.description}</p>
+              <div className="mt-4 text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: "var(--accent-light)" }}>
                 Open admin →
               </div>
             </button>
