@@ -11,11 +11,11 @@ interface Stats {
 }
 
 const CARDS = [
-  { key: "total_confirmations",     label: "Total Confirmations",      color: "bg-blue-50 border-blue-200 text-blue-700" },
-  { key: "total_enrollments",       label: "Total Enrollments",        color: "bg-indigo-50 border-indigo-200 text-indigo-700" },
-  { key: "enrollments_checked",     label: "Enrollments Checked",      color: "bg-green-50 border-green-200 text-green-700" },
-  { key: "enrollments_unchecked",   label: "Enrollments Unchecked",    color: "bg-yellow-50 border-yellow-200 text-yellow-700" },
-  { key: "confirmations_unchecked", label: "Confirmations Unchecked",  color: "bg-red-50 border-red-200 text-red-700" },
+  { key: "total_confirmations", label: "Total Confirmations", bg: "var(--accent-light-tint)", fg: "var(--accent-light)" },
+  { key: "total_enrollments", label: "Total Enrollments", bg: "var(--accent-light-tint)", fg: "var(--accent-light)" },
+  { key: "enrollments_checked", label: "Enrollments Checked", bg: "var(--success-light-tint)", fg: "var(--success-light)" },
+  { key: "enrollments_unchecked", label: "Enrollments Unchecked", bg: "var(--amber-light-tint)", fg: "var(--amber-light)" },
+  { key: "confirmations_unchecked", label: "Confirmations Unchecked", bg: "var(--danger-light-tint)", fg: "var(--danger-light)" },
 ] as const;
 
 export default function EnrollmentHome() {
@@ -31,21 +31,21 @@ export default function EnrollmentHome() {
 
   return (
     <EnrollmentLayout title="Enrollment Audit">
-      <h2 className="text-base font-semibold text-gray-800 mb-5">Dashboard</h2>
+      <h2 className="text-base font-semibold mb-5" style={{ color: "var(--ct-text-primary)" }}>Dashboard</h2>
 
       {loading ? (
-        <p className="text-sm text-gray-400">Loading stats…</p>
+        <p className="text-sm" style={{ color: "var(--ct-text-muted)" }}>Loading stats…</p>
       ) : stats ? (
         <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4">
-          {CARDS.map(({ key, label, color }) => (
-            <div key={key} className={`rounded-lg border p-5 ${color}`}>
+          {CARDS.map(({ key, label, bg, fg }) => (
+            <div key={key} className="rounded-[var(--r-lg)] border p-5" style={{ background: bg, borderColor: bg, color: fg }}>
               <p className="text-3xl font-bold">{stats[key].toLocaleString()}</p>
               <p className="text-xs font-medium mt-1 opacity-80">{label}</p>
             </div>
           ))}
         </div>
       ) : (
-        <p className="text-sm text-red-500">Failed to load stats.</p>
+        <p className="text-sm" style={{ color: "var(--danger-light)" }}>Failed to load stats.</p>
       )}
     </EnrollmentLayout>
   );
