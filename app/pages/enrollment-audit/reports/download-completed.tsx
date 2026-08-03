@@ -32,24 +32,27 @@ export default function DownloadCompleted() {
   return (
     <EnrollmentLayout title="Enrollment – Download Completed">
       <div className="max-w-md">
-        <h2 className="text-base font-semibold text-gray-800 mb-5">Download Completed Enrollments</h2>
+        <h2 className="text-base font-semibold mb-5" style={{ color: "var(--ct-text-primary)" }}>Download Completed Enrollments</h2>
 
-        <div className="bg-white rounded-lg border border-gray-200 p-5 space-y-4">
+        <div className="rounded-[var(--r-lg)] border p-5 space-y-4" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Start Date</label>
+            <label className="block text-xs font-medium mb-1" style={{ color: "var(--ct-text-secondary)" }}>Start Date</label>
             <input type="date" value={start} onChange={(e) => setStart(e.target.value)}
-              className="border border-gray-300 rounded px-3 py-1.5 text-sm w-full focus:outline-none focus:ring-1 focus:ring-blue-400" />
+              className="border rounded-[var(--r-sm)] px-3 py-1.5 text-sm w-full outline-none focus:border-[var(--accent-light)]"
+              style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-primary)" }} />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">End Date</label>
+            <label className="block text-xs font-medium mb-1" style={{ color: "var(--ct-text-secondary)" }}>End Date</label>
             <input type="date" value={end} onChange={(e) => setEnd(e.target.value)}
-              className="border border-gray-300 rounded px-3 py-1.5 text-sm w-full focus:outline-none focus:ring-1 focus:ring-blue-400" />
+              className="border rounded-[var(--r-sm)] px-3 py-1.5 text-sm w-full outline-none focus:border-[var(--accent-light)]"
+              style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-primary)" }} />
           </div>
 
-          {err && <p className="text-xs text-red-500">{err}</p>}
+          {err && <p className="text-xs" style={{ color: "var(--danger-light)" }}>{err}</p>}
 
           <button onClick={download} disabled={loading}
-            className="w-full px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 disabled:opacity-40 transition-colors">
+            className="w-full px-4 py-2 text-sm rounded-[var(--r-sm)] disabled:opacity-40 transition-colors hover:opacity-90"
+            style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}>
             {loading ? "Preparing download…" : "Download XLSX"}
           </button>
         </div>
