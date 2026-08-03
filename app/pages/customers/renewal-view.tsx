@@ -103,50 +103,53 @@ const RenewalView = () => {
   };
 
   const statusBadge = (s: string) => {
-    if (s === "active")    return <span className="text-xs bg-green-900/50 text-green-400 px-2 py-0.5 rounded">active</span>;
-    if (s === "pending")   return <span className="text-xs bg-yellow-900/50 text-yellow-400 px-2 py-0.5 rounded">pending</span>;
-    if (s === "cancelled") return <span className="text-xs bg-slate-700 text-red-400/70 px-2 py-0.5 rounded">cancelled</span>;
-    return <span className="text-xs bg-slate-800 text-slate-500 px-2 py-0.5 rounded">{s || "—"}</span>;
+    if (s === "active")
+      return <span className="text-xs px-2 py-0.5 rounded-[var(--r-sm)]" style={{ background: "var(--success-light-tint)", color: "var(--success-light)" }}>active</span>;
+    if (s === "pending")
+      return <span className="text-xs px-2 py-0.5 rounded-[var(--r-sm)]" style={{ background: "var(--amber-light-tint)", color: "var(--amber-light)" }}>pending</span>;
+    if (s === "cancelled")
+      return <span className="text-xs px-2 py-0.5 rounded-[var(--r-sm)]" style={{ background: "var(--ct-surface-hover)", color: "var(--danger-light)" }}>cancelled</span>;
+    return <span className="text-xs px-2 py-0.5 rounded-[var(--r-sm)]" style={{ background: "var(--ct-surface-hover)", color: "var(--ct-text-muted)" }}>{s || "—"}</span>;
   };
 
   const expiryBadge = (dateStr: string) => {
     const days = daysUntilExpiry(dateStr);
     if (days === null) return null;
     if (days < 0)
-      return <span className="text-xs bg-red-900/50 text-red-400 px-2 py-0.5 rounded">Expired</span>;
+      return <span className="text-xs px-2 py-0.5 rounded-[var(--r-sm)]" style={{ background: "var(--danger-light-tint)", color: "var(--danger-light)" }}>Expired</span>;
     if (days <= 60)
-      return <span className="text-xs bg-yellow-900/50 text-yellow-400 px-2 py-0.5 rounded">{days}d left</span>;
-    return <span className="text-xs bg-slate-700 text-slate-400 px-2 py-0.5 rounded">{days}d left</span>;
+      return <span className="text-xs px-2 py-0.5 rounded-[var(--r-sm)]" style={{ background: "var(--amber-light-tint)", color: "var(--amber-light)" }}>{days}d left</span>;
+    return <span className="text-xs px-2 py-0.5 rounded-[var(--r-sm)]" style={{ background: "var(--ct-surface-hover)", color: "var(--ct-text-muted)" }}>{days}d left</span>;
   };
 
   return (
     <Layout title="Renewal Data">
       <div className="max-w-7xl mx-auto p-6 space-y-5">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-slate-800 pb-5">
+        <div className="flex items-center justify-between border-b pb-5" style={{ borderColor: "var(--ct-border-default)" }}>
           <div className="flex items-center gap-4">
             <button
               onClick={() => router.push("/customers")}
-              className="text-slate-400 hover:text-white text-sm"
+              className="text-sm hover:opacity-80"
+              style={{ color: "var(--ct-text-muted)" }}
             >
               ← Customers
             </button>
-            <h1 className="text-2xl font-black text-white uppercase tracking-tighter">
+            <h1 className="text-2xl font-black uppercase tracking-tighter" style={{ color: "var(--ct-text-primary)" }}>
               Renewal Data
             </h1>
             {hasSearched && !loading && (
-              <span className="bg-slate-700 text-slate-300 text-xs px-2 py-1 rounded font-mono">
+              <span className="text-xs px-2 py-1 rounded-[var(--r-sm)] font-mono" style={{ background: "var(--ct-surface-hover)", color: "var(--ct-text-secondary)" }}>
                 {rows.length} results found
               </span>
             )}
             {expiryFilter && (
               <button
                 onClick={clearExpiryFilter}
-                className={`text-xs px-2 py-1 rounded font-semibold flex items-center gap-1 ${
-                  expiryFilter === "expired"
-                    ? "bg-red-900/50 text-red-400"
-                    : "bg-yellow-900/50 text-yellow-400"
-                }`}
+                className="text-xs px-2 py-1 rounded-[var(--r-sm)] font-semibold flex items-center gap-1"
+                style={expiryFilter === "expired"
+                  ? { background: "var(--danger-light-tint)", color: "var(--danger-light)" }
+                  : { background: "var(--amber-light-tint)", color: "var(--amber-light)" }}
               >
                 {expiryFilter === "expired" ? "Expired" : "Expiring ≤60d"} ✕
               </button>
@@ -154,7 +157,8 @@ const RenewalView = () => {
           </div>
           <button
             onClick={() => router.push("/customers/renewal-upload")}
-            className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded text-sm font-bold uppercase transition"
+            className="px-4 py-2 rounded-[var(--r-md)] text-sm font-bold uppercase transition-colors hover:opacity-90"
+            style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
           >
             Upload new file
           </button>
@@ -166,11 +170,10 @@ const RenewalView = () => {
             <button
               key={s}
               onClick={() => handleStatusChange(s)}
-              className={`text-xs px-3 py-1.5 rounded font-semibold uppercase transition ${
-                statusFilter === s
-                  ? "bg-red-600 text-white"
-                  : "bg-slate-800 text-slate-400 hover:text-white"
-              }`}
+              className="text-xs px-3 py-1.5 rounded-[var(--r-sm)] font-semibold uppercase transition-colors"
+              style={statusFilter === s
+                ? { background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }
+                : { background: "var(--ct-surface-hover)", color: "var(--ct-text-muted)" }}
             >
               {s === "" ? "All" : s}
             </button>
@@ -184,23 +187,24 @@ const RenewalView = () => {
           value={search}
           onChange={handleSearchChange}
           onKeyDown={handleKeyDown}
-          className="w-full bg-slate-800 text-white px-4 py-2 rounded border border-slate-700 focus:outline-none focus:border-red-500 text-sm"
+          className="w-full px-4 py-2 rounded-[var(--r-md)] border outline-none focus:border-[var(--accent-light)] text-sm"
+          style={{ background: "var(--ct-surface)", color: "var(--ct-text-primary)", borderColor: "var(--ct-border-default)" }}
         />
 
         {/* Body */}
         {loading ? (
-          <div className="text-slate-500 text-center py-20 animate-pulse">Loading...</div>
+          <div className="text-center py-20 animate-pulse" style={{ color: "var(--ct-text-muted)" }}>Loading...</div>
         ) : !hasSearched ? (
-          <div className="text-slate-500 text-center py-20 text-sm">
+          <div className="text-center py-20 text-sm" style={{ color: "var(--ct-text-muted)" }}>
             Search by Company Name, ESI ID, Customer ID, or Email to find customers.
           </div>
         ) : rows.length === 0 ? (
-          <div className="text-slate-500 text-center py-20">No records found.</div>
+          <div className="text-center py-20" style={{ color: "var(--ct-text-muted)" }}>No records found.</div>
         ) : (
-          <div className="bg-slate-900 rounded-lg border border-slate-800 overflow-x-auto">
+          <div className="rounded-[var(--r-lg)] border overflow-x-auto" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
             <table className="w-full text-sm">
               <thead>
-                <tr className="bg-slate-800 text-slate-400 uppercase text-xs">
+                <tr className="uppercase text-xs" style={{ background: "var(--ct-surface-hover)", color: "var(--ct-text-muted)" }}>
                   <th className="p-3 text-left">Company</th>
                   <th className="p-3 text-left font-mono">Cust ID</th>
                   <th className="p-3 text-left">ESI ID</th>
@@ -218,29 +222,30 @@ const RenewalView = () => {
                   <tr
                     key={r.serial}
                     onClick={() => router.push(`/customers/${r.serial}`)}
-                    className="border-t border-slate-800 hover:bg-slate-800/40 transition-colors cursor-pointer"
+                    className="border-t hover:bg-[var(--ct-surface-hover)] transition-colors cursor-pointer"
+                    style={{ borderColor: "var(--ct-border-subtle)" }}
                   >
-                    <td className="p-3 font-semibold text-white">{r.company_name}</td>
-                    <td className="p-3 font-mono text-xs text-slate-500">{r.cust_id || "—"}</td>
-                    <td className="p-3 font-mono text-xs text-slate-400">{r.premise_id}</td>
+                    <td className="p-3 font-semibold" style={{ color: "var(--ct-text-primary)" }}>{r.company_name}</td>
+                    <td className="p-3 font-mono text-xs" style={{ color: "var(--ct-text-muted)" }}>{r.cust_id || "—"}</td>
+                    <td className="p-3 font-mono text-xs" style={{ color: "var(--ct-text-secondary)" }}>{r.premise_id}</td>
                     <td className="p-3">{statusBadge(r.status)}</td>
-                    <td className="p-3 text-slate-400">{r.broker_code}</td>
+                    <td className="p-3" style={{ color: "var(--ct-text-secondary)" }}>{r.broker_code}</td>
                     <td className="p-3">
                       <div className="flex items-center gap-2">
-                        <span className="text-slate-300">{r.contract_end_date}</span>
+                        <span style={{ color: "var(--ct-text-secondary)" }}>{r.contract_end_date}</span>
                         {expiryBadge(r.contract_end_date)}
                       </div>
                     </td>
-                    <td className="p-3 text-right text-slate-300 font-mono">
+                    <td className="p-3 text-right font-mono" style={{ color: "var(--ct-text-secondary)" }}>
                       {r.contract_rate ? parseFloat(r.contract_rate).toFixed(4) : "—"}
                     </td>
-                    <td className="p-3 text-right text-slate-300 font-mono">
+                    <td className="p-3 text-right font-mono" style={{ color: "var(--ct-text-secondary)" }}>
                       {r.contract_renewal_usage
                         ? Number(r.contract_renewal_usage).toLocaleString()
                         : "—"}
                     </td>
-                    <td className="p-3 text-xs text-slate-400 font-mono">{r.load_profile}</td>
-                    <td className="p-3 text-xs text-slate-400">
+                    <td className="p-3 text-xs font-mono" style={{ color: "var(--ct-text-muted)" }}>{r.load_profile}</td>
+                    <td className="p-3 text-xs" style={{ color: "var(--ct-text-muted)" }}>
                       {r.cust_email || r.cust_phone1 || "—"}
                     </td>
                   </tr>
