@@ -67,21 +67,6 @@ const BLOCK_TYPES = ["7x16", "7x8", "5x16", "7x24", "HOURLY"];
 const INSTRUMENTS = ["FIXED", "HEAT_RATE", "GAS_BASIS", "INDEX"];
 const SOURCES = ["ICE", "BILATERAL", "NYMEX"];
 
-const ZONE_COLORS: Record<string, string> = {
-  HOUSTON: "bg-emerald-100 text-emerald-700 border-emerald-200",
-  NORTH: "bg-blue-100 text-blue-700 border-blue-200",
-  SOUTH: "bg-orange-100 text-orange-700 border-orange-200",
-  WEST: "bg-teal-100 text-teal-700 border-teal-200",
-};
-
-const BLOCK_COLORS: Record<string, string> = {
-  "7x16": "bg-violet-100 text-violet-700",
-  "7x8": "bg-slate-100 text-slate-600",
-  "5x16": "bg-indigo-100 text-indigo-700",
-  "7x24": "bg-rose-100 text-rose-700",
-  HOURLY: "bg-amber-100 text-amber-700",
-};
-
 function today() {
   return new Date().toISOString().split("T")[0];
 }
@@ -273,14 +258,15 @@ export default function HedgingPage() {
         {/* ── Header ── */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-bold text-slate-900">Hedge Book</h1>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <h1 className="text-xl font-bold" style={{ color: "var(--ct-text-primary)" }}>Hedge Book</h1>
+            <p className="text-xs mt-0.5" style={{ color: "var(--ct-text-muted)" }}>
               Forward purchases · DAM positions · Net supply
             </p>
           </div>
           <div className="flex gap-2">
             <Link href="/portfolio/position">
-              <button className="px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white text-slate-600 hover:bg-slate-50">
+              <button className="px-3 py-2 text-sm border rounded-[var(--r-lg)] hover:bg-[var(--ct-surface-hover)]"
+                style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)", color: "var(--ct-text-secondary)" }}>
                 ← Position Screen
               </button>
             </Link>
@@ -291,7 +277,8 @@ export default function HedgingPage() {
                 setForm({ ...EMPTY_FORM });
                 setError("");
               }}
-              className="px-4 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              className="px-4 py-2 text-sm rounded-[var(--r-lg)] transition-colors hover:opacity-90"
+              style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
             >
               {showForm ? "✕ Cancel" : "+ Add Hedge"}
             </button>
@@ -301,56 +288,56 @@ export default function HedgingPage() {
         {/* ── Summary KPIs ── */}
         {summary?.stats && (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-white rounded-xl border border-slate-200 p-4">
-              <p className="text-xs text-slate-500 uppercase tracking-wide">
+            <div className="rounded-[var(--r-lg)] border p-4" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
+              <p className="text-xs uppercase tracking-wide" style={{ color: "var(--ct-text-muted)" }}>
                 Total Deals
               </p>
-              <p className="text-2xl font-bold text-slate-900 mt-1">
+              <p className="text-2xl font-bold mt-1" style={{ color: "var(--ct-text-primary)" }}>
                 {summary.stats.unique_deals || 0}
               </p>
             </div>
-            <div className="bg-white rounded-xl border border-slate-200 p-4">
-              <p className="text-xs text-slate-500 uppercase tracking-wide">
+            <div className="rounded-[var(--r-lg)] border p-4" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
+              <p className="text-xs uppercase tracking-wide" style={{ color: "var(--ct-text-muted)" }}>
                 Total MW Hedged
               </p>
-              <div className="bg-white rounded-xl border border-slate-200 p-4">
-                <p className="text-xs text-slate-500 uppercase tracking-wide">
+              <div className="rounded-[var(--r-lg)] border p-4" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
+                <p className="text-xs uppercase tracking-wide" style={{ color: "var(--ct-text-muted)" }}>
                   Total MW (Block Size)
                 </p>
-                <p className="text-2xl font-bold text-slate-900 mt-1">
+                <p className="text-2xl font-bold mt-1" style={{ color: "var(--ct-text-primary)" }}>
                   {Number(summary.stats.total_mw || 0).toLocaleString()}
                 </p>
-                <p className="text-xs text-slate-400 mt-1">MW per hour</p>
+                <p className="text-xs mt-1" style={{ color: "var(--ct-text-muted)" }}>MW per hour</p>
               </div>
 
-              <div className="bg-white rounded-xl border border-slate-200 p-4">
-                <p className="text-xs text-slate-500 uppercase tracking-wide">
+              <div className="rounded-[var(--r-lg)] border p-4" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
+                <p className="text-xs uppercase tracking-wide" style={{ color: "var(--ct-text-muted)" }}>
                   Total MWh Hedged
                 </p>
-                <p className="text-2xl font-bold text-slate-900 mt-1">
+                <p className="text-2xl font-bold mt-1" style={{ color: "var(--ct-text-primary)" }}>
                   {Number(summary.stats.total_mwh || 0).toLocaleString()}
                 </p>
-                <p className="text-xs text-slate-400 mt-1">
+                <p className="text-xs mt-1" style={{ color: "var(--ct-text-muted)" }}>
                   Total energy hedged
                 </p>
               </div>
             </div>
-            <div className="bg-white rounded-xl border border-slate-200 p-4">
-              <p className="text-xs text-slate-500 uppercase tracking-wide">
+            <div className="rounded-[var(--r-lg)] border p-4" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
+              <p className="text-xs uppercase tracking-wide" style={{ color: "var(--ct-text-muted)" }}>
                 Avg Portfolio Price
               </p>
-              <p className="text-2xl font-bold text-slate-900 mt-1">
+              <p className="text-2xl font-bold mt-1" style={{ color: "var(--ct-text-primary)" }}>
                 ${fmt(summary.stats.avg_portfolio_price, 2)}
               </p>
             </div>
-            <div className="bg-white rounded-xl border border-slate-200 p-4">
-              <p className="text-xs text-slate-500 uppercase tracking-wide">
+            <div className="rounded-[var(--r-lg)] border p-4" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
+              <p className="text-xs uppercase tracking-wide" style={{ color: "var(--ct-text-muted)" }}>
                 Delivery Window
               </p>
-              <p className="text-sm font-bold text-slate-900 mt-1">
+              <p className="text-sm font-bold mt-1" style={{ color: "var(--ct-text-primary)" }}>
                 {fmtDate(summary.stats.earliest_delivery)}
               </p>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs" style={{ color: "var(--ct-text-muted)" }}>
                 to {fmtDate(summary.stats.latest_delivery)}
               </p>
             </div>
@@ -359,15 +346,15 @@ export default function HedgingPage() {
 
         {/* ── Add/Edit Form ── */}
         {showForm && (
-          <div className="bg-white rounded-xl border-2 border-red-200 p-6 space-y-5">
+          <div className="rounded-[var(--r-lg)] border-2 p-6 space-y-5" style={{ background: "var(--ct-surface)", borderColor: "var(--accent-light-tint)" }}>
             <div className="flex items-center justify-between">
-              <h2 className="text-sm font-bold text-slate-800">
+              <h2 className="text-sm font-bold" style={{ color: "var(--ct-text-primary)" }}>
                 {editId
                   ? `Edit Hedge — ${form.deal_number}`
                   : "New Hedge Entry"}
               </h2>
               {error && (
-                <p className="text-xs text-red-600 bg-red-50 border border-red-200 px-3 py-1.5 rounded-lg">
+                <p className="text-xs px-3 py-1.5 rounded-[var(--r-lg)] border" style={{ color: "var(--danger-light)", background: "var(--danger-light-tint)", borderColor: "var(--danger-light-tint)" }}>
                   ⚠ {error}
                 </p>
               )}
@@ -376,33 +363,35 @@ export default function HedgingPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {/* Row 1 */}
               <div>
-                <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
-                  Deal Number <span className="text-red-500">*</span>
+                <label className="text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--ct-text-secondary)" }}>
+                  Deal Number <span style={{ color: "var(--danger-light)" }}>*</span>
                 </label>
                 <input
                   type="text"
                   value={form.deal_number}
                   onChange={(e) => setField("deal_number", e.target.value)}
                   placeholder="e.g. PW1252856"
-                  className="mt-1 w-full border border-slate-200 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:border-red-400"
+                  className="mt-1 w-full border rounded-[var(--r-lg)] px-3 py-2 text-sm font-mono outline-none focus:border-[var(--accent-light)]"
+                  style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-primary)" }}
                 />
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
+                <label className="text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--ct-text-secondary)" }}>
                   Trade Date
                 </label>
                 <input
                   type="date"
                   value={form.trade_date}
                   onChange={(e) => setField("trade_date", e.target.value)}
-                  className="mt-1 w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-400"
+                  className="mt-1 w-full border rounded-[var(--r-lg)] px-3 py-2 text-sm outline-none focus:border-[var(--accent-light)]"
+                  style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-primary)" }}
                 />
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
-                  Location <span className="text-red-500">*</span>
+                <label className="text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--ct-text-secondary)" }}>
+                  Location <span style={{ color: "var(--danger-light)" }}>*</span>
                 </label>
                 <select
                   value={form.location}
@@ -410,7 +399,8 @@ export default function HedgingPage() {
                     setField("location", e.target.value);
                     setField("zone", LOCATION_TO_ZONE[e.target.value]);
                   }}
-                  className="mt-1 w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-400"
+                  className="mt-1 w-full border rounded-[var(--r-lg)] px-3 py-2 text-sm outline-none focus:border-[var(--accent-light)]"
+                  style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-primary)" }}
                 >
                   {LOCATIONS.map((l) => (
                     <option key={l} value={l}>
@@ -418,38 +408,40 @@ export default function HedgingPage() {
                     </option>
                   ))}
                 </select>
-                <p className="text-xs text-slate-400 mt-1">
+                <p className="text-xs mt-1" style={{ color: "var(--ct-text-muted)" }}>
                   Zone: {LOCATION_TO_ZONE[form.location]}
                 </p>
               </div>
 
               {/* Row 2 */}
               <div>
-                <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
-                  Delivery Start <span className="text-red-500">*</span>
+                <label className="text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--ct-text-secondary)" }}>
+                  Delivery Start <span style={{ color: "var(--danger-light)" }}>*</span>
                 </label>
                 <input
                   type="date"
                   value={form.delivery_start}
                   onChange={(e) => setField("delivery_start", e.target.value)}
-                  className="mt-1 w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-400"
+                  className="mt-1 w-full border rounded-[var(--r-lg)] px-3 py-2 text-sm outline-none focus:border-[var(--accent-light)]"
+                  style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-primary)" }}
                 />
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
-                  Delivery End <span className="text-red-500">*</span>
+                <label className="text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--ct-text-secondary)" }}>
+                  Delivery End <span style={{ color: "var(--danger-light)" }}>*</span>
                 </label>
                 <input
                   type="date"
                   value={form.delivery_end}
                   onChange={(e) => setField("delivery_end", e.target.value)}
-                  className="mt-1 w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-400"
+                  className="mt-1 w-full border rounded-[var(--r-lg)] px-3 py-2 text-sm outline-none focus:border-[var(--accent-light)]"
+                  style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-primary)" }}
                 />
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
+                <label className="text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--ct-text-secondary)" }}>
                   Block Type
                 </label>
                 <div className="mt-1 flex flex-wrap gap-1.5">
@@ -457,11 +449,10 @@ export default function HedgingPage() {
                     <button
                       key={b}
                       onClick={() => setField("block_type", b)}
-                      className={`px-2.5 py-1 text-xs rounded-lg border transition-colors ${
-                        form.block_type === b
-                          ? "bg-red-600 text-white border-red-600"
-                          : "border-slate-200 text-slate-600 hover:bg-slate-50"
-                      }`}
+                      className="px-2.5 py-1 text-xs rounded-[var(--r-lg)] border transition-colors"
+                      style={form.block_type === b
+                        ? { background: "var(--accent-light)", color: "var(--accent-light-on-solid)", borderColor: "var(--accent-light)" }
+                        : { borderColor: "var(--ct-border-default)", color: "var(--ct-text-secondary)" }}
                     >
                       {b}
                     </button>
@@ -472,8 +463,8 @@ export default function HedgingPage() {
               {/* Row 3 */}
               {/* Row 3 */}
               <div>
-                <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
-                  Volume (MW) <span className="text-red-500">*</span>
+                <label className="text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--ct-text-secondary)" }}>
+                  Volume (MW) <span style={{ color: "var(--danger-light)" }}>*</span>
                 </label>
                 <input
                   type="number"
@@ -483,18 +474,20 @@ export default function HedgingPage() {
                   step="0.01"
                   min="0"
                   onWheel={(e) => e.currentTarget.blur()}
-                  className="mt-1 w-full border border-slate-200 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:border-red-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  className="mt-1 w-full border rounded-[var(--r-lg)] px-3 py-2 text-sm font-mono outline-none focus:border-[var(--accent-light)] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-primary)" }}
                 />
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
+                <label className="text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--ct-text-secondary)" }}>
                   Instrument Type
                 </label>
                 <select
                   value={form.instrument_type}
                   onChange={(e) => setField("instrument_type", e.target.value)}
-                  className="mt-1 w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-400"
+                  className="mt-1 w-full border rounded-[var(--r-lg)] px-3 py-2 text-sm outline-none focus:border-[var(--accent-light)]"
+                  style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-primary)" }}
                 >
                   {INSTRUMENTS.map((i) => (
                     <option key={i} value={i}>
@@ -508,8 +501,8 @@ export default function HedgingPage() {
               {form.instrument_type === "FIXED" ||
               form.instrument_type === "INDEX" ? (
                 <div>
-                  <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
-                    Price ($/MWh) <span className="text-red-500">*</span>
+                  <label className="text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--ct-text-secondary)" }}>
+                    Price ($/MWh) <span style={{ color: "var(--danger-light)" }}>*</span>
                   </label>
                   <input
                     type="number"
@@ -529,15 +522,16 @@ export default function HedgingPage() {
                     step="0.01"
                     min="0"
                     onWheel={(e) => e.currentTarget.blur()}
-                    className="mt-1 w-full border border-slate-200 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:border-red-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    className="mt-1 w-full border rounded-[var(--r-lg)] px-3 py-2 text-sm font-mono outline-none focus:border-[var(--accent-light)] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-primary)" }}
                   />
                 </div>
               ) : (
                 <>
                   <div>
-                    <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
+                    <label className="text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--ct-text-secondary)" }}>
                       Heat Rate (BTU/kWh){" "}
-                      <span className="text-red-500">*</span>
+                      <span style={{ color: "var(--danger-light)" }}>*</span>
                     </label>
                     <input
                       type="number"
@@ -545,13 +539,14 @@ export default function HedgingPage() {
                       onChange={(e) => setField("hr_value", e.target.value)}
                       placeholder="7.500"
                       step="0.001"
-                      className="mt-1 w-full border border-slate-200 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:border-red-400"
+                      className="mt-1 w-full border rounded-[var(--r-lg)] px-3 py-2 text-sm font-mono outline-none focus:border-[var(--accent-light)]"
+                      style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-primary)" }}
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
+                    <label className="text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--ct-text-secondary)" }}>
                       Gas Price ($/MMBtu){" "}
-                      <span className="text-red-500">*</span>
+                      <span style={{ color: "var(--danger-light)" }}>*</span>
                     </label>
                     <input
                       type="number"
@@ -559,7 +554,8 @@ export default function HedgingPage() {
                       onChange={(e) => setField("gas_price", e.target.value)}
                       placeholder="3.500"
                       step="0.001"
-                      className="mt-1 w-full border border-slate-200 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:border-red-400"
+                      className="mt-1 w-full border rounded-[var(--r-lg)] px-3 py-2 text-sm font-mono outline-none focus:border-[var(--accent-light)]"
+                      style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-primary)" }}
                     />
                   </div>
                 </>
@@ -567,7 +563,7 @@ export default function HedgingPage() {
 
               {/* Row 4 */}
               <div>
-                <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
+                <label className="text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--ct-text-secondary)" }}>
                   Counterparty
                 </label>
                 <input
@@ -575,12 +571,13 @@ export default function HedgingPage() {
                   value={form.counterparty}
                   onChange={(e) => setField("counterparty", e.target.value)}
                   placeholder="e.g. Shell Energy"
-                  className="mt-1 w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-400"
+                  className="mt-1 w-full border rounded-[var(--r-lg)] px-3 py-2 text-sm outline-none focus:border-[var(--accent-light)]"
+                  style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-primary)" }}
                 />
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
+                <label className="text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--ct-text-secondary)" }}>
                   Source
                 </label>
                 <div className="mt-1 flex gap-1.5">
@@ -588,11 +585,10 @@ export default function HedgingPage() {
                     <button
                       key={s}
                       onClick={() => setField("source", s)}
-                      className={`px-3 py-1.5 text-xs rounded-lg border transition-colors ${
-                        form.source === s
-                          ? "bg-slate-700 text-white border-slate-700"
-                          : "border-slate-200 text-slate-600 hover:bg-slate-50"
-                      }`}
+                      className="px-3 py-1.5 text-xs rounded-[var(--r-lg)] border transition-colors"
+                      style={form.source === s
+                        ? { background: "var(--accent-light)", color: "var(--accent-light-on-solid)", borderColor: "var(--accent-light)" }
+                        : { borderColor: "var(--ct-border-default)", color: "var(--ct-text-secondary)" }}
                     >
                       {s}
                     </button>
@@ -601,7 +597,7 @@ export default function HedgingPage() {
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
+                <label className="text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--ct-text-secondary)" }}>
                   Notes
                 </label>
                 <input
@@ -609,44 +605,47 @@ export default function HedgingPage() {
                   value={form.notes}
                   onChange={(e) => setField("notes", e.target.value)}
                   placeholder="Optional notes"
-                  className="mt-1 w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-400"
+                  className="mt-1 w-full border rounded-[var(--r-lg)] px-3 py-2 text-sm outline-none focus:border-[var(--accent-light)]"
+                  style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-primary)" }}
                 />
               </div>
             </div>
 
-            {/* Effective price preview */}
+            {/* Effective price preview — calculated result, uses shared accent per convention */}
             {form.instrument_type === "HEAT_RATE" &&
               form.hr_value &&
               form.gas_price && (
-                <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-2 flex items-center gap-3">
-                  <span className="text-xs text-amber-700 font-semibold">
+                <div className="rounded-[var(--r-lg)] border px-4 py-2 flex items-center gap-3" style={{ background: "var(--accent-light-tint)", borderColor: "var(--accent-light-tint)" }}>
+                  <span className="text-xs font-semibold" style={{ color: "var(--accent-light)" }}>
                     Effective Price:
                   </span>
-                  <span className="text-sm font-mono font-bold text-amber-900">
+                  <span className="text-sm font-mono font-bold" style={{ color: "var(--accent-light)" }}>
                     ${effectivePrice}/MWh
                   </span>
-                  <span className="text-xs text-amber-600">
+                  <span className="text-xs" style={{ color: "var(--accent-light)" }}>
                     ({form.hr_value} HR × ${form.gas_price} gas)
                   </span>
                 </div>
               )}
 
             {/* Save button */}
-            <div className="flex justify-end gap-3 pt-2 border-t">
+            <div className="flex justify-end gap-3 pt-2 border-t" style={{ borderColor: "var(--ct-border-default)" }}>
               <button
                 onClick={() => {
                   setShowForm(false);
                   setEditId(null);
                   setError("");
                 }}
-                className="px-4 py-2 text-sm border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50"
+                className="px-4 py-2 text-sm border rounded-[var(--r-lg)] hover:bg-[var(--ct-surface-hover)]"
+                style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-secondary)" }}
               >
                 Cancel
               </button>
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="px-6 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 font-semibold transition-colors"
+                className="px-6 py-2 text-sm rounded-[var(--r-lg)] disabled:opacity-50 font-semibold transition-colors hover:opacity-90"
+                style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
               >
                 {saving ? "Saving..." : editId ? "Update Hedge" : "Save Hedge"}
               </button>
@@ -655,17 +654,16 @@ export default function HedgingPage() {
         )}
 
         {/* ── Tabs ── */}
-        <div className="border-b border-slate-200">
+        <div className="border-b" style={{ borderColor: "var(--ct-border-default)" }}>
           <div className="flex gap-6">
             {(["book", "summary"] as const).map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`pb-3 text-sm font-medium capitalize transition-colors border-b-2 -mb-px ${
-                  activeTab === tab
-                    ? "border-red-600 text-red-600"
-                    : "border-transparent text-slate-500 hover:text-slate-700"
-                }`}
+                className="pb-3 text-sm font-medium capitalize transition-colors border-b-2 -mb-px"
+                style={activeTab === tab
+                  ? { borderColor: "var(--accent-light)", color: "var(--accent-light)" }
+                  : { borderColor: "transparent", color: "var(--ct-text-muted)" }}
               >
                 {tab === "book" ? "Hedge Book" : "Summary"}
               </button>
@@ -680,11 +678,10 @@ export default function HedgingPage() {
             <div className="flex gap-2">
               <button
                 onClick={() => setFilterZone("")}
-                className={`px-3 py-1.5 text-xs rounded-lg border transition-colors ${
-                  !filterZone
-                    ? "bg-red-600 text-white border-red-600"
-                    : "border-slate-200 text-slate-600 hover:bg-slate-50"
-                }`}
+                className="px-3 py-1.5 text-xs rounded-[var(--r-lg)] border transition-colors"
+                style={!filterZone
+                  ? { background: "var(--accent-light)", color: "var(--accent-light-on-solid)", borderColor: "var(--accent-light)" }
+                  : { borderColor: "var(--ct-border-default)", color: "var(--ct-text-secondary)" }}
               >
                 All Zones
               </button>
@@ -692,11 +689,10 @@ export default function HedgingPage() {
                 <button
                   key={z}
                   onClick={() => setFilterZone(z)}
-                  className={`px-3 py-1.5 text-xs rounded-lg border transition-colors ${
-                    filterZone === z
-                      ? "bg-red-600 text-white border-red-600"
-                      : "border-slate-200 text-slate-600 hover:bg-slate-50"
-                  }`}
+                  className="px-3 py-1.5 text-xs rounded-[var(--r-lg)] border transition-colors"
+                  style={filterZone === z
+                    ? { background: "var(--accent-light)", color: "var(--accent-light-on-solid)", borderColor: "var(--accent-light)" }
+                    : { borderColor: "var(--ct-border-default)", color: "var(--ct-text-secondary)" }}
                 >
                   {z}
                 </button>
@@ -704,125 +700,119 @@ export default function HedgingPage() {
             </div>
 
             {loading ? (
-              <div className="text-center py-12 text-slate-400 text-sm">
+              <div className="text-center py-12 text-sm" style={{ color: "var(--ct-text-muted)" }}>
                 Loading...
               </div>
             ) : filtered.length === 0 ? (
-              <div className="bg-white rounded-xl border border-dashed border-slate-300 p-12 text-center">
-                <p className="text-slate-400 text-sm">No hedges entered yet</p>
-                <p className="text-slate-300 text-xs mt-1">
+              <div className="rounded-[var(--r-lg)] border border-dashed p-12 text-center" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
+                <p className="text-sm" style={{ color: "var(--ct-text-muted)" }}>No hedges entered yet</p>
+                <p className="text-xs mt-1" style={{ color: "var(--ct-text-muted)" }}>
                   Click + Add Hedge to enter your first forward purchase
                 </p>
               </div>
             ) : (
-              <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+              <div className="rounded-[var(--r-lg)] border overflow-hidden" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="bg-slate-50 border-b border-slate-200">
-                      <th className="text-left px-4 py-3 text-xs text-slate-500 uppercase tracking-wide font-medium">
+                    <tr className="border-b" style={{ background: "var(--ct-surface-hover)", borderColor: "var(--ct-border-default)" }}>
+                      <th className="text-left px-4 py-3 text-xs uppercase tracking-wide font-medium" style={{ color: "var(--ct-text-muted)" }}>
                         Deal #
                       </th>
-                      <th className="text-left px-4 py-3 text-xs text-slate-500 uppercase tracking-wide font-medium">
+                      <th className="text-left px-4 py-3 text-xs uppercase tracking-wide font-medium" style={{ color: "var(--ct-text-muted)" }}>
                         Zone
                       </th>
-                      <th className="text-left px-4 py-3 text-xs text-slate-500 uppercase tracking-wide font-medium">
+                      <th className="text-left px-4 py-3 text-xs uppercase tracking-wide font-medium" style={{ color: "var(--ct-text-muted)" }}>
                         Block
                       </th>
-                      <th className="text-left px-4 py-3 text-xs text-slate-500 uppercase tracking-wide font-medium">
+                      <th className="text-left px-4 py-3 text-xs uppercase tracking-wide font-medium" style={{ color: "var(--ct-text-muted)" }}>
                         Delivery
                       </th>
-                      <th className="text-right px-4 py-3 text-xs text-slate-500 uppercase tracking-wide font-medium">
+                      <th className="text-right px-4 py-3 text-xs uppercase tracking-wide font-medium" style={{ color: "var(--ct-text-muted)" }}>
                         Volume MW
                       </th>
-                      <th className="text-right px-4 py-3 text-xs text-slate-500 uppercase tracking-wide font-medium">
+                      <th className="text-right px-4 py-3 text-xs uppercase tracking-wide font-medium" style={{ color: "var(--ct-text-muted)" }}>
                         Price
                       </th>
-                      <th className="text-left px-4 py-3 text-xs text-slate-500 uppercase tracking-wide font-medium">
+                      <th className="text-left px-4 py-3 text-xs uppercase tracking-wide font-medium" style={{ color: "var(--ct-text-muted)" }}>
                         Location
                       </th>
-                      <th className="text-left px-4 py-3 text-xs text-slate-500 uppercase tracking-wide font-medium">
+                      <th className="text-left px-4 py-3 text-xs uppercase tracking-wide font-medium" style={{ color: "var(--ct-text-muted)" }}>
                         Instrument
                       </th>
-                      <th className="text-left px-4 py-3 text-xs text-slate-500 uppercase tracking-wide font-medium">
+                      <th className="text-left px-4 py-3 text-xs uppercase tracking-wide font-medium" style={{ color: "var(--ct-text-muted)" }}>
                         Source
                       </th>
-                      <th className="text-left px-4 py-3 text-xs text-slate-500 uppercase tracking-wide font-medium">
+                      <th className="text-left px-4 py-3 text-xs uppercase tracking-wide font-medium" style={{ color: "var(--ct-text-muted)" }}>
                         Counterparty
                       </th>
                       <th className="px-4 py-3"></th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100">
+                  <tbody className="divide-y" style={{ borderColor: "var(--ct-border-subtle)" }}>
                     {filtered.map((h) => (
                       <tr
                         key={h.id}
-                        className="hover:bg-slate-50 transition-colors"
+                        className="hover:bg-[var(--ct-surface-hover)] transition-colors"
                       >
-                        <td className="px-4 py-3 font-mono text-xs font-semibold text-slate-800">
+                        <td className="px-4 py-3 font-mono text-xs font-semibold" style={{ color: "var(--ct-text-primary)" }}>
                           {h.deal_number}
                         </td>
                         <td className="px-4 py-3">
-                          <span
-                            className={`text-xs font-medium px-2 py-0.5 rounded border ${
-                              ZONE_COLORS[h.zone] ||
-                              "bg-slate-100 text-slate-600 border-slate-200"
-                            }`}
-                          >
+                          <span className="text-xs font-medium px-2 py-0.5 rounded-[var(--r-sm)]"
+                            style={{ background: "var(--accent-light-tint)", color: "var(--accent-light)" }}>
                             {h.zone}
                           </span>
                         </td>
                         <td className="px-4 py-3">
-                          <span
-                            className={`text-xs font-medium px-2 py-0.5 rounded ${
-                              BLOCK_COLORS[h.block_type] ||
-                              "bg-slate-100 text-slate-600"
-                            }`}
-                          >
+                          <span className="text-xs font-medium px-2 py-0.5 rounded-[var(--r-sm)]"
+                            style={{ background: "var(--accent-light-tint)", color: "var(--accent-light)" }}>
                             {h.block_type}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-xs text-slate-600">
+                        <td className="px-4 py-3 text-xs" style={{ color: "var(--ct-text-secondary)" }}>
                           <span>{fmtDate(h.delivery_start)}</span>
-                          <span className="text-slate-300 mx-1">→</span>
+                          <span className="mx-1" style={{ color: "var(--ct-text-muted)" }}>→</span>
                           <span>{fmtDate(h.delivery_end)}</span>
-                          <span className="text-slate-400 ml-1">
+                          <span className="ml-1" style={{ color: "var(--ct-text-muted)" }}>
                             ({h.delivery_days}d)
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-right font-mono text-slate-900 font-medium">
+                        <td className="px-4 py-3 text-right font-mono font-medium" style={{ color: "var(--ct-text-primary)" }}>
                           {Number(h.volume_mw).toLocaleString()} MW
                         </td>
-                        <td className="px-4 py-3 text-right font-mono text-slate-900">
+                        <td className="px-4 py-3 text-right font-mono" style={{ color: "var(--ct-text-primary)" }}>
                           ${fmt(h.effective_price, 2)}
                           {h.instrument_type === "HEAT_RATE" && (
-                            <div className="text-xs text-slate-400">
+                            <div className="text-xs" style={{ color: "var(--ct-text-muted)" }}>
                               {h.hr_value} HR × ${h.gas_price}
                             </div>
                           )}
                         </td>
-                        <td className="px-4 py-3 text-xs text-slate-500">
+                        <td className="px-4 py-3 text-xs" style={{ color: "var(--ct-text-muted)" }}>
                           {h.location || "—"}
                         </td>
-                        <td className="px-4 py-3 text-xs text-slate-500">
+                        <td className="px-4 py-3 text-xs" style={{ color: "var(--ct-text-muted)" }}>
                           {h.instrument_type.replace("_", " ")}
                         </td>
-                        <td className="px-4 py-3 text-xs text-slate-500">
+                        <td className="px-4 py-3 text-xs" style={{ color: "var(--ct-text-muted)" }}>
                           {h.source}
                         </td>
-                        <td className="px-4 py-3 text-xs text-slate-500">
+                        <td className="px-4 py-3 text-xs" style={{ color: "var(--ct-text-muted)" }}>
                           {h.counterparty || "—"}
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex gap-2">
                             <button
                               onClick={() => handleEdit(h)}
-                              className="text-xs text-blue-600 hover:underline"
+                              className="text-xs hover:underline"
+                              style={{ color: "var(--accent-light)" }}
                             >
                               Edit
                             </button>
                             <button
                               onClick={() => handleDelete(h.id, h.deal_number)}
-                              className="text-xs text-red-500 hover:underline"
+                              className="text-xs hover:underline"
+                              style={{ color: "var(--danger-light)" }}
                             >
                               Delete
                             </button>
@@ -841,77 +831,74 @@ export default function HedgingPage() {
         {activeTab === "summary" && summary && (
           <div className="space-y-4">
             {/* By zone */}
-            <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-              <div className="px-4 py-3 border-b border-slate-100">
-                <h3 className="text-sm font-semibold text-slate-700">
+            <div className="rounded-[var(--r-lg)] border overflow-hidden" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
+              <div className="px-4 py-3 border-b" style={{ borderColor: "var(--ct-border-subtle)" }}>
+                <h3 className="text-sm font-semibold" style={{ color: "var(--ct-text-primary)" }}>
                   Hedged Position by Zone
                 </h3>
               </div>
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="bg-slate-50 border-b border-slate-100">
-                    <th className="text-left px-4 py-2 text-xs text-slate-500 uppercase font-medium">
+                  <tr className="border-b" style={{ background: "var(--ct-surface-hover)", borderColor: "var(--ct-border-subtle)" }}>
+                    <th className="text-left px-4 py-2 text-xs uppercase font-medium" style={{ color: "var(--ct-text-muted)" }}>
                       Zone
                     </th>
-                    <th className="text-left px-4 py-2 text-xs text-slate-500 uppercase font-medium">
+                    <th className="text-left px-4 py-2 text-xs uppercase font-medium" style={{ color: "var(--ct-text-muted)" }}>
                       Block
                     </th>
-                    <th className="text-left px-4 py-2 text-xs text-slate-500 uppercase font-medium">
+                    <th className="text-left px-4 py-2 text-xs uppercase font-medium" style={{ color: "var(--ct-text-muted)" }}>
                       Instrument
                     </th>
-                    <th className="text-right px-4 py-2 text-xs text-slate-500 uppercase font-medium">
+                    <th className="text-right px-4 py-2 text-xs uppercase font-medium" style={{ color: "var(--ct-text-muted)" }}>
                       Deals
                     </th>
-                    <th className="text-right px-4 py-2 text-xs text-slate-500 uppercase font-medium">
+                    <th className="text-right px-4 py-2 text-xs uppercase font-medium" style={{ color: "var(--ct-text-muted)" }}>
                       Total MW
                     </th>
-                    <th className="text-right px-4 py-2 text-xs text-slate-500 uppercase font-medium">
+                    <th className="text-right px-4 py-2 text-xs uppercase font-medium" style={{ color: "var(--ct-text-muted)" }}>
                       Avg Price
                     </th>
-                    <th className="text-left px-4 py-2 text-xs text-slate-500 uppercase font-medium">
+                    <th className="text-left px-4 py-2 text-xs uppercase font-medium" style={{ color: "var(--ct-text-muted)" }}>
                       Delivery
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y" style={{ borderColor: "var(--ct-border-subtle)" }}>
                   {summary.by_zone.length === 0 ? (
                     <tr>
                       <td
                         colSpan={7}
-                        className="text-center py-8 text-slate-400 text-sm"
+                        className="text-center py-8 text-sm"
+                        style={{ color: "var(--ct-text-muted)" }}
                       >
                         No hedges entered yet
                       </td>
                     </tr>
                   ) : (
                     summary.by_zone.map((r, i) => (
-                      <tr key={i} className="hover:bg-slate-50">
+                      <tr key={i} className="hover:bg-[var(--ct-surface-hover)]">
                         <td className="px-4 py-2">
-                          <span
-                            className={`text-xs font-medium px-2 py-0.5 rounded border ${
-                              ZONE_COLORS[r.zone] ||
-                              "bg-slate-100 text-slate-600 border-slate-200"
-                            }`}
-                          >
+                          <span className="text-xs font-medium px-2 py-0.5 rounded-[var(--r-sm)]"
+                            style={{ background: "var(--accent-light-tint)", color: "var(--accent-light)" }}>
                             {r.zone}
                           </span>
                         </td>
-                        <td className="px-4 py-2 text-xs text-slate-600">
+                        <td className="px-4 py-2 text-xs" style={{ color: "var(--ct-text-secondary)" }}>
                           {r.block_type}
                         </td>
-                        <td className="px-4 py-2 text-xs text-slate-500">
+                        <td className="px-4 py-2 text-xs" style={{ color: "var(--ct-text-muted)" }}>
                           {r.instrument_type}
                         </td>
-                        <td className="px-4 py-2 text-right text-slate-700">
+                        <td className="px-4 py-2 text-right" style={{ color: "var(--ct-text-secondary)" }}>
                           {r.deals}
                         </td>
-                        <td className="px-4 py-2 text-right font-mono text-slate-900 font-medium">
+                        <td className="px-4 py-2 text-right font-mono font-medium" style={{ color: "var(--ct-text-primary)" }}>
                           {Number(r.total_mw).toLocaleString()} MW
                         </td>
-                        <td className="px-4 py-2 text-right font-mono text-slate-900">
+                        <td className="px-4 py-2 text-right font-mono" style={{ color: "var(--ct-text-primary)" }}>
                           ${fmt(r.avg_price, 4)}
                         </td>
-                        <td className="px-4 py-2 text-xs text-slate-500">
+                        <td className="px-4 py-2 text-xs" style={{ color: "var(--ct-text-muted)" }}>
                           {fmtDate(r.earliest_delivery)} →{" "}
                           {fmtDate(r.latest_delivery)}
                         </td>
