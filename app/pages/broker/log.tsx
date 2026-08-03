@@ -31,31 +31,32 @@ const BrokerLogPage = () => {
   return (
     <Layout title="Broker Log">
       <div className="max-w-7xl mx-auto p-6 space-y-6">
-        <header className="flex justify-between items-center border-b border-slate-800 pb-6">
-          <h1 className="text-3xl font-black text-white uppercase tracking-tighter">
+        <header className="flex justify-between items-center border-b pb-6" style={{ borderColor: "var(--ct-border-default)" }}>
+          <h1 className="text-3xl font-black uppercase tracking-tighter" style={{ color: "var(--ct-text-primary)" }}>
             Broker Log
           </h1>
           <button
             onClick={() => router.push("/broker")}
-            className="text-slate-400 hover:text-white text-sm"
+            className="text-sm hover:opacity-80"
+            style={{ color: "var(--ct-text-muted)" }}
           >
             ← Back
           </button>
         </header>
 
         {loading ? (
-          <div className="text-slate-500 text-center py-20 italic animate-pulse">
+          <div className="text-center py-20 italic animate-pulse" style={{ color: "var(--ct-text-muted)" }}>
             Loading...
           </div>
         ) : logs.length === 0 ? (
-          <div className="text-slate-500 text-center py-20 italic">
+          <div className="text-center py-20 italic" style={{ color: "var(--ct-text-muted)" }}>
             No logs found.
           </div>
         ) : (
-          <div className="bg-slate-900 rounded-lg border border-slate-800 overflow-hidden">
+          <div className="rounded-[var(--r-lg)] border overflow-hidden" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
             <table className="w-full text-sm">
               <thead>
-                <tr className="bg-slate-800 text-slate-400 uppercase text-xs">
+                <tr className="uppercase text-xs" style={{ background: "var(--ct-surface-hover)", color: "var(--ct-text-muted)" }}>
                   <th className="p-3 text-left">Broker Code</th>
                   <th className="p-3 text-left">Company</th>
                   <th className="p-3 text-left">Email Type</th>
@@ -68,26 +69,26 @@ const BrokerLogPage = () => {
                 {logs.map((log) => (
                   <tr
                     key={log.id}
-                    className="border-t border-slate-800 hover:bg-slate-800/50"
+                    className="border-t hover:bg-[var(--ct-surface-hover)] transition-colors"
+                    style={{ borderColor: "var(--ct-border-subtle)" }}
                   >
-                    <td className="p-3 text-white font-mono">
+                    <td className="p-3 font-mono" style={{ color: "var(--ct-text-primary)" }}>
                       {log.broker_code}
                     </td>
-                    <td className="p-3 text-white">{log.company_name}</td>
-                    <td className="p-3 text-slate-400">{log.email_type}</td>
-                    <td className="p-3 text-slate-400 text-xs">
+                    <td className="p-3" style={{ color: "var(--ct-text-primary)" }}>{log.company_name}</td>
+                    <td className="p-3" style={{ color: "var(--ct-text-secondary)" }}>{log.email_type}</td>
+                    <td className="p-3 text-xs" style={{ color: "var(--ct-text-muted)" }}>
                       {log.sent_to}
                     </td>
-                    <td className="p-3 text-center text-slate-400">
+                    <td className="p-3 text-center" style={{ color: "var(--ct-text-secondary)" }}>
                       {log.sent_at}
                     </td>
                     <td className="p-3 text-center">
                       <span
-                        className={`px-2 py-1 rounded text-xs font-bold ${
-                          log.status === "sent"
-                            ? "bg-green-900 text-green-300"
-                            : "bg-red-900 text-red-300"
-                        }`}
+                        className="px-2 py-1 rounded-[var(--r-sm)] text-xs font-bold"
+                        style={log.status === "sent"
+                          ? { background: "var(--success-light-tint)", color: "var(--success-light)" }
+                          : { background: "var(--danger-light-tint)", color: "var(--danger-light)" }}
                       >
                         {log.status}
                       </span>

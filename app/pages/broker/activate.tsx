@@ -43,9 +43,8 @@ const Toggle = ({
   return (
     <button
       onClick={onChange}
-      className={`relative inline-flex h-5 w-10 items-center rounded-full transition-colors ${
-        isOn ? "bg-green-500" : "bg-slate-600"
-      }`}
+      className="relative inline-flex h-5 w-10 items-center rounded-full transition-colors"
+      style={{ background: isOn ? "var(--success-light)" : "var(--ct-border-strong)" }}
     >
       <span
         className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
@@ -86,22 +85,23 @@ const FlagRow = ({
   const isActive = flagVal === 1 || flagVal === "1";
 
   return (
-    <div className="flex items-center gap-4 py-2 border-b border-slate-700/50">
+    <div className="flex items-center gap-4 py-2 border-b" style={{ borderColor: "var(--ct-border-subtle)" }}>
       <Toggle
         value={flagVal}
         onChange={() => onToggle(broker.sid, flagField as string, flagVal ?? 0)}
       />
       <span
-        className={`text-xs font-bold w-16 ${isActive ? "text-green-400" : "text-slate-500"}`}
+        className="text-xs font-bold w-16"
+        style={{ color: isActive ? "var(--success-light)" : "var(--ct-text-muted)" }}
       >
         {isActive ? "Active" : "Inactive"}
       </span>
-      <span className="text-slate-400 text-xs w-32 uppercase font-bold">
+      <span className="text-xs w-32 uppercase font-bold" style={{ color: "var(--ct-text-muted)" }}>
         {label}
       </span>
-      <span className="text-slate-300 text-xs">{email}</span>
+      <span className="text-xs" style={{ color: "var(--ct-text-secondary)" }}>{email}</span>
       {millsVal !== null && (
-        <span className="text-slate-500 text-xs ml-auto">
+        <span className="text-xs ml-auto" style={{ color: "var(--ct-text-muted)" }}>
           mills: {millsVal || "—"}
         </span>
       )}
@@ -185,18 +185,19 @@ const BrokerActivatePage = () => {
   return (
     <Layout title="Activate / Deactivate Brokers">
       <div className="max-w-5xl mx-auto p-6 space-y-6">
-        <header className="flex justify-between items-center border-b border-slate-800 pb-6">
+        <header className="flex justify-between items-center border-b pb-6" style={{ borderColor: "var(--ct-border-default)" }}>
           <div>
-            <h1 className="text-3xl font-black text-white uppercase tracking-tighter">
+            <h1 className="text-3xl font-black uppercase tracking-tighter" style={{ color: "var(--ct-text-primary)" }}>
               Activate / Deactivate
             </h1>
-            <p className="text-slate-500 text-sm mt-1">
+            <p className="text-sm mt-1" style={{ color: "var(--ct-text-muted)" }}>
               Manage broker email flags independently
             </p>
           </div>
           <button
             onClick={() => router.push("/broker")}
-            className="text-slate-400 hover:text-white text-sm"
+            className="text-sm hover:opacity-80"
+            style={{ color: "var(--ct-text-muted)" }}
           >
             ← Back
           </button>
@@ -208,12 +209,14 @@ const BrokerActivatePage = () => {
             placeholder="Search by broker code or company..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="flex-1 bg-slate-800 text-white px-4 py-2 rounded border border-slate-700 focus:outline-none focus:border-red-500"
+            className="flex-1 px-4 py-2 rounded-[var(--r-md)] border outline-none focus:border-[var(--accent-light)]"
+            style={{ background: "var(--ct-surface)", color: "var(--ct-text-primary)", borderColor: "var(--ct-border-default)" }}
           />
           <select
             value={vendorFilter}
             onChange={(e) => setVendorFilter(e.target.value)}
-            className="bg-slate-800 text-white px-4 py-2 rounded border border-slate-700 focus:outline-none focus:border-red-500"
+            className="px-4 py-2 rounded-[var(--r-md)] border outline-none focus:border-[var(--accent-light)]"
+            style={{ background: "var(--ct-surface)", color: "var(--ct-text-primary)", borderColor: "var(--ct-border-default)" }}
           >
             <option value="">All Vendors</option>
             {vendors.map((v) => (
@@ -225,7 +228,7 @@ const BrokerActivatePage = () => {
         </div>
 
         {loading ? (
-          <div className="text-slate-500 text-center py-20 italic animate-pulse">
+          <div className="text-center py-20 italic animate-pulse" style={{ color: "var(--ct-text-muted)" }}>
             Loading...
           </div>
         ) : (
@@ -239,37 +242,38 @@ const BrokerActivatePage = () => {
               return (
                 <div
                   key={broker.sid}
-                  className="bg-slate-800 rounded-lg border border-slate-700 overflow-hidden"
+                  className="rounded-[var(--r-lg)] border overflow-hidden"
+                  style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}
                 >
                   <div
-                    className="flex items-center justify-between p-4 cursor-pointer hover:bg-slate-700/50 transition-colors"
+                    className="flex items-center justify-between p-4 cursor-pointer hover:bg-[var(--ct-surface-hover)] transition-colors"
                     onClick={() => setExpanded(isExpanded ? null : broker.sid)}
                   >
                     <div className="flex items-center gap-4">
-                      <span className="text-red-400 font-mono font-bold text-sm w-20">
+                      <span className="font-mono font-bold text-sm w-20" style={{ color: "var(--accent-light)" }}>
                         {broker.broker_code}
                       </span>
-                      <span className="text-white font-semibold">
+                      <span className="font-semibold" style={{ color: "var(--ct-text-primary)" }}>
                         {broker.company_name}
                       </span>
-                      <span className="text-slate-500 text-xs">
+                      <span className="text-xs" style={{ color: "var(--ct-text-muted)" }}>
                         {broker.vendor}
                       </span>
                     </div>
                     <div className="flex items-center gap-3">
                       {hasChanges && (
-                        <span className="text-yellow-400 text-xs font-bold">
+                        <span className="text-xs font-bold" style={{ color: "var(--amber-light)" }}>
                           Unsaved changes
                         </span>
                       )}
-                      <span className="text-slate-400 text-sm">
+                      <span className="text-sm" style={{ color: "var(--ct-text-muted)" }}>
                         {isExpanded ? "▲" : "▼"}
                       </span>
                     </div>
                   </div>
 
                   {isExpanded && (
-                    <div className="px-4 pb-4 space-y-1 border-t border-slate-700">
+                    <div className="px-4 pb-4 space-y-1 border-t" style={{ borderColor: "var(--ct-border-subtle)" }}>
                       <div className="pt-3 space-y-1">
                         <FlagRow
                           label="Pricing"
@@ -352,11 +356,12 @@ const BrokerActivatePage = () => {
                             }
                           />
                           <span
-                            className={`text-xs font-bold w-16 ${isUpfrontActive ? "text-green-400" : "text-slate-500"}`}
+                            className="text-xs font-bold w-16"
+                            style={{ color: isUpfrontActive ? "var(--success-light)" : "var(--ct-text-muted)" }}
                           >
                             {isUpfrontActive ? "Active" : "Inactive"}
                           </span>
-                          <span className="text-slate-400 text-xs w-32 uppercase font-bold">
+                          <span className="text-xs w-32 uppercase font-bold" style={{ color: "var(--ct-text-muted)" }}>
                             Upfront Calc
                           </span>
                         </div>
@@ -366,12 +371,13 @@ const BrokerActivatePage = () => {
                         <button
                           onClick={() => handleSave(broker)}
                           disabled={saving === broker.sid || !hasChanges}
-                          className="bg-red-600 hover:bg-red-700 text-white px-4 py-1.5 rounded text-xs font-bold uppercase disabled:opacity-50"
+                          className="px-4 py-1.5 rounded-[var(--r-md)] text-xs font-bold uppercase disabled:opacity-50 hover:opacity-90"
+                          style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
                         >
                           {saving === broker.sid ? "Saving..." : "Save Changes"}
                         </button>
                         {savedMsg === broker.sid && (
-                          <span className="text-green-400 text-xs font-bold self-center">
+                          <span className="text-xs font-bold self-center" style={{ color: "var(--success-light)" }}>
                             ✓ Saved
                           </span>
                         )}
@@ -379,7 +385,8 @@ const BrokerActivatePage = () => {
                           onClick={() =>
                             router.push(`/broker/${broker.sid}/edit`)
                           }
-                          className="bg-slate-700 hover:bg-slate-600 text-white px-4 py-1.5 rounded text-xs font-bold uppercase"
+                          className="px-4 py-1.5 rounded-[var(--r-md)] text-xs font-bold uppercase border hover:bg-[var(--ct-surface-hover)]"
+                          style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)", color: "var(--ct-text-secondary)" }}
                         >
                           Edit Broker
                         </button>

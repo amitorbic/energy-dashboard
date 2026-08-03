@@ -52,33 +52,33 @@ const ViewBrokerList = () => {
   return (
     <Layout title="View Broker List">
       <div className="max-w-5xl mx-auto p-6 space-y-6">
-        <header className="flex justify-between items-center border-b border-slate-800 pb-6">
+        <header className="flex justify-between items-center border-b pb-6" style={{ borderColor: "var(--ct-border-default)" }}>
           <div>
-            <h1 className="text-3xl font-black text-white uppercase tracking-tighter">
+            <h1 className="text-3xl font-black uppercase tracking-tighter" style={{ color: "var(--ct-text-primary)" }}>
               View Broker List
             </h1>
-            <p className="text-slate-500 text-sm mt-1">
+            <p className="text-sm mt-1" style={{ color: "var(--ct-text-muted)" }}>
               {filtered.length} brokers in this category
             </p>
           </div>
           <button
             onClick={() => router.push("/broker")}
-            className="text-slate-400 hover:text-white text-sm"
+            className="text-sm hover:opacity-80"
+            style={{ color: "var(--ct-text-muted)" }}
           >
             ← Back
           </button>
         </header>
 
-        <div className="flex gap-2 border-b border-slate-800">
+        <div className="flex gap-2 border-b" style={{ borderColor: "var(--ct-border-default)" }}>
           {tabs.map((tab) => (
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className={`px-4 py-2 text-sm font-bold uppercase transition-colors ${
-                activeTab === tab.key
-                  ? "text-red-400 border-b-2 border-red-400"
-                  : "text-slate-500 hover:text-white"
-              }`}
+              className="px-4 py-2 text-sm font-bold uppercase transition-colors border-b-2 -mb-px"
+              style={activeTab === tab.key
+                ? { color: "var(--accent-light)", borderColor: "var(--accent-light)" }
+                : { color: "var(--ct-text-muted)", borderColor: "transparent" }}
             >
               {tab.label} (
               {
@@ -98,18 +98,18 @@ const ViewBrokerList = () => {
         </div>
 
         {loading ? (
-          <div className="text-slate-500 text-center py-20 italic animate-pulse">
+          <div className="text-center py-20 italic animate-pulse" style={{ color: "var(--ct-text-muted)" }}>
             Loading...
           </div>
         ) : filtered.length === 0 ? (
-          <div className="text-slate-500 text-center py-20 italic">
+          <div className="text-center py-20 italic" style={{ color: "var(--ct-text-muted)" }}>
             No brokers in this category.
           </div>
         ) : (
-          <div className="bg-slate-900 rounded-lg border border-slate-800 overflow-hidden">
+          <div className="rounded-[var(--r-lg)] border overflow-hidden" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
             <table className="w-full text-sm">
               <thead>
-                <tr className="bg-slate-800 text-slate-400 uppercase text-xs">
+                <tr className="uppercase text-xs" style={{ background: "var(--ct-surface-hover)", color: "var(--ct-text-muted)" }}>
                   <th className="p-3 text-left">Broker Code</th>
                   <th className="p-3 text-left">Company</th>
                   <th className="p-3 text-left">Broker Name</th>
@@ -120,21 +120,23 @@ const ViewBrokerList = () => {
                 {filtered.map((b) => (
                   <tr
                     key={b.sid}
-                    className="border-t border-slate-800 hover:bg-slate-800/50 transition-colors"
+                    className="border-t hover:bg-[var(--ct-surface-hover)] transition-colors"
+                    style={{ borderColor: "var(--ct-border-subtle)" }}
                   >
-                    <td className="p-3 text-red-400 font-mono font-bold">
+                    <td className="p-3 font-mono font-bold" style={{ color: "var(--accent-light)" }}>
                       {b.broker_code}
                     </td>
                     <td className="p-3">
                       <button
                         onClick={() => router.push(`/broker/${b.sid}/edit`)}
-                        className="text-white hover:text-red-400 font-semibold transition-colors"
+                        className="font-semibold transition-colors hover:text-[var(--accent-light)]"
+                        style={{ color: "var(--ct-text-primary)" }}
                       >
                         {b.company_name}
                       </button>
                     </td>
-                    <td className="p-3 text-slate-400">{b.broker_name}</td>
-                    <td className="p-3 text-slate-400 text-xs">
+                    <td className="p-3" style={{ color: "var(--ct-text-secondary)" }}>{b.broker_name}</td>
+                    <td className="p-3 text-xs" style={{ color: "var(--ct-text-muted)" }}>
                       {activeTab === "pricing" && b.pricing_email}
                       {activeTab === "daily_pricing" && b.daily_pricing_email1}
                       {activeTab === "commission" && b.commission_email}
