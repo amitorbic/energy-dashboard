@@ -41,8 +41,9 @@ function EditModal({ tmpl, onClose, onSaved }: { tmpl: Template; onClose: () => 
 
   const field = (label: string, key: keyof Template) => (
     <div key={key as string}>
-      <label className="block text-xs font-medium text-gray-600 mb-1">{label}</label>
-      <input className="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400"
+      <label className="block text-xs font-medium mb-1" style={{ color: "var(--ct-text-secondary)" }}>{label}</label>
+      <input className="w-full border rounded-[var(--r-sm)] px-3 py-1.5 text-sm outline-none focus:border-[var(--accent-light)]"
+        style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-primary)" }}
         value={form[key] as string}
         onChange={(e) => setForm({ ...form, [key]: e.target.value })} />
     </div>
@@ -50,8 +51,8 @@ function EditModal({ tmpl, onClose, onSaved }: { tmpl: Template; onClose: () => 
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-lg p-6">
-        <h3 className="text-sm font-semibold text-gray-800 mb-4">Edit Template — {tmpl.customer_name}</h3>
+      <div className="rounded-[var(--r-lg)] shadow-xl w-full max-w-lg p-6" style={{ background: "var(--ct-surface)" }}>
+        <h3 className="text-sm font-semibold mb-4" style={{ color: "var(--ct-text-primary)" }}>Edit Template — {tmpl.customer_name}</h3>
         <div className="grid grid-cols-2 gap-3">
           {field("Customer Name", "customer_name")}
           {field("Broker Code", "broker_code")}
@@ -60,19 +61,20 @@ function EditModal({ tmpl, onClose, onSaved }: { tmpl: Template; onClose: () => 
           {field("Meter Fee", "meter_fee")}
           {field("Contract End Date", "contract_end_date")}
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Tax Exempt</label>
-            <select className="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400"
+            <label className="block text-xs font-medium mb-1" style={{ color: "var(--ct-text-secondary)" }}>Tax Exempt</label>
+            <select className="w-full border rounded-[var(--r-sm)] px-3 py-1.5 text-sm outline-none focus:border-[var(--accent-light)]"
+              style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-primary)" }}
               value={form.tax_exempt}
               onChange={(e) => setForm({ ...form, tax_exempt: e.target.value })}>
               {TAX_OPTIONS.map((o) => <option key={o} value={o}>{o || "None"}</option>)}
             </select>
           </div>
         </div>
-        {err && <p className="mt-2 text-xs text-red-500">{err}</p>}
+        {err && <p className="mt-2 text-xs" style={{ color: "var(--danger-light)" }}>{err}</p>}
         <div className="flex justify-end gap-2 mt-4">
-          <button onClick={onClose} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800">Cancel</button>
+          <button onClick={onClose} className="px-4 py-2 text-sm hover:opacity-80" style={{ color: "var(--ct-text-secondary)" }}>Cancel</button>
           <button onClick={save} disabled={saving}
-            className="px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 disabled:opacity-40">
+            className="px-4 py-2 text-sm rounded-[var(--r-sm)] disabled:opacity-40" style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}>
             {saving ? "Saving…" : "Save"}
           </button>
         </div>
@@ -107,54 +109,55 @@ export default function TemplateList() {
   return (
     <EnrollmentLayout title="Enrollment – Templates">
       <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
-        <h2 className="text-base font-semibold text-gray-800">Template List</h2>
+        <h2 className="text-base font-semibold" style={{ color: "var(--ct-text-primary)" }}>Template List</h2>
         <div className="flex gap-2">
           <input
-            className="border border-gray-300 rounded px-3 py-1.5 text-xs w-48 focus:outline-none focus:ring-1 focus:ring-blue-400"
+            className="border rounded-[var(--r-sm)] px-3 py-1.5 text-xs w-48 outline-none focus:border-[var(--accent-light)]"
+            style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-primary)" }}
             placeholder="Search customer name…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && load(search || undefined)}
           />
           <button onClick={() => load(search || undefined)}
-            className="px-3 py-1.5 bg-blue-600 text-white text-xs rounded hover:bg-blue-700">Search</button>
+            className="px-3 py-1.5 text-xs rounded-[var(--r-sm)]" style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}>Search</button>
           <button onClick={() => { setSearch(""); load(); }}
-            className="px-3 py-1.5 bg-gray-100 text-gray-600 text-xs rounded hover:bg-gray-200">Reset</button>
+            className="px-3 py-1.5 text-xs rounded-[var(--r-sm)] hover:opacity-80" style={{ background: "var(--ct-surface-hover)", color: "var(--ct-text-secondary)" }}>Reset</button>
         </div>
       </div>
 
       {loading ? (
-        <p className="text-sm text-gray-400">Loading…</p>
+        <p className="text-sm" style={{ color: "var(--ct-text-muted)" }}>Loading…</p>
       ) : (
-        <div className="overflow-x-auto rounded border border-gray-200">
+        <div className="overflow-x-auto rounded-[var(--r-md)] border" style={{ borderColor: "var(--ct-border-default)" }}>
           <table className="w-full text-xs">
-            <thead className="bg-gray-50 border-b border-gray-200">
+            <thead className="border-b" style={{ background: "var(--ct-surface-hover)", borderColor: "var(--ct-border-default)" }}>
               <tr>
                 {["#","Customer","Broker","Broker Name","Rate","Comm","Meter Fee","Tax Exempt","End Date","Actions"].map((h) => (
-                  <th key={h} className="px-3 py-2 text-left font-medium text-gray-500 whitespace-nowrap">{h}</th>
+                  <th key={h} className="px-3 py-2 text-left font-medium whitespace-nowrap" style={{ color: "var(--ct-text-muted)" }}>{h}</th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 bg-white">
+            <tbody className="divide-y" style={{ background: "var(--ct-surface)" }}>
               {rows.length === 0 ? (
-                <tr><td colSpan={10} className="px-3 py-6 text-center text-gray-400">No templates</td></tr>
+                <tr><td colSpan={10} className="px-3 py-6 text-center" style={{ color: "var(--ct-text-muted)" }}>No templates</td></tr>
               ) : rows.map((r, i) => (
-                <tr key={r.sid} className="hover:bg-gray-50">
-                  <td className="px-3 py-2 text-gray-400">{i + 1}</td>
-                  <td className="px-3 py-2 text-gray-700">{r.customer_name}</td>
-                  <td className="px-3 py-2 text-gray-600">{r.broker_code}</td>
-                  <td className="px-3 py-2 text-gray-600">{r.broker_name}</td>
-                  <td className="px-3 py-2 text-gray-600">{r.contract_rate}</td>
-                  <td className="px-3 py-2 text-gray-600">{r.commission}</td>
-                  <td className="px-3 py-2 text-gray-600">{r.meter_fee}</td>
-                  <td className="px-3 py-2 text-gray-600">{r.tax_exempt}</td>
-                  <td className="px-3 py-2 text-gray-600 whitespace-nowrap">{r.contract_end_date}</td>
+                <tr key={r.sid} className="hover:bg-[var(--ct-surface-hover)]">
+                  <td className="px-3 py-2" style={{ color: "var(--ct-text-muted)" }}>{i + 1}</td>
+                  <td className="px-3 py-2" style={{ color: "var(--ct-text-secondary)" }}>{r.customer_name}</td>
+                  <td className="px-3 py-2" style={{ color: "var(--ct-text-secondary)" }}>{r.broker_code}</td>
+                  <td className="px-3 py-2" style={{ color: "var(--ct-text-secondary)" }}>{r.broker_name}</td>
+                  <td className="px-3 py-2" style={{ color: "var(--ct-text-secondary)" }}>{r.contract_rate}</td>
+                  <td className="px-3 py-2" style={{ color: "var(--ct-text-secondary)" }}>{r.commission}</td>
+                  <td className="px-3 py-2" style={{ color: "var(--ct-text-secondary)" }}>{r.meter_fee}</td>
+                  <td className="px-3 py-2" style={{ color: "var(--ct-text-secondary)" }}>{r.tax_exempt}</td>
+                  <td className="px-3 py-2 whitespace-nowrap" style={{ color: "var(--ct-text-secondary)" }}>{r.contract_end_date}</td>
                   <td className="px-3 py-2">
                     <div className="flex gap-1">
                       <button onClick={() => setEditRow(r)}
-                        className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs hover:bg-blue-200">Edit</button>
+                        className="px-2 py-1 rounded-[var(--r-sm)] text-xs hover:opacity-80" style={{ background: "var(--accent-light-tint)", color: "var(--accent-light)" }}>Edit</button>
                       <button onClick={() => remove(r.sid)}
-                        className="px-2 py-1 bg-red-100 text-red-600 rounded text-xs hover:bg-red-200">Delete</button>
+                        className="px-2 py-1 rounded-[var(--r-sm)] text-xs hover:opacity-80" style={{ background: "var(--danger-light-tint)", color: "var(--danger-light)" }}>Delete</button>
                     </div>
                   </td>
                 </tr>
