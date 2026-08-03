@@ -45,9 +45,10 @@ export default function AddTemplate() {
 
   const field = (label: string, key: keyof typeof form, type = "text") => (
     <div key={key}>
-      <label className="block text-xs font-medium text-gray-600 mb-1">{label}</label>
+      <label className="block text-xs font-medium mb-1" style={{ color: "var(--ct-text-secondary)" }}>{label}</label>
       <input type={type}
-        className="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400"
+        className="w-full border rounded-[var(--r-sm)] px-3 py-1.5 text-sm outline-none focus:border-[var(--accent-light)]"
+        style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-primary)" }}
         value={form[key]}
         onChange={(e) => setForm({ ...form, [key]: e.target.value })} />
     </div>
@@ -56,15 +57,16 @@ export default function AddTemplate() {
   return (
     <EnrollmentLayout title="Enrollment – Add Template">
       <div className="max-w-xl">
-        <h2 className="text-base font-semibold text-gray-800 mb-5">Add Template</h2>
+        <h2 className="text-base font-semibold mb-5" style={{ color: "var(--ct-text-primary)" }}>Add Template</h2>
 
-        <div className="bg-white rounded-lg border border-gray-200 p-5 space-y-4">
+        <div className="rounded-[var(--r-lg)] border p-5 space-y-4" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
           {field("Customer Name", "customer_name")}
 
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Broker</label>
+            <label className="block text-xs font-medium mb-1" style={{ color: "var(--ct-text-secondary)" }}>Broker</label>
             <select
-              className="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400"
+              className="w-full border rounded-[var(--r-sm)] px-3 py-1.5 text-sm outline-none focus:border-[var(--accent-light)]"
+              style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-primary)" }}
               value={form.broker_code}
               onChange={(e) => setForm({ ...form, broker_code: e.target.value })}>
               <option value="">— Select broker —</option>
@@ -84,9 +86,10 @@ export default function AddTemplate() {
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Tax Exempt</label>
+            <label className="block text-xs font-medium mb-1" style={{ color: "var(--ct-text-secondary)" }}>Tax Exempt</label>
             <select
-              className="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400"
+              className="w-full border rounded-[var(--r-sm)] px-3 py-1.5 text-sm outline-none focus:border-[var(--accent-light)]"
+              style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-primary)" }}
               value={form.tax_exempt}
               onChange={(e) => setForm({ ...form, tax_exempt: e.target.value })}>
               <option value="">None</option>
@@ -95,15 +98,15 @@ export default function AddTemplate() {
             </select>
           </div>
 
-          {err && <p className="text-xs text-red-500">{err}</p>}
+          {err && <p className="text-xs" style={{ color: "var(--danger-light)" }}>{err}</p>}
 
           <div className="flex gap-3 pt-1">
             <button onClick={save} disabled={saving}
-              className="px-5 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 disabled:opacity-40">
+              className="px-5 py-2 text-sm rounded-[var(--r-sm)] disabled:opacity-40" style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}>
               {saving ? "Saving…" : "Add Template"}
             </button>
             <button onClick={() => router.push("/enrollment/templates")}
-              className="px-5 py-2 bg-gray-100 text-gray-600 text-sm rounded hover:bg-gray-200">
+              className="px-5 py-2 text-sm rounded-[var(--r-sm)] hover:opacity-80" style={{ background: "var(--ct-surface-hover)", color: "var(--ct-text-secondary)" }}>
               Cancel
             </button>
           </div>
