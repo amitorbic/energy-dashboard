@@ -21,24 +21,24 @@ function RowsTable({ rows }: { rows: any[] }) {
   if (!rows?.length) return null;
   const cols = Object.keys(rows[0]);
   return (
-    <div className="overflow-x-auto rounded border border-gray-100 mt-3">
+    <div className="overflow-x-auto rounded-[var(--r-md)] border mt-3" style={{ borderColor: "var(--ct-border-default)" }}>
       <table className="w-full text-xs">
-        <thead className="bg-gray-50 border-b border-gray-100">
+        <thead className="border-b" style={{ background: "var(--ct-surface-hover)", borderColor: "var(--ct-border-default)" }}>
           <tr>
-            <th className="px-3 py-2 text-left text-gray-400 font-medium">#</th>
+            <th className="px-3 py-2 text-left font-medium" style={{ color: "var(--ct-text-muted)" }}>#</th>
             {cols.map((c) => (
-              <th key={c} className="px-3 py-2 text-left text-gray-500 font-medium whitespace-nowrap">
+              <th key={c} className="px-3 py-2 text-left font-medium whitespace-nowrap" style={{ color: "var(--ct-text-muted)" }}>
                 {c.replace(/_/g, " ")}
               </th>
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-50 bg-white">
+        <tbody className="divide-y" style={{ background: "var(--ct-surface)" }}>
           {rows.map((r, i) => (
-            <tr key={i} className={i % 2 === 0 ? "bg-white" : "bg-gray-50"}>
-              <td className="px-3 py-2 text-gray-400">{i + 1}</td>
+            <tr key={i} style={{ background: i % 2 === 0 ? "var(--ct-surface)" : "var(--ct-surface-hover)" }}>
+              <td className="px-3 py-2" style={{ color: "var(--ct-text-muted)" }}>{i + 1}</td>
               {cols.map((c) => (
-                <td key={c} className="px-3 py-2 text-gray-700 whitespace-nowrap">
+                <td key={c} className="px-3 py-2 whitespace-nowrap" style={{ color: "var(--ct-text-secondary)" }}>
                   {String(r[c] ?? "")}
                 </td>
               ))}
@@ -52,17 +52,18 @@ function RowsTable({ rows }: { rows: any[] }) {
 
 // ── bills summary card ────────────────────────────────────────────────────────
 function SummaryCard({ summary }: { summary: Summary }) {
+  const cards = [
+    { label: "Master Accounts", value: summary.master },
+    { label: "Sub Accounts", value: summary.sub },
+    { label: "Standalone", value: summary.standalone },
+    { label: "Est. Cost", value: `$${summary.cost}` },
+  ];
   return (
     <div className="grid grid-cols-4 gap-3 mt-3">
-      {[
-        { label: "Master Accounts", value: summary.master, color: "text-blue-700 bg-blue-50" },
-        { label: "Sub Accounts",    value: summary.sub,    color: "text-purple-700 bg-purple-50" },
-        { label: "Standalone",      value: summary.standalone, color: "text-gray-700 bg-gray-50" },
-        { label: "Est. Cost",       value: `$${summary.cost}`, color: "text-green-700 bg-green-50" },
-      ].map(({ label, value, color }) => (
-        <div key={label} className={`rounded-lg px-4 py-3 ${color}`}>
-          <div className="text-xs font-medium opacity-70">{label}</div>
-          <div className="text-xl font-bold mt-0.5">{value}</div>
+      {cards.map(({ label, value }) => (
+        <div key={label} className="rounded-[var(--r-lg)] px-4 py-3" style={{ background: "var(--accent-light-tint)" }}>
+          <div className="text-xs font-medium opacity-70" style={{ color: "var(--accent-light)" }}>{label}</div>
+          <div className="text-xl font-bold mt-0.5" style={{ color: "var(--accent-light)" }}>{value}</div>
         </div>
       ))}
     </div>
@@ -83,33 +84,36 @@ function CheckSection({
   const hasRows = count > 0;
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+    <div className="rounded-[var(--r-lg)] border overflow-hidden" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
       {/* header — always clickable if rows exist */}
       <button
-        className={`w-full text-left flex items-center justify-between px-4 py-3 border-b border-gray-100 ${
-          hasRows ? "bg-red-50 hover:bg-red-100" : "bg-green-50"
-        } transition-colors`}
+        className="w-full text-left flex items-center justify-between px-4 py-3 border-b transition-colors"
         onClick={hasRows ? onToggle : undefined}
-        style={{ cursor: hasRows ? "pointer" : "default" }}
+        style={{
+          borderColor: "var(--ct-border-subtle)",
+          background: hasRows ? "var(--danger-light-tint)" : "var(--success-light-tint)",
+          cursor: hasRows ? "pointer" : "default",
+        }}
       >
-        <span className="text-sm font-medium text-gray-800">
-          <span className="text-gray-400 font-normal mr-2">#{num}</span>
+        <span className="text-sm font-medium" style={{ color: "var(--ct-text-primary)" }}>
+          <span className="font-normal mr-2" style={{ color: "var(--ct-text-muted)" }}>#{num}</span>
           {label}
         </span>
         <div className="flex items-center gap-2 shrink-0 ml-4">
           {hasRows ? (
-            <span className="px-2 py-0.5 rounded text-xs font-semibold bg-red-100 text-red-700">
+            <span className="px-2 py-0.5 rounded-[var(--r-sm)] text-xs font-semibold" style={{ background: "var(--danger-light-tint)", color: "var(--danger-light)" }}>
               {count} row{count !== 1 ? "s" : ""}
             </span>
           ) : (
-            <span className="px-2 py-0.5 rounded text-xs font-semibold bg-green-100 text-green-700">
+            <span className="px-2 py-0.5 rounded-[var(--r-sm)] text-xs font-semibold" style={{ background: "var(--success-light-tint)", color: "var(--success-light)" }}>
               No exceptions
             </span>
           )}
           {hasRows && (
             <svg
-              className={`w-4 h-4 text-gray-400 transition-transform ${expanded ? "rotate-180" : ""}`}
+              className={`w-4 h-4 transition-transform ${expanded ? "rotate-180" : ""}`}
               fill="none" viewBox="0 0 24 24" stroke="currentColor"
+              style={{ color: "var(--ct-text-muted)" }}
             >
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
             </svg>
@@ -187,62 +191,66 @@ export default function BillingExceptionTestPage() {
     <BillingLayout title="Billing Audit">
       {/* header */}
       <div className="mb-6">
-        <h2 className="text-base font-semibold text-gray-800">PHP Billing Exception Test</h2>
-        <p className="text-xs text-gray-400 mt-0.5">
+        <h2 className="text-base font-semibold" style={{ color: "var(--ct-text-primary)" }}>PHP Billing Exception Test</h2>
+        <p className="text-xs mt-0.5" style={{ color: "var(--ct-text-muted)" }}>
           Runs the PHP-equivalent checks in-memory and shows results in the same order as the PHP email.
         </p>
       </div>
 
       {/* upload */}
-      <div className="bg-white border border-gray-200 rounded-lg p-5 mb-6">
+      <div className="rounded-[var(--r-lg)] border p-5 mb-6" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
         <div className="flex items-end gap-4">
           <div className="flex-1">
-            <label className="block text-xs font-medium text-gray-600 mb-1.5">
+            <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--ct-text-secondary)" }}>
               Billing Extract (.xls / .xlsx)
             </label>
             <input
               ref={fileRef}
               type="file"
               accept=".xls,.xlsx"
-              className="block w-full text-sm text-gray-600 file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-xs file:font-medium file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200 cursor-pointer"
+              className="block w-full text-sm cursor-pointer file:mr-3 file:py-1.5 file:px-3 file:rounded-[var(--r-sm)] file:border-0 file:text-xs file:font-medium"
+              style={{ color: "var(--ct-text-secondary)" }}
             />
           </div>
           <button
             onClick={handleRun}
             disabled={running}
-            className="px-5 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 disabled:opacity-40 transition-colors flex items-center gap-2 shrink-0"
+            className="px-5 py-2 text-sm rounded-[var(--r-sm)] disabled:opacity-40 transition-colors flex items-center gap-2 shrink-0"
+            style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
           >
             {running && <Spinner />}
             {running ? "Running…" : "Run Checks"}
           </button>
         </div>
-        {error && <p className="mt-2 text-xs text-red-500">{error}</p>}
+        {error && <p className="mt-2 text-xs" style={{ color: "var(--danger-light)" }}>{error}</p>}
       </div>
 
       {/* stats bar */}
       {hasResults && (
-        <div className="flex items-center gap-6 mb-5 px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg text-sm">
-          <span className="text-gray-500">
-            File: <span className="font-medium text-gray-700">{filename}</span>
+        <div className="flex items-center gap-6 mb-5 px-4 py-3 rounded-[var(--r-lg)] border text-sm" style={{ background: "var(--ct-surface-hover)", borderColor: "var(--ct-border-default)" }}>
+          <span style={{ color: "var(--ct-text-muted)" }}>
+            File: <span className="font-medium" style={{ color: "var(--ct-text-secondary)" }}>{filename}</span>
           </span>
-          <span className="text-gray-500">
+          <span style={{ color: "var(--ct-text-muted)" }}>
             Checks with exceptions:{" "}
-            <span className="font-semibold text-red-600">{checksWithRows}</span>
-            <span className="text-gray-400"> / {order.length}</span>
+            <span className="font-semibold" style={{ color: "var(--danger-light)" }}>{checksWithRows}</span>
+            <span style={{ color: "var(--ct-text-muted)" }}> / {order.length}</span>
           </span>
-          <span className="text-gray-500">
+          <span style={{ color: "var(--ct-text-muted)" }}>
             Total exception rows:{" "}
-            <span className="font-semibold text-orange-600">{totalRows}</span>
+            <span className="font-semibold" style={{ color: "var(--amber-light)" }}>{totalRows}</span>
           </span>
           <button
             onClick={() => setExpanded(new Set(order.map((o) => o.key)))}
-            className="ml-auto text-xs text-blue-600 hover:underline"
+            className="ml-auto text-xs hover:underline"
+            style={{ color: "var(--accent-light)" }}
           >
             Expand all
           </button>
           <button
             onClick={() => setExpanded(new Set())}
-            className="text-xs text-gray-500 hover:underline"
+            className="text-xs hover:underline"
+            style={{ color: "var(--ct-text-muted)" }}
           >
             Collapse all
           </button>
@@ -256,10 +264,10 @@ export default function BillingExceptionTestPage() {
             // bills_summary is special — show as a card, not a check section
             if (item.key === "bills_summary") {
               return (
-                <div key={item.key} className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                  <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-blue-50">
-                    <span className="text-sm font-medium text-gray-800">
-                      <span className="text-gray-400 font-normal mr-2">#{idx + 1}</span>
+                <div key={item.key} className="rounded-[var(--r-lg)] border overflow-hidden" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
+                  <div className="flex items-center justify-between px-4 py-3 border-b" style={{ background: "var(--accent-light-tint)", borderColor: "var(--ct-border-subtle)" }}>
+                    <span className="text-sm font-medium" style={{ color: "var(--ct-text-primary)" }}>
+                      <span className="font-normal mr-2" style={{ color: "var(--ct-text-muted)" }}>#{idx + 1}</span>
                       {item.label}
                     </span>
                   </div>
@@ -267,7 +275,7 @@ export default function BillingExceptionTestPage() {
                     {summary ? (
                       <SummaryCard summary={summary} />
                     ) : (
-                      <p className="text-xs text-gray-400 mt-3">No summary data.</p>
+                      <p className="text-xs mt-3" style={{ color: "var(--ct-text-muted)" }}>No summary data.</p>
                     )}
                   </div>
                 </div>
