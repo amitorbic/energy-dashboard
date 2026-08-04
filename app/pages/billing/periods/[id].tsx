@@ -4,6 +4,7 @@ import Link from "next/link";
 import BillingEngineLayout from "../../../components/BillingEngineLayout";
 import api from "../../../utils/api";
 import { isAdmin } from "../../../utils/auth";
+import { RevertConfirmDialog, UnpostConfirmDialog } from "../../../components/RevertUnpostDialogs";
 
 // ── types ─────────────────────────────────────────────────────────────────────
 
@@ -186,12 +187,12 @@ export default function BillingPeriodDetailPage() {
     }
   };
 
-  const unpostInvoice = async () => {
+  const unpostInvoice = async (reason: string) => {
     if (!invoice) return;
     setUnpostBusy(true);
     setUnpostMsg("");
     try {
-      await api.post(`/admin/invoices/${invoice.id}/unpost`);
+      await api.post(`/admin/invoices/${invoice.id}/unpost`, { reason });
       setShowUnpostConfirm(false);
       await load(String(period!.id));
       setUnpostMsg("Invoice unposted. You can now revert this billing period if needed.");
@@ -546,83 +547,26 @@ export default function BillingPeriodDetailPage() {
       </div>
 
       {showRevertConfirm && period && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-lg overflow-hidden">
-            <div className="px-6 py-4 border-b border-red-200 bg-red-50">
-              <p className="font-semibold text-red-700">Revert Period #{period.id} to Draft?</p>
-            </div>
-            <div className="px-6 py-4 space-y-3 text-sm text-gray-700">
-              <p>This action cannot be undone. It will immediately:</p>
-              <ul className="list-disc pl-5 space-y-1 text-gray-600">
-                {invoice && (
-                  <li>Delete invoice <span className="font-mono">{invoice.invoice_number}</span> ({invoice.status}) entirely.</li>
-                )}
-                <li>Wipe all {period.charges.length} charge line(s) (energy, meter fee, TDSP, addon, tax).</li>
-                <li>Reset the period's status back to <span className="font-mono">draft</span>.</li>
-                <li>Recompute contract rate, meter fee, energy charge, TDSP charges, and flags from the still-linked EDI data — no re-upload needed.</li>
-              </ul>
-              <p className="text-gray-500">The underlying EDI 867/810 records stay linked, so staff can re-approve this period afterward.</p>
-              {revertMsg && (
-                <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">{revertMsg}</p>
-              )}
-            </div>
-            <div className="px-6 py-4 border-t border-gray-100 flex justify-end gap-2">
-              <button
-                onClick={() => setShowRevertConfirm(false)}
-                disabled={revertBusy}
-                className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-800 disabled:opacity-40"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={revertToDraft}
-                disabled={revertBusy}
-                className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white text-sm font-medium rounded hover:bg-red-700 disabled:opacity-40 transition-colors"
-              >
-                {revertBusy && <Spinner />}
-                Yes, Revert to Draft
-              </button>
-            </div>
-          </div>
-        </div>
+        <RevertConfirmDialog
+          periodId={period.id}
+          chargesCount={period.charges.length}
+          invoiceNumber={invoice?.invoice_number}
+          invoiceStatus={invoice?.status}
+          busy={revertBusy}
+          errorMsg={revertMsg}
+          onCancel={() => setShowRevertConfirm(false)}
+          onConfirm={revertToDraft}
+        />
       )}
 
       {showUnpostConfirm && invoice && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-lg overflow-hidden">
-            <div className="px-6 py-4 border-b border-amber-200 bg-amber-50">
-              <p className="font-semibold text-amber-800">Unpost Invoice {invoice.invoice_number}?</p>
-            </div>
-            <div className="px-6 py-4 space-y-3 text-sm text-gray-700">
-              <p className="text-amber-700 bg-amber-50 border border-amber-200 rounded px-3 py-2">
-                Unposting a sent bill can create accounting discrepancies, especially if
-                significant time has passed since it was sent. This should only be done
-                shortly after sending, and the affected accounting period may need manual
-                reconciliation. Continue?
-              </p>
-              {unpostMsg && (
-                <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">{unpostMsg}</p>
-              )}
-            </div>
-            <div className="px-6 py-4 border-t border-gray-100 flex justify-end gap-2">
-              <button
-                onClick={() => setShowUnpostConfirm(false)}
-                disabled={unpostBusy}
-                className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-800 disabled:opacity-40"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={unpostInvoice}
-                disabled={unpostBusy}
-                className="flex items-center gap-2 px-4 py-2 bg-amber-600 text-white text-sm font-medium rounded hover:bg-amber-700 disabled:opacity-40 transition-colors"
-              >
-                {unpostBusy && <Spinner />}
-                Yes, Unpost
-              </button>
-            </div>
-          </div>
-        </div>
+        <UnpostConfirmDialog
+          invoiceNumber={invoice.invoice_number}
+          busy={unpostBusy}
+          errorMsg={unpostMsg}
+          onCancel={() => setShowUnpostConfirm(false)}
+          onConfirm={unpostInvoice}
+        />
       )}
     </BillingEngineLayout>
   );

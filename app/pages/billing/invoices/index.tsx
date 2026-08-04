@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/router";
 import BillingEngineLayout from "../../../components/BillingEngineLayout";
 import api from "../../../utils/api";
+import { isAdmin } from "../../../utils/auth";
 
 // ── types ─────────────────────────────────────────────────────────────────────
 
@@ -20,6 +21,24 @@ interface Invoice {
   sent_at: string | null;
   paid_at: string | null;
   created_at: string;
+}
+
+interface ApprovedPeriod {
+  billing_period_id: number;
+  esi_id: string;
+  customer_name: string | null;
+  service_start: string | null;
+  service_end: string | null;
+  amount: number;
+  status: string;
+}
+
+interface BulkResult {
+  id: number;
+  success: boolean;
+  status?: string;
+  invoice_number?: string;
+  reason?: string;
 }
 
 // ── helpers ───────────────────────────────────────────────────────────────────
@@ -57,6 +76,7 @@ const PAGE_SIZE = 200;
 
 export default function InvoicesPage() {
   const router = useRouter();
+  const admin = isAdmin();
 
   const [rows, setRows]       = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
@@ -69,6 +89,21 @@ export default function InvoicesPage() {
   const [esiFilter, setEsiFilter]       = useState("");
 
   const esiRef = useRef<HTMLInputElement>(null);
+
+  // bulk-post (draft invoices only)
+  const [selectedInvoices, setSelectedInvoices] = useState<Set<number>>(new Set());
+  const [bulkPostBusy, setBulkPostBusy]         = useState(false);
+  const [bulkPostResults, setBulkPostResults]   = useState<BulkResult[] | null>(null);
+  const [bulkPostError, setBulkPostError]       = useState("");
+
+  // approved billing periods awaiting invoice generation
+  const [approvedRows, setApprovedRows]         = useState<ApprovedPeriod[]>([]);
+  const [approvedLoading, setApprovedLoading]   = useState(true);
+  const [approvedError, setApprovedError]       = useState("");
+  const [selectedPeriods, setSelectedPeriods]   = useState<Set<number>>(new Set());
+  const [bulkGenBusy, setBulkGenBusy]           = useState(false);
+  const [bulkGenResults, setBulkGenResults]     = useState<BulkResult[] | null>(null);
+  const [bulkGenError, setBulkGenError]         = useState("");
 
   const fetchInvoices = useCallback(async (off: number, status: string, esi: string) => {
     setLoading(true);
@@ -86,9 +121,26 @@ export default function InvoicesPage() {
     }
   }, []);
 
+  const fetchApprovedPeriods = useCallback(async () => {
+    setApprovedLoading(true);
+    setApprovedError("");
+    try {
+      const res = await api.get(`/admin/billing-corrections?status=approved&limit=500`);
+      setApprovedRows(res.data);
+    } catch (e: any) {
+      setApprovedError(e?.response?.data?.detail ?? "Failed to load approved periods.");
+    } finally {
+      setApprovedLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     fetchInvoices(offset, statusFilter, esiFilter);
   }, [fetchInvoices, offset, statusFilter, esiFilter]);
+
+  useEffect(() => {
+    fetchApprovedPeriods();
+  }, [fetchApprovedPeriods]);
 
   const applyEsiSearch = () => {
     setOffset(0);
@@ -101,6 +153,89 @@ export default function InvoicesPage() {
   };
 
   const currentPage = Math.floor(offset / PAGE_SIZE) + 1;
+
+  // ── bulk-post ─────────────────────────────────────────────────────────────
+  const draftIds = useMemo(() => rows.filter((r) => r.status === "draft").map((r) => r.id), [rows]);
+  const allDraftSelected = draftIds.length > 0 && draftIds.every((id) => selectedInvoices.has(id));
+
+  const toggleSelectInvoice = (id: number) => {
+    setSelectedInvoices((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+  const toggleSelectAllInvoices = () => {
+    setSelectedInvoices(allDraftSelected ? new Set() : new Set(draftIds));
+  };
+
+  useEffect(() => {
+    setSelectedInvoices((prev) => {
+      const next = new Set<number>();
+      prev.forEach((id) => { if (draftIds.includes(id)) next.add(id); });
+      return next;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rows]);
+
+  const doBulkPost = async () => {
+    setBulkPostBusy(true);
+    setBulkPostError("");
+    try {
+      const res = await api.post(`/billing-engine/invoices/bulk-post`, {
+        invoice_ids: Array.from(selectedInvoices),
+      });
+      setBulkPostResults(res.data.results);
+      setSelectedInvoices(new Set());
+      await fetchInvoices(offset, statusFilter, esiFilter);
+    } catch (e: any) {
+      setBulkPostError(e?.response?.data?.detail ?? "Bulk post failed.");
+    } finally {
+      setBulkPostBusy(false);
+    }
+  };
+
+  // ── bulk-generate ─────────────────────────────────────────────────────────
+  const approvedIds = useMemo(() => approvedRows.map((r) => r.billing_period_id), [approvedRows]);
+  const allApprovedSelected = approvedIds.length > 0 && approvedIds.every((id) => selectedPeriods.has(id));
+
+  const toggleSelectPeriod = (id: number) => {
+    setSelectedPeriods((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+  const toggleSelectAllPeriods = () => {
+    setSelectedPeriods(allApprovedSelected ? new Set() : new Set(approvedIds));
+  };
+
+  useEffect(() => {
+    setSelectedPeriods((prev) => {
+      const next = new Set<number>();
+      prev.forEach((id) => { if (approvedIds.includes(id)) next.add(id); });
+      return next;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [approvedRows]);
+
+  const doBulkGenerate = async () => {
+    setBulkGenBusy(true);
+    setBulkGenError("");
+    try {
+      const res = await api.post(`/billing-engine/invoices/bulk-generate`, {
+        billing_period_ids: Array.from(selectedPeriods),
+      });
+      setBulkGenResults(res.data.results);
+      setSelectedPeriods(new Set());
+      await fetchApprovedPeriods();
+      await fetchInvoices(offset, statusFilter, esiFilter);
+    } catch (e: any) {
+      setBulkGenError(e?.response?.data?.detail ?? "Bulk generate failed.");
+    } finally {
+      setBulkGenBusy(false);
+    }
+  };
 
   return (
     <BillingEngineLayout title="Invoices">
@@ -171,11 +306,64 @@ export default function InvoicesPage() {
         </div>
       )}
 
+      {admin && selectedInvoices.size > 0 && (
+        <div className="mb-3 flex items-center justify-between px-3 py-2 bg-green-50 border border-green-200 rounded">
+          <span className="text-xs text-green-700">{selectedInvoices.size} invoice(s) selected for bulk post</span>
+          <div className="flex items-center gap-3">
+            <button onClick={() => setSelectedInvoices(new Set())} className="text-xs text-gray-500 hover:text-gray-700">
+              Clear selection
+            </button>
+            <button
+              onClick={doBulkPost}
+              disabled={bulkPostBusy}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-40 transition-colors"
+            >
+              {bulkPostBusy && <Spinner />}
+              Post Selected ({selectedInvoices.size})
+            </button>
+          </div>
+        </div>
+      )}
+
+      {bulkPostError && (
+        <div className="mb-3 px-4 py-3 bg-red-50 border border-red-200 rounded text-sm text-red-600">{bulkPostError}</div>
+      )}
+
+      {bulkPostResults && (
+        <div className="mb-4 px-4 py-3 bg-gray-50 border border-gray-200 rounded text-xs">
+          <div className="flex items-center justify-between mb-1">
+            <p className="font-medium text-gray-700">
+              Bulk post results: {bulkPostResults.filter((r) => r.success).length} succeeded,{" "}
+              {bulkPostResults.filter((r) => !r.success).length} skipped
+            </p>
+            <button onClick={() => setBulkPostResults(null)} className="text-gray-400 hover:text-gray-600">Dismiss</button>
+          </div>
+          <ul className="space-y-0.5">
+            {bulkPostResults.map((r) => (
+              <li key={r.id} className={r.success ? "text-green-700" : "text-red-600"}>
+                Invoice #{r.id}: {r.success ? "posted" : `skipped — ${r.reason}`}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead className="bg-gray-50 border-b border-gray-100">
               <tr>
+                {admin && (
+                  <th className="px-3 py-2.5 text-center text-gray-500 font-medium">
+                    <input
+                      type="checkbox"
+                      checked={allDraftSelected}
+                      onChange={toggleSelectAllInvoices}
+                      disabled={draftIds.length === 0}
+                      title="Select all draft invoices on this page"
+                    />
+                  </th>
+                )}
                 <th className="px-3 py-2.5 text-left text-gray-500 font-medium">Invoice #</th>
                 <th className="px-3 py-2.5 text-left text-gray-500 font-medium">ESI ID</th>
                 <th className="px-3 py-2.5 text-left text-gray-500 font-medium whitespace-nowrap">Invoice Date</th>
@@ -191,11 +379,11 @@ export default function InvoicesPage() {
             <tbody className="divide-y divide-gray-50">
               {loading ? (
                 <tr>
-                  <td colSpan={10} className="px-4 py-8 text-center text-sm text-gray-400">Loading…</td>
+                  <td colSpan={admin ? 11 : 10} className="px-4 py-8 text-center text-sm text-gray-400">Loading…</td>
                 </tr>
               ) : rows.length === 0 ? (
                 <tr>
-                  <td colSpan={10} className="px-4 py-8 text-center text-sm text-gray-400">No invoices found.</td>
+                  <td colSpan={admin ? 11 : 10} className="px-4 py-8 text-center text-sm text-gray-400">No invoices found.</td>
                 </tr>
               ) : (
                 rows.map((r) => (
@@ -204,6 +392,16 @@ export default function InvoicesPage() {
                     onClick={() => router.push(`/billing/periods/${r.billing_period_id}`)}
                     className="hover:bg-green-50 cursor-pointer transition-colors"
                   >
+                    {admin && (
+                      <td className="px-3 py-2 text-center" onClick={(e) => e.stopPropagation()}>
+                        <input
+                          type="checkbox"
+                          checked={selectedInvoices.has(r.id)}
+                          disabled={r.status !== "draft"}
+                          onChange={() => toggleSelectInvoice(r.id)}
+                        />
+                      </td>
+                    )}
                     <td className="px-3 py-2 font-mono text-gray-800 font-medium">{r.invoice_number}</td>
                     <td className="px-3 py-2 font-mono text-gray-700">{r.esi_id}</td>
                     <td className="px-3 py-2 text-gray-600 whitespace-nowrap">{r.invoice_date ?? "—"}</td>
@@ -253,6 +451,120 @@ export default function InvoicesPage() {
             </div>
           </div>
         )}
+      </div>
+
+      {/* approved billing periods awaiting invoice generation */}
+      <div className="mt-8 mb-3">
+        <h2 className="text-base font-semibold text-gray-800">Approved Periods — Ready to Generate</h2>
+        <p className="text-xs text-gray-400 mt-0.5">
+          Billing periods in &quot;approved&quot; status with no invoice yet. Generating creates a
+          draft invoice and moves the period to &quot;invoiced&quot;.
+        </p>
+      </div>
+
+      {approvedError && (
+        <div className="mb-4 px-4 py-3 bg-red-50 border border-red-200 rounded text-sm text-red-600">
+          {approvedError}
+        </div>
+      )}
+
+      {admin && selectedPeriods.size > 0 && (
+        <div className="mb-3 flex items-center justify-between px-3 py-2 bg-purple-50 border border-purple-200 rounded">
+          <span className="text-xs text-purple-700">{selectedPeriods.size} period(s) selected for bulk generate</span>
+          <div className="flex items-center gap-3">
+            <button onClick={() => setSelectedPeriods(new Set())} className="text-xs text-gray-500 hover:text-gray-700">
+              Clear selection
+            </button>
+            <button
+              onClick={doBulkGenerate}
+              disabled={bulkGenBusy}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-purple-600 text-white rounded hover:bg-purple-700 disabled:opacity-40 transition-colors"
+            >
+              {bulkGenBusy && <Spinner />}
+              Generate Invoices for Selected ({selectedPeriods.size})
+            </button>
+          </div>
+        </div>
+      )}
+
+      {bulkGenError && (
+        <div className="mb-3 px-4 py-3 bg-red-50 border border-red-200 rounded text-sm text-red-600">{bulkGenError}</div>
+      )}
+
+      {bulkGenResults && (
+        <div className="mb-4 px-4 py-3 bg-gray-50 border border-gray-200 rounded text-xs">
+          <div className="flex items-center justify-between mb-1">
+            <p className="font-medium text-gray-700">
+              Bulk generate results: {bulkGenResults.filter((r) => r.success).length} succeeded,{" "}
+              {bulkGenResults.filter((r) => !r.success).length} skipped
+            </p>
+            <button onClick={() => setBulkGenResults(null)} className="text-gray-400 hover:text-gray-600">Dismiss</button>
+          </div>
+          <ul className="space-y-0.5">
+            {bulkGenResults.map((r) => (
+              <li key={r.id} className={r.success ? "text-green-700" : "text-red-600"}>
+                Period #{r.id}: {r.success ? `generated as ${r.invoice_number}` : `skipped — ${r.reason}`}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs">
+            <thead className="bg-gray-50 border-b border-gray-100">
+              <tr>
+                {admin && (
+                  <th className="px-3 py-2.5 text-center text-gray-500 font-medium">
+                    <input
+                      type="checkbox"
+                      checked={allApprovedSelected}
+                      onChange={toggleSelectAllPeriods}
+                      disabled={approvedIds.length === 0}
+                      title="Select all approved periods"
+                    />
+                  </th>
+                )}
+                <th className="px-3 py-2.5 text-left text-gray-500 font-medium">ESI ID</th>
+                <th className="px-3 py-2.5 text-left text-gray-500 font-medium">Customer / Company</th>
+                <th className="px-3 py-2.5 text-left text-gray-500 font-medium whitespace-nowrap">Service Start</th>
+                <th className="px-3 py-2.5 text-left text-gray-500 font-medium whitespace-nowrap">Service End</th>
+                <th className="px-3 py-2.5 text-right text-gray-500 font-medium">Amount</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-50">
+              {approvedLoading ? (
+                <tr>
+                  <td colSpan={admin ? 6 : 5} className="px-4 py-8 text-center text-sm text-gray-400">Loading…</td>
+                </tr>
+              ) : approvedRows.length === 0 ? (
+                <tr>
+                  <td colSpan={admin ? 6 : 5} className="px-4 py-8 text-center text-sm text-gray-400">No approved periods awaiting invoice generation.</td>
+                </tr>
+              ) : (
+                approvedRows.map((r) => (
+                  <tr key={r.billing_period_id} className="hover:bg-gray-50 transition-colors">
+                    {admin && (
+                      <td className="px-3 py-2 text-center">
+                        <input
+                          type="checkbox"
+                          checked={selectedPeriods.has(r.billing_period_id)}
+                          onChange={() => toggleSelectPeriod(r.billing_period_id)}
+                        />
+                      </td>
+                    )}
+                    <td className="px-3 py-2 font-mono text-gray-700">{r.esi_id}</td>
+                    <td className="px-3 py-2 text-gray-600">{r.customer_name ?? "—"}</td>
+                    <td className="px-3 py-2 text-gray-600 whitespace-nowrap">{r.service_start ?? "—"}</td>
+                    <td className="px-3 py-2 text-gray-600 whitespace-nowrap">{r.service_end ?? "—"}</td>
+                    <td className="px-3 py-2 text-right text-gray-700">${fmt2(r.amount)}</td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </BillingEngineLayout>
   );

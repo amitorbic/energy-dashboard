@@ -3,6 +3,7 @@ import Layout from "../../components/Layout";
 import api from "../../utils/api";
 import { useRouter } from "next/router";
 import { isAdmin } from "../../utils/auth";
+import { isReasonValid, UNPOST_COOLDOWN_SECONDS } from "../../components/RevertUnpostDialogs";
 
 interface CustomerDetail {
   id: number;
@@ -295,6 +296,9 @@ const CustomerDetailPage = () => {
   const [invoiceError, setInvoiceError] = useState(false);
   const [unpostConfirmId, setUnpostConfirmId] = useState<number | null>(null);
   const [unpostBusyId, setUnpostBusyId] = useState<number | null>(null);
+  const [unpostReason, setUnpostReason] = useState("");
+  const [unpostConfirmText, setUnpostConfirmText] = useState("");
+  const [unpostCooldown, setUnpostCooldown] = useState(0);
 
   useEffect(() => {
     setAdmin(isAdmin());
@@ -407,7 +411,7 @@ const CustomerDetailPage = () => {
     setInvoiceMsg("");
     setInvoiceError(false);
     try {
-      await api.post(`/admin/invoices/${invoiceId}/unpost`);
+      await api.post(`/admin/invoices/${invoiceId}/unpost`, { reason: unpostReason.trim() });
       setInvoices((prev) =>
         prev.map((inv) => (inv.id === invoiceId ? { ...inv, status: "draft" } : inv))
       );
@@ -424,6 +428,19 @@ const CustomerDetailPage = () => {
       setUnpostBusyId(null);
     }
   };
+
+  const openUnpostConfirm = (invoiceId: number) => {
+    setUnpostReason("");
+    setUnpostConfirmText("");
+    setUnpostCooldown(UNPOST_COOLDOWN_SECONDS);
+    setUnpostConfirmId(invoiceId);
+  };
+
+  useEffect(() => {
+    if (unpostConfirmId === null || unpostCooldown <= 0) return;
+    const t = setTimeout(() => setUnpostCooldown((c) => c - 1), 1000);
+    return () => clearTimeout(t);
+  }, [unpostConfirmId, unpostCooldown]);
 
   const set = (field: keyof EditForm) => (v: string) =>
     setForm((prev) => ({ ...prev, [field]: v }));
@@ -727,7 +744,7 @@ const CustomerDetailPage = () => {
                               ) : null}
                               {admin && inv.status === "sent" ? (
                                 <button
-                                  onClick={() => setUnpostConfirmId(inv.id)}
+                                  onClick={() => openUnpostConfirm(inv.id)}
                                   disabled={unpostBusyId === inv.id}
                                   className="text-xs px-2 py-0.5 rounded bg-amber-900/60 text-amber-400 hover:bg-amber-800/60 disabled:opacity-50 transition-colors"
                                 >
@@ -1046,41 +1063,81 @@ const CustomerDetailPage = () => {
 
       </div>
 
-      {unpostConfirmId !== null && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-          <div className="bg-slate-900 border border-amber-800 rounded-xl shadow-xl w-full max-w-lg overflow-hidden">
-            <div className="px-6 py-4 border-b border-amber-800 bg-amber-950/40">
-              <p className="font-semibold text-amber-400">
-                Unpost Invoice {invoices.find((i) => i.id === unpostConfirmId)?.invoice_number}?
-              </p>
-            </div>
-            <div className="px-6 py-4 space-y-3 text-sm text-slate-300">
-              <p className="text-amber-300 bg-amber-950/30 border border-amber-800 rounded px-3 py-2">
-                Unposting a sent bill can create accounting discrepancies, especially if
-                significant time has passed since it was sent. This should only be done
-                shortly after sending, and the affected accounting period may need manual
-                reconciliation. Continue?
-              </p>
-            </div>
-            <div className="px-6 py-4 border-t border-slate-800 flex justify-end gap-2">
-              <button
-                onClick={() => setUnpostConfirmId(null)}
-                disabled={unpostBusyId === unpostConfirmId}
-                className="px-4 py-2 text-sm font-medium text-slate-400 hover:text-slate-200 disabled:opacity-40"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => handleUnpostInvoice(unpostConfirmId)}
-                disabled={unpostBusyId === unpostConfirmId}
-                className="px-4 py-2 bg-amber-600 text-white text-sm font-medium rounded hover:bg-amber-700 disabled:opacity-40 transition-colors"
-              >
-                {unpostBusyId === unpostConfirmId ? "Unposting…" : "Yes, Unpost"}
-              </button>
+      {unpostConfirmId !== null && (() => {
+        const targetInvoiceNumber = invoices.find((i) => i.id === unpostConfirmId)?.invoice_number ?? "";
+        const busy = unpostBusyId === unpostConfirmId;
+        const reasonOk = isReasonValid(unpostReason);
+        const phraseOk = unpostConfirmText.trim() === targetInvoiceNumber;
+        const canConfirm = !busy && unpostCooldown <= 0 && reasonOk && phraseOk;
+        return (
+          <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+            <div className="bg-slate-900 border border-amber-800 rounded-xl shadow-xl w-full max-w-lg overflow-hidden">
+              <div className="px-6 py-4 border-b border-amber-800 bg-amber-950/40">
+                <p className="font-semibold text-amber-400">
+                  Unpost Invoice {targetInvoiceNumber}?
+                </p>
+              </div>
+              <div className="px-6 py-4 space-y-3 text-sm text-slate-300">
+                <p className="text-amber-300 bg-amber-950/30 border border-amber-800 rounded px-3 py-2">
+                  Unposting a sent bill can create accounting discrepancies, especially if
+                  significant time has passed since it was sent. This should only be done
+                  shortly after sending, and the affected accounting period may need manual
+                  reconciliation.
+                </p>
+
+                <div>
+                  <label className="block text-xs font-medium text-slate-400 mb-1">
+                    Why are you unposting this bill? <span className="text-red-400">(required)</span>
+                  </label>
+                  <textarea
+                    value={unpostReason}
+                    onChange={(e) => setUnpostReason(e.target.value)}
+                    disabled={busy}
+                    rows={2}
+                    placeholder="Explain the specific reason -- this is stored in the audit log."
+                    className="w-full text-sm bg-slate-800 border border-slate-700 rounded px-2.5 py-1.5 text-slate-200 focus:outline-none focus:ring-1 focus:ring-amber-500 disabled:opacity-40"
+                  />
+                  {unpostReason.trim().length > 0 && !reasonOk && (
+                    <p className="text-xs text-red-400 mt-1">
+                      Enter a real, specific reason (at least 10 characters) -- placeholders aren&apos;t accepted.
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-slate-400 mb-1">
+                    Type the invoice number <span className="font-mono text-slate-200">{targetInvoiceNumber}</span> to confirm
+                  </label>
+                  <input
+                    type="text"
+                    value={unpostConfirmText}
+                    onChange={(e) => setUnpostConfirmText(e.target.value)}
+                    disabled={busy}
+                    placeholder={targetInvoiceNumber}
+                    className="w-full text-sm bg-slate-800 border border-slate-700 rounded px-2.5 py-1.5 text-slate-200 font-mono focus:outline-none focus:ring-1 focus:ring-amber-500 disabled:opacity-40"
+                  />
+                </div>
+              </div>
+              <div className="px-6 py-4 border-t border-slate-800 flex justify-end gap-2">
+                <button
+                  onClick={() => setUnpostConfirmId(null)}
+                  disabled={busy}
+                  className="px-4 py-2 text-sm font-medium text-slate-400 hover:text-slate-200 disabled:opacity-40"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => handleUnpostInvoice(unpostConfirmId)}
+                  disabled={!canConfirm}
+                  className="px-4 py-2 bg-amber-600 text-white text-sm font-medium rounded hover:bg-amber-700 disabled:opacity-40 transition-colors"
+                >
+                  {busy ? "Unposting…" : unpostCooldown > 0 ? `Yes, Unpost (${unpostCooldown})` : "Yes, Unpost"}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
     </Layout>
   );
 };

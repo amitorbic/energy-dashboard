@@ -1,5 +1,5 @@
 from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Body, Depends, HTTPException, Query
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -93,15 +93,13 @@ async def api_list_invoices_by_esi(
     return result
 
 
-@router.post("/invoices/{invoice_id}/post")
-async def api_post_invoice(
-    invoice_id: int,
-    db: AsyncSession = Depends(get_db),
-):
-    """Transition an invoice from 'draft' to 'posted'.
+async def _post_one(db: AsyncSession, invoice_id: int) -> dict:
+    """Core post logic, shared by the single-item and bulk-post endpoints.
 
-    'posted' is the gate before 'sent' -- an invoice must be posted before
-    it can be marked sent (enforced wherever that transition is built)."""
+    Raises HTTPException (404/409) before any write runs, so the bulk-post
+    loop can catch them per-item and keep going -- same pattern as
+    admin_billing._revert_one / bulk_revert_billing_periods.
+    """
     r = await db.execute(
         text("SELECT status FROM invoices WHERE id = :id"),
         {"id": invoice_id},
@@ -121,8 +119,87 @@ async def api_post_invoice(
         text("UPDATE invoices SET status = 'posted' WHERE id = :id"),
         {"id": invoice_id},
     )
-    await db.commit()
     return {"id": invoice_id, "status": "posted"}
+
+
+@router.post("/invoices/{invoice_id}/post")
+async def api_post_invoice(
+    invoice_id: int,
+    db: AsyncSession = Depends(get_db),
+):
+    """Transition an invoice from 'draft' to 'posted'.
+
+    'posted' is the gate before 'sent' -- an invoice must be posted before
+    it can be marked sent (enforced wherever that transition is built)."""
+    result = await _post_one(db, invoice_id)
+    await db.commit()
+    return result
+
+
+@router.post("/invoices/bulk-post")
+async def bulk_post_invoices(
+    body: dict = Body(...),
+    db: AsyncSession = Depends(get_db),
+):
+    """Bulk post -- reuses _post_one() in a loop. One failed item (404 not
+    found, or 409 because it isn't 'draft') does not stop the batch; it's
+    recorded as a skip with a reason and the loop continues. All successful
+    items are committed together at the end.
+    """
+    raw_ids = body.get("invoice_ids")
+    if not isinstance(raw_ids, list) or not raw_ids:
+        raise HTTPException(status_code=422, detail="invoice_ids must be a non-empty list")
+
+    results = []
+    for raw_id in raw_ids:
+        invoice_id = int(raw_id)
+        try:
+            r = await _post_one(db, invoice_id)
+            results.append({"id": invoice_id, "success": True, "status": r["status"]})
+        except HTTPException as e:
+            results.append({"id": invoice_id, "success": False, "reason": e.detail})
+
+    await db.commit()
+
+    return {
+        "results":   results,
+        "succeeded": sum(1 for r in results if r["success"]),
+        "skipped":   sum(1 for r in results if not r["success"]),
+    }
+
+
+@router.post("/invoices/bulk-generate")
+async def bulk_generate_invoices(
+    body: dict = Body(...),
+    db: AsyncSession = Depends(get_db),
+):
+    """Bulk generate -- reuses generate_invoice() in a loop. One failed item
+    (billing_period not found, not 'approved', or already invoiced) does not
+    stop the batch; it's recorded as a skip with a reason and the loop
+    continues. generate_invoice() commits its own write per successful item,
+    same as the single-item /invoices/generate/{billing_period_id} endpoint.
+    """
+    raw_ids = body.get("billing_period_ids")
+    if not isinstance(raw_ids, list) or not raw_ids:
+        raise HTTPException(status_code=422, detail="billing_period_ids must be a non-empty list")
+
+    results = []
+    for raw_id in raw_ids:
+        bp_id = int(raw_id)
+        r = await generate_invoice(bp_id, db)
+        if r.get("status") == "ok":
+            results.append({
+                "id": bp_id, "success": True,
+                "invoice_id": r["invoice_id"], "invoice_number": r["invoice_number"],
+            })
+        else:
+            results.append({"id": bp_id, "success": False, "reason": r.get("reason")})
+
+    return {
+        "results":   results,
+        "succeeded": sum(1 for r in results if r["success"]),
+        "skipped":   sum(1 for r in results if not r["success"]),
+    }
 
 
 @router.get("/invoices/by-period/{billing_period_id}")
