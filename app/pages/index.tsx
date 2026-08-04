@@ -2,65 +2,41 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import { getUser, isAdmin, isLoggedIn, User } from "../utils/auth";
+import { SECTIONS } from "../components/Sidebar";
 
-// Mirrors Sidebar.tsx's SECTIONS labels exactly (Sales, Operations, Portfolio,
-// Reports, Audit, Customers, Broker, Admin). Sidebar.tsx's SECTIONS array isn't
-// exported, so this can't be a live import without touching that file — keep
-// the `label` values here in sync with Sidebar.tsx if a section is ever
-// renamed. Each segment links to its primary/first item from Sidebar.tsx's
-// SECTIONS, confirmed with the team where the choice wasn't obvious.
-const SEGMENTS = [
-  {
-    label: "Sales",
-    href: "/pricing",
-    description: "Pricing, ESI ID search, daily market data and AI document parsing",
-    icon: "📊",
-  },
-  {
-    label: "Operations",
-    href: "/contracts",
-    description: "Contracts, enrollment, billing, commission and past-due accounts",
-    icon: "🧾",
-  },
-  {
-    label: "Portfolio",
-    href: "/portfolio",
-    description: "Portfolio management and tracking",
-    icon: "🗂️",
-  },
-  {
-    label: "Reports",
-    href: null,
-    description: "Reporting and analytics",
-    icon: "📈",
-    soon: true,
-  },
-  {
-    label: "Audit",
-    href: "/enrollment-audit",
-    description: "Enrollment, billing and payment audit trails",
-    icon: "🔎",
-  },
-  {
-    label: "Customers",
-    href: "/customers",
-    description: "Customer accounts, ESI IDs and contract details",
-    icon: "👥",
-  },
-  {
-    label: "Broker",
-    href: "/broker",
-    description: "Broker accounts, commissions and status",
-    icon: "🤝",
-  },
-  {
-    label: "Admin",
-    href: "/admin",
-    description: "Supplier data configuration and testing utilities",
-    icon: "⚙",
-    adminOnly: true,
-  },
-];
+// Presentation-only metadata per segment (icon/description have no equivalent
+// in Sidebar.tsx's SECTIONS, which only carries per-item nav data). Labels,
+// link targets and "soon" state are all derived from SECTIONS below, not
+// hand-copied, so this can't drift the way the old MODULES list did.
+const SEGMENT_META: Record<string, { description: string; icon: string }> = {
+  Sales: { description: "Pricing, ESI ID search, daily market data and AI document parsing", icon: "📊" },
+  Operations: { description: "Contracts, enrollment, billing, commission and past-due accounts", icon: "🧾" },
+  Portfolio: { description: "Portfolio management and tracking", icon: "🗂️" },
+  Reports: { description: "Reporting and analytics", icon: "📈" },
+  Audit: { description: "Enrollment, billing and payment audit trails", icon: "🔎" },
+  Customers: { description: "Customer accounts, ESI IDs and contract details", icon: "👥" },
+  Broker: { description: "Broker accounts, commissions and status", icon: "🤝" },
+  Admin: { description: "Supplier data configuration and testing utilities", icon: "⚙" },
+};
+
+// One card per Sidebar.tsx SECTIONS entry, linking to that section's first
+// item that has a real href (skipping "soon" placeholders) — this is what
+// Pricing/Contracts/Enrollment Audit resolved to when picked by hand for
+// Sales/Operations/Audit, so deriving it here reproduces the same targets.
+// A section with no linkable item (e.g. Reports, entirely "soon") renders
+// as a disabled card instead.
+const SEGMENTS = SECTIONS.map((section) => {
+  const primary = section.items.find((item) => item.href);
+  const meta = SEGMENT_META[section.label];
+  return {
+    label: section.label,
+    href: primary?.href ?? null,
+    soon: !primary,
+    adminOnly: section.adminOnly,
+    description: meta.description,
+    icon: meta.icon,
+  };
+});
 
 const CARD_CLASS =
   "border-[var(--sb-border-default)] hover:border-[var(--accent-dark)] bg-[var(--sb-surface)] hover:bg-[var(--sb-surface-hover)]";

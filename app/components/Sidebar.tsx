@@ -3,19 +3,19 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { User } from "../utils/auth";
 
-interface NavItem {
+export interface NavItem {
   label: string;
   href?: string;
   soon?: boolean;
 }
 
-interface NavSection {
+export interface NavSection {
   label: string;
   items: NavItem[];
   adminOnly?: boolean;
 }
 
-const SECTIONS: NavSection[] = [
+export const SECTIONS: NavSection[] = [
   {
     label: "Sales",
     items: [
