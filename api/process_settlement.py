@@ -17,6 +17,7 @@ Usage:
   python process_settlement.py --date 2026-04-01        # single date
   python process_settlement.py --date 2026-04-01 --run RTM_FINAL2
   python process_settlement.py --reprocess              # force reprocess everything
+  python process_settlement.py --backfill               # process all unprocessed dates, skip failures
 """
 
 import argparse
@@ -297,6 +298,52 @@ async def main(args):
         repcode, qsecode = await get_repcode(conn)
         log.info("REP  repcode=%s  qsecode=%s", repcode, qsecode)
 
+        if args.backfill:
+            work_list = await get_pending_dates(conn)
+            total = len(work_list)
+            log.info("Backfill mode: %d unprocessed date/run combos", total)
+
+            if not work_list:
+                log.info("Nothing to process.")
+                pool.close()
+                await pool.wait_closed()
+                return
+
+            processed = 0
+            total_upserted = 0
+            failed_dates: list[tuple[str, str]] = []
+            for idx, (oper_date, settlement_run) in enumerate(work_list, start=1):
+                log.info(
+                    "Processing %d of %d dates: %s %s",
+                    idx, total, oper_date, settlement_run,
+                )
+                try:
+                    n1 = await process_with_losses(
+                        conn, oper_date, settlement_run, repcode, qsecode
+                    )
+                    n2 = await process_unadjusted(
+                        conn, oper_date, settlement_run, repcode, qsecode
+                    )
+                    await conn.commit()
+                    total_upserted += n1 + n2
+                    processed += 1
+                except Exception as exc:
+                    await conn.rollback()
+                    log.error("FAILED %s/%s — %s", oper_date, settlement_run, exc)
+                    failed_dates.append((oper_date, settlement_run))
+
+            pool.close()
+            await pool.wait_closed()
+            log.info(
+                "Backfill complete — processed=%d failed=%d total_upserted=%d",
+                processed, len(failed_dates), total_upserted,
+            )
+            if failed_dates:
+                log.info("Failed dates:")
+                for d, r in failed_dates:
+                    log.info("  %s %s", d, r)
+            return
+
         if args.date:
             run = args.run or "RTM_INITIAL"
             work_list = [(args.date, run)]
@@ -355,5 +402,6 @@ if __name__ == "__main__":
     parser.add_argument("--date", help="Single oper_date (YYYY-MM-DD)")
     parser.add_argument("--run", help="settlement_run", default=None)
     parser.add_argument("--reprocess", action="store_true")
+    parser.add_argument("--backfill", action="store_true")
     args = parser.parse_args()
     asyncio.run(main(args))

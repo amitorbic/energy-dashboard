@@ -696,16 +696,17 @@ ZONES = ("HOUSTON", "NORTH", "SOUTH", "WEST")
 
 
 def _shape_load_response(oper_date: str, settlement_run: str, rows) -> dict:
-    """Pivot flat DB rows into zone → 24-element array."""
+    """Pivot flat DB rows (96 x 15-min intervals) into zone → 24-element hourly array."""
     # Initialise with zeros — position screen shows 0 when no data, not null
-    zones: dict[str, list[float]] = {z: [0.0] * 96 for z in ZONES}
+    zones: dict[str, list[float]] = {z: [0.0] * 24 for z in ZONES}
 
     for row in rows:
         z = row["settlement_zone"]
         ie = int(row["interval_ending"])
         print(f"DEBUG z={z} ie={ie} len={len(zones.get(z, []))}")
         if z in zones and 1 <= ie <= 96:
-            zones[z][ie - 1] = float(row["mwh"])
+            he_idx = (ie - 1) // 4
+            zones[z][he_idx] += float(row["mwh"])
 
     daily_totals = {z: round(sum(v), 4) for z, v in zones.items()}
     has_data = any(t > 0 for t in daily_totals.values())
@@ -1097,19 +1098,30 @@ async def get_dna_forecast_data(criteria: dict, db: AsyncSession) -> dict:
     forecast_years = list(set(range(start.year, end.year + 1)))
 
     # Portfolio annual MWh per year per load zone
-    pla_result = await db.execute(
-        text("""
-        SELECT year, load_zone, annual_mwh
-        FROM   portfolio_load_annual
-        WHERE  year IN :years
-          AND  load_zone IN :zones
-    """),
-        {"years": tuple(forecast_years), "zones": tuple(zones)},
-    )
+    result = await db.execute(text("""
+        SELECT load_zone, SUM(annual_kwh) / 1000.0 as annual_mwh
+        FROM customer_forecast_dates
+        WHERE load_zone IS NOT NULL
+          AND annual_kwh IS NOT NULL
+          AND forecast_end_date >= :forecast_date
+        GROUP BY load_zone
+
+        UNION ALL
+
+        SELECT load_zone, SUM(annual_kwh) / 1000.0 as annual_mwh
+        FROM future_forecast_dates
+        WHERE load_zone IS NOT NULL
+          AND annual_kwh IS NOT NULL
+          AND forecast_start_date <= :forecast_date
+          AND forecast_end_date   >= :forecast_date
+        GROUP BY load_zone
+    """), {"forecast_date": str(start)})
 
     portfolio_annual: dict[tuple, float] = {}
-    for row in pla_result.fetchall():
-        portfolio_annual[(int(row[0]), row[1])] = float(row[2] or 0)
+    for row in result.fetchall():
+        if row[0] in zones:
+            existing = portfolio_annual.get((start.year, row[0]), 0.0)
+            portfolio_annual[(start.year, row[0])] = existing + float(row[1] or 0)
 
     # ERCOT annual totals per year per load zone (from growth factors)
     gf_result = await db.execute(
@@ -1321,4 +1333,185 @@ async def get_dna_forecast_data(criteria: dict, db: AsyncSession) -> dict:
         "zone_annual_mwh": {
             z: portfolio_annual.get((start.year, z), 0.0) for z in zones
         },
+    }
+
+
+# ── Hour Blocks ────────────────────────────────────────────────────────────────
+"""
+get_hour_blocks_data
+──────────────────────
+Hourly shape within a selected block, for hedge sizing: a trader needs to see
+the shape hour-by-hour to know the minimum flat MW they can safely buy.
+
+Block definitions (peak window is HE07–HE22):
+  7x16 = HE07-HE22, all 7 days
+  5x16 = HE07-HE22, Mon-Fri excluding FULL holidays
+  2x16 = HE07-HE22, Sat + Sun + FULL holidays
+  7x8  = HE01-06 + HE23-24, all 7 days
+  7x24 = all 24 hours, all 7 days
+
+Only holiday_type = 'FULL' counts as a holiday for weekday/weekend
+classification, matching the convention in build_patterns.py.
+
+Each row is one hour (load_mw is the average MW for that hour — MWh over a
+1-hour interval is numerically the same as MW). Supply MW for an hour is the
+sum of hedge_book deals whose OWN block_type covers that hour (a 7x24 hedge
+covers every hour, a 7x8 hedge only covers off-peak hours, etc.) — not just
+deals matching the criteria's selected block_type — so the trader sees the
+full hedged position against the shape.
+"""
+
+def _hour_in_block(d: date, he: int, block_type: str, full_holidays: set) -> bool:
+    peak = 7 <= he <= 22
+    off_peak = he <= 6 or he >= 23
+    is_weekend = d.weekday() >= 5
+    is_holiday = d in full_holidays
+
+    if block_type == "7x24":
+        return True
+    if block_type == "7x16":
+        return peak
+    if block_type == "5x16":
+        return peak and not is_weekend and not is_holiday
+    if block_type == "2x16":
+        return peak and (is_weekend or is_holiday)
+    if block_type == "7x8":
+        return off_peak
+    return False
+
+
+async def get_hour_blocks_data(criteria: dict, db: AsyncSession) -> dict:
+    from datetime import date, timedelta
+
+    from_date = criteria.get("from_date", date.today().isoformat())
+    through_date = criteria.get("through_date", from_date)
+    load_type = criteria.get("load_type", "Forecast")
+    forecast_type = criteria.get("forecast_type", "ERCOT Shape Forecast")
+    block_type = criteria.get("block_type", "7x16")
+    zones = criteria.get("zones", get_load_zones())
+
+    start = date.fromisoformat(from_date)
+    end = date.fromisoformat(through_date)
+
+    # ── Step 1: Holidays ──────────────────────────────────────────────────────
+    holiday_result = await db.execute(
+        text("SELECT observed_date FROM ercot_holidays WHERE holiday_type = 'FULL'")
+    )
+    full_holidays = {row[0] for row in holiday_result.fetchall()}
+
+    # ── Step 2: Hourly load (MW) across the full range, all 24 hours/day ─────
+    zone_load: dict[tuple, float] = {}  # (date, hour_ending) -> avg MW, all zones
+
+    if load_type == "Actual":
+        settlement_run = criteria.get("settlement_run", "RTM_FINAL2")
+
+        d = start
+        while d <= end:
+            result = await db.execute(
+                text("""
+                SELECT interval_ending, settlement_zone, mwh
+                FROM   portfolio_load_with_losses
+                WHERE  oper_date      = :oper_date
+                  AND  settlement_run = :settlement_run
+            """),
+                {"oper_date": str(d), "settlement_run": settlement_run},
+            )
+            for row in result.fetchall():
+                if row[1] not in zones:
+                    continue
+                he = (int(row[0]) - 1) // 4 + 1
+                key = (d, he)
+                # 4 intervals of MWh summed over the hour == avg MW for that hour
+                zone_load[key] = zone_load.get(key, 0.0) + float(row[2] or 0)
+            d += timedelta(days=1)
+    elif load_type == "Forecast" and forecast_type in (
+        "ERCOT Shape Forecast",
+        "DNA Forecast",
+    ):
+        forecast_fn = (
+            get_dna_forecast_data
+            if forecast_type == "DNA Forecast"
+            else get_forecast_data
+        )
+        forecast_result = await forecast_fn(
+            {
+                **criteria,
+                "from_date": from_date,
+                "through_date": through_date,
+                "from_he": 1,
+                "through_he": 24,
+                "granularity": "hourly",
+                "zones": zones,
+            },
+            db,
+        )
+        zone_rows = [r for r in forecast_result["rows"] if r["type"] == "zone"]
+
+        d = start
+        idx = 0
+        while d <= end:
+            for he in range(1, 25):
+                # hourly granularity -> each bucket is 1 hour, so MWh == avg MW
+                zone_load[(d, he)] = sum(r["hours"][idx] for r in zone_rows)
+                idx += 1
+            d += timedelta(days=1)
+    # else: other forecast types (Smoothed, Min/Max, Bands, What-If) not yet
+    # implemented for Hour Blocks — zone_load stays empty and reads back as 0
+
+    # ── Step 3: All hedge deals overlapping the range (any block type) ───────
+    hedge_result = await db.execute(
+        text("""
+        SELECT zone, volume_mw, block_type, delivery_start, delivery_end
+        FROM   hedge_book
+        WHERE  delivery_start <= :end_date
+          AND  delivery_end   >= :start_date
+    """),
+        {"start_date": from_date, "end_date": through_date},
+    )
+    hedges = [dict(r) for r in hedge_result.mappings() if r["zone"] in zones]
+
+    # ── Step 4: One row per hour in the selected block ────────────────────────
+    rows: list[dict] = []
+    d = start
+    while d <= end:
+        for he in range(1, 25):
+            if not _hour_in_block(d, he, block_type, full_holidays):
+                continue
+
+            load_mw = zone_load.get((d, he), 0.0)
+            supply_mw = sum(
+                float(h["volume_mw"])
+                for h in hedges
+                if h["delivery_start"] <= d
+                and h["delivery_end"] >= d
+                and _hour_in_block(d, he, h["block_type"], full_holidays)
+            )
+            net_mw = supply_mw - load_mw
+
+            rows.append({
+                "hour_ending": he,
+                "date": d.strftime("%m/%d"),
+                "load_mw": round(load_mw, 3),
+                "supply_mw": round(supply_mw, 3),
+                "net_mw": round(net_mw, 3),
+            })
+        d += timedelta(days=1)
+
+    load_values = [r["load_mw"] for r in rows]
+    summary = {
+        "min_load_mw": round(min(load_values), 3) if load_values else 0.0,
+        "max_load_mw": round(max(load_values), 3) if load_values else 0.0,
+        "avg_load_mw": round(sum(load_values) / len(load_values), 3)
+        if load_values
+        else 0.0,
+        "total_hours": len(rows),
+    }
+
+    return {
+        "rows": rows,
+        "summary": summary,
+        "block_type": block_type,
+        "load_type": load_type,
+        "zones": zones,
+        "criteria": criteria,
     }

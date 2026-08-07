@@ -1,6 +1,18 @@
 import React, { useState, useCallback, useEffect } from "react";
 import Layout from "../../components/Layout";
 import api from "../../utils/api";
+import {
+  BarChart,
+  LineChart,
+  Bar,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 interface PositionRow {
@@ -52,9 +64,34 @@ interface AvailableDate {
   loaded_at: string;
 }
 
+interface BlockHourRow {
+  hour_ending: number;
+  date: string;
+  load_mw: number;
+  supply_mw: number;
+  net_mw: number;
+}
+
+interface HourBlocksSummary {
+  min_load_mw: number;
+  max_load_mw: number;
+  avg_load_mw: number;
+  total_hours: number;
+}
+
+interface HourBlocksResponse {
+  rows: BlockHourRow[];
+  summary: HourBlocksSummary;
+  block_type: string;
+  load_type: string;
+  zones: string[];
+}
+
 // ── Constants ──────────────────────────────────────────────────────────────────
 const ALL_ZONES = ["HOUSTON", "NORTH", "SOUTH", "WEST"];
 const ZONES = ["HOUSTON", "NORTH", "SOUTH", "WEST"] as const;
+const HOUR_BLOCK_TYPES = ["7x16", "5x16", "2x16", "7x8", "7x24"] as const;
+const HOUR_BLOCK_LOAD_TYPES = ["Forecast", "Actual"] as const;
 const RUNS = ["RTM_INITIAL", "RTM_FINAL2", "RTM_TRUEUP3"] as const;
 const HOUR_LABELS = Array.from(
   { length: 24 },
@@ -402,6 +439,357 @@ function LoadSelector({
   );
 }
 
+// ── HourBlocksTab ───────────────────────────────────────────────────────────────
+function HourBlockBarChart({ rows }: { rows: BlockHourRow[] }) {
+  const [chartType, setChartType] = useState<"bar" | "line">("bar");
+
+  const chartData = rows.map((r) => ({
+    label: `${r.date} ${r.hour_ending}`,
+    Load: r.load_mw,
+    Supply: r.supply_mw,
+    Net: r.net_mw,
+  }));
+  const chartWidth = Math.max(800, rows.length * 20);
+
+  return (
+    <div className="rounded-[var(--r-lg)] border p-4" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--ct-text-secondary)" }}>
+          Load Shape
+        </p>
+        <div className="flex gap-1">
+          <button
+            onClick={() => setChartType("bar")}
+            className="px-2.5 py-1 text-xs rounded-[var(--r-sm)] border"
+            style={chartType === "bar"
+              ? { background: "var(--accent-light)", color: "var(--accent-light-on-solid)", borderColor: "var(--accent-light)" }
+              : { background: "var(--ct-surface)", color: "var(--ct-text-secondary)", borderColor: "var(--ct-border-default)" }}
+          >
+            Bar
+          </button>
+          <button
+            onClick={() => setChartType("line")}
+            className="px-2.5 py-1 text-xs rounded-[var(--r-sm)] border"
+            style={chartType === "line"
+              ? { background: "var(--accent-light)", color: "var(--accent-light-on-solid)", borderColor: "var(--accent-light)" }
+              : { background: "var(--ct-surface)", color: "var(--ct-text-secondary)", borderColor: "var(--ct-border-default)" }}
+          >
+            Line
+          </button>
+        </div>
+      </div>
+      <div className="overflow-x-auto w-full">
+        <div style={{ minWidth: chartWidth }}>
+          <ResponsiveContainer width="100%" height={300}>
+            {chartType === "bar" ? (
+              <BarChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--ct-border-subtle)" />
+                <XAxis dataKey="label" interval={3} tick={{ fontSize: 11, fill: "var(--ct-text-muted)" }} />
+                <YAxis tick={{ fontSize: 11, fill: "var(--ct-text-muted)" }} />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="Load" fill="#0d9488" />
+                <Bar dataKey="Supply" fill="#10b981" />
+                <Bar dataKey="Net" fill="#ef4444" />
+              </BarChart>
+            ) : (
+              <LineChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--ct-border-subtle)" />
+                <XAxis dataKey="label" interval={3} tick={{ fontSize: 11, fill: "var(--ct-text-muted)" }} />
+                <YAxis tick={{ fontSize: 11, fill: "var(--ct-text-muted)" }} />
+                <Tooltip />
+                <Legend />
+                <Line type="monotone" dataKey="Load" stroke="#0d9488" dot={false} />
+                <Line type="monotone" dataKey="Supply" stroke="#10b981" dot={false} />
+                <Line type="monotone" dataKey="Net" stroke="#ef4444" dot={false} />
+              </LineChart>
+            )}
+          </ResponsiveContainer>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function HourBlocksTab() {
+  const [fromDate, setFromDate] = useState(today());
+  const [throughDate, setThroughDate] = useState(today());
+  const [loadType, setLoadType] =
+    useState<(typeof HOUR_BLOCK_LOAD_TYPES)[number]>("Forecast");
+  const [forecastType, setForecastType] = useState("ERCOT Shape Forecast");
+  const [blockType, setBlockType] =
+    useState<(typeof HOUR_BLOCK_TYPES)[number]>("7x16");
+  const [zones, setZones] = useState<string[]>([...ALL_ZONES]);
+  const [data, setData] = useState<HourBlocksResponse | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [ran, setRan] = useState(false);
+
+  function toggleBlockZone(z: string) {
+    setZones((zs) => (zs.includes(z) ? zs.filter((x) => x !== z) : [...zs, z]));
+  }
+
+  const runBlocks = useCallback(async () => {
+    setLoading(true);
+    setRan(true);
+    try {
+      const res = await api.post("/portfolio/position/blocks", {
+        from_date: fromDate,
+        through_date: throughDate,
+        load_type: loadType,
+        forecast_type: forecastType,
+        block_type: blockType,
+        zones,
+      });
+      setData(res.data);
+    } catch (e) {
+      console.error(e);
+      setData(null);
+    } finally {
+      setLoading(false);
+    }
+  }, [fromDate, throughDate, loadType, forecastType, blockType, zones]);
+
+  return (
+    <div className="space-y-4">
+      {/* Selection Criteria Panel */}
+      <div className="rounded-[var(--r-lg)] border p-5 space-y-5" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
+        <h2 className="text-sm font-bold uppercase tracking-wide" style={{ color: "var(--ct-text-primary)" }}>
+          Hour Blocks — Selection Criteria
+        </h2>
+
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          {/* Date Range */}
+          <div className="space-y-2">
+            <p className="text-xs font-semibold uppercase tracking-wide border-b pb-1" style={{ color: "var(--ct-text-secondary)", borderColor: "var(--ct-border-subtle)" }}>
+              Date Range
+            </p>
+            <div className="flex items-center gap-2">
+              <span className="text-xs w-14" style={{ color: "var(--ct-text-muted)" }}>From</span>
+              <input
+                type="date"
+                value={fromDate}
+                onChange={(e) => setFromDate(e.target.value)}
+                className="flex-1 text-xs border rounded-[var(--r-sm)] px-2 py-1 outline-none focus:border-[var(--accent-light)]"
+                style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-primary)" }}
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs w-14" style={{ color: "var(--ct-text-muted)" }}>Through</span>
+              <input
+                type="date"
+                value={throughDate}
+                onChange={(e) => setThroughDate(e.target.value)}
+                className="flex-1 text-xs border rounded-[var(--r-sm)] px-2 py-1 outline-none focus:border-[var(--accent-light)]"
+                style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-primary)" }}
+              />
+            </div>
+          </div>
+
+          {/* Load Type */}
+          <div className="space-y-1">
+            <p className="text-xs font-semibold uppercase tracking-wide border-b pb-1 mb-2" style={{ color: "var(--ct-text-secondary)", borderColor: "var(--ct-border-subtle)" }}>
+              Load Type
+            </p>
+            {HOUR_BLOCK_LOAD_TYPES.map((lt) => (
+              <button
+                key={lt}
+                onClick={() => setLoadType(lt)}
+                className="w-full text-left px-3 py-1.5 text-xs rounded-[var(--r-sm)] mb-1 flex items-center gap-2 transition-colors hover:bg-[var(--ct-surface-hover)]"
+                style={loadType === lt
+                  ? { background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }
+                  : { color: "var(--ct-text-secondary)" }}
+              >
+                <span
+                  className="w-3 h-3 rounded-full border flex-shrink-0"
+                  style={loadType === lt
+                    ? { background: "var(--accent-light-on-solid)", borderColor: "var(--accent-light-on-solid)" }
+                    : { borderColor: "var(--ct-border-strong)" }}
+                />
+                {lt}
+              </button>
+            ))}
+          </div>
+
+          {/* Forecast Type */}
+          {loadType === "Forecast" && (
+            <div className="space-y-1">
+              <p className="text-xs font-semibold uppercase tracking-wide border-b pb-1 mb-2" style={{ color: "var(--ct-text-secondary)", borderColor: "var(--ct-border-subtle)" }}>
+                Forecast Type
+              </p>
+              {LOAD_TYPES.filter((lt) => !ACTUAL_LOAD_TYPES.includes(lt)).map((lt) => (
+                <button
+                  key={lt}
+                  onClick={() => setForecastType(lt)}
+                  className="w-full text-left px-3 py-1.5 text-xs rounded-[var(--r-sm)] mb-1 flex items-center gap-2 transition-colors hover:bg-[var(--ct-surface-hover)]"
+                  style={forecastType === lt
+                    ? { background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }
+                    : { color: "var(--ct-text-secondary)" }}
+                >
+                  <span
+                    className="w-3 h-3 rounded-full border flex-shrink-0"
+                    style={forecastType === lt
+                      ? { background: "var(--accent-light-on-solid)", borderColor: "var(--accent-light-on-solid)" }
+                      : { borderColor: "var(--ct-border-strong)" }}
+                  />
+                  {lt}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Block Type */}
+          <div className="space-y-1">
+            <p className="text-xs font-semibold uppercase tracking-wide border-b pb-1 mb-2" style={{ color: "var(--ct-text-secondary)", borderColor: "var(--ct-border-subtle)" }}>
+              Block Type
+            </p>
+            {HOUR_BLOCK_TYPES.map((b) => (
+              <button
+                key={b}
+                onClick={() => setBlockType(b)}
+                className="w-full text-left px-3 py-1.5 text-xs rounded-[var(--r-sm)] mb-1 flex items-center gap-2 transition-colors hover:bg-[var(--ct-surface-hover)]"
+                style={blockType === b
+                  ? { background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }
+                  : { color: "var(--ct-text-secondary)" }}
+              >
+                <span
+                  className="w-3 h-3 rounded-full border flex-shrink-0"
+                  style={blockType === b
+                    ? { background: "var(--accent-light-on-solid)", borderColor: "var(--accent-light-on-solid)" }
+                    : { borderColor: "var(--ct-border-strong)" }}
+                />
+                {b}
+              </button>
+            ))}
+          </div>
+
+          {/* Zones */}
+          <div className="space-y-1">
+            <p className="text-xs font-semibold uppercase tracking-wide border-b pb-1 mb-2" style={{ color: "var(--ct-text-secondary)", borderColor: "var(--ct-border-subtle)" }}>
+              Zones
+            </p>
+            {ALL_ZONES.map((z) => (
+              <button
+                key={z}
+                onClick={() => toggleBlockZone(z)}
+                className="w-full text-left px-3 py-1.5 text-xs rounded-[var(--r-sm)] mb-1 flex items-center gap-2 transition-colors"
+                style={zones.includes(z)
+                  ? { background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }
+                  : { background: "var(--ct-surface-hover)", color: "var(--ct-text-muted)" }}
+              >
+                <span
+                  className="w-3 h-3 rounded-sm border flex-shrink-0"
+                  style={zones.includes(z)
+                    ? { background: "var(--accent-light-on-solid)", borderColor: "var(--accent-light-on-solid)" }
+                    : { borderColor: "var(--ct-border-strong)" }}
+                />
+                {z}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex justify-end pt-2 border-t" style={{ borderColor: "var(--ct-border-default)" }}>
+          <button
+            onClick={runBlocks}
+            disabled={loading}
+            className="px-6 py-2 text-sm font-semibold rounded-[var(--r-lg)] disabled:opacity-50 transition-colors hover:opacity-90"
+            style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}
+          >
+            {loading ? "Loading..." : "▶  Run Hour Blocks"}
+          </button>
+        </div>
+      </div>
+
+      {/* Results */}
+      {ran && !loading && data && (
+        <>
+          {/* Summary card */}
+          <div className="rounded-[var(--r-lg)] border p-5" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="text-center">
+                <div className="text-xs uppercase tracking-wide mb-1" style={{ color: "var(--ct-text-muted)" }}>Min MW</div>
+                <div className="text-xl font-bold" style={{ color: "var(--ct-text-primary)" }}>{data.summary.min_load_mw.toFixed(1)}</div>
+              </div>
+              <div className="text-center">
+                <div className="text-xs uppercase tracking-wide mb-1" style={{ color: "var(--ct-text-muted)" }}>Max MW</div>
+                <div className="text-xl font-bold" style={{ color: "var(--ct-text-primary)" }}>{data.summary.max_load_mw.toFixed(1)}</div>
+              </div>
+              <div className="text-center">
+                <div className="text-xs uppercase tracking-wide mb-1" style={{ color: "var(--ct-text-muted)" }}>Avg MW</div>
+                <div className="text-xl font-bold" style={{ color: "var(--ct-text-primary)" }}>{data.summary.avg_load_mw.toFixed(1)}</div>
+              </div>
+              <div className="text-center">
+                <div className="text-xs uppercase tracking-wide mb-1" style={{ color: "var(--ct-text-muted)" }}>Total Hours</div>
+                <div className="text-xl font-bold" style={{ color: "var(--ct-text-primary)" }}>{data.summary.total_hours}</div>
+              </div>
+            </div>
+            <div className="mt-4 pt-4 border-t text-sm text-center" style={{ borderColor: "var(--ct-border-subtle)", color: "var(--ct-text-secondary)" }}>
+              Max flat block you can buy:{" "}
+              <span className="font-bold" style={{ color: "var(--accent-light)" }}>
+                {data.summary.min_load_mw.toFixed(1)} MW
+              </span>
+            </div>
+          </div>
+
+          {/* Bar chart */}
+          <HourBlockBarChart rows={data.rows} />
+
+          {/* Hourly shape table */}
+          <div className="rounded-[var(--r-lg)] overflow-hidden border" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
+            <div className="px-4 py-2 border-b text-xs" style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-muted)" }}>
+              Block Type: <span style={{ color: "var(--ct-text-secondary)" }}>{data.block_type}</span>
+              &ensp;·&ensp;Load Type: <span style={{ color: "var(--ct-text-secondary)" }}>{data.load_type}</span>
+              &ensp;·&ensp;Zones: <span style={{ color: "var(--ct-text-secondary)" }}>{data.zones.join(", ")}</span>
+            </div>
+            <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
+              <table className="w-full text-xs font-mono">
+                <thead>
+                  <tr className="border-b sticky top-0" style={{ background: "var(--ct-surface-hover)", borderColor: "var(--ct-border-default)" }}>
+                    <th className="text-left px-3 py-2 font-medium" style={{ color: "var(--ct-text-muted)" }}>Hour</th>
+                    <th className="text-left px-3 py-2 font-medium" style={{ color: "var(--ct-text-muted)" }}>Date</th>
+                    <th className="text-right px-3 py-2 font-medium" style={{ color: "var(--ct-text-muted)" }}>Load MW</th>
+                    <th className="text-right px-3 py-2 font-medium" style={{ color: "var(--ct-text-muted)" }}>Supply MW</th>
+                    <th className="text-right px-3 py-2 font-medium" style={{ color: "var(--ct-text-muted)" }}>Net MW</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.rows.map((row, i) => (
+                    <tr key={i} className="border-b hover:bg-[var(--ct-surface-hover)]" style={{ borderColor: "var(--ct-border-subtle)" }}>
+                      <td className="px-3 py-1.5" style={{ color: "var(--ct-text-secondary)" }}>
+                        HE{String(row.hour_ending).padStart(2, "0")}
+                      </td>
+                      <td className="px-3 py-1.5" style={{ color: "var(--ct-text-secondary)" }}>{row.date}</td>
+                      <td className="px-3 py-1.5 text-right tabular-nums" style={{ color: "var(--ct-text-primary)" }}>
+                        {row.load_mw.toFixed(1)}
+                      </td>
+                      <td className="px-3 py-1.5 text-right tabular-nums" style={{ color: "var(--ct-text-secondary)" }}>
+                        {row.supply_mw.toFixed(1)}
+                      </td>
+                      <td
+                        className="px-3 py-1.5 text-right tabular-nums font-semibold"
+                        style={{ color: row.net_mw < 0 ? "var(--danger-light)" : "var(--success-light)" }}
+                      >
+                        {row.net_mw > 0 ? "+" : ""}
+                        {row.net_mw.toFixed(1)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
+      )}
+
+      {ran && !loading && !data && (
+        <div className="rounded-[var(--r-md)] border p-4 text-sm" style={{ background: "var(--danger-light-tint)", borderColor: "var(--danger-light-tint)", color: "var(--danger-light)" }}>
+          Failed to load hour blocks data.
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Main Component ─────────────────────────────────────────────────────────────
 export default function PositionScreen() {
   const [criteria, setCriteria] = useState<SelectionCriteria>({
@@ -420,13 +808,15 @@ export default function PositionScreen() {
 
   const [rows, setRows] = useState<PositionRow[]>([]);
   const [hours, setHours] = useState<number[]>([]);
+  const [chartType, setChartType] = useState<"bar" | "line">("bar");
   const [loading, setLoading] = useState(false);
   const [showCriteria, setShowCriteria] = useState(true);
   const [ran, setRan] = useState(false);
+  const [activeTab, setActiveTab] = useState<"position" | "hour_blocks">("position");
 
   // ── Actual load state ──────────────────────────────────────────────────────
   const [operDate, setOperDate] = useState(today());
-  const [settlementRun, setSettlementRun] = useState("RTM_FINAL");
+  const [settlementRun, setSettlementRun] = useState("RTM_FINAL2");
 
   const isActualLoadType = ACTUAL_LOAD_TYPES.includes(criteria.load_type);
 
@@ -532,28 +922,50 @@ export default function PositionScreen() {
               Forecast · Supply · Net Position
             </p>
           </div>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setShowCriteria((v) => !v)}
-              className="px-3 py-1.5 text-xs border rounded-[var(--r-sm)] hover:bg-[var(--ct-surface-hover)]"
-              style={{ borderColor: "var(--ct-border-default)", background: "var(--ct-surface)", color: "var(--ct-text-secondary)" }}
-            >
-              {showCriteria ? "Hide" : "Show"} Criteria
-            </button>
-            {ran && (
+          {activeTab === "position" && (
+            <div className="flex gap-2">
               <button
-                onClick={runPosition}
+                onClick={() => setShowCriteria((v) => !v)}
                 className="px-3 py-1.5 text-xs border rounded-[var(--r-sm)] hover:bg-[var(--ct-surface-hover)]"
                 style={{ borderColor: "var(--ct-border-default)", background: "var(--ct-surface)", color: "var(--ct-text-secondary)" }}
               >
-                ↻ Refresh
+                {showCriteria ? "Hide" : "Show"} Criteria
               </button>
-            )}
+              {ran && (
+                <button
+                  onClick={runPosition}
+                  className="px-3 py-1.5 text-xs border rounded-[var(--r-sm)] hover:bg-[var(--ct-surface-hover)]"
+                  style={{ borderColor: "var(--ct-border-default)", background: "var(--ct-surface)", color: "var(--ct-text-secondary)" }}
+                >
+                  ↻ Refresh
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Tabs */}
+        <div className="border-b" style={{ borderColor: "var(--ct-border-default)" }}>
+          <div className="flex gap-6">
+            {(["position", "hour_blocks"] as const).map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className="pb-3 text-sm font-medium transition-colors border-b-2 -mb-px"
+                style={activeTab === tab
+                  ? { borderColor: "var(--accent-light)", color: "var(--accent-light)" }
+                  : { borderColor: "transparent", color: "var(--ct-text-muted)" }}
+              >
+                {tab === "position" ? "Position Screen" : "Hour Blocks"}
+              </button>
+            ))}
           </div>
         </div>
 
+        {activeTab === "hour_blocks" && <HourBlocksTab />}
+
         {/* Selection Criteria Panel */}
-        {showCriteria && (
+        {activeTab === "position" && showCriteria && (
           <div className="rounded-[var(--r-lg)] border p-5 space-y-5" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-bold uppercase tracking-wide" style={{ color: "var(--ct-text-primary)" }}>
@@ -909,13 +1321,13 @@ export default function PositionScreen() {
         )}
 
         {/* Position Grid */}
-        {ran && !loading && (
+        {activeTab === "position" && ran && !loading && (
           <div className="rounded-[var(--r-lg)] overflow-hidden border" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
             <div className="overflow-x-auto">
               <table className="w-full text-xs font-mono">
                 <thead>
                   <tr className="border-b" style={{ background: "var(--ct-surface-hover)", borderColor: "var(--ct-border-default)" }}>
-                    <th className="text-left px-3 py-2 font-medium sticky left-0 min-w-[180px]" style={{ color: "var(--ct-text-muted)", background: "var(--ct-surface-hover)" }}>
+                    <th className="text-left px-3 py-2 sticky left-0 min-w-[180px] bg-slate-900 text-white font-semibold">
                       Name
                     </th>
                     <th className="text-right px-2 py-2 font-medium min-w-[80px]" style={{ color: "var(--ct-text-muted)" }}>
@@ -941,10 +1353,7 @@ export default function PositionScreen() {
                       className="border-b"
                       style={{ borderColor: "var(--ct-border-subtle)", ...rowStyle }}
                     >
-                      <td
-                        className="px-3 py-1.5 sticky left-0"
-                        style={rowStyle}
-                      >
+                      <td className="px-3 py-1.5 sticky left-0 bg-slate-900 text-white">
                         {row.name}
                       </td>
                       <td className="px-2 py-1.5 text-right">
@@ -977,37 +1386,97 @@ export default function PositionScreen() {
         )}
 
         {/* Actual Load Section — only when Actual load type selected and ran */}
-        {ran && !loading && isActualLoadType && (
+        {activeTab === "position" && ran && !loading && isActualLoadType && (
           <ActualLoadSection
             operDate={operDate}
             settlementRun={settlementRun}
           />
         )}
 
-        {/* Graph placeholder */}
-        {ran && !loading && (
+        {/* Graph */}
+        {activeTab === "position" && ran && !loading && (
           <div className="rounded-[var(--r-lg)] border p-6" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-sm font-semibold" style={{ color: "var(--ct-text-primary)" }}>
                 Supply vs Load — {criteria.from_date}
               </h3>
-              <div className="flex gap-3 text-xs">
-                <span className="flex items-center gap-1" style={{ color: "var(--ct-text-secondary)" }}>
-                  <span className="w-3 h-0.5 inline-block" style={{ background: "var(--accent-light)" }} /> Load
-                </span>
-                <span className="flex items-center gap-1" style={{ color: "var(--ct-text-secondary)" }}>
-                  <span className="w-3 h-0.5 inline-block" style={{ background: "var(--success-light)" }} />{" "}
-                  Supply
-                </span>
-                <span className="flex items-center gap-1" style={{ color: "var(--ct-text-secondary)" }}>
-                  <span className="w-3 h-0.5 inline-block border-dashed border-t" style={{ background: "var(--danger-light)" }} />{" "}
-                  Net Position
-                </span>
+              <div className="flex gap-1">
+                <button
+                  onClick={() => setChartType("bar")}
+                  className="px-2.5 py-1 text-xs rounded-[var(--r-sm)] border"
+                  style={chartType === "bar"
+                    ? { background: "var(--accent-light)", color: "var(--accent-light-on-solid)", borderColor: "var(--accent-light)" }
+                    : { background: "var(--ct-surface)", color: "var(--ct-text-secondary)", borderColor: "var(--ct-border-default)" }}
+                >
+                  Bar
+                </button>
+                <button
+                  onClick={() => setChartType("line")}
+                  className="px-2.5 py-1 text-xs rounded-[var(--r-sm)] border"
+                  style={chartType === "line"
+                    ? { background: "var(--accent-light)", color: "var(--accent-light-on-solid)", borderColor: "var(--accent-light)" }
+                    : { background: "var(--ct-surface)", color: "var(--ct-text-secondary)", borderColor: "var(--ct-border-default)" }}
+                >
+                  Line
+                </button>
               </div>
             </div>
-            <div className="h-48 flex items-center justify-center text-sm border border-dashed rounded-[var(--r-lg)]" style={{ color: "var(--ct-text-muted)", borderColor: "var(--ct-border-default)" }}>
-              Graph renders after hedges are entered · Supply = 0 currently
-            </div>
+            {(() => {
+              const loadRow = rows.find((r) => r.type === "header");
+              const supplyRow = rows.find(
+                (r) => r.type === "supply" && r.name === "Net Supply",
+              );
+              const netRow = rows.find(
+                (r) => r.type === "net" && r.name === "Net Position",
+              );
+              const chartData = hours.map((h, i) => ({
+                hour: h,
+                Load: loadRow?.hours[i] ?? 0,
+                Supply: supplyRow?.hours[i] ?? 0,
+                Net: netRow?.hours[i] ?? 0,
+              }));
+              const chartWidth = Math.max(800, hours.length * 20);
+
+              return (
+                <div className="overflow-x-auto w-full">
+                  <div style={{ minWidth: chartWidth }}>
+                    <ResponsiveContainer width="100%" height={300}>
+                      {chartType === "bar" ? (
+                        <BarChart data={chartData}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="var(--ct-border-subtle)" />
+                          <XAxis
+                            dataKey="hour"
+                            interval={3}
+                            tick={{ fontSize: 11, fill: "var(--ct-text-muted)" }}
+                          />
+                          <YAxis tick={{ fontSize: 11, fill: "var(--ct-text-muted)" }} />
+                          <Tooltip />
+                          <Legend />
+                          <Bar dataKey="Load" fill="#0d9488" />
+                          <Bar dataKey="Supply" fill="#10b981" />
+                          <Bar dataKey="Net" fill="#ef4444" />
+                        </BarChart>
+                      ) : (
+                        <LineChart data={chartData}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="var(--ct-border-subtle)" />
+                          <XAxis
+                            dataKey="hour"
+                            interval={3}
+                            tick={{ fontSize: 11, fill: "var(--ct-text-muted)" }}
+                          />
+                          <YAxis tick={{ fontSize: 11, fill: "var(--ct-text-muted)" }} />
+                          <Tooltip />
+                          <Legend />
+                          <Line type="monotone" dataKey="Load" stroke="#0d9488" dot={false} />
+                          <Line type="monotone" dataKey="Supply" stroke="#10b981" dot={false} />
+                          <Line type="monotone" dataKey="Net" stroke="#ef4444" dot={false} />
+                        </LineChart>
+                      )}
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         )}
       </div>

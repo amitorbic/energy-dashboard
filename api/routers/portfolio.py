@@ -14,6 +14,7 @@ from controllers.portfolio import (
     get_available_dates,
     get_forecast_data,
     get_dna_forecast_data,
+    get_hour_blocks_data,
 )
 
 router = APIRouter(prefix="/portfolio", tags=["Portfolio"])
@@ -142,3 +143,12 @@ async def portfolio_position(
         return await get_position_data(criteria, db)
     else:
         return await get_forecast_data(criteria, db)
+
+
+@router.post("/position/blocks")
+async def portfolio_position_blocks(
+    criteria: dict,
+    db: AsyncSession = Depends(get_db),
+):
+    """Hour Blocks tab — weekly Load/Supply/Net for a selected block type."""
+    return await get_hour_blocks_data(criteria, db)
