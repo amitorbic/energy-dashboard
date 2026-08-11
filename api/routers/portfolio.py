@@ -114,25 +114,23 @@ async def portfolio_position(
     criteria: dict,
     db: AsyncSession = Depends(get_db),
 ):
-    print(f"DEBUG portfolio_position called load_type={criteria.get('load_type')}")
     from controllers.portfolio import get_position_data, get_forecast_data
 
-    print(f"DEBUG imported get_forecast_data={get_forecast_data}")
-
     load_type = criteria.get("load_type", "ERCOT Shape Forecast")
-
-    FORECAST_TYPES = [
-        "ERCOT Shape Forecast",
-        "DNA Forecast",
-        "Minimum Forecast",
-        "Maximum Forecast",
-        "Forecast Bands",
-        "What-If Forecast",
-    ]
 
     ACTUAL_TYPES = [
         "Actual (With Losses)",
         "Actual (Unadjusted)",
+    ]
+
+    # Selectable on the frontend but not yet implemented — see
+    # docs/AMERIPOWER_RISK_PORTFOLIO_MD.md "Position Screen — Load Types Available"
+    UNIMPLEMENTED_FORECAST_TYPES = [
+        "Smoothed Forecast",
+        "Minimum Forecast",
+        "Maximum Forecast",
+        "Forecast Bands",
+        "What-If Forecast",
     ]
 
     if load_type == "ERCOT Shape Forecast":
@@ -141,6 +139,12 @@ async def portfolio_position(
         return await get_dna_forecast_data(criteria, db)
     elif load_type in ACTUAL_TYPES:
         return await get_position_data(criteria, db)
+    elif load_type in UNIMPLEMENTED_FORECAST_TYPES:
+        return {
+            "rows": [],
+            "hours": [],
+            "message": "This forecast type is not yet implemented",
+        }
     else:
         return await get_forecast_data(criteria, db)
 

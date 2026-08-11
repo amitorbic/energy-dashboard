@@ -22,6 +22,8 @@ import aiomysql
 from dotenv import load_dotenv
 import os
 
+from utils.zone_mapping import get_load_zones
+
 load_dotenv()
 
 logging.basicConfig(
@@ -44,7 +46,6 @@ if not DB_CONFIG["db"]:
     raise SystemExit("ERROR: DB_NAME environment variable is not set. Set it before running this script.")
 
 BASE_YEAR = 2025
-LOAD_ZONES = ["HOUSTON", "NORTH", "SOUTH", "WEST"]
 ZONE_TO_COL = {
     "HOUSTON": "houston",
     "NORTH": "north",
@@ -159,7 +160,7 @@ async def main(args):
     pool = await aiomysql.create_pool(**DB_CONFIG, minsize=1, maxsize=3)
 
     async with pool.acquire() as conn:
-        zones = [args.zone.upper()] if args.zone else LOAD_ZONES
+        zones = [args.zone.upper()] if args.zone else get_load_zones()
         await build_growth_factors(conn, zones, args.year)
 
     pool.close()

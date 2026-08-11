@@ -27,7 +27,7 @@ from decimal import Decimal, ROUND_HALF_UP
 import aiomysql
 from dotenv import load_dotenv
 import os
-from utils.zone_mapping import get_all_weather_zones, get_load_zones, DB_COL_TO_ZONE
+from utils.zone_mapping import get_all_weather_zones, get_load_zones, FORECAST_WZ_COLS
 
 load_dotenv()
 
@@ -50,7 +50,6 @@ DB_CONFIG = dict(
 if not DB_CONFIG["db"]:
     raise SystemExit("ERROR: DB_NAME environment variable is not set. Set it before running this script.")
 
-
 def safe_divide(numerator, denominator) -> Decimal:
     """Divide safely — return 0 if denominator is 0."""
     if not denominator or denominator == 0:
@@ -64,9 +63,7 @@ def safe_divide(numerator, denominator) -> Decimal:
 async def calculate_weatherzone_shape(conn, year: int):
     log.info("Calculating weather zone shape for year=%d", year)
 
-    for col, zone_label in DB_COL_TO_ZONE.items():
-        col_net = f"{col}_net"  # coast → coast_net
-
+    for col, zone_label in FORECAST_WZ_COLS.items():
         # Step 1 — Annual total for this zone/year
         async with conn.cursor() as cur:
             await cur.execute(

@@ -4,7 +4,12 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import Optional
 import sqlalchemy as sa
-from utils.zone_mapping import weather_to_load, get_zone_mapping_from_db
+from utils.zone_mapping import (
+    weather_to_load,
+    get_zone_mapping_from_db,
+    get_load_zones,
+    ALL_LOCATIONS,
+)
 
 
 def extract_zone(load_profile: str) -> str:
@@ -332,7 +337,7 @@ async def get_position_data(criteria: dict, db: AsyncSession):
     through_date = criteria.get("through_date", from_date)
     from_he = int(criteria.get("from_he", 1))
     through_he = int(criteria.get("through_he", 24))
-    zones = criteria.get("zones", ["HOUSTON", "NORTH", "SOUTH", "WEST"])
+    zones = criteria.get("zones", get_load_zones())
     load_type = criteria.get("load_type", "Forecast")
     granularity = criteria.get("granularity", "hourly")
     settlement_run = criteria.get("settlement_run", "RTM_FINAL2")
@@ -455,16 +460,7 @@ async def get_position_data(criteria: dict, db: AsyncSession):
     )
     hedges = [dict(r) for r in hedge_result.mappings()]
 
-    all_locations = [
-        "HB_HOUSTON",
-        "HB_NORTH",
-        "HB_SOUTH",
-        "HB_WEST",
-        "LZ_HOUSTON",
-        "LZ_NORTH",
-        "LZ_SOUTH",
-        "LZ_WEST",
-    ]
+    all_locations = ALL_LOCATIONS
 
     def hedge_mw_for_location(location, hour_idx):
         he = (hour_idx % 24) + 1
@@ -692,18 +688,15 @@ async def get_available_dates(db) -> list[dict]:
 
 # ── Internal helper ───────────────────────────────────────────────────────────
 
-ZONES = ("HOUSTON", "NORTH", "SOUTH", "WEST")
-
 
 def _shape_load_response(oper_date: str, settlement_run: str, rows) -> dict:
     """Pivot flat DB rows (96 x 15-min intervals) into zone → 24-element hourly array."""
     # Initialise with zeros — position screen shows 0 when no data, not null
-    zones: dict[str, list[float]] = {z: [0.0] * 24 for z in ZONES}
+    zones: dict[str, list[float]] = {z: [0.0] * 24 for z in get_load_zones()}
 
     for row in rows:
         z = row["settlement_zone"]
         ie = int(row["interval_ending"])
-        print(f"DEBUG z={z} ie={ie} len={len(zones.get(z, []))}")
         if z in zones and 1 <= ie <= 96:
             he_idx = (ie - 1) // 4
             zones[z][he_idx] += float(row["mwh"])
@@ -721,7 +714,6 @@ def _shape_load_response(oper_date: str, settlement_run: str, rows) -> dict:
 
 
 async def get_forecast_data(criteria: dict, db: AsyncSession) -> dict:
-    print("DEBUG get_forecast_data called")
     """
     ERCOT shape-based forecast for position screen.
     Returns same structure as get_position_data for seamless integration.
@@ -732,7 +724,7 @@ async def get_forecast_data(criteria: dict, db: AsyncSession) -> dict:
     through_date = criteria.get("through_date", from_date)
     from_he = int(criteria.get("from_he", 1))
     through_he = int(criteria.get("through_he", 24))
-    zones = criteria.get("zones", ["HOUSTON", "NORTH", "SOUTH", "WEST"])
+    zones = criteria.get("zones", get_load_zones())
     granularity = criteria.get("granularity", "hourly")
     forecast_year = criteria.get("forecast_year", date.today().year)
 
@@ -760,7 +752,6 @@ async def get_forecast_data(criteria: dict, db: AsyncSession) -> dict:
         {"forecast_date": str(start)},
     )
     contracts = result.fetchall()
-    print(f"DEBUG contracts found={len(contracts)}")
 
     # ── Step 2: Aggregate annual MWh per load_zone AND weather_zone ──────────
     zone_annual_mwh: dict[str, float] = {
@@ -828,7 +819,6 @@ async def get_forecast_data(criteria: dict, db: AsyncSession) -> dict:
         },
     )
     shape_rows = shape_result.fetchall()
-    print(f"DEBUG shape_rows found={len(shape_rows)}")
 
     # Build shape lookup: (oper_date, hour, load_zone) → (hourly, daily, monthly)
     shape_lookup: dict[tuple, tuple] = {}
@@ -908,16 +898,7 @@ async def get_forecast_data(criteria: dict, db: AsyncSession) -> dict:
     )
     hedges = [dict(r) for r in hedge_result.mappings()]
 
-    all_locations = [
-        "HB_HOUSTON",
-        "HB_NORTH",
-        "HB_SOUTH",
-        "HB_WEST",
-        "LZ_HOUSTON",
-        "LZ_NORTH",
-        "LZ_SOUTH",
-        "LZ_WEST",
-    ]
+    all_locations = ALL_LOCATIONS
 
     def hedge_mw_for_location(location, hour_idx):
         he = (hour_idx % 24) + 1
@@ -1019,23 +1000,6 @@ async def get_forecast_data(criteria: dict, db: AsyncSession) -> dict:
     }
 
 
-"""
-get_dna_forecast_data
-──────────────────────
-Add this function to controllers/portfolio.py
-
-DNA Forecast logic:
-  1. Get portfolio annual MWh from portfolio_load_annual for forecast year
-  2. Get ERCOT annual total from forecast_growth_factors for forecast year
-  3. customer_share = portfolio_annual_mwh / ercot_year_total
-  4. Get DNA avg_load from forecast_baseline_dna (weather zone/month/dow/hour)
-  5. Sum weather zones → load zone
-  6. hourly_mwh = dna_avg_load × customer_share
-  
-  Note: growth is already embedded in customer_share since both numerator
-  (portfolio_load_annual) and denominator (ercot year_total) are year-specific
-"""
-
 from datetime import date, timedelta
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -1047,7 +1011,7 @@ async def get_dna_forecast_data(criteria: dict, db: AsyncSession) -> dict:
     through_date = criteria.get("through_date", from_date)
     from_he = int(criteria.get("from_he", 1))
     through_he = int(criteria.get("through_he", 24))
-    zones = criteria.get("zones", ["HOUSTON", "NORTH", "SOUTH", "WEST"])
+    zones = criteria.get("zones", get_load_zones())
     granularity = criteria.get("granularity", "hourly")
 
     start = date.fromisoformat(from_date)
@@ -1097,31 +1061,22 @@ async def get_dna_forecast_data(criteria: dict, db: AsyncSession) -> dict:
     # Get all years in the forecast range
     forecast_years = list(set(range(start.year, end.year + 1)))
 
-    # Portfolio annual MWh per year per load zone
-    result = await db.execute(text("""
-        SELECT load_zone, SUM(annual_kwh) / 1000.0 as annual_mwh
-        FROM customer_forecast_dates
-        WHERE load_zone IS NOT NULL
-          AND annual_kwh IS NOT NULL
-          AND forecast_end_date >= :forecast_date
-        GROUP BY load_zone
-
-        UNION ALL
-
-        SELECT load_zone, SUM(annual_kwh) / 1000.0 as annual_mwh
-        FROM future_forecast_dates
-        WHERE load_zone IS NOT NULL
-          AND annual_kwh IS NOT NULL
-          AND forecast_start_date <= :forecast_date
-          AND forecast_end_date   >= :forecast_date
-        GROUP BY load_zone
-    """), {"forecast_date": str(start)})
+    # Portfolio annual MWh per year per load zone — pre-built by
+    # populate_portfolio_load_annual.py (2024 backcast, 2025 direct from
+    # customer_forecast_dates, 2026+ from customer_forecast_dates by year)
+    pa_result = await db.execute(
+        text("""
+        SELECT year, load_zone, annual_mwh
+        FROM   portfolio_load_annual
+        WHERE  year IN :years
+          AND  load_zone IN :zones
+    """),
+        {"years": tuple(forecast_years), "zones": tuple(zones)},
+    )
 
     portfolio_annual: dict[tuple, float] = {}
-    for row in result.fetchall():
-        if row[0] in zones:
-            existing = portfolio_annual.get((start.year, row[0]), 0.0)
-            portfolio_annual[(start.year, row[0])] = existing + float(row[1] or 0)
+    for row in pa_result.fetchall():
+        portfolio_annual[(int(row[0]), row[1])] = float(row[2] or 0)
 
     # ERCOT annual totals per year per load zone (from growth factors)
     gf_result = await db.execute(
@@ -1221,16 +1176,7 @@ async def get_dna_forecast_data(criteria: dict, db: AsyncSession) -> dict:
     )
     hedges = [dict(r) for r in hedge_result.mappings()]
 
-    all_locations = [
-        "HB_HOUSTON",
-        "HB_NORTH",
-        "HB_SOUTH",
-        "HB_WEST",
-        "LZ_HOUSTON",
-        "LZ_NORTH",
-        "LZ_SOUTH",
-        "LZ_WEST",
-    ]
+    all_locations = ALL_LOCATIONS
 
     def hedge_mw_for_location(location, hour_idx):
         he = (hour_idx % 24) + 1

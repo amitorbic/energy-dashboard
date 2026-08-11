@@ -28,7 +28,7 @@ from decimal import Decimal
 import aiomysql
 from dotenv import load_dotenv
 import os
-from utils.zone_mapping import weather_to_load
+from utils.zone_mapping import weather_to_load, get_load_zones
 
 load_dotenv()
 
@@ -198,7 +198,7 @@ async def process_unadjusted(
 
     # Accumulate intervals per zone — sum across all profiles in same zone
     zone_intervals: dict[str, list[Decimal]] = {
-        z: [Decimal("0")] * 96 for z in ("HOUSTON", "NORTH", "SOUTH", "WEST")
+        z: [Decimal("0")] * 96 for z in get_load_zones()
     }
 
     for hdr in headers:

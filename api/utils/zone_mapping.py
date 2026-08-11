@@ -124,3 +124,26 @@ DB_COL_TO_ZONE = {
 }
 
 ZONE_TO_DB_COL = {v: k for k, v in DB_COL_TO_ZONE.items()}
+
+
+# ── Column name helpers (for ercot_forecast_weatherzone queries) ──────────────
+
+# Maps ercot_forecast_weatherzone DB column name → weather zone label
+FORECAST_WZ_COLS = {
+    "coast_net":  "COAST",
+    "east_net":   "EAST",
+    "fwest_net":  "FAR_WEST",
+    "ncent_net":  "NORTH_CENTRAL",
+    "north_net":  "NORTH",
+    "scent_net":  "SOUTH_CENTRAL",
+    "south_net":  "SOUTHERN",
+    "west_net":   "WEST",
+}
+
+
+# ── Location helpers (hub + load-zone identifiers used in position/MTM screens) ─
+
+ALL_LOCATIONS = [
+    "HB_HOUSTON", "HB_NORTH", "HB_SOUTH", "HB_WEST",
+    "LZ_HOUSTON", "LZ_NORTH", "LZ_SOUTH", "LZ_WEST",
+]

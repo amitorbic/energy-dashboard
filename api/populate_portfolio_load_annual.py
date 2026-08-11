@@ -29,6 +29,8 @@ import aiomysql
 from dotenv import load_dotenv
 import os
 
+from utils.zone_mapping import weather_to_load, get_load_zones, get_all_weather_zones
+
 load_dotenv()
 
 logging.basicConfig(
@@ -50,19 +52,6 @@ DB_CONFIG = dict(
 if not DB_CONFIG["db"]:
     raise SystemExit("ERROR: DB_NAME environment variable is not set. Set it before running this script.")
 
-# Weather zone columns in ercot_load_history → load zone mapping
-WEATHER_TO_LOAD = {
-    "coast":         "HOUSTON",
-    "east":          "NORTH",
-    "far_west":      "WEST",
-    "north":         "NORTH",
-    "north_central": "NORTH",
-    "south_central": "SOUTH",
-    "southern":      "SOUTH",
-    "west":          "WEST",
-}
-
-LOAD_ZONES = ["HOUSTON", "NORTH", "SOUTH", "WEST"]
 BASE_YEAR  = 2025
 
 
@@ -79,9 +68,9 @@ async def get_portfolio_2025(conn) -> dict[str, float]:
         """, (f"{BASE_YEAR}-01-01",))
         rows = await cur.fetchall()
 
-    result = {z: 0.0 for z in LOAD_ZONES}
+    result = {z: 0.0 for z in get_load_zones()}
     for row in rows:
-        if row[0] in LOAD_ZONES:
+        if row[0] in get_load_zones():
             result[row[0]] = float(row[1] or 0)
 
     # Add future contracts active in 2025
@@ -98,7 +87,7 @@ async def get_portfolio_2025(conn) -> dict[str, float]:
         rows = await cur.fetchall()
 
     for row in rows:
-        if row[0] in LOAD_ZONES:
+        if row[0] in get_load_zones():
             result[row[0]] = result.get(row[0], 0.0) + float(row[1] or 0)
 
     log.info("Portfolio 2025 annual MWh:")
@@ -115,11 +104,13 @@ async def get_ercot_annual_by_loadzone(conn, year: int,
     use_history=True  → ercot_load_history (actuals)
     use_history=False → ercot_forecast_loadzone (forecast)
     """
-    result = {z: 0.0 for z in LOAD_ZONES}
+    result = {z: 0.0 for z in get_load_zones()}
 
     if use_history:
         # Sum weather zones from ercot_load_history → aggregate to load zone
-        for wz_col, load_zone in WEATHER_TO_LOAD.items():
+        for weather_zone in get_all_weather_zones():
+            wz_col = weather_zone.lower()
+            load_zone = weather_to_load(weather_zone)
             async with conn.cursor() as cur:
                 await cur.execute(f"""
                     SELECT SUM({wz_col})
@@ -183,7 +174,7 @@ async def populate(conn, year_filter: int | None):
         ercot_2025 = await get_ercot_annual_by_loadzone(conn, 2025, use_history=False)
 
         portfolio_2024 = {}
-        for zone in LOAD_ZONES:
+        for zone in get_load_zones():
             e2024 = ercot_2024.get(zone, 0.0)
             e2025 = ercot_2025.get(zone, 0.0)
             if e2025 > 0:
@@ -193,7 +184,7 @@ async def populate(conn, year_filter: int | None):
                 portfolio_2024[zone] = 0.0
 
         log.info("Backcast ratios 2024/2025:")
-        for zone in LOAD_ZONES:
+        for zone in get_load_zones():
             e24 = ercot_2024.get(zone, 0)
             e25 = ercot_2025.get(zone, 0)
             ratio = e24/e25 if e25 > 0 else 0
@@ -221,9 +212,9 @@ async def populate(conn, year_filter: int | None):
             """, (jan1,))
             rows = await cur.fetchall()
 
-        zone_mwh = {z: 0.0 for z in LOAD_ZONES}
+        zone_mwh = {z: 0.0 for z in get_load_zones()}
         for row in rows:
-            if row[0] in LOAD_ZONES:
+            if row[0] in get_load_zones():
                 zone_mwh[row[0]] = float(row[1] or 0)
 
         # Add future contracts
@@ -240,7 +231,7 @@ async def populate(conn, year_filter: int | None):
             rows = await cur.fetchall()
 
         for row in rows:
-            if row[0] in LOAD_ZONES:
+            if row[0] in get_load_zones():
                 zone_mwh[row[0]] = zone_mwh.get(row[0], 0.0) + float(row[1] or 0)
 
         if any(v > 0 for v in zone_mwh.values()):

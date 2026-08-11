@@ -1,6 +1,6 @@
 # AmeriPower — Risk & Portfolio Module Context
 
-## Last Updated: June 2026
+## Last Updated: August 2026
 
 ## System Overview
 
@@ -8,7 +8,8 @@
 - **Frontend**: Next.js + TypeScript + Tailwind on port 3000
 - **DB**: u972964962_orbic (MariaDB)
 - **All routes registered under `/api` prefix in `main.py`**
-- **Architecture**: Single REP (AmeriPower) now — multi-tenant DB routing planned for future REPs
+- **Architecture**: SaaS platform for any REP — no hardcoded company names
+- **Multi-tenant DB routing planned for future REPs**
 
 ## Multi-Tenant Architecture (Planned)
 
@@ -46,16 +47,20 @@ Backend:
   controllers/hedging.py
   routers/dam.py
   controllers/dam.py
+  routers/mtm.py                     ← NEW
+  controllers/mtm.py                 ← NEW
 
 Frontend:
-  pages/portfolio/index.tsx      → Portfolio home
-  pages/portfolio/position.tsx   → Position screen
-  pages/portfolio/hedging.tsx    → Hedge book
-  pages/portfolio/dam.tsx        → DAM purchases
+  pages/portfolio/index.tsx          → Portfolio home
+  pages/portfolio/position.tsx       → Position screen + Hour Blocks tab
+  pages/portfolio/hedging.tsx        → Hedge book
+  pages/portfolio/dam.tsx            → DAM purchases
+  pages/portfolio/mtm.tsx            → Mark-to-Market ← NEW
 
 Scripts:
   ingest_ercot_settlement.py         → Loads ERCOT settlement ZIPs
   process_settlement.py              → Processes settlement → portfolio_load tables
+                                       --backfill flag for unprocessed dates
   ingest_ercot_forecast.py           → Loads ERCOT 20-25yr forecast CSVs
   calculate_ercot_shape.py           → Calculates shape factors from forecast
   populate_customer_forecast_dates.py → Derives forecast table from contract_renewal
@@ -71,15 +76,17 @@ Utils:
   utils/zone_mapping.py              → Single source of truth for zone mapping
 ```
 
-### main.py additions needed:
+### main.py router registrations:
 
 ```python
 from routers.portfolio import router as portfolio_router
 from routers.hedging import router as hedging_router
 from routers.dam import router as dam_router
+from routers.mtm import router as mtm_router
 app.include_router(portfolio_router, prefix="/api")
 app.include_router(hedging_router, prefix="/api")
 app.include_router(dam_router, prefix="/api")
+app.include_router(mtm_router, prefix="/api")
 ```
 
 ---
@@ -106,6 +113,9 @@ app.include_router(dam_router, prefix="/api")
 
 - **portfolio_view**: MariaDB VIEW on contract_renewal
 - **hedge_book**: Forward purchases
+  - Columns: deal_number, trade_date, delivery_start, delivery_end, block_type, zone, location, volume_mw, price, instrument_type, hr_value, gas_price, counterparty, source
+  - instrument_type: FIXED, HEAT_RATE, GAS_BASIS, INDEX
+  - location: HB*\* = hub (basis risk), LZ*\* = load zone (no basis risk)
 - **dam_purchases**: Daily DAM cleared prices
 
 ### ERCOT Settlement Tables
@@ -119,11 +129,11 @@ app.include_router(dam_router, prefix="/api")
 
 - **portfolio_load_with_losses**: 96 x 15-min intervals per zone per day
   - Columns: oper_date, interval_ending (1-96), settlement_zone, mwh, settlement_run
-  - Source: POSTEDAML_* from daioutputheader/interval
+  - Source: POSTEDAML\_\* from daioutputheader/interval
   - UNIQUE KEY on (oper_date, interval_ending, settlement_zone, settlement_run)
 
 - **portfolio_load_unadjusted**: Same structure as with_losses
-  - Source: LSEGUNADJ_* from llsoutputheader/interval
+  - Source: LSEGUNADJ\_\* from llsoutputheader/interval
 
 ### ERCOT Forecast Tables
 
@@ -134,7 +144,6 @@ app.include_router(dam_router, prefix="/api")
   - Columns: oper_date, year, month, day, hour, houston, north, south, west, ercot_net
 
 - **ercot_shape_weatherzone**: Shape factors per weather zone
-  - Columns: oper_date, year, month, day, hour, weather_zone, hourly_shape, daily_shape, monthly_shape
   - monthly_shape = month_total / annual_total
   - daily_shape = day_total / month_total
   - hourly_shape = hour_value / day_total
@@ -179,6 +188,18 @@ app.include_router(dam_router, prefix="/api")
   - SCENT, SOUTH_CENTRAL, SOUTHERN → SOUTH
   - FAR_WEST, WEST → WEST
 
+### MTM Tables ← NEW
+
+- **market_prices**: Manual/API market price entry
+  - Columns: id, price_date, hour_ending (0=flat/all-day), location, price, source (MANUAL/API), loaded_at
+  - UNIQUE KEY on (price_date, hour_ending, location)
+  - Locations: HB*\*, LZ*\*, HH (Henry Hub for gas)
+  - source: MANUAL now, API endpoint ready for future price feeds
+
+- **mtm_results**: Calculated MTM per deal
+  - Columns: id, calc_date, deal_number, instrument_type, location, zone, volume_mw, deal_price, market_price, basis, gas_price_current, mtm_value, delivery_start, delivery_end, calculated_at
+  - UNIQUE KEY on (calc_date, deal_number)
+
 ### SMT Table (Planned)
 
 - **smt_interval_data**: ESI-level 15-min interval data
@@ -220,6 +241,15 @@ Actual (With Losses)  → get_position_data()       — portfolio_load_with_loss
 Actual (Unadjusted)   → get_position_data()       — portfolio_load_unadjusted
 ```
 
+### Position Screen Features
+
+- **Two tabs**: Position Screen | Hour Blocks
+- **Position Screen tab**: hourly/daily/monthly/15-min grid + recharts graph (Bar/Line toggle, scrollable)
+- **Hour Blocks tab**: block type selector (7x16/5x16/2x16/7x8/7x24) + forecast type selector + scrollable bar/line chart + hourly shape table
+- **ActualLoadSection**: appears below grid for Actual load types, shows 24 hourly aggregated values (96 intervals → 24 hours)
+- **Graph**: Supply vs Load chart with Bar/Line toggle, horizontally scrollable
+- **Sticky Name column**: dark bg-slate-900, white text, z-index correct
+
 ### ERCOT Shape Forecast Logic
 
 ```
@@ -250,6 +280,30 @@ Customer filtering:
   Future = forecast_start_date <= forecast_date AND forecast_end_date >= forecast_date
 ```
 
+### Hour Blocks Logic
+
+```
+Purpose: Help traders decide which power block to buy for hedging
+Shows: Hourly shape within the selected block
+
+Block definitions:
+  7x16 = HE07-HE22, all 7 days
+  5x16 = HE07-HE22, Mon-Fri excluding holidays (ercot_holidays table)
+  2x16 = HE07-HE22, Sat + Sun + holidays
+  7x8  = HE01-06 + HE23-24, all 7 days
+  7x24 = all 24 hours, 7 days
+
+Output per hour:
+  Load MW | Supply MW | Net MW
+
+Summary:
+  Min MW = max flat block you can buy
+  Max MW = peak hour
+  Avg MW = average across block hours
+
+Forecast types: Same as position screen (ERCOT Shape, DNA, etc.)
+```
+
 ### Actual Load Data Flow
 
 ```
@@ -260,12 +314,11 @@ ERCOT ZIP arrives
 process_settlement.py:
   → filters POSTEDAML_* → stores 96 intervals → portfolio_load_with_losses
   → filters LSEGUNADJ_* → stores 96 intervals → portfolio_load_unadjusted
+  → --backfill flag processes all unprocessed dates
 
-Position screen queries:
-  → portfolio_load_with_losses for "Actual (With Losses)"
-  → portfolio_load_unadjusted for "Actual (Unadjusted)"
-  → Aggregation in get_position_data() based on granularity
-  → Shows zeros if no data (NO fallback to patterns)
+_shape_load_response() in controllers/portfolio.py:
+  → aggregates 96 intervals → 24 hourly: he_idx = (interval_ending-1)//4
+  → zones initialized as [0.0] * 24
 ```
 
 ### repcode is DYNAMIC (never hardcoded)
@@ -282,6 +335,8 @@ rep_result = await db.execute(
 RTM_INITIAL  → ~2 days after operating day
 RTM_FINAL2   → ~55 days after (replaces initial)
 RTM_TRUEUP3  → ~180 days after (final true-up)
+
+Default in frontend: RTM_FINAL2
 ```
 
 ---
@@ -322,6 +377,63 @@ Checkpoint 4: Portfolio Ratio Check — REP load / ERCOT total
               Flag if ratio drifts >50% from historical band
 
 All checkpoints → dashboard flags (alert system to add later)
+```
+
+---
+
+## MTM Engine ← NEW
+
+### MTM Logic by Instrument Type
+
+```
+FIXED (LZ location):
+  mtm_value = (market_price - deal_price) × volume_mw × hours
+
+FIXED (HB location):
+  basis = lz_market_price - hb_market_price
+  mtm_value = (lz_market_price - (deal_price - basis)) × volume_mw × hours
+
+HEAT_RATE:
+  current_price = hr_value × current_gas_price / 1000
+  mtm_value = (market_price - current_price) × volume_mw × hours
+
+GAS_BASIS:
+  mtm_value = (current_gas_price - deal_gas_price) × volume_mmbtu
+
+INDEX:
+  mtm_value = 0  (settles at market, no MTM)
+```
+
+### Hours Calculation
+
+```
+hours = block_type_hours_per_day × days_in_delivery_period
+7x24 → 24 hrs/day
+7x16 → 16 hrs/day
+5x16 → 16 hrs/day (Mon-Fri only)
+7x8  → 8 hrs/day
+```
+
+### Market Price Entry
+
+```
+Manual entry via /portfolio/mtm UI
+Location options: HB_HOUSTON, HB_NORTH, HB_SOUTH, HB_WEST,
+                  LZ_HOUSTON, LZ_NORTH, LZ_SOUTH, LZ_WEST,
+                  HH (Henry Hub — for gas/heat rate deals)
+Hour: 1-24 or Flat (0) for all-day price
+Source: MANUAL (now) — API endpoint ready for future price feeds
+        CME DataMine, ICE, Bloomberg can plug in via POST /mtm/prices/upload
+```
+
+### API Endpoints (MTM)
+
+```
+GET  /api/mtm/summary
+GET  /api/mtm/by-deal?calc_date=YYYY-MM-DD
+GET  /api/mtm/prices?price_date=YYYY-MM-DD
+POST /api/mtm/calculate    body: {"price_date": "YYYY-MM-DD"}
+POST /api/mtm/prices/upload body: [{"price_date","hour_ending","location","price","source"}]
 ```
 
 ---
@@ -370,19 +482,17 @@ ercot_load_history has UNIQUE KEY on (oper_date, hour_ending, dst_flag)
 ### Business Rules
 
 - Deal number MANDATORY
-- Location drives zone (LOCATION_TO_ZONE mapping)
+- Location drives zone (use utils/zone_mapping.py)
 - HB vs LZ critical for MTM basis calculation
 - 2 decimal places display
 
-### LOCATION_TO_ZONE
+### Instrument Types
 
-```python
-{
-    "HB_HOUSTON": "HOUSTON", "HB_NORTH": "NORTH",
-    "HB_SOUTH"  : "SOUTH",   "HB_WEST" : "WEST",
-    "LZ_HOUSTON": "HOUSTON", "LZ_NORTH": "NORTH",
-    "LZ_SOUTH"  : "SOUTH",   "LZ_WEST" : "WEST",
-}
+```
+FIXED      → Fixed $/MWh price
+HEAT_RATE  → hr_value (BTU/kWh) × gas_price = effective $/MWh
+GAS_BASIS  → Gas hedge against heat rate product
+INDEX      → Floating, settles at market (MTM = 0)
 ```
 
 ---
@@ -426,6 +536,7 @@ GET  /api/portfolio/customers
 GET  /api/portfolio/open-position
 GET  /api/portfolio/forecast
 POST /api/portfolio/position          → routes to correct forecast/actual function
+POST /api/portfolio/position/blocks   → Hour Blocks tab
 GET  /api/portfolio/load/with-losses
 GET  /api/portfolio/load/unadjusted
 GET  /api/portfolio/load/combined
@@ -437,36 +548,37 @@ GET  /api/portfolio/load/dates
 ## Pending (In Order of Priority)
 
 ```
-1.  Hour blocks tab — separate tab, holiday-aware (2x16 = Sat+Sun+holidays)
-    Uses ercot_holidays table
-    Display: weekly buckets for selected date range
+1.  Layer 3 Seasonal — NOAA seasonal outlook integration
 
-2.  Frontend ActualLoadSection — fix to show hourly aggregated view
-    Currently returns 96 intervals, frontend needs to aggregate to 24
+2.  Layer 4 7-Day Override — wire ercot_lfc_history for short-term forecast
 
-3.  Frontend date/settlement_run — remove hardcoded defaults
+3.  Monitoring/Checkpoint system — 4 checkpoints, dashboard flags
 
-4.  Historical settlement data ingestion — fill portfolio_load tables
-    with more than just 2021-02-01
+4.  Risk assessment — black swan detection, short/long term scoring
 
-5.  Layer 3 Seasonal — NOAA seasonal outlook integration
+5.  Settlement reconciliation — 3-way match (ERCOT vs supplier vs system)
 
-6.  Layer 4 7-Day Override — wire ercot_lfc_history for short-term forecast
+6.  Historical settlement data ingestion — ingest more ZIP files beyond 2021-02-01
 
-7.  Monitoring/Checkpoint system — 4 checkpoints, dashboard flags
+7.  MTM market price feed — integrate live price feed (CME DataMine/ICE/Bloomberg)
+    when REP subscribes to one
 
-8.  MTM engine — market price vs buy price, basis adjustment for HB
+8.  ERCOT MIS + SMT integration — automated daily data pull
 
-9.  Risk assessment — black swan detection, short/long term scoring
+9.  AI Agent home page
 
-10. Settlement reconciliation — 3-way match (ERCOT vs supplier vs system)
-
-11. ERCOT MIS + SMT integration — automated daily data pull
-
-12. AI Agent home page
-
-13. Multi-tenant DB routing — when onboarding second REP
+10. Multi-tenant DB routing — when onboarding second REP
 ```
+
+---
+
+## Migrations
+
+```
+api/migrations/022_create_mtm_tables.sql  ← NEW — market_prices + mtm_results
+```
+
+Run migrations on live via migration runner script.
 
 ---
 
@@ -496,4 +608,7 @@ python populate_portfolio_load_annual.py
 
 # 8. Process settlement (after ingesting ERCOT ZIPs)
 python process_settlement.py --date YYYY-MM-DD --run RTM_FINAL2
+
+# 9. Backfill all unprocessed settlement dates
+python process_settlement.py --backfill
 ```

@@ -113,6 +113,10 @@ from routers.dam import router as dam_router
 
 app.include_router(dam_router, prefix="/api")
 
+from routers.mtm import router as mtm_router
+
+app.include_router(mtm_router, prefix="/api")
+
 from routers import enrollment
 
 app.include_router(enrollment.router, prefix="/api")
