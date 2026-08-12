@@ -136,12 +136,6 @@ export default function PortfolioHome() {
             </p>
           </div>
           <div className="flex gap-2">
-            <Link href="/portfolio/customers">
-              <button className="px-4 py-2 text-sm rounded-[var(--r-lg)] border transition-colors hover:bg-[var(--ct-surface-hover)]"
-                style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)", color: "var(--ct-text-secondary)" }}>
-                View Customers
-              </button>
-            </Link>
             <Link href="/portfolio/hedging">
               <button className="px-4 py-2 text-sm rounded-[var(--r-lg)] transition-colors hover:opacity-90"
                 style={{ background: "var(--accent-light)", color: "var(--accent-light-on-solid)" }}>
