@@ -9,8 +9,6 @@
 -- one row per (calc_date, deal_number), re-runnable via ON DUPLICATE KEY
 -- UPDATE so recalculating a date overwrites the prior result cleanly.
 
-USE `u972964962_orbic`;
-
 CREATE TABLE IF NOT EXISTS `market_prices` (
   `id`          BIGINT        NOT NULL AUTO_INCREMENT,
   `price_date`  DATE          NOT NULL,
