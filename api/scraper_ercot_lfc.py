@@ -47,7 +47,7 @@ ERCOT_SUBSCRIPTION_KEY = os.getenv("ERCOT_SUBSCRIPTION_KEY")
 # hand back the id_token we use as the Bearer token.
 ERCOT_CLIENT_ID = os.getenv("ERCOT_CLIENT_ID", "fec253ea-0d06-4272-a5e6-b478baeecd70")
 TOKEN_URL = "https://ercotb2c.b2clogin.com/ercotb2c.onmicrosoft.com/B2C_1_PUBAPI-ROPC-FLOW/oauth2/v2.0/token"
-REPORT_URL = "https://api.ercot.com/api/public-data/np3-561-cd"
+REPORT_URL = "https://api.ercot.com/api/public-reports/np3-565-cd/lf_by_model_weather_zone"
 
 DB_HOST = os.getenv("DB_HOST", "localhost")
 DB_USER = os.getenv("DB_USER", "root")
