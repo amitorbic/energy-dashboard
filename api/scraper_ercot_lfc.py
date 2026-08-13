@@ -94,7 +94,7 @@ def get_access_token() -> str:
 
     resp = requests.post(
         TOKEN_URL,
-        data={
+        params={
             "grant_type": "password",
             "username": ERCOT_USERNAME,
             "password": ERCOT_PASSWORD,
