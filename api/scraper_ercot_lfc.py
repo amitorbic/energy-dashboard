@@ -134,6 +134,15 @@ def fetch_forecast_rows(id_token: str) -> list[dict]:
             timeout=REQUEST_TIMEOUT,
         )
         if resp.status_code != 200:
+            log.error("Report fetch failed — URL: %s", resp.url)
+            log.error("Report fetch failed — Status: %s", resp.status_code)
+            log.error(
+                "Report fetch failed — Headers: x-iinfo=%s cf-ray=%s all=%s",
+                resp.headers.get("x-iinfo"),
+                resp.headers.get("cf-ray"),
+                dict(resp.headers),
+            )
+            log.error("Report fetch failed — Body (first 500 chars): %s", resp.text[:500])
             raise ErcotApiError(f"Report fetch failed ({resp.status_code}): {resp.text[:300]}")
 
         payload = resp.json()
