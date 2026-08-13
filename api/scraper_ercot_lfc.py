@@ -24,7 +24,7 @@ import logging
 import asyncio
 from datetime import datetime, date, time
 
-import requests
+from curl_cffi import requests
 import aiomysql
 from dotenv import load_dotenv
 
@@ -104,6 +104,7 @@ def get_access_token() -> str:
         },
         headers={"Ocp-Apim-Subscription-Key": ERCOT_SUBSCRIPTION_KEY},
         timeout=REQUEST_TIMEOUT,
+        impersonate="chrome120",
     )
     if resp.status_code != 200:
         raise ErcotApiError(f"Auth failed ({resp.status_code}): {resp.text[:300]}")
@@ -120,6 +121,13 @@ def fetch_forecast_rows(id_token: str) -> list[dict]:
     headers = {
         "Authorization": f"Bearer {id_token}",
         "Ocp-Apim-Subscription-Key": ERCOT_SUBSCRIPTION_KEY,
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "application/json, text/plain, */*",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Accept-Encoding": "gzip, deflate, br",
+        "Connection": "keep-alive",
+        "Referer": "https://apiexplorer.ercot.com/",
+        "Origin": "https://apiexplorer.ercot.com",
     }
 
     all_rows = []
@@ -132,6 +140,7 @@ def fetch_forecast_rows(id_token: str) -> list[dict]:
             headers=headers,
             params={"page": page, "size": 1000},
             timeout=REQUEST_TIMEOUT,
+            impersonate="chrome120",
         )
         if resp.status_code != 200:
             log.error("Report fetch failed — URL: %s", resp.url)
