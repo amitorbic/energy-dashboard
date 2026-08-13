@@ -43,11 +43,11 @@ ERCOT_PASSWORD = os.getenv("ERCOT_PASSWORD")
 ERCOT_SUBSCRIPTION_KEY = os.getenv("ERCOT_SUBSCRIPTION_KEY")
 
 # Fixed public client id required by ERCOT's Public API OAuth2 flow (same for
-# all API consumers) — response_type=id_token is what makes /connect/token
+# all API consumers) — response_type=id_token is what makes the token endpoint
 # hand back the id_token we use as the Bearer token.
 ERCOT_CLIENT_ID = os.getenv("ERCOT_CLIENT_ID", "fec253ea-0d06-4272-a5e6-b478baeecd70")
-TOKEN_URL = "https://idp.ercot.com/connect/token"
-REPORT_URL = "https://api.ercot.com/api/public-reports/np3-561-cd"
+TOKEN_URL = "https://ercotb2c.b2clogin.com/ercotb2c.onmicrosoft.com/B2C_1_PUBAPI-ROPC-FLOW/oauth2/v2.0/token"
+REPORT_URL = "https://api.ercot.com/api/public-data/np3-561-cd"
 
 DB_HOST = os.getenv("DB_HOST", "localhost")
 DB_USER = os.getenv("DB_USER", "root")
@@ -98,7 +98,7 @@ def get_access_token() -> str:
             "grant_type": "password",
             "username": ERCOT_USERNAME,
             "password": ERCOT_PASSWORD,
-            "scope": "openid fueltype offline_access",
+            "scope": f"openid {ERCOT_CLIENT_ID} offline_access",
             "client_id": ERCOT_CLIENT_ID,
             "response_type": "id_token",
         },
