@@ -130,15 +130,18 @@ async def execute_tool(name: str, arguments: Dict[str, Any], db: AsyncSession) -
             return rows if rows else {"message": f"No invoices found for ESI ID {esi_id}."}
 
         if name == "get_customer_count":
-            # Same COUNT(DISTINCT company_name) query broker_home.get_portfolio()
-            # runs for admins. Not routed through get_portfolio() itself since
-            # its non-admin branch scopes by broker_id, a claim that only
-            # exists on broker-portal JWTs — the app/ staff JWT this voice
-            # widget authenticates with has no broker_id, and (matching the
-            # other tools above) any authenticated staff user can already see
-            # all customer data, so no such scoping applies here.
+            # contract_renewal is the real customer/ESID book (~10k+ rows) —
+            # customers_new is a much smaller table scoped to the Custom
+            # Pricing tool's own quote records, confirmed by controllers/
+            # customers.py's CRUD being used only from custom_pricing.py /
+            # contracts_confirm.py / email_pricing.py, not a master roster.
+            # Filter matches broker_home.get_portfolio()'s existing
+            # total_esiids query — excludes blank/placeholder premise_id rows.
             result = await db.execute(
-                text("SELECT COUNT(DISTINCT company_name) FROM contract_renewal")
+                text(
+                    "SELECT COUNT(*) FROM contract_renewal "
+                    "WHERE premise_id != '' AND premise_id != 'Array'"
+                )
             )
             return {"customer_count": int(result.scalar() or 0)}
 
