@@ -15,6 +15,15 @@ function getToken(): string {
   return localStorage.getItem("ap_token") ?? "";
 }
 
+// A ~0 duration silent WAV. Played (and immediately allowed to finish) once,
+// synchronously inside the mic tap handler, to satisfy iOS Safari's/Chrome
+// Android's "no programmatic audio.play() outside a user gesture" policy —
+// the TTS reply later plays from inside an async fetch().then() callback,
+// which by itself is NOT a user gesture and gets silently blocked without
+// this unlock.
+const SILENT_AUDIO_SRC =
+  "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
+
 export default function VoiceWidget() {
   const [active, setActive] = useState(false);
   const [state, setState] = useState<VoiceState>("idle");
@@ -32,6 +41,7 @@ export default function VoiceWidget() {
   const spokeRef = useRef(false);
   const activeRef = useRef(false);
   const audioElRef = useRef<HTMLAudioElement | null>(null);
+  const unlockAudioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     activeRef.current = active;
@@ -121,8 +131,20 @@ export default function VoiceWidget() {
           if (activeRef.current) startListening();
           else setState("idle");
         };
-        await audioEl.play();
-      } catch {
+        try {
+          await audioEl.play();
+        } catch (playErr) {
+          // Distinct from the outer catch: this is a playback-permission
+          // failure (e.g. iOS Safari blocking an unlocked-but-still-denied
+          // programmatic play()), not a network/API failure — log it for
+          // real instead of reporting a misleading "connection error".
+          console.error("Voice widget: TTS playback failed", playErr);
+          setHint("Couldn't play the reply audio. Tap the mic to retry.");
+          if (activeRef.current) startListening();
+          else setState("idle");
+        }
+      } catch (err) {
+        console.error("Voice widget: turn request failed", err);
         setHint("Connection error. Try again.");
         if (activeRef.current) startListening();
         else setState("idle");
@@ -205,6 +227,18 @@ export default function VoiceWidget() {
   }, [teardownRecording, sendTurn]);
 
   const startConversation = useCallback(() => {
+    // Must run synchronously inside the click handler's call stack — this
+    // is what registers as a "user gesture" with iOS Safari/Android Chrome.
+    // Once one play() call has been made this way, later programmatic
+    // play() calls from inside async code (sendTurn's fetch callback) are
+    // allowed for the rest of the page session.
+    if (!unlockAudioRef.current) {
+      unlockAudioRef.current = new Audio(SILENT_AUDIO_SRC);
+    }
+    unlockAudioRef.current.play().catch((err) => {
+      console.warn("Voice widget: audio unlock failed", err);
+    });
+
     setActive(true);
     activeRef.current = true;
     startListening();

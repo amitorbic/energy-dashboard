@@ -13,7 +13,7 @@ async def synthesize(text: str) -> bytes:
     """
     response = await _client.audio.speech.create(
         model="gpt-4o-mini-tts",
-        voice="alloy",
+        voice="shimmer",
         input=text,
         response_format="mp3",
     )
