@@ -3,6 +3,7 @@ import type { AppProps } from "next/app";
 import { useRouter } from "next/router";
 import CommissionLayout from "../components/CommissionLayout";
 import ChatWidget from "../components/ChatWidget";
+import VoiceWidget from "../components/VoiceWidget";
 
 export default function App({ Component, pageProps }: AppProps) {
   const router = useRouter();
@@ -20,6 +21,7 @@ export default function App({ Component, pageProps }: AppProps) {
           <Component {...pageProps} />
         </CommissionLayout>
         {showWidget && <ChatWidget />}
+        {showWidget && <VoiceWidget />}
       </>
     );
   }
@@ -28,6 +30,7 @@ export default function App({ Component, pageProps }: AppProps) {
     <>
       <Component {...pageProps} />
       {showWidget && <ChatWidget />}
+      {showWidget && <VoiceWidget />}
     </>
   );
 }

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
-import { getUser, isAdmin, isLoggedIn, User } from "../utils/auth";
+import { getUser, isLoggedIn, User } from "../utils/auth";
 import { SECTIONS } from "../components/Sidebar";
 
 // Presentation-only metadata per segment (icon/description have no equivalent
@@ -161,7 +161,7 @@ export default function Dashboard() {
 
         {/* Segment grid — one card per Sidebar.tsx SECTIONS entry */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {SEGMENTS.filter((seg) => !seg.adminOnly || isAdmin()).map((seg) => {
+          {SEGMENTS.filter((seg) => !seg.adminOnly || user?.role === "1").map((seg) => {
             const isAdminCard = seg.label === "Admin";
             const accent = isAdminCard ? "var(--danger-dark)" : "var(--accent-dark)";
             const accentTint = isAdminCard ? "var(--danger-dark-tint)" : "var(--accent-dark-tint)";

@@ -9,3 +9,5 @@ phpserialize
 openpyxl
 reportlab
 python-docx
+python-multipart
+openai

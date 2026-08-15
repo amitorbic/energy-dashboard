@@ -166,3 +166,7 @@ app.include_router(broker_forms_router.router, prefix="/api")
 app.include_router(broker_bill_router.router, prefix="/api")
 app.include_router(broker_esiid_router.router, prefix="/api")
 app.include_router(broker_profile_router.router, prefix="/api")
+
+from routers import voice as voice_router
+
+app.include_router(voice_router.router, prefix="/api")
