@@ -41,7 +41,6 @@ export default function VoiceWidget() {
   const spokeRef = useRef(false);
   const activeRef = useRef(false);
   const audioElRef = useRef<HTMLAudioElement | null>(null);
-  const unlockAudioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     activeRef.current = active;
@@ -125,8 +124,13 @@ export default function VoiceWidget() {
         ]);
 
         setState("speaking");
-        const audioEl = new Audio(`data:${data.audio_mime};base64,${data.audio_base64}`);
+        // Reuse the single Audio element unlocked in startConversation's
+        // gesture handler rather than `new Audio(...)` here — iOS Safari's
+        // autoplay unlock does not reliably carry over to a freshly created
+        // element, only to one that was itself played during the gesture.
+        const audioEl = audioElRef.current ?? new Audio();
         audioElRef.current = audioEl;
+        audioEl.src = `data:${data.audio_mime};base64,${data.audio_base64}`;
         audioEl.onended = () => {
           if (activeRef.current) startListening();
           else setState("idle");
@@ -229,13 +233,16 @@ export default function VoiceWidget() {
   const startConversation = useCallback(() => {
     // Must run synchronously inside the click handler's call stack — this
     // is what registers as a "user gesture" with iOS Safari/Android Chrome.
-    // Once one play() call has been made this way, later programmatic
-    // play() calls from inside async code (sendTurn's fetch callback) are
-    // allowed for the rest of the page session.
-    if (!unlockAudioRef.current) {
-      unlockAudioRef.current = new Audio(SILENT_AUDIO_SRC);
+    // Crucially, this is the SAME Audio element sendTurn() later reuses for
+    // the TTS reply (just swapping .src) — iOS ties the autoplay unlock to
+    // the element instance that was played during the gesture, not to the
+    // page/session in general, so a fresh `new Audio()` per turn would stay
+    // blocked even after this unlock.
+    if (!audioElRef.current) {
+      audioElRef.current = new Audio();
     }
-    unlockAudioRef.current.play().catch((err) => {
+    audioElRef.current.src = SILENT_AUDIO_SRC;
+    audioElRef.current.play().catch((err) => {
       console.warn("Voice widget: audio unlock failed", err);
     });
 
