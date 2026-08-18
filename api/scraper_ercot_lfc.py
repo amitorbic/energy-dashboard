@@ -61,11 +61,17 @@ Downloads the latest 7-Day Load Forecast by Weather Zone (NP3-561-CD)
 directly from ERCOT's public data archive and loads it into: ercot_lfc_history
 """
 
+"""
+ERCOT 7-Day Load Forecast Scraper (Latest Run Only)
+──────────────────────────────────────────────────
+Fetches the latest published 7-Day Load Forecast by Weather Zone
+from ERCOT Public API (Page 1) and loads it into: ercot_lfc_history.
+
+Scheduled to run hourly.
+"""
+
 import os
 import sys
-import io
-import csv
-import zipfile
 import logging
 import asyncio
 from datetime import datetime, date, time as dtime
@@ -83,10 +89,16 @@ logging.basicConfig(
 )
 log = logging.getLogger(__name__)
 
-PRODUCT_PAGE_URL = (
-    "https://www.ercot.com/mp/data-products/data-product-details?id=NP3-561-CD"
+# ── Config ────────────────────────────────────────────────────────────────────
+ERCOT_USERNAME = os.getenv("ERCOT_USERNAME")
+ERCOT_PASSWORD = os.getenv("ERCOT_PASSWORD")
+ERCOT_SUBSCRIPTION_KEY = os.getenv("ERCOT_SUBSCRIPTION_KEY")
+
+ERCOT_CLIENT_ID = os.getenv("ERCOT_CLIENT_ID", "fec253ea-0d06-4272-a5e6-b478baeecd70")
+TOKEN_URL = "https://ercotb2c.b2clogin.com/ercotb2c.onmicrosoft.com/B2C_1_PUBAPI-ROPC-FLOW/oauth2/v2.0/token"
+REPORT_URL = (
+    "https://api.ercot.com/api/public-reports/np3-565-cd/lf_by_model_weather_zone"
 )
-ARCHIVE_LIST_URL = "https://www.ercot.com/content/api/archives/NP3-561-CD"
 
 DB_HOST = os.getenv("DB_HOST", "localhost")
 DB_USER = os.getenv("DB_USER", "root")
@@ -100,9 +112,10 @@ PROXY_HOST = os.getenv("PROXY_HOST", "geo.iproyal.com")
 PROXY_PORT = os.getenv("PROXY_PORT", "12321")
 PROXY_URL = f"http://{PROXY_HOST}:{PROXY_PORT}"
 
-# Reads USE_PROXY from env (default false unless specified)
-USE_PROXY = os.getenv("USE_PROXY", "false").lower() == "true"
-PROXIES = {"http": PROXY_URL, "https": PROXY_URL} if USE_PROXY else None
+PROXIES = {
+    "http": PROXY_URL,
+    "https": PROXY_URL,
+}
 
 INSERT_SQL = """
     INSERT IGNORE INTO ercot_lfc_history
@@ -113,146 +126,122 @@ INSERT_SQL = """
 """
 
 FIELD_ALIASES = {
-    "delivery_date": ("deliverydate", "delivery_date", "date"),
-    "hour_ending": ("hourending", "hour_ending", "he"),
-    "coast": ("coast",),
-    "east": ("east",),
-    "far_west": ("farwest", "far_west", "fwest"),
-    "north": ("north",),
-    "north_central": ("northcentral", "north_central", "ncentral"),
-    "south_central": ("southcentral", "south_central", "scentral"),
-    "southern": ("southern", "south"),
-    "west": ("west",),
-    "system_total": ("total", "systemtotal", "system_total", "ercot"),
+    "delivery_date": ("deliveryDate", "DeliveryDate", "delivery_date"),
+    "hour_ending": ("hourEnding", "HourEnding", "hour_ending"),
+    "coast": ("coast", "Coast"),
+    "east": ("east", "East"),
+    "far_west": ("farWest", "FarWest", "far_west"),
+    "north": ("north", "North"),
+    "north_central": ("northCentral", "NorthCentral", "north_central"),
+    "south_central": ("southCentral", "SouthCentral", "south_central"),
+    "southern": ("southern", "Southern"),
+    "west": ("west", "West"),
 }
 
 
-class ErcotScrapeError(Exception):
+class ErcotApiError(Exception):
     pass
 
 
-# ── Step 1: Discover Latest Archive ──────────────────────────────────────────
-def get_latest_archive_url(session: requests.Session) -> str:
-    log.info("Loading ERCOT product page to initialize session...")
-
-    # 1. Warm-up request to the product page
-    landing_headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
-        "Accept-Language": "en-US,en;q=0.9",
-        "Sec-Ch-Ua": '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
-        "Sec-Ch-Ua-Mobile": "?0",
-        "Sec-Ch-Ua-Platform": '"Windows"',
-        "Sec-Fetch-Dest": "document",
-        "Sec-Fetch-Mode": "navigate",
-        "Sec-Fetch-Site": "none",
-        "Sec-Fetch-User": "?1",
-        "Upgrade-Insecure-Requests": "1",
-    }
-
-    resp_landing = session.get(
-        PRODUCT_PAGE_URL, headers=landing_headers, timeout=REQUEST_TIMEOUT
-    )
-    if resp_landing.status_code != 200:
-        log.warning(
-            "Product landing page returned status: %d", resp_landing.status_code
+# ── Auth Phase ────────────────────────────────────────────────────────────────
+def get_access_token(session: requests.Session) -> str:
+    if not (ERCOT_USERNAME and ERCOT_PASSWORD and ERCOT_SUBSCRIPTION_KEY):
+        raise ErcotApiError(
+            "Missing ERCOT_USERNAME / ERCOT_PASSWORD / ERCOT_SUBSCRIPTION_KEY in .env"
         )
 
-    # 2. Query the content archives endpoint with full browser AJAX context
-    log.info("Fetching archive directory listing...")
-    api_headers = {
+    log.info("Requesting ERCOT access token...")
+    resp = session.post(
+        TOKEN_URL,
+        params={
+            "grant_type": "password",
+            "username": ERCOT_USERNAME,
+            "password": ERCOT_PASSWORD,
+            "scope": f"openid {ERCOT_CLIENT_ID} offline_access",
+            "client_id": ERCOT_CLIENT_ID,
+            "response_type": "id_token",
+        },
+        headers={"Ocp-Apim-Subscription-Key": ERCOT_SUBSCRIPTION_KEY},
+        timeout=REQUEST_TIMEOUT,
+    )
+    if resp.status_code != 200:
+        raise ErcotApiError(f"Auth failed ({resp.status_code}): {resp.text[:300]}")
+
+    token = resp.json().get("id_token")
+    if not token:
+        raise ErcotApiError("Auth response did not contain id_token")
+
+    log.info("Successfully acquired valid ERCOT ID token.")
+    return token
+
+
+# ── Report Fetching (Page 1 Only) ─────────────────────────────────────────────
+def fetch_latest_forecast_page(session: requests.Session, id_token: str) -> list[dict]:
+    headers = {
+        "Authorization": f"Bearer {id_token}",
+        "Ocp-Apim-Subscription-Key": ERCOT_SUBSCRIPTION_KEY,
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
         "Accept": "application/json, text/plain, */*",
         "Accept-Language": "en-US,en;q=0.9",
-        "Referer": PRODUCT_PAGE_URL,
-        "Origin": "https://www.ercot.com",
-        "Sec-Ch-Ua": '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
-        "Sec-Ch-Ua-Mobile": "?0",
-        "Sec-Ch-Ua-Platform": '"Windows"',
-        "Sec-Fetch-Dest": "empty",
-        "Sec-Fetch-Mode": "cors",
-        "Sec-Fetch-Site": "same-origin",
+        "Referer": "https://apiexplorer.ercot.com/",
+        "Origin": "https://apiexplorer.ercot.com",
     }
 
-    resp = session.get(ARCHIVE_LIST_URL, headers=api_headers, timeout=REQUEST_TIMEOUT)
+    log.info("Fetching latest forecast run (Page 1)...")
+    resp = session.get(
+        REPORT_URL,
+        headers=headers,
+        params={"page": 1, "size": 1000},
+        timeout=REQUEST_TIMEOUT,
+    )
+
     if resp.status_code != 200:
-        raise ErcotScrapeError(
-            f"Failed to fetch archive listing ({resp.status_code}): {resp.text[:200]}"
-        )
+        log.error("Report fetch failed — Status: %d", resp.status_code)
+        log.error("Response snippet: %s", resp.text[:300])
+        raise ErcotApiError(f"Report fetch failed ({resp.status_code})")
 
     payload = resp.json()
-    docs = payload.get("archives", []) or payload.get("docs", [])
-    if not docs:
-        raise ErcotScrapeError("No document archives found for NP3-561-CD")
+    fields = payload.get("fields", [])
+    data = payload.get("data", [])
 
-    latest_doc = docs[0]
-    download_endpoint = latest_doc.get("endpoint") or latest_doc.get("url")
+    col_index = {}
+    for canonical, aliases in FIELD_ALIASES.items():
+        idx = None
+        for i, f in enumerate(fields):
+            name = f.get("name") if isinstance(f, dict) else f
+            if name in aliases:
+                idx = i
+                break
+        col_index[canonical] = idx
 
-    if not download_endpoint.startswith("http"):
-        download_endpoint = f"https://www.ercot.com{download_endpoint}"
-
-    log.info("Latest archive found: %s", latest_doc.get("name", download_endpoint))
-    return download_endpoint
-
-
-# ── Step 2: Download & Unzip CSV ──────────────────────────────────────────────
-def download_and_extract_csv(session: requests.Session, url: str) -> list[dict]:
-    log.info("Downloading zip archive...")
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
-        "Referer": PRODUCT_PAGE_URL,
-        "Sec-Fetch-Dest": "document",
-        "Sec-Fetch-Mode": "navigate",
-        "Sec-Fetch-Site": "same-origin",
-    }
-
-    resp = session.get(url, headers=headers, timeout=REQUEST_TIMEOUT)
-    if resp.status_code != 200:
-        raise ErcotScrapeError(f"Failed to download archive file ({resp.status_code})")
-
-    rows = []
-    with zipfile.ZipFile(io.BytesIO(resp.content)) as z:
-        csv_files = [f for f in z.namelist() if f.lower().endswith(".csv")]
-        if not csv_files:
-            raise ErcotScrapeError("No CSV found inside downloaded zip archive")
-
-        target_file = csv_files[0]
-        log.info("Extracting %s...", target_file)
-
-        with z.open(target_file) as f:
-            reader = csv.DictReader(io.TextIOWrapper(f, encoding="utf-8-sig"))
-            cleaned_headers = {
-                k: k.strip().lower().replace(" ", "_").replace("-", "_")
-                for k in reader.fieldnames
-                if k
+    all_rows = []
+    for record in data:
+        all_rows.append(
+            {
+                key: record[idx] if idx is not None else None
+                for key, idx in col_index.items()
             }
+        )
 
-            for raw_row in reader:
-                normalized_row = {}
-                for orig_key, clean_key in cleaned_headers.items():
-                    normalized_row[clean_key] = raw_row[orig_key]
-                rows.append(normalized_row)
-
-    log.info("Extracted %d forecast rows from CSV.", len(rows))
-    return rows
+    log.info("Successfully fetched %d records from latest run.", len(all_rows))
+    return all_rows
 
 
-# ── Step 3: Parsing & Transformation ──────────────────────────────────────────
+# ── Parsing Helpers ───────────────────────────────────────────────────────────
 def safe_float(val):
     if val is None:
         return None
     try:
-        return float(str(val).replace(",", "").strip())
+        return float(val)
     except (ValueError, TypeError):
         return None
 
 
 def parse_delivery_date(val):
-    if not val:
-        return None
+    if isinstance(val, date):
+        return val
     s = str(val).strip()
-    for fmt in ("%m/%d/%Y", "%Y-%m-%d", "%Y%m%d", "%d-%b-%Y"):
+    for fmt in ("%Y-%m-%d", "%m/%d/%Y"):
         try:
             return datetime.strptime(s, fmt).date()
         except ValueError:
@@ -261,8 +250,6 @@ def parse_delivery_date(val):
 
 
 def parse_hour_ending(val):
-    if not val:
-        return None
     s = str(val).strip()
     if ":" in s:
         s = s.split(":")[0]
@@ -272,43 +259,26 @@ def parse_hour_ending(val):
         return None
 
 
-def find_val(row: dict, aliases: tuple):
-    for alias in aliases:
-        if alias in row and row[alias] is not None:
-            return row[alias]
-    return None
-
-
 def build_db_rows(raw_rows: list[dict], publish_date: date, publish_time: dtime):
     db_rows = []
     for r in raw_rows:
-        deliv_date_raw = find_val(r, FIELD_ALIASES["delivery_date"])
-        he_raw = find_val(r, FIELD_ALIASES["hour_ending"])
-
-        delivery_date = parse_delivery_date(deliv_date_raw)
-        hour_ending = parse_hour_ending(he_raw)
-
+        delivery_date = parse_delivery_date(r.get("delivery_date"))
+        hour_ending = parse_hour_ending(r.get("hour_ending"))
         if delivery_date is None or hour_ending is None:
             continue
 
         zones = {
-            "coast": safe_float(find_val(r, FIELD_ALIASES["coast"])),
-            "east": safe_float(find_val(r, FIELD_ALIASES["east"])),
-            "far_west": safe_float(find_val(r, FIELD_ALIASES["far_west"])),
-            "north": safe_float(find_val(r, FIELD_ALIASES["north"])),
-            "north_central": safe_float(find_val(r, FIELD_ALIASES["north_central"])),
-            "south_central": safe_float(find_val(r, FIELD_ALIASES["south_central"])),
-            "southern": safe_float(find_val(r, FIELD_ALIASES["southern"])),
-            "west": safe_float(find_val(r, FIELD_ALIASES["west"])),
+            "coast": safe_float(r.get("coast")),
+            "east": safe_float(r.get("east")),
+            "far_west": safe_float(r.get("far_west")),
+            "north": safe_float(r.get("north")),
+            "north_central": safe_float(r.get("north_central")),
+            "south_central": safe_float(r.get("south_central")),
+            "southern": safe_float(r.get("southern")),
+            "west": safe_float(r.get("west")),
         }
-
-        explicit_total = safe_float(find_val(r, FIELD_ALIASES["system_total"]))
         zone_values = [v for v in zones.values() if v is not None]
-        system_total = (
-            explicit_total
-            if explicit_total is not None
-            else (sum(zone_values) if zone_values else None)
-        )
+        system_total = sum(zone_values) if zone_values else None
 
         db_rows.append(
             (
@@ -331,10 +301,10 @@ def build_db_rows(raw_rows: list[dict], publish_date: date, publish_time: dtime)
     return db_rows
 
 
-# ── Step 4: Database Insert ───────────────────────────────────────────────────
+# ── DB Insertion ──────────────────────────────────────────────────────────────
 async def insert_rows(db_rows: list[tuple]) -> int:
     if not DB_NAME:
-        raise ErcotScrapeError("DB_NAME environment variable is not set.")
+        raise ErcotApiError("DB_NAME environment variable is not set.")
 
     conn = await aiomysql.connect(
         host=DB_HOST,
@@ -357,26 +327,29 @@ async def insert_rows(db_rows: list[tuple]) -> int:
         conn.close()
 
 
-# ── Execution ─────────────────────────────────────────────────────────────────
+# ── Main Run ──────────────────────────────────────────────────────────────────
 async def run():
     now = datetime.now()
     publish_date = now.date()
     publish_time = now.time().replace(microsecond=0)
 
     with requests.Session(impersonate="chrome120", proxies=PROXIES) as session:
-        archive_url = get_latest_archive_url(session)
-        raw_rows = download_and_extract_csv(session, archive_url)
+        token = get_access_token(session)
+        raw_rows = fetch_latest_forecast_page(session, token)
 
     db_rows = build_db_rows(raw_rows, publish_date, publish_time)
     inserted = await insert_rows(db_rows)
-    log.info("Rows successfully inserted into ercot_lfc_history: %d", inserted)
+    log.info("Rows inserted into ercot_lfc_history: %d", inserted)
 
 
 def main():
     try:
         asyncio.run(run())
+    except ErcotApiError as e:
+        log.error("ERCOT scrape failed: %s", e)
+        sys.exit(1)
     except Exception as e:
-        log.error("Execution failed: %s", e)
+        log.error("Unexpected error: %s", e)
         sys.exit(1)
 
 

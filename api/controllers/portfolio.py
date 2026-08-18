@@ -830,7 +830,67 @@ async def get_forecast_data(criteria: dict, db: AsyncSession) -> dict:
             float(row[7] or 0),  # monthly_shape
         )
 
-    # Apply shapes to annual MWh
+    # ── Step 4b: Layer 4 — 7-Day Override from ercot_lfc_history ─────────────
+    from utils.zone_mapping import DB_COL_TO_ZONE
+
+    lfc_result = await db.execute(
+        text("""
+            SELECT delivery_date, hour_ending,
+                   AVG(coast) as coast,
+                   AVG(east) as east,
+                   AVG(far_west) as far_west,
+                   AVG(north) as north,
+                   AVG(north_central) as north_central,
+                   AVG(south_central) as south_central,
+                   AVG(southern) as southern,
+                   AVG(west) as west,
+                   AVG(system_total) as system_total
+            FROM ercot_lfc_history
+            WHERE delivery_date BETWEEN :start_date AND :end_date
+              AND publish_date >= CURDATE() - INTERVAL 1 DAY
+            GROUP BY delivery_date, hour_ending
+            ORDER BY delivery_date, hour_ending
+        """),
+        {"start_date": str(start), "end_date": str(end)},
+    )
+    lfc_rows = lfc_result.mappings().fetchall()
+
+    # Keep only the most-recent publish per (delivery_date, hour_ending)
+    lfc_by_date_hour: dict[tuple, dict] = {}
+    for row in lfc_rows:
+        key = (row["delivery_date"], int(row["hour_ending"]))
+        if key not in lfc_by_date_hour:
+            lfc_by_date_hour[key] = row
+
+    lfc_override_dates = {dh[0] for dh in lfc_by_date_hour.keys()}
+
+    # ERCOT zone annual totals (for customer_share = zone_annual_mwh / ercot_zone_annual_mwh)
+    gf_result = await db.execute(
+        text("""
+        SELECT load_zone, base_total
+        FROM forecast_growth_factors
+        WHERE base_year = 2025
+          AND load_zone IN :zones
+    """),
+        {"zones": tuple(zones)},
+    )
+    ercot_zone_annual_mwh: dict[str, float] = {}
+    for row in gf_result.fetchall():
+        ercot_zone_annual_mwh[row[0]] = float(row[1] or 0)
+
+    def lfc_load_by_zone(row) -> dict[str, float]:
+        """Group ercot_lfc_history weather-zone columns into load zones."""
+        grouped = {"HOUSTON": 0.0, "NORTH": 0.0, "SOUTH": 0.0, "WEST": 0.0}
+        for db_col, weather_label in DB_COL_TO_ZONE.items():
+            val = row.get(db_col)
+            if val is None:
+                continue
+            load_zone = weather_to_load(weather_label)
+            if load_zone in grouped:
+                grouped[load_zone] += float(val)
+        return grouped
+
+    # Apply shapes to annual MWh (Layer 4 override takes precedence per date)
     d = start
     hour_offset = 0
 
@@ -838,21 +898,36 @@ async def get_forecast_data(criteria: dict, db: AsyncSession) -> dict:
         he_start = from_he if d == start else 1
         he_end = through_he if d == end else 24
 
+        use_lfc_for_date = d in lfc_override_dates
+
         for zone in zones:
             annual_mwh = zone_annual_mwh.get(zone, 0.0)
             if annual_mwh == 0:
                 continue
 
             for he in range(he_start, he_end + 1):
-                key = (str(d), he, zone)
-                shapes = shape_lookup.get(key)
-                if not shapes:
-                    continue
+                hourly_mwh = None
 
-                hourly_shape, daily_shape, monthly_shape = shapes
+                if use_lfc_for_date:
+                    lfc_row = lfc_by_date_hour.get((d, he))
+                    if lfc_row is not None:
+                        ercot_zone_total = ercot_zone_annual_mwh.get(zone, 0.0)
+                        if ercot_zone_total:
+                            customer_share = annual_mwh / ercot_zone_total
+                            lfc_zone_mw = lfc_load_by_zone(lfc_row).get(zone, 0.0)
+                            hourly_mwh = lfc_zone_mw * customer_share
+                            print(f"DEBUG Layer4 date={d} zone=HOUSTON lfc_zone_mw={lfc_zone_mw} customer_share={customer_share} hourly_mwh={hourly_mwh}")
 
-                # hourly_mwh = annual × monthly_shape × daily_shape × hourly_shape
-                hourly_mwh = annual_mwh * monthly_shape * daily_shape * hourly_shape
+                if hourly_mwh is None:
+                    key = (str(d), he, zone)
+                    shapes = shape_lookup.get(key)
+                    if not shapes:
+                        continue
+
+                    hourly_shape, daily_shape, monthly_shape = shapes
+
+                    # hourly_mwh = annual × monthly_shape × daily_shape × hourly_shape
+                    hourly_mwh = annual_mwh * monthly_shape * daily_shape * hourly_shape
 
                 if granularity == "fifteen_min":
                     # 15-min = hourly / 4
