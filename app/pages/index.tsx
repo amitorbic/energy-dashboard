@@ -33,8 +33,8 @@ const SEGMENTS = SECTIONS.map((section) => {
     href: primary?.href ?? null,
     soon: !primary,
     adminOnly: section.adminOnly,
-    description: meta.description,
-    icon: meta.icon,
+    description: meta?.description,
+    icon: meta?.icon,
   };
 });
 
