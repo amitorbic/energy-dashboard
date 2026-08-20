@@ -170,3 +170,7 @@ app.include_router(broker_profile_router.router, prefix="/api")
 from routers import voice as voice_router
 
 app.include_router(voice_router.router, prefix="/api")
+
+from routers.monitoring import router as monitoring_router
+
+app.include_router(monitoring_router, prefix="/api")

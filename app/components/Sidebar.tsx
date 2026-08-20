@@ -69,6 +69,10 @@ export const SECTIONS: NavSection[] = [
     items: [{ label: "Admin", href: "/admin" }],
     adminOnly: true,
   },
+  {
+    label: "System",
+    items: [{ label: "Monitoring", href: "/monitoring/checkpoints" }],
+  },
 ];
 
 const ICONS: Record<string, React.ReactNode> = {
@@ -124,6 +128,11 @@ const ICONS: Record<string, React.ReactNode> = {
     </>
   ),
   Admin: <circle cx="7.5" cy="7.5" r="1.8" />,
+  Monitoring: (
+    <>
+      <path d="M1.5 8h3l1.5-4 2.5 8 2-6 1 2h2" />
+    </>
+  ),
 };
 
 function isItemActive(pathname: string, href?: string) {
