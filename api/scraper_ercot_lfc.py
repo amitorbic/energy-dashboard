@@ -1,82 +1,41 @@
 """
-ERCOT 7-Day Load Forecast Scraper (Official ERCOT Public API)
-────────────────────────────────────────────────────────────
-Fetches the Seven-Day Load Forecast by Weather Zone report (np3-561-cd)
-from the ERCOT Public API and loads it into: ercot_lfc_history
+ERCOT LFC (7-Day Load Forecast) scraper -- Playwright + residential proxy version.
 
-Auth flow (fresh every run — id_token is valid ~1 hour):
-  POST https://idp.ercot.com/connect/token   → id_token (Bearer)
+Why this exists: ERCOT sits behind Incapsula/Imperva, which blocks the earlier
+curl_cffi-based approach at the very first request -- even with a clean
+residential IP. Incapsula's newer rules fingerprint more than TLS/JA3 (header
+ordering, HTTP/2 frame behavior, presence of a real JS engine), so a bare HTTP
+client gets flagged regardless of IP reputation or User-Agent spoofing.
 
-Report call:
-  GET https://api.ercot.com/api/public-reports/np3-561-cd
+This version drives a real Chromium browser via Playwright, routed through
+your IPRoyal residential proxy, so the traffic looks like an actual browser
+because it *is* one. It:
+  1. Launches Chromium through the IPRoyal proxy.
+  2. Navigates to the ERCOT product page (lets Incapsula's cookie/JS checks
+     resolve naturally).
+  3. Uses the browser's own `fetch()` (via page.evaluate) to call the
+     IceDocListServlet JSON endpoint -- so cookies, header ordering, and
+     fingerprint all come from the real browser session.
+  4. Downloads the ZIP the same way, extracts the CSV, and hands rows back
+     in the same shape your DB-insertion code expects.
 
-Credentials (api/.env):
-  ERCOT_USERNAME=
-  ERCOT_PASSWORD=
-  ERCOT_SUBSCRIPTION_KEY=
-
-Run: python scraper_ercot_lfc.py
-"""
-
-"""
-ERCOT 7-Day Load Forecast Scraper (Official ERCOT Public API)
-────────────────────────────────────────────────────────────
-Fetches the Seven-Day Load Forecast by Weather Zone report (np3-561-cd / np3-565-cd)
-from the ERCOT Public API and loads it into: ercot_lfc_history
-
-Routes network traffic through IPRoyal Proxies using curl_cffi to match browser TLS fingerprints.
-"""
-
-"""
-ERCOT 7-Day Load Forecast Scraper (Official ERCOT Public API)
-────────────────────────────────────────────────────────────
-Fetches the Seven-Day Load Forecast by Weather Zone report (np3-565-cd)
-from the ERCOT Public API and loads it into: ercot_lfc_history
-
-Routes traffic through proxy using curl_cffi Session for persistent TLS & cookies.
-"""
-
-"""
-ERCOT 7-Day Load Forecast Scraper (Official ERCOT Public API)
-────────────────────────────────────────────────────────────
-Fetches the Seven-Day Load Forecast by Weather Zone report (np3-565-cd)
-from the ERCOT Public API and loads it into: ercot_lfc_history
-
-Routes traffic through proxy using curl_cffi Session for persistent TLS & cookies.
-"""
-
-"""
-ERCOT 7-Day Load Forecast Scraper (Direct Public Web Portal)
-────────────────────────────────────────────────────────────
-Downloads the latest 7-Day Load Forecast by Weather Zone (NP3-561-CD) 
-directly from ERCOT's public data archive and loads it into: ercot_lfc_history
-
-No OAuth tokens, API subscription keys, or B2C login required.
-"""
-
-"""
-ERCOT 7-Day Load Forecast Scraper (Direct Public Web Portal)
-────────────────────────────────────────────────────────────
-Downloads the latest 7-Day Load Forecast by Weather Zone (NP3-561-CD) 
-directly from ERCOT's public data archive and loads it into: ercot_lfc_history
-"""
-
-"""
-ERCOT 7-Day Load Forecast Scraper (Latest Run Only)
-──────────────────────────────────────────────────
-Fetches the latest published 7-Day Load Forecast by Weather Zone
-from ERCOT Public API (Page 1) and loads it into: ercot_lfc_history.
-
-Scheduled to run hourly.
+Install:
+    pip install playwright python-dotenv aiomysql
+    playwright install chromium
 """
 
 import os
 import sys
+import io
+import csv
+import json
+import zipfile
 import logging
 import asyncio
-from datetime import datetime, date, time as dtime
+import base64
+from datetime import datetime, date, time as dtime, timezone
 
-from curl_cffi import requests
+from patchright.async_api import async_playwright
 import aiomysql
 from dotenv import load_dotenv
 
@@ -89,33 +48,31 @@ logging.basicConfig(
 )
 log = logging.getLogger(__name__)
 
-# ── Config ────────────────────────────────────────────────────────────────────
-ERCOT_USERNAME = os.getenv("ERCOT_USERNAME")
-ERCOT_PASSWORD = os.getenv("ERCOT_PASSWORD")
-ERCOT_SUBSCRIPTION_KEY = os.getenv("ERCOT_SUBSCRIPTION_KEY")
-
-ERCOT_CLIENT_ID = os.getenv("ERCOT_CLIENT_ID", "fec253ea-0d06-4272-a5e6-b478baeecd70")
-TOKEN_URL = "https://ercotb2c.b2clogin.com/ercotb2c.onmicrosoft.com/B2C_1_PUBAPI-ROPC-FLOW/oauth2/v2.0/token"
-REPORT_URL = (
-    "https://api.ercot.com/api/public-reports/np3-565-cd/lf_by_model_weather_zone"
+# ── ERCOT URLs ────────────────────────────────────────────────────────────────
+# Note: the old misapp/servlets/IceDocListServlet JSON endpoint (reportTypeId
+# 12312, which IS the correct id for NP3-561-CD) now 404s -- it looks to be a
+# retired legacy path. The current product page instead renders a results
+# table (#reportTable) client-side via JS, which we read directly instead of
+# hitting a separate JSON API. This mirrors ERCOT's own working example at
+# https://github.com/ercot/api-specs/discussions/58
+PRODUCT_URL = (
+    "https://www.ercot.com/mp/data-products/data-product-details?id=NP3-561-CD"
 )
 
+# ── Database Configuration ───────────────────────────────────────────────────
 DB_HOST = os.getenv("DB_HOST", "localhost")
 DB_USER = os.getenv("DB_USER", "root")
 DB_PASSWORD = os.getenv("DB_PASSWORD", "")
 DB_NAME = os.getenv("DB_NAME")
 DB_PORT = int(os.getenv("DB_PORT", "3306"))
 
-REQUEST_TIMEOUT = 30
-
+# ── IPRoyal Residential Proxy Configuration ──────────────────────────────────
+# IPRoyal typically gives you: host, port, username, password (rotating or sticky).
+# Set these in your .env file.
 PROXY_HOST = os.getenv("PROXY_HOST", "geo.iproyal.com")
 PROXY_PORT = os.getenv("PROXY_PORT", "12321")
-PROXY_URL = f"http://{PROXY_HOST}:{PROXY_PORT}"
-
-PROXIES = {
-    "http": PROXY_URL,
-    "https": PROXY_URL,
-}
+PROXY_USER = os.getenv("PROXY_USER", "")
+PROXY_PASS = os.getenv("PROXY_PASS", "")
 
 INSERT_SQL = """
     INSERT IGNORE INTO ercot_lfc_history
@@ -126,130 +83,44 @@ INSERT_SQL = """
 """
 
 FIELD_ALIASES = {
-    "delivery_date": ("deliveryDate", "DeliveryDate", "delivery_date"),
-    "hour_ending": ("hourEnding", "HourEnding", "hour_ending"),
-    "coast": ("coast", "Coast"),
-    "east": ("east", "East"),
-    "far_west": ("farWest", "FarWest", "far_west"),
-    "north": ("north", "North"),
-    "north_central": ("northCentral", "NorthCentral", "north_central"),
-    "south_central": ("southCentral", "SouthCentral", "south_central"),
-    "southern": ("southern", "Southern"),
-    "west": ("west", "West"),
+    "delivery_date": ("deliverydate", "delivery_date", "date"),
+    "hour_ending": ("hourending", "hour_ending", "he"),
+    "coast": ("coast",),
+    "east": ("east",),
+    "far_west": ("farwest", "far_west", "fwest"),
+    "north": ("north",),
+    "north_central": ("northcentral", "north_central", "ncentral"),
+    "south_central": ("southcentral", "south_central", "scentral"),
+    "southern": ("southern", "south"),
+    "west": ("west",),
+    "system_total": ("total", "systemtotal", "system_total", "ercot"),
 }
 
 
-class ErcotApiError(Exception):
-    pass
-
-
-# ── Auth Phase ────────────────────────────────────────────────────────────────
-def get_access_token(session: requests.Session) -> str:
-    if not (ERCOT_USERNAME and ERCOT_PASSWORD and ERCOT_SUBSCRIPTION_KEY):
-        raise ErcotApiError(
-            "Missing ERCOT_USERNAME / ERCOT_PASSWORD / ERCOT_SUBSCRIPTION_KEY in .env"
-        )
-
-    log.info("Requesting ERCOT access token...")
-    resp = session.post(
-        TOKEN_URL,
-        params={
-            "grant_type": "password",
-            "username": ERCOT_USERNAME,
-            "password": ERCOT_PASSWORD,
-            "scope": f"openid {ERCOT_CLIENT_ID} offline_access",
-            "client_id": ERCOT_CLIENT_ID,
-            "response_type": "id_token",
-        },
-        headers={"Ocp-Apim-Subscription-Key": ERCOT_SUBSCRIPTION_KEY},
-        timeout=REQUEST_TIMEOUT,
-    )
-    if resp.status_code != 200:
-        raise ErcotApiError(f"Auth failed ({resp.status_code}): {resp.text[:300]}")
-
-    token = resp.json().get("id_token")
-    if not token:
-        raise ErcotApiError("Auth response did not contain id_token")
-
-    log.info("Successfully acquired valid ERCOT ID token.")
-    return token
-
-
-# ── Report Fetching (Page 1 Only) ─────────────────────────────────────────────
-def fetch_latest_forecast_page(session: requests.Session, id_token: str) -> list[dict]:
-    headers = {
-        "Authorization": f"Bearer {id_token}",
-        "Ocp-Apim-Subscription-Key": ERCOT_SUBSCRIPTION_KEY,
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "Accept": "application/json, text/plain, */*",
-        "Accept-Language": "en-US,en;q=0.9",
-        "Referer": "https://apiexplorer.ercot.com/",
-        "Origin": "https://apiexplorer.ercot.com",
-    }
-
-    log.info("Fetching latest forecast run (Page 1)...")
-    resp = session.get(
-        REPORT_URL,
-        headers=headers,
-        params={"page": 1, "size": 1000},
-        timeout=REQUEST_TIMEOUT,
-    )
-
-    if resp.status_code != 200:
-        log.error("Report fetch failed — Status: %d", resp.status_code)
-        log.error("Response snippet: %s", resp.text[:300])
-        raise ErcotApiError(f"Report fetch failed ({resp.status_code})")
-
-    payload = resp.json()
-    fields = payload.get("fields", [])
-    data = payload.get("data", [])
-
-    col_index = {}
-    for canonical, aliases in FIELD_ALIASES.items():
-        idx = None
-        for i, f in enumerate(fields):
-            name = f.get("name") if isinstance(f, dict) else f
-            if name in aliases:
-                idx = i
-                break
-        col_index[canonical] = idx
-
-    all_rows = []
-    for record in data:
-        all_rows.append(
-            {
-                key: record[idx] if idx is not None else None
-                for key, idx in col_index.items()
-            }
-        )
-
-    log.info("Successfully fetched %d records from latest run.", len(all_rows))
-    return all_rows
-
-
-# ── Parsing Helpers ───────────────────────────────────────────────────────────
+# ── Parsing Helpers (unchanged from your version) ────────────────────────────
 def safe_float(val):
     if val is None:
         return None
     try:
-        return float(val)
+        return float(str(val).replace(",", "").strip())
     except (ValueError, TypeError):
         return None
 
 
 def parse_delivery_date(val):
-    if isinstance(val, date):
-        return val
-    s = str(val).strip()
-    for fmt in ("%Y-%m-%d", "%m/%d/%Y"):
+    if not val:
+        return None
+    for fmt in ("%m/%d/%Y", "%Y-%m-%d", "%Y%m%d", "%d-%b-%Y"):
         try:
-            return datetime.strptime(s, fmt).date()
+            return datetime.strptime(str(val).strip(), fmt).date()
         except ValueError:
             continue
     return None
 
 
 def parse_hour_ending(val):
+    if not val:
+        return None
     s = str(val).strip()
     if ":" in s:
         s = s.split(":")[0]
@@ -259,26 +130,42 @@ def parse_hour_ending(val):
         return None
 
 
+def find_val(row: dict, aliases: tuple):
+    normalized_row = {str(k).lower().strip(): v for k, v in row.items()}
+    for alias in aliases:
+        target = str(alias).lower()
+        if target in normalized_row and normalized_row[target] is not None:
+            return normalized_row[target]
+    return None
+
+
 def build_db_rows(raw_rows: list[dict], publish_date: date, publish_time: dtime):
     db_rows = []
     for r in raw_rows:
-        delivery_date = parse_delivery_date(r.get("delivery_date"))
-        hour_ending = parse_hour_ending(r.get("hour_ending"))
+        delivery_date = parse_delivery_date(find_val(r, FIELD_ALIASES["delivery_date"]))
+        hour_ending = parse_hour_ending(find_val(r, FIELD_ALIASES["hour_ending"]))
         if delivery_date is None or hour_ending is None:
             continue
 
         zones = {
-            "coast": safe_float(r.get("coast")),
-            "east": safe_float(r.get("east")),
-            "far_west": safe_float(r.get("far_west")),
-            "north": safe_float(r.get("north")),
-            "north_central": safe_float(r.get("north_central")),
-            "south_central": safe_float(r.get("south_central")),
-            "southern": safe_float(r.get("southern")),
-            "west": safe_float(r.get("west")),
+            "coast": safe_float(find_val(r, FIELD_ALIASES["coast"])),
+            "east": safe_float(find_val(r, FIELD_ALIASES["east"])),
+            "far_west": safe_float(find_val(r, FIELD_ALIASES["far_west"])),
+            "north": safe_float(find_val(r, FIELD_ALIASES["north"])),
+            "north_central": safe_float(find_val(r, FIELD_ALIASES["north_central"])),
+            "south_central": safe_float(find_val(r, FIELD_ALIASES["south_central"])),
+            "southern": safe_float(find_val(r, FIELD_ALIASES["southern"])),
+            "west": safe_float(find_val(r, FIELD_ALIASES["west"])),
         }
+        zones = {k: round(v, 4) if v is not None else None for k, v in zones.items()}
+
+        explicit_total = safe_float(find_val(r, FIELD_ALIASES["system_total"]))
         zone_values = [v for v in zones.values() if v is not None]
-        system_total = sum(zone_values) if zone_values else None
+        system_total = (
+            round(explicit_total, 4)
+            if explicit_total is not None
+            else (round(sum(zone_values), 4) if zone_values else None)
+        )
 
         db_rows.append(
             (
@@ -301,10 +188,10 @@ def build_db_rows(raw_rows: list[dict], publish_date: date, publish_time: dtime)
     return db_rows
 
 
-# ── DB Insertion ──────────────────────────────────────────────────────────────
+# ── MySQL Async Ingestion (unchanged) ─────────────────────────────────────────
 async def insert_rows(db_rows: list[tuple]) -> int:
     if not DB_NAME:
-        raise ErcotApiError("DB_NAME environment variable is not set.")
+        raise ValueError("DB_NAME is not configured in .env")
 
     conn = await aiomysql.connect(
         host=DB_HOST,
@@ -327,31 +214,166 @@ async def insert_rows(db_rows: list[tuple]) -> int:
         conn.close()
 
 
-# ── Main Run ──────────────────────────────────────────────────────────────────
-async def run():
-    now = datetime.now()
-    publish_date = now.date()
-    publish_time = now.time().replace(microsecond=0)
-
-    with requests.Session(impersonate="chrome120", proxies=PROXIES) as session:
-        token = get_access_token(session)
-        raw_rows = fetch_latest_forecast_page(session, token)
-
-    db_rows = build_db_rows(raw_rows, publish_date, publish_time)
-    inserted = await insert_rows(db_rows)
-    log.info("Rows inserted into ercot_lfc_history: %d", inserted)
+# ── Browser-driven fetch & extraction ─────────────────────────────────────────
+MAX_IP_ATTEMPTS = 8  # how many fresh proxy IPs to try before giving up
+TABLE_WAIT_MS = 20_000  # per-attempt wait -- a bad/blocked IP fails fast,
+# no need to wait the full 45s on every retry
 
 
-def main():
+async def _try_one_attempt(attempt_num: int, proxy_config, run_headless):
+    """
+    One full attempt: launch a fresh browser (which draws a NEW IPRoyal exit
+    IP by default, since no _session- is pinned in the proxy password), try
+    to reach the real results table. Returns (rows_html_info) on success,
+    raises on failure so the caller can retry with a new IP.
+    """
+    async with async_playwright() as p:
+        browser = await p.chromium.launch(
+            channel="chrome",
+            headless=run_headless,
+            proxy=proxy_config,
+        )
+        context = await browser.new_context(
+            viewport={"width": 1366, "height": 768},
+            locale="en-US",
+        )
+        page = await context.new_page()
+
+        try:
+            ip_resp = await page.goto(
+                "https://api.ipify.org?format=json", timeout=20_000
+            )
+            ip_body = await ip_resp.text()
+            log.info("[Attempt %d] Exit IP: %s", attempt_num, ip_body.strip())
+        except Exception as e:
+            log.warning("[Attempt %d] Could not verify exit IP: %s", attempt_num, e)
+
+        log.info("[Attempt %d] Navigating to ERCOT product portal...", attempt_num)
+        resp = await page.goto(
+            PRODUCT_URL, wait_until="domcontentloaded", timeout=60_000
+        )
+        log.info(
+            "[Attempt %d] Initial navigation status: %s",
+            attempt_num,
+            resp.status if resp else "no response",
+        )
+
+        try:
+            await page.wait_for_selector("#reportTable a", timeout=TABLE_WAIT_MS)
+        except Exception as e:
+            await browser.close()
+            raise RuntimeError(
+                f"[Attempt {attempt_num}] Table never appeared (likely blocked IP)."
+            ) from e
+
+        first_link = page.locator("#reportTable a").first
+        download_url = await first_link.get_attribute("href")
+        row_text = (await first_link.inner_text()).strip()
+
+        if not download_url:
+            await browser.close()
+            raise ValueError(
+                f"[Attempt {attempt_num}] Found table but no href on first link."
+            )
+        if not download_url.startswith("http"):
+            download_url = f"https://www.ercot.com{download_url}"
+
+        file_name = row_text or "latest.zip"
+        log.info(
+            "[Attempt %d] SUCCESS -- found file link: %s (%s)",
+            attempt_num,
+            download_url,
+            file_name,
+        )
+
+        publish_date = datetime.now(timezone.utc).date()
+        publish_time = datetime.now(timezone.utc).time().replace(microsecond=0)
+
+        log.info("[Attempt %d] Downloading ZIP...", attempt_num)
+        dl_resp = await context.request.get(download_url)
+        if dl_resp.status != 200:
+            await browser.close()
+            raise RuntimeError(
+                f"[Attempt {attempt_num}] ZIP download failed: HTTP {dl_resp.status}"
+            )
+
+        zip_bytes = await dl_resp.body()
+        await browser.close()
+        return zip_bytes, publish_date, publish_time
+
+
+async def fetch_latest_zip_and_parse() -> tuple[list[dict], date, dtime]:
+    proxy_config = None
+    if PROXY_USER and PROXY_PASS:
+        proxy_config = {
+            "server": f"http://{PROXY_HOST}:{PROXY_PORT}",
+            "username": PROXY_USER,
+            "password": PROXY_PASS,
+        }
+    else:
+        log.warning("No PROXY_USER/PROXY_PASS set -- launching without a proxy.")
+
+    run_headless = os.getenv("HEADLESS", "false").strip().lower() != "false"
+
+    last_error = None
+    zip_bytes = publish_date = publish_time = None
+
+    for attempt in range(1, MAX_IP_ATTEMPTS + 1):
+        try:
+            zip_bytes, publish_date, publish_time = await _try_one_attempt(
+                attempt, proxy_config, run_headless
+            )
+            break  # got a clean IP through -- stop retrying
+        except Exception as e:
+            last_error = e
+            log.warning("Attempt %d/%d failed: %s", attempt, MAX_IP_ATTEMPTS, e)
+            if attempt < MAX_IP_ATTEMPTS:
+                log.info("Retrying with a fresh proxy IP...")
+            continue
+
+    if zip_bytes is None:
+        raise RuntimeError(
+            f"All {MAX_IP_ATTEMPTS} proxy IP attempts were blocked. "
+            f"Last error: {last_error}"
+        ) from last_error
+
+    rows = []
+    with zipfile.ZipFile(io.BytesIO(zip_bytes)) as z:
+        csv_files = [f for f in z.namelist() if f.lower().endswith(".csv")]
+        if not csv_files:
+            raise FileNotFoundError("No CSV file found inside downloaded ZIP.")
+
+        log.info("Reading CSV target inside zip archive: %s", csv_files[0])
+        with z.open(csv_files[0]) as f:
+            text_file = io.TextIOWrapper(f, encoding="utf-8-sig")
+            reader = csv.DictReader(text_file)
+            for row in reader:
+                rows.append(row)
+
+    return rows, publish_date, publish_time
+
+
+# ── Orchestrator Main Execution Loop ──────────────────────────────────────────
+async def main():
     try:
-        asyncio.run(run())
-    except ErcotApiError as e:
-        log.error("ERCOT scrape failed: %s", e)
-        sys.exit(1)
-    except Exception as e:
-        log.error("Unexpected error: %s", e)
+        raw_rows, pub_date, pub_time = await fetch_latest_zip_and_parse()
+        log.info("Successfully extracted %d raw records from CSV.", len(raw_rows))
+
+        db_rows = build_db_rows(raw_rows, pub_date, pub_time)
+        log.info("Normalized rows matching schema: %d records.", len(db_rows))
+
+        if db_rows:
+            inserted = await insert_rows(db_rows)
+            log.info(
+                "Database transaction complete. %d new records committed.", inserted
+            )
+        else:
+            log.warning("No valid forecast lines remained after parsing filters.")
+
+    except Exception:
+        log.exception("Pipeline execution failed:")
         sys.exit(1)
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
