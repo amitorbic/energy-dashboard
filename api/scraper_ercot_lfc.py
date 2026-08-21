@@ -33,6 +33,7 @@ import zipfile
 import logging
 import asyncio
 import base64
+import urllib.parse
 from datetime import datetime, date, time as dtime, timezone
 
 from patchright.async_api import async_playwright
@@ -62,7 +63,7 @@ PRODUCT_URL = (
 # ── Database Configuration ───────────────────────────────────────────────────
 DB_HOST = os.getenv("DB_HOST", "localhost")
 DB_USER = os.getenv("DB_USER", "root")
-DB_PASSWORD = os.getenv("DB_PASSWORD", "")
+DB_PASSWORD = urllib.parse.unquote(os.getenv("DB_PASSWORD", ""))
 DB_NAME = os.getenv("DB_NAME")
 DB_PORT = int(os.getenv("DB_PORT", "3306"))
 

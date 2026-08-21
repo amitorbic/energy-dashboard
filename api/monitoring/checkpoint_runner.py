@@ -38,6 +38,7 @@ import os
 import random
 import statistics
 import sys
+import urllib.parse
 from datetime import date, timedelta
 from decimal import Decimal
 
@@ -60,7 +61,7 @@ DB_CONFIG = dict(
     host=os.getenv("DB_HOST", "localhost"),
     port=int(os.getenv("DB_PORT", 3306)),
     user=os.getenv("DB_USER", "root"),
-    password=os.getenv("DB_PASSWORD", ""),
+    password=urllib.parse.unquote(os.getenv("DB_PASSWORD", "")),
     db=os.getenv("DB_NAME"),
     charset="utf8mb4",
     autocommit=False,
