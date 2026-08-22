@@ -12,6 +12,7 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
+  ReferenceLine,
 } from "recharts";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -137,6 +138,10 @@ function fmt(n: number, dec = 3) {
     maximumFractionDigits: dec,
   });
 }
+function aggregateHourly(intervals: number[], hourIdx: number) {
+  const start = hourIdx * 4;
+  return intervals.slice(start, start + 4).reduce((a, b) => a + b, 0);
+}
 function fmtNet(n: number) {
   if (n === 0) return <span style={{ color: "var(--ct-text-muted)" }}>—</span>;
   const color = n > 0 ? "var(--success-light)" : "var(--danger-light)";
@@ -255,7 +260,7 @@ function LoadTable({
             <tbody>
               {HOUR_LABELS.map((he, idx) => {
                 const rowTotal = ZONES.reduce(
-                  (s, z) => s + (loadData.zones[z][idx] ?? 0),
+                  (s, z) => s + aggregateHourly(loadData.zones[z], idx),
                   0,
                 );
                 return (
@@ -273,7 +278,7 @@ function LoadTable({
                         className="px-3 py-1.5 text-right tabular-nums"
                         style={{ color: "var(--ct-text-secondary)" }}
                       >
-                        {(loadData.zones[z][idx] ?? 0).toFixed(3)}
+                        {aggregateHourly(loadData.zones[z], idx).toFixed(3)}
                       </td>
                     ))}
                     <td className="px-3 py-1.5 text-right font-medium tabular-nums" style={{ color: "var(--accent-light)" }}>
@@ -440,7 +445,7 @@ function LoadSelector({
 }
 
 // ── HourBlocksTab ───────────────────────────────────────────────────────────────
-function HourBlockBarChart({ rows }: { rows: BlockHourRow[] }) {
+function HourBlockBarChart({ rows, summary }: { rows: BlockHourRow[]; summary: HourBlocksSummary }) {
   const [chartType, setChartType] = useState<"bar" | "line">("bar");
 
   const chartData = rows.map((r) => ({
@@ -452,7 +457,7 @@ function HourBlockBarChart({ rows }: { rows: BlockHourRow[] }) {
   const chartWidth = Math.max(800, rows.length * 20);
 
   return (
-    <div className="rounded-[var(--r-lg)] border p-4" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
+    <div className="rounded-[var(--r-lg)] border p-4 overflow-hidden" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
       <div className="flex items-center justify-between mb-3">
         <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--ct-text-secondary)" }}>
           Load Shape
@@ -491,6 +496,9 @@ function HourBlockBarChart({ rows }: { rows: BlockHourRow[] }) {
                 <Bar dataKey="Load" fill="#0d9488" />
                 <Bar dataKey="Supply" fill="#10b981" />
                 <Bar dataKey="Net" fill="#ef4444" />
+                <ReferenceLine y={summary.min_load_mw} stroke="#ef4444"
+                  strokeDasharray="4 4" label={{ value: `Min ${summary.min_load_mw} MW`,
+                  position: 'insideTopRight', fill: '#ef4444', fontSize: 11 }} />
               </BarChart>
             ) : (
               <LineChart data={chartData}>
@@ -502,6 +510,9 @@ function HourBlockBarChart({ rows }: { rows: BlockHourRow[] }) {
                 <Line type="monotone" dataKey="Load" stroke="#0d9488" dot={false} />
                 <Line type="monotone" dataKey="Supply" stroke="#10b981" dot={false} />
                 <Line type="monotone" dataKey="Net" stroke="#ef4444" dot={false} />
+                <ReferenceLine y={summary.min_load_mw} stroke="#ef4444"
+                  strokeDasharray="4 4" label={{ value: `Min ${summary.min_load_mw} MW`,
+                  position: 'insideTopRight', fill: '#ef4444', fontSize: 11 }} />
               </LineChart>
             )}
           </ResponsiveContainer>
@@ -732,7 +743,7 @@ function HourBlocksTab() {
           </div>
 
           {/* Bar chart */}
-          <HourBlockBarChart rows={data.rows} />
+          <HourBlockBarChart rows={data.rows} summary={data.summary} />
 
           {/* Hourly shape table */}
           <div className="rounded-[var(--r-lg)] overflow-hidden border" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
