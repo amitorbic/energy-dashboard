@@ -33,7 +33,6 @@ import zipfile
 import logging
 import asyncio
 import base64
-import urllib.parse
 from datetime import datetime, date, time as dtime, timezone
 
 from patchright.async_api import async_playwright
@@ -63,7 +62,7 @@ PRODUCT_URL = (
 # ── Database Configuration ───────────────────────────────────────────────────
 DB_HOST = os.getenv("DB_HOST", "localhost")
 DB_USER = os.getenv("DB_USER", "root")
-DB_PASSWORD = urllib.parse.unquote(os.getenv("DB_PASSWORD", ""))
+DB_PASSWORD = os.getenv("DB_PASSWORD", "")
 DB_NAME = os.getenv("DB_NAME")
 DB_PORT = int(os.getenv("DB_PORT", "3306"))
 
@@ -303,6 +302,134 @@ async def _try_one_attempt(attempt_num: int, proxy_config, run_headless):
         return zip_bytes, publish_date, publish_time
 
 
+# ── Bright Data Browser API Configuration (fallback tier) ───────────────────
+# From the "ready to go" email: username is fixed, password comes from the
+# Bright Data dashboard (Web Access APIs -> ercot_scraper zone -> Overview).
+# Set these in .env:
+#   BRIGHTDATA_USER=brd-customer-hl_4437783a-zone-ercot_scraper
+#   BRIGHTDATA_PASS=<password from dashboard>
+BRIGHTDATA_USER = os.getenv("BRIGHTDATA_USER", "")
+BRIGHTDATA_PASS = os.getenv("BRIGHTDATA_PASS", "")
+BRIGHTDATA_HOST = os.getenv("BRIGHTDATA_HOST", "brd.superproxy.io:9222")
+MAX_BRIGHTDATA_ATTEMPTS = 2  # Bright Data's pool is much more reliable --
+# shouldn't need many retries at all
+
+
+async def _try_brightdata_attempt(attempt_num: int):
+    """
+    Connect to Bright Data's already-running, already-unblocked remote
+    Chrome via CDP over WebSocket -- no local browser launch, no local
+    proxy config. Bright Data handles the unblocking on their end.
+    """
+    if not BRIGHTDATA_USER or not BRIGHTDATA_PASS:
+        raise RuntimeError(
+            "BRIGHTDATA_USER/BRIGHTDATA_PASS not set in .env -- get the "
+            "password from https://brightdata.com/cp/web_access/ercot_scraper"
+        )
+
+    ws_endpoint = f"wss://{BRIGHTDATA_USER}:{BRIGHTDATA_PASS}@{BRIGHTDATA_HOST}"
+
+    async with async_playwright() as p:
+        log.info(
+            "[Bright Data attempt %d] Connecting to remote browser...", attempt_num
+        )
+        browser = await p.chromium.connect_over_cdp(ws_endpoint, timeout=60_000)
+
+        # CDP-connected browsers already have a default context -- reuse it
+        # rather than creating a new one.
+        context = (
+            browser.contexts[0] if browser.contexts else await browser.new_context()
+        )
+        page = await context.new_page()
+
+        log.info(
+            "[Bright Data attempt %d] Navigating to ERCOT product portal...",
+            attempt_num,
+        )
+        # Bright Data recommends generous timeouts (60-120s) since their
+        # unlocking process (solving challenges, retrying internally) takes
+        # longer than a plain proxy connection.
+        resp = await page.goto(
+            PRODUCT_URL, wait_until="domcontentloaded", timeout=120_000
+        )
+        log.info(
+            "[Bright Data attempt %d] Initial navigation status: %s",
+            attempt_num,
+            resp.status if resp else "no response",
+        )
+
+        try:
+            await page.wait_for_selector("#reportTable a", timeout=45_000)
+        except Exception as e:
+            await browser.close()
+            raise RuntimeError(
+                f"[Bright Data attempt {attempt_num}] Table never appeared."
+            ) from e
+
+        first_link = page.locator("#reportTable a").first
+        download_url = await first_link.get_attribute("href")
+        row_text = (await first_link.inner_text()).strip()
+
+        if not download_url:
+            await browser.close()
+            raise ValueError(
+                f"[Bright Data attempt {attempt_num}] Found table but no href on first link."
+            )
+        if not download_url.startswith("http"):
+            download_url = f"https://www.ercot.com{download_url}"
+
+        file_name = row_text or "latest.zip"
+        log.info(
+            "[Bright Data attempt %d] SUCCESS -- found file link: %s (%s)",
+            attempt_num,
+            download_url,
+            file_name,
+        )
+
+        publish_date = datetime.now(timezone.utc).date()
+        publish_time = datetime.now(timezone.utc).time().replace(microsecond=0)
+
+        log.info("[Bright Data attempt %d] Downloading ZIP...", attempt_num)
+        # IMPORTANT: context.request.get() issues the HTTP call from your own
+        # local machine's network, NOT through Bright Data's remote browser --
+        # that's fine for a locally-launched+proxied browser (IPRoyal path),
+        # but for a CDP-connected remote browser it bypasses Bright Data's
+        # network entirely, hitting your already-blocked IP directly (this is
+        # exactly what caused the 403 on the ZIP download despite the page
+        # itself loading fine). Use the page's own in-browser fetch() instead,
+        # so the download genuinely goes through Bright Data's network.
+        zip_b64_result = await page.evaluate(
+            """
+            async (url) => {
+                const res = await fetch(url, { credentials: "include" });
+                if (res.status !== 200) return { status: res.status, data: null };
+                const buf = await res.arrayBuffer();
+                let binary = "";
+                const bytes = new Uint8Array(buf);
+                const chunkSize = 0x8000;
+                for (let i = 0; i < bytes.length; i += chunkSize) {
+                    binary += String.fromCharCode.apply(
+                        null, bytes.subarray(i, i + chunkSize)
+                    );
+                }
+                return { status: res.status, data: btoa(binary) };
+            }
+            """,
+            download_url,
+        )
+
+        if zip_b64_result["status"] != 200 or not zip_b64_result["data"]:
+            await browser.close()
+            raise RuntimeError(
+                f"[Bright Data attempt {attempt_num}] ZIP download failed: "
+                f"HTTP {zip_b64_result['status']}"
+            )
+
+        zip_bytes = base64.b64decode(zip_b64_result["data"])
+        await browser.close()
+        return zip_bytes, publish_date, publish_time
+
+
 async def fetch_latest_zip_and_parse() -> tuple[list[dict], date, dtime]:
     proxy_config = None
     if PROXY_USER and PROXY_PASS:
@@ -319,23 +446,52 @@ async def fetch_latest_zip_and_parse() -> tuple[list[dict], date, dtime]:
     last_error = None
     zip_bytes = publish_date = publish_time = None
 
-    for attempt in range(1, MAX_IP_ATTEMPTS + 1):
-        try:
-            zip_bytes, publish_date, publish_time = await _try_one_attempt(
-                attempt, proxy_config, run_headless
-            )
-            break  # got a clean IP through -- stop retrying
-        except Exception as e:
-            last_error = e
-            log.warning("Attempt %d/%d failed: %s", attempt, MAX_IP_ATTEMPTS, e)
-            if attempt < MAX_IP_ATTEMPTS:
-                log.info("Retrying with a fresh proxy IP...")
-            continue
+    # ── Tier 1: IPRoyal (cheap, works most hours) ────────────────────────────
+    if proxy_config is None:
+        log.warning(
+            "No IPRoyal proxy configured -- skipping Tier 1, going straight to Bright Data."
+        )
+    else:
+        for attempt in range(1, MAX_IP_ATTEMPTS + 1):
+            try:
+                zip_bytes, publish_date, publish_time = await _try_one_attempt(
+                    attempt, proxy_config, run_headless
+                )
+                break
+            except Exception as e:
+                last_error = e
+                log.warning(
+                    "IPRoyal attempt %d/%d failed: %s", attempt, MAX_IP_ATTEMPTS, e
+                )
+                if attempt < MAX_IP_ATTEMPTS:
+                    log.info("Retrying with a fresh proxy IP...")
+                continue
+
+    # ── Tier 2: Bright Data (fallback, only used when IPRoyal is exhausted) ─
+    if zip_bytes is None:
+        log.warning(
+            "All %d IPRoyal attempts failed -- falling back to Bright Data Browser API.",
+            MAX_IP_ATTEMPTS,
+        )
+        for bd_attempt in range(1, MAX_BRIGHTDATA_ATTEMPTS + 1):
+            try:
+                zip_bytes, publish_date, publish_time = await _try_brightdata_attempt(
+                    bd_attempt
+                )
+                break
+            except Exception as e:
+                last_error = e
+                log.warning(
+                    "Bright Data attempt %d/%d failed: %s",
+                    bd_attempt,
+                    MAX_BRIGHTDATA_ATTEMPTS,
+                    e,
+                )
+                continue
 
     if zip_bytes is None:
         raise RuntimeError(
-            f"All {MAX_IP_ATTEMPTS} proxy IP attempts were blocked. "
-            f"Last error: {last_error}"
+            f"All IPRoyal AND Bright Data attempts failed. Last error: {last_error}"
         ) from last_error
 
     rows = []

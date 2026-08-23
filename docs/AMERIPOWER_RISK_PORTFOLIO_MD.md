@@ -357,8 +357,10 @@ Layer 2 ✅  Growth — ERCOT projected growth year over year
 Layer 3 ⏳  Seasonal — El Niño/La Niña adjustment
             Source: NOAA seasonal outlook (to build)
 
-Layer 4 ⏳  7-Day Override — use ERCOT week-ahead as ground truth
-            Source: ercot_lfc_history + weather API
+Layer 4 ✅  7-Day Override — ercot_lfc_history (LFC scraper running hourly)
+            Uses most recent publish per (delivery_date, hour_ending)
+            customer_share = zone_annual_mwh / ercot_base_total_2025
+            Falls back to ERCOT Shape for dates beyond 7 days
 ```
 
 ### Self-Healing System (Planned)
@@ -435,6 +437,53 @@ GET  /api/mtm/prices?price_date=YYYY-MM-DD
 POST /api/mtm/calculate    body: {"price_date": "YYYY-MM-DD"}
 POST /api/mtm/prices/upload body: [{"price_date","hour_ending","location","price","source"}]
 ```
+
+---
+
+## Monitoring System
+
+### Checkpoint Runner
+Script: api/monitoring/checkpoint_runner.py
+Runs: Nightly at midnight via PM2 (ecosystem.monitoring.config.js)
+Table: forecast_checkpoints
+
+### Four Checkpoints
+1. 7-Day Mirror Test — ERCOT Shape forecast vs ercot_lfc_history
+   GREEN ≤5%, YELLOW ≤10%, RED >10%
+   
+2. Historical Backtest — DNA forecast vs ercot_load_history actuals
+   Random date within available data range
+   GREEN ≤5%, YELLOW ≤10%, RED >10%
+   
+3. Energy Balance Sanity — ERCOT growth rate 2025→2035
+   GREEN 1-15%, YELLOW 0.5-20%, RED outside
+   
+4. Portfolio Ratio Check — portfolio/ERCOT ratio vs baseline
+   GREEN within 50%, RED >50% drift
+
+### API Endpoints
+GET /api/monitoring/checkpoints         → latest results
+GET /api/monitoring/checkpoints/history → last 30 days
+
+### Frontend
+Page: app/pages/monitoring/checkpoints.tsx
+Sidebar: System → Monitoring
+
+---
+
+## LFC Scraper (ERCOT 7-Day Load Forecast)
+
+Script: api/scraper_ercot_lfc.py
+Runs: Hourly via PM2 (ecosystem.lfc.config.js)
+Source: ERCOT NP3-561-CD (Seven-Day Load Forecast by Weather Zone)
+Method: Playwright with proxy rotation to bypass Incapsula
+Table: ercot_lfc_history
+Records: 192 per run (8 weather zones × 24 hours)
+
+Credentials needed in .env:
+  ERCOT_USERNAME=
+  ERCOT_PASSWORD=  
+  ERCOT_SUBSCRIPTION_KEY=
 
 ---
 
@@ -548,26 +597,17 @@ GET  /api/portfolio/load/dates
 ## Pending (In Order of Priority)
 
 ```
-1.  Layer 3 Seasonal — NOAA seasonal outlook integration
+1. Layer 3 Seasonal — NOAA seasonal outlook integration
 
-2.  Layer 4 7-Day Override — wire ercot_lfc_history for short-term forecast
+2. Risk assessment — black swan detection, short/long term scoring
 
-3.  Monitoring/Checkpoint system — 4 checkpoints, dashboard flags
+3. Settlement reconciliation — 3-way match (ERCOT vs supplier vs system)
 
-4.  Risk assessment — black swan detection, short/long term scoring
+4. Historical settlement data — need more ZIP files beyond 2021-02-01
 
-5.  Settlement reconciliation — 3-way match (ERCOT vs supplier vs system)
+5. MTM market price feed — live feed integration (CME DataMine/ICE/Bloomberg)
 
-6.  Historical settlement data ingestion — ingest more ZIP files beyond 2021-02-01
-
-7.  MTM market price feed — integrate live price feed (CME DataMine/ICE/Bloomberg)
-    when REP subscribes to one
-
-8.  ERCOT MIS + SMT integration — automated daily data pull
-
-9.  AI Agent home page
-
-10. Multi-tenant DB routing — when onboarding second REP
+6. ERCOT MIS + SMT integration — automated daily data pull
 ```
 
 ---
@@ -576,6 +616,7 @@ GET  /api/portfolio/load/dates
 
 ```
 api/migrations/022_create_mtm_tables.sql  ← NEW — market_prices + mtm_results
+api/migrations/029_create_forecast_checkpoints.sql ← forecast_checkpoints table
 ```
 
 Run migrations on live via migration runner script.
@@ -611,4 +652,12 @@ python process_settlement.py --date YYYY-MM-DD --run RTM_FINAL2
 
 # 9. Backfill all unprocessed settlement dates
 python process_settlement.py --backfill
+
+# 10. Run LFC scraper (hourly via PM2)
+pm2 start api/ecosystem.lfc.config.js
+
+# 11. Run monitoring checkpoints (nightly via PM2)
+pm2 start api/monitoring/ecosystem.monitoring.config.js
+
+pm2 save
 ```
