@@ -25,6 +25,7 @@ Install:
 """
 
 import os
+import re
 import sys
 import io
 import csv
@@ -33,8 +34,12 @@ import zipfile
 import logging
 import asyncio
 import base64
+import smtplib
+import traceback
 import urllib.parse
 from datetime import datetime, date, time as dtime, timezone
+from email.mime.text import MIMEText
+from zoneinfo import ZoneInfo
 
 from patchright.async_api import async_playwright
 import aiomysql
@@ -67,6 +72,29 @@ DB_PASSWORD = urllib.parse.unquote(os.getenv("DB_PASSWORD", ""))
 DB_NAME = os.getenv("DB_NAME")
 DB_PORT = int(os.getenv("DB_PORT", "3306"))
 
+# ── Smart-Save Configuration ─────────────────────────────────────────────────
+# 7am/8am Central are the DAM-relevant captures and are always saved. Every
+# other hour is only saved if it deviates meaningfully from the last SAVED
+# snapshot, so the table stops accumulating ~192 near-identical rows/hour.
+CENTRAL_TZ = ZoneInfo("America/Chicago")
+SCHEDULED_SAVE_HOURS_CT = (7, 8)  # always-save hours, Central time
+
+# Simple fixed threshold for now -- may later need to vary per portfolio
+# (e.g. a customer with heavy exposure to one zone caring about smaller
+# moves than the system as a whole), but a single constant is enough today.
+DEVIATION_THRESHOLD_PCT = 10.0
+
+# ── Failure Alert Email Configuration ────────────────────────────────────────
+# Reuses the same SMTP_HOST/PORT/USER/PASS vars already set in .env for the
+# rest of the app (api/utils/email.py) rather than introducing a second SMTP
+# secret. ALERT_EMAIL_TO/ALERT_EMAIL_FROM are new and specific to this alert.
+ALERT_EMAIL_TO = os.getenv("ALERT_EMAIL_TO", "").strip()
+ALERT_EMAIL_FROM = os.getenv("ALERT_EMAIL_FROM", "").strip()
+SMTP_HOST = os.getenv("SMTP_HOST", "")
+SMTP_PORT = int(os.getenv("SMTP_PORT", "465"))
+SMTP_USER = os.getenv("SMTP_USER", "")
+SMTP_PASS = os.getenv("SMTP_PASS", "")
+
 # ── IPRoyal Residential Proxy Configuration ──────────────────────────────────
 # IPRoyal typically gives you: host, port, username, password (rotating or sticky).
 # Set these in your .env file.
@@ -79,8 +107,23 @@ INSERT_SQL = """
     INSERT IGNORE INTO ercot_lfc_history
         (publish_date, publish_time, delivery_date, hour_ending,
          coast, east, far_west, north, north_central,
-         south_central, southern, west, system_total, dst_flag)
-    VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+         south_central, southern, west, system_total, dst_flag,
+         capture_date_ct, capture_hour_ct, save_reason, deviation_pct)
+    VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+"""
+
+LAST_SNAPSHOT_GROUP_SQL = """
+    SELECT capture_date_ct, capture_hour_ct
+    FROM ercot_lfc_history
+    WHERE capture_date_ct IS NOT NULL AND capture_hour_ct IS NOT NULL
+    ORDER BY capture_date_ct DESC, capture_hour_ct DESC, id DESC
+    LIMIT 1
+"""
+
+LAST_SNAPSHOT_TOTALS_SQL = """
+    SELECT delivery_date, hour_ending, system_total
+    FROM ercot_lfc_history
+    WHERE capture_date_ct = %s AND capture_hour_ct = %s
 """
 
 FIELD_ALIASES = {
@@ -140,6 +183,26 @@ def find_val(row: dict, aliases: tuple):
     return None
 
 
+# ERCOT's real publish timestamp (already US/Central) is embedded in the CSV
+# filename inside the ZIP, e.g.:
+#   cdr.00012312.0000000000000000.20260823.103000.LFCWEATHERNP3561.csv
+# Same pattern the historical-backfill script (ingest_lfc.py) uses.
+FILENAME_RE = re.compile(
+    r"cdr\.\d+\.\d+\.(\d{8})\.(\d{6})\d*\.LFCWEATHER", re.IGNORECASE
+)
+
+
+def parse_filename(fname: str) -> tuple[date | None, dtime | None]:
+    m = FILENAME_RE.search(fname)
+    if not m:
+        return None, None
+    d = m.group(1)  # 20260823
+    t = m.group(2)  # 103000
+    pub_date = date(int(d[:4]), int(d[4:6]), int(d[6:8]))
+    pub_time = dtime(int(t[:2]), int(t[2:4]), int(t[4:6]))
+    return pub_date, pub_time
+
+
 def build_db_rows(raw_rows: list[dict], publish_date: date, publish_time: dtime):
     db_rows = []
     for r in raw_rows:
@@ -190,9 +253,20 @@ def build_db_rows(raw_rows: list[dict], publish_date: date, publish_time: dtime)
 
 
 # ── MySQL Async Ingestion (unchanged) ─────────────────────────────────────────
-async def insert_rows(db_rows: list[tuple]) -> int:
+async def insert_rows(
+    db_rows: list[tuple],
+    capture_date_ct: date,
+    capture_hour_ct: int,
+    save_reason: str,
+    deviation_pct: float | None,
+) -> int:
     if not DB_NAME:
         raise ValueError("DB_NAME is not configured in .env")
+
+    full_rows = [
+        row + (capture_date_ct, capture_hour_ct, save_reason, deviation_pct)
+        for row in db_rows
+    ]
 
     conn = await aiomysql.connect(
         host=DB_HOST,
@@ -205,8 +279,8 @@ async def insert_rows(db_rows: list[tuple]) -> int:
     try:
         inserted = 0
         async with conn.cursor() as cur:
-            for i in range(0, len(db_rows), 500):
-                batch = db_rows[i : i + 500]
+            for i in range(0, len(full_rows), 500):
+                batch = full_rows[i : i + 500]
                 await cur.executemany(INSERT_SQL, batch)
                 inserted += cur.rowcount
         await conn.commit()
@@ -215,8 +289,117 @@ async def insert_rows(db_rows: list[tuple]) -> int:
         conn.close()
 
 
+# ── Smart-Save: baseline lookup + deviation check ────────────────────────────
+def get_central_capture_time() -> tuple[date, int]:
+    """(date, hour) of *now* in US/Central, DST-safe via zoneinfo."""
+    now_ct = datetime.now(timezone.utc).astimezone(CENTRAL_TZ)
+    return now_ct.date(), now_ct.hour
+
+
+async def get_last_saved_totals() -> dict[tuple[date, int], float] | None:
+    """
+    system_total per (delivery_date, hour_ending) for the most recently
+    SAVED snapshot group (by capture_date_ct/capture_hour_ct) -- i.e. the
+    baseline the new scrape should be compared against. Returns None if
+    there is no previous saved snapshot to compare against yet.
+    """
+    if not DB_NAME:
+        raise ValueError("DB_NAME is not configured in .env")
+
+    conn = await aiomysql.connect(
+        host=DB_HOST,
+        port=DB_PORT,
+        user=DB_USER,
+        password=DB_PASSWORD,
+        db=DB_NAME,
+        autocommit=False,
+    )
+    try:
+        async with conn.cursor() as cur:
+            await cur.execute(LAST_SNAPSHOT_GROUP_SQL)
+            group = await cur.fetchone()
+            if not group:
+                return None
+            last_date, last_hour = group
+
+            await cur.execute(LAST_SNAPSHOT_TOTALS_SQL, (last_date, last_hour))
+            rows = await cur.fetchall()
+        return {
+            (delivery_date, hour_ending): float(system_total)
+            for delivery_date, hour_ending, system_total in rows
+            if system_total is not None
+        }
+    finally:
+        conn.close()
+
+
+def compute_max_deviation(
+    db_rows: list[tuple], baseline: dict[tuple[date, int], float]
+) -> float | None:
+    """
+    Max abs % deviation of this run's system_total vs. the baseline,
+    across every (delivery_date, hour_ending) pair present in both. Returns
+    None if there are no matching pairs to compare (can't evaluate).
+    """
+    max_dev = None
+    for row in db_rows:
+        delivery_date, hour_ending, new_total = row[2], row[3], row[12]
+        if new_total is None:
+            continue
+        old_total = baseline.get((delivery_date, hour_ending))
+        if not old_total:  # guards both None and 0
+            continue
+        dev = abs(new_total - old_total) / old_total * 100
+        if max_dev is None or dev > max_dev:
+            max_dev = dev
+    return max_dev
+
+
+def send_failure_alert(central_hour: int, error: BaseException) -> None:
+    """Best-effort email alert when both scrape tiers are exhausted. Never
+    raises -- a failed alert must not mask or replace the original failure."""
+    if not ALERT_EMAIL_TO:
+        log.warning("ALERT_EMAIL_TO not set -- skipping failure alert email.")
+        return
+    if not SMTP_HOST or not SMTP_USER or not SMTP_PASS:
+        log.warning(
+            "SMTP_HOST/SMTP_USER/SMTP_PASS not fully configured -- skipping "
+            "failure alert email."
+        )
+        return
+
+    is_critical = central_hour in SCHEDULED_SAVE_HOURS_CT
+    subject = (
+        f"{'[CRITICAL - DAM HOUR]' if is_critical else '[ERCOT Scraper Failure]'} "
+        f"ERCOT LFC scraper failed at {central_hour:02d}:00 Central"
+    )
+    tb = "".join(traceback.format_exception(type(error), error, error.__traceback__))
+    body = (
+        f"ERCOT LFC scraper run failed -- both IPRoyal and Bright Data tiers exhausted.\n\n"
+        f"Timestamp (UTC): {datetime.now(timezone.utc).isoformat()}\n"
+        f"Central-time hour of failed run: {central_hour}\n"
+        f"DAM-critical hour (7/8 CT): {'YES' if is_critical else 'no'}\n\n"
+        f"Last error:\n{tb}"
+    )
+
+    from_addr = ALERT_EMAIL_FROM or SMTP_USER
+    msg = MIMEText(body, "plain")
+    msg["From"] = from_addr
+    msg["To"] = ALERT_EMAIL_TO
+    msg["Subject"] = subject
+
+    try:
+        with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT) as server:
+            server.login(SMTP_USER, SMTP_PASS)
+            server.sendmail(from_addr, [ALERT_EMAIL_TO], msg.as_string())
+        log.info("Failure alert email sent to %s", ALERT_EMAIL_TO)
+    except Exception:
+        log.exception("Failed to send failure alert email (non-fatal):")
+
+
 # ── Browser-driven fetch & extraction ─────────────────────────────────────────
 MAX_IP_ATTEMPTS = 8  # how many fresh proxy IPs to try before giving up
+MAX_IP_ATTEMPTS_CRITICAL = 15  # 7am/8am CT (DAM-relevant) -- worth more retries
 TABLE_WAIT_MS = 20_000  # per-attempt wait -- a bad/blocked IP fails fast,
 # no need to wait the full 45s on every retry
 
@@ -287,9 +470,6 @@ async def _try_one_attempt(attempt_num: int, proxy_config, run_headless):
             file_name,
         )
 
-        publish_date = datetime.now(timezone.utc).date()
-        publish_time = datetime.now(timezone.utc).time().replace(microsecond=0)
-
         log.info("[Attempt %d] Downloading ZIP...", attempt_num)
         dl_resp = await context.request.get(download_url)
         if dl_resp.status != 200:
@@ -300,7 +480,7 @@ async def _try_one_attempt(attempt_num: int, proxy_config, run_headless):
 
         zip_bytes = await dl_resp.body()
         await browser.close()
-        return zip_bytes, publish_date, publish_time
+        return zip_bytes
 
 
 # ── Bright Data Browser API Configuration (fallback tier) ───────────────────
@@ -314,6 +494,7 @@ BRIGHTDATA_PASS = os.getenv("BRIGHTDATA_PASS", "")
 BRIGHTDATA_HOST = os.getenv("BRIGHTDATA_HOST", "brd.superproxy.io:9222")
 MAX_BRIGHTDATA_ATTEMPTS = 2  # Bright Data's pool is much more reliable --
 # shouldn't need many retries at all
+MAX_BRIGHTDATA_ATTEMPTS_CRITICAL = 5  # 7am/8am CT (DAM-relevant) -- worth more retries
 
 
 async def _try_brightdata_attempt(attempt_num: int):
@@ -387,9 +568,6 @@ async def _try_brightdata_attempt(attempt_num: int):
             file_name,
         )
 
-        publish_date = datetime.now(timezone.utc).date()
-        publish_time = datetime.now(timezone.utc).time().replace(microsecond=0)
-
         log.info("[Bright Data attempt %d] Downloading ZIP...", attempt_num)
         # IMPORTANT: context.request.get() issues the HTTP call from your own
         # local machine's network, NOT through Bright Data's remote browser --
@@ -428,10 +606,12 @@ async def _try_brightdata_attempt(attempt_num: int):
 
         zip_bytes = base64.b64decode(zip_b64_result["data"])
         await browser.close()
-        return zip_bytes, publish_date, publish_time
+        return zip_bytes
 
 
-async def fetch_latest_zip_and_parse() -> tuple[list[dict], date, dtime]:
+async def fetch_latest_zip_and_parse(
+    is_critical_hour: bool = False,
+) -> tuple[list[dict], date, dtime]:
     proxy_config = None
     if PROXY_USER and PROXY_PASS:
         proxy_config = {
@@ -444,8 +624,14 @@ async def fetch_latest_zip_and_parse() -> tuple[list[dict], date, dtime]:
 
     run_headless = os.getenv("HEADLESS", "false").strip().lower() != "false"
 
+    # 7am/8am CT is the DAM-relevant capture -- worth burning more retries on.
+    max_ip_attempts = MAX_IP_ATTEMPTS_CRITICAL if is_critical_hour else MAX_IP_ATTEMPTS
+    max_brightdata_attempts = (
+        MAX_BRIGHTDATA_ATTEMPTS_CRITICAL if is_critical_hour else MAX_BRIGHTDATA_ATTEMPTS
+    )
+
     last_error = None
-    zip_bytes = publish_date = publish_time = None
+    zip_bytes = None
 
     # ── Tier 1: IPRoyal (cheap, works most hours) ────────────────────────────
     if proxy_config is None:
@@ -453,18 +639,18 @@ async def fetch_latest_zip_and_parse() -> tuple[list[dict], date, dtime]:
             "No IPRoyal proxy configured -- skipping Tier 1, going straight to Bright Data."
         )
     else:
-        for attempt in range(1, MAX_IP_ATTEMPTS + 1):
+        for attempt in range(1, max_ip_attempts + 1):
             try:
-                zip_bytes, publish_date, publish_time = await _try_one_attempt(
+                zip_bytes = await _try_one_attempt(
                     attempt, proxy_config, run_headless
                 )
                 break
             except Exception as e:
                 last_error = e
                 log.warning(
-                    "IPRoyal attempt %d/%d failed: %s", attempt, MAX_IP_ATTEMPTS, e
+                    "IPRoyal attempt %d/%d failed: %s", attempt, max_ip_attempts, e
                 )
-                if attempt < MAX_IP_ATTEMPTS:
+                if attempt < max_ip_attempts:
                     log.info("Retrying with a fresh proxy IP...")
                 continue
 
@@ -472,20 +658,18 @@ async def fetch_latest_zip_and_parse() -> tuple[list[dict], date, dtime]:
     if zip_bytes is None:
         log.warning(
             "All %d IPRoyal attempts failed -- falling back to Bright Data Browser API.",
-            MAX_IP_ATTEMPTS,
+            max_ip_attempts,
         )
-        for bd_attempt in range(1, MAX_BRIGHTDATA_ATTEMPTS + 1):
+        for bd_attempt in range(1, max_brightdata_attempts + 1):
             try:
-                zip_bytes, publish_date, publish_time = await _try_brightdata_attempt(
-                    bd_attempt
-                )
+                zip_bytes = await _try_brightdata_attempt(bd_attempt)
                 break
             except Exception as e:
                 last_error = e
                 log.warning(
                     "Bright Data attempt %d/%d failed: %s",
                     bd_attempt,
-                    MAX_BRIGHTDATA_ATTEMPTS,
+                    max_brightdata_attempts,
                     e,
                 )
                 continue
@@ -501,8 +685,20 @@ async def fetch_latest_zip_and_parse() -> tuple[list[dict], date, dtime]:
         if not csv_files:
             raise FileNotFoundError("No CSV file found inside downloaded ZIP.")
 
-        log.info("Reading CSV target inside zip archive: %s", csv_files[0])
-        with z.open(csv_files[0]) as f:
+        csv_name = csv_files[0]
+        log.info("Reading CSV target inside zip archive: %s", csv_name)
+
+        publish_date, publish_time = parse_filename(csv_name)
+        if publish_date is None or publish_time is None:
+            log.warning(
+                "Could not parse ERCOT publish timestamp from CSV filename %r "
+                "-- falling back to current UTC time for publish_date/publish_time.",
+                csv_name,
+            )
+            publish_date = datetime.now(timezone.utc).date()
+            publish_time = datetime.now(timezone.utc).time().replace(microsecond=0)
+
+        with z.open(csv_name) as f:
             text_file = io.TextIOWrapper(f, encoding="utf-8-sig")
             reader = csv.DictReader(text_file)
             for row in reader:
@@ -513,23 +709,74 @@ async def fetch_latest_zip_and_parse() -> tuple[list[dict], date, dtime]:
 
 # ── Orchestrator Main Execution Loop ──────────────────────────────────────────
 async def main():
+    capture_date_ct, capture_hour_ct = get_central_capture_time()
+    is_critical_hour = capture_hour_ct in SCHEDULED_SAVE_HOURS_CT
+    log.info(
+        "Run captured at %s %02d:00 Central%s",
+        capture_date_ct,
+        capture_hour_ct,
+        " (DAM-critical hour)" if is_critical_hour else "",
+    )
+
     try:
-        raw_rows, pub_date, pub_time = await fetch_latest_zip_and_parse()
+        raw_rows, pub_date, pub_time = await fetch_latest_zip_and_parse(is_critical_hour)
+    except Exception as e:
+        log.exception("Pipeline execution failed (scrape stage -- both tiers exhausted):")
+        send_failure_alert(capture_hour_ct, e)
+        sys.exit(1)
+
+    try:
         log.info("Successfully extracted %d raw records from CSV.", len(raw_rows))
 
         db_rows = build_db_rows(raw_rows, pub_date, pub_time)
         log.info("Normalized rows matching schema: %d records.", len(db_rows))
 
-        if db_rows:
-            inserted = await insert_rows(db_rows)
-            log.info(
-                "Database transaction complete. %d new records committed.", inserted
-            )
-        else:
+        if not db_rows:
             log.warning("No valid forecast lines remained after parsing filters.")
+            return
+
+        # ── Smart-save decision ──────────────────────────────────────────────
+        if capture_hour_ct == 7:
+            save_reason, deviation_pct, should_save = "scheduled_7am", None, True
+        elif capture_hour_ct == 8:
+            save_reason, deviation_pct, should_save = "scheduled_8am", None, True
+        else:
+            baseline = await get_last_saved_totals()
+            max_dev = compute_max_deviation(db_rows, baseline) if baseline else None
+            if baseline is None or max_dev is None:
+                # No prior saved snapshot (or nothing comparable in it) --
+                # can't evaluate deviation without a baseline, so save.
+                save_reason, deviation_pct, should_save = (
+                    "no_baseline_fallback",
+                    None,
+                    True,
+                )
+            elif max_dev >= DEVIATION_THRESHOLD_PCT:
+                save_reason, deviation_pct, should_save = (
+                    "deviation_triggered",
+                    round(max_dev, 2),
+                    True,
+                )
+            else:
+                save_reason, deviation_pct, should_save = None, None, False
+                log.info(
+                    "Deviation %.2f%% below threshold (%.1f%%) -- skipping DB save for this hour.",
+                    max_dev,
+                    DEVIATION_THRESHOLD_PCT,
+                )
+
+        if should_save:
+            inserted = await insert_rows(
+                db_rows, capture_date_ct, capture_hour_ct, save_reason, deviation_pct
+            )
+            log.info(
+                "Database transaction complete. %d new records committed (save_reason=%s).",
+                inserted,
+                save_reason,
+            )
 
     except Exception:
-        log.exception("Pipeline execution failed:")
+        log.exception("Pipeline execution failed (processing/save stage):")
         sys.exit(1)
 
 
