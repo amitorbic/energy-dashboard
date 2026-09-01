@@ -117,6 +117,10 @@ from routers.mtm import router as mtm_router
 
 app.include_router(mtm_router, prefix="/api")
 
+from routers.risk import router as risk_router
+
+app.include_router(risk_router, prefix="/api")
+
 from routers import enrollment
 
 app.include_router(enrollment.router, prefix="/api")

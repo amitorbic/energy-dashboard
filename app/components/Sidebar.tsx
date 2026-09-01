@@ -42,6 +42,7 @@ export const SECTIONS: NavSection[] = [
       { label: "Portfolio", href: "/portfolio" },
       { label: "Position Screen", href: "/portfolio/position" },
       { label: "MTM", href: "/portfolio/mtm" },
+      { label: "Risk", href: "/portfolio/risk" },
     ],
   },
   {
@@ -116,6 +117,12 @@ const ICONS: Record<string, React.ReactNode> = {
   Portfolio: <rect x="1.5" y="5" width="12" height="8" rx="1" />,
   "Position Screen": <path d="M2 12.5h11M4.5 12.5V6M7.5 12.5V3M10.5 12.5V8.5" />,
   MTM: <path d="M1.5 12 5 7l3 3 5.5-6.5M9.5 3.5h4v4" />,
+  Risk: (
+    <>
+      <path d="M7.5 1.5 13 3.5v4c0 3.5-2.3 5.7-5.5 7-3.2-1.3-5.5-3.5-5.5-7v-4z" />
+      <path d="M7.5 5v3.5M7.5 10.8v.2" />
+    </>
+  ),
   Reports: <path d="M2 13V2M2 13h11" />,
   "Enrollment Audit": <path d="M7.5 1.5 13 3.5v4c0 3.5-2.3 5.7-5.5 7-3.2-1.3-5.5-3.5-5.5-7v-4z" />,
   "Billing Audit": <path d="M7.5 1.5 13 3.5v4c0 3.5-2.3 5.7-5.5 7-3.2-1.3-5.5-3.5-5.5-7v-4z" />,
