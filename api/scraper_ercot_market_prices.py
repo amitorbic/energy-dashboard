@@ -263,12 +263,33 @@ def parse_oper_day(val) -> "date | None":
 def parse_interval_ending(val) -> "str | None":
     """RTM's 'Interval Ending' column -- HH:MM (or HH:MM:SS), including
     '24:00' for the day's last interval (ERCOT's own hour-ending convention;
-    MySQL TIME supports values past 23:59:59, so no rollover math needed)."""
-    m = re.match(r"^\s*(\d{1,2}):(\d{2})(?::(\d{2}))?\s*$", str(val))
-    if not m:
+    MySQL TIME supports values past 23:59:59, so no rollover math needed).
+    Also accepts a bare HHMM digit rendering (e.g. "15", "930", "2400"),
+    since pandas.read_html silently casts a pure-digit column to int/float,
+    which drops the colon and any leading zero -- this report's live HTML
+    could not be independently re-verified from this environment (see
+    module docstring), so both shapes are accepted rather than assuming
+    one exact rendering."""
+    s = str(val).strip()
+    if not s or s.lower() == "nan":
         return None
-    hh, mm, ss = int(m.group(1)), int(m.group(2)), int(m.group(3) or 0)
-    return f"{hh:02d}:{mm:02d}:{ss:02d}"
+
+    m = re.match(r"^(\d{1,2}):(\d{2})(?::(\d{2}))?$", s)
+    if m:
+        hh, mm, ss = int(m.group(1)), int(m.group(2)), int(m.group(3) or 0)
+        return f"{hh:02d}:{mm:02d}:{ss:02d}"
+
+    try:
+        digits = str(int(float(s)))
+    except ValueError:
+        return None
+    digits = digits.zfill(4)
+    if len(digits) != 4:
+        return None
+    hh, mm = int(digits[:2]), int(digits[2:])
+    if hh > 24 or mm > 59:
+        return None
+    return f"{hh:02d}:{mm:02d}:00"
 
 
 def parse_hour_ending(val) -> "int | None":
