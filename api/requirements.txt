@@ -11,3 +11,6 @@ reportlab
 python-docx
 python-multipart
 openai
+aiohttp
+pandas
+lxml
