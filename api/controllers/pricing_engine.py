@@ -12,6 +12,16 @@ from fastapi.responses import StreamingResponse
 async def calculate_matrix_for_start_date(
     start_date, terms, db, price_type, prior_day=False
 ):
+    # Callers may pass a month-only string (e.g. "2026-09" from the
+    # start_month quick-action param) rather than a full date. start_date is
+    # spliced directly into raw SQL date comparisons and date.fromisoformat()
+    # below, both of which require a full YYYY-MM-DD -- normalize to the 1st
+    # of the month here so it works regardless of the DB's DATE-literal
+    # strictness (local MariaDB tolerated "2026-09", live MySQL 8 rejects it
+    # with error 1525 "Incorrect DATE value").
+    if len(start_date) == 7:
+        start_date = f"{start_date}-01"
+
     def get_sweetspot_terms(start_date: str) -> list[int]:
         start = date.fromisoformat(start_date)
         sweetspots = []
