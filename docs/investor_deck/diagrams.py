@@ -52,6 +52,22 @@ MUTED2 = (95, 112, 138)
 GREEN = (52, 211, 153)
 YELLOW = (251, 191, 36)
 RED = (248, 113, 113)
+PURPLE = (196, 132, 224)
+
+STATUS_COLOR = {
+    "built": GREEN,
+    "operational": GREEN,
+    "partial": AMBER,
+    "progress": AMBER,
+    "roadmap": MUTED2,
+}
+STATUS_TEXT = {
+    "built": "BUILT",
+    "operational": "OPERATIONAL",
+    "partial": "PARTIALLY BUILT",
+    "progress": "IN PROGRESS",
+    "roadmap": "ROADMAP",
+}
 
 
 def text_centered(draw, xy, text, f, fill, anchor="mm"):
@@ -73,9 +89,9 @@ def arrow(draw, p1, p2, color, width=3, head=10):
 
 
 def status_chip(draw, center, label, status, f):
-    """status: 'built' | 'partial' | 'roadmap'"""
-    color = {"built": GREEN, "partial": AMBER, "roadmap": MUTED2}[status]
-    text = {"built": "BUILT", "partial": "PARTIAL", "roadmap": "ROADMAP"}[status]
+    """status: 'built' | 'operational' | 'partial' | 'progress' | 'roadmap'"""
+    color = STATUS_COLOR[status]
+    text = STATUS_TEXT[status]
     w = f.getlength(text) + 22
     box = (center[0] - w / 2, center[1] - 14, center[0] + w / 2, center[1] + 14)
     rrect(draw, box, 14, outline=color, fill=(color[0] // 6, color[1] // 6, color[2] // 6), width=2)
@@ -89,12 +105,32 @@ def new_canvas(w, h, bg=None):
     return img, ImageDraw.Draw(img)
 
 
-# ── 1. Hero graphic (cover background) ───────────────────────────────────────
+def wrapped(draw, xy, text, f, fill, max_w, anchor_h="m", line_gap=8):
+    """Center-wrap text within max_w, drawing lines centered on xy, returns bottom y."""
+    words = text.split(" ")
+    lines, cur = [], ""
+    for w in words:
+        trial = (cur + " " + w).strip()
+        if f.getlength(trial) <= max_w or not cur:
+            cur = trial
+        else:
+            lines.append(cur)
+            cur = w
+    if cur:
+        lines.append(cur)
+    lh = f.size + line_gap
+    y = xy[1] - (len(lines) - 1) * lh / 2
+    for ln in lines:
+        text_centered(draw, (xy[0], y), ln, f, fill)
+        y += lh
+    return y
+
+
+# ── 1. Hero graphic (cover + closing background) ────────────────────────────
 def hero_graphic():
     W, H = 2400, 1350
     img, d = new_canvas(W, H, BG)
 
-    # radial-ish gradient wash from bottom-right
     grad = Image.new("L", (W, H), 0)
     gd = ImageDraw.Draw(grad)
     cx, cy, maxr = W * 0.82, H * 0.55, int(W * 0.75)
@@ -105,13 +141,11 @@ def hero_graphic():
     img = Image.composite(tint, img, grad)
     d = ImageDraw.Draw(img)
 
-    # faint HUD grid, right two-thirds only
     for gx in range(int(W * 0.30), W, 60):
         d.line([(gx, 0), (gx, H)], fill=(20, 30, 46), width=1)
     for gy in range(0, H, 60):
         d.line([(int(W * 0.30), gy), (W, gy)], fill=(20, 30, 46), width=1)
 
-    # network of glowing nodes converging center-right
     import random
     random.seed(7)
     nodes = []
@@ -138,13 +172,11 @@ def hero_graphic():
         d.ellipse([x - r - 3, y - r - 3, x + r + 3, y + r + 3], fill=tuple(c // 4 for c in glow))
         d.ellipse([x - r, y - r, x + r, y + r], fill=glow)
 
-    # central hub glow
     for r in range(140, 0, -2):
         a = int(90 * (1 - r / 140))
         d.ellipse([cx - r, cy - r, cx + r, cy + r], outline=(34, 211 - r // 6, 238 - r // 6))
     d.ellipse([cx - 10, cy - 10, cx + 10, cy + 10], fill=CYAN)
 
-    # left vignette so title text is legible
     fade = Image.new("L", (W, H), 0)
     fd = ImageDraw.Draw(fade)
     for x in range(0, int(W * 0.62)):
@@ -156,274 +188,477 @@ def hero_graphic():
     img.save(os.path.join(ASSETS, "hero_graphic.png"))
 
 
-# ── 2. Lifecycle ring (slide 3) ──────────────────────────────────────────────
-def lifecycle_ring():
-    W, H = 2000, 1500
-    img, d = new_canvas(W, H, None)
-
-    stages = [
-        "Contract\nConfirmation", "Enrollment &\nMasterRoll", "Activation",
-        "Billing", "Collections", "Portfolio\nForecasting", "Hedging",
-        "Settlement", "Risk\nMonitoring", "AI-Assisted\nOperations",
-    ]
-    cx, cy, R = W / 2, H / 2 + 20, 560
-    n = len(stages)
-    f_lbl = FB(26)
-    f_hub = FB(46)
-    f_hub2 = F(22)
-
-    pts = []
-    for i in range(n):
-        ang = -math.pi / 2 + i * 2 * math.pi / n
-        x = cx + R * math.cos(ang)
-        y = cy + R * math.sin(ang) * 0.82
-        pts.append((x, y, ang))
-
-    # connecting ring arcs with arrowheads (clockwise)
-    for i in range(n):
-        x1, y1, _ = pts[i]
-        x2, y2, _ = pts[(i + 1) % n]
-        mx, my = (x1 + x2) / 2, (y1 + y2) / 2
-        d.line([(x1, y1), (mx, my)], fill=BLUE_DIM, width=4)
-        arrow(d, (mx, my), (x2, y2), BLUE, width=4, head=14)
-
-    # spokes to hub
-    for x, y, _ in pts:
-        d.line([(cx, cy), (x, y)], fill=(*BORDER, 140), width=2)
-
-    # hub
-    for r in range(170, 0, -2):
-        a = int(110 * (1 - r / 170))
-        d.ellipse([cx - r, cy - r, cx + r, cy + r], outline=(*CYAN, a))
-    rrect(d, [cx - 150, cy - 90, cx + 150, cy + 90], 26, fill=(*PANEL, 255), outline=(*CYAN, 255), width=4)
-    text_centered(d, (cx, cy - 18), "ORBIC", f_hub, WHITE)
-    text_centered(d, (cx, cy + 28), "Connected Lifecycle Engine", f_hub2, CYAN)
-
-    # stage nodes
-    box_w, box_h = 300, 130
-    for (x, y, ang), label in zip(pts, stages):
-        box = (x - box_w / 2, y - box_h / 2, x + box_w / 2, y + box_h / 2)
-        rrect(d, box, 20, fill=(*PANEL_LIGHT, 255), outline=(*CYAN, 255), width=3)
-        lines = label.split("\n")
-        ly = y - (len(lines) - 1) * 16
-        for ln in lines:
-            text_centered(d, (x, ly), ln, f_lbl, WHITE)
-            ly += 34
-
-    img.save(os.path.join(ASSETS, "lifecycle_ring.png"))
-
-
-# ── 3. Architecture diagram (slide 5) ────────────────────────────────────────
-def architecture_diagram():
+# ── 2. Four-engine architecture (slide 3) ────────────────────────────────────
+def four_engine_architecture():
     W, H = 2400, 1500
     img, d = new_canvas(W, H, None)
-    f_h = FB(34)
-    f_b = F(22)
-    f_small = F(19)
-    f_tag = FB(20)
+    f_hub = FB(46)
+    f_hub2 = F(24)
+    f_eng = FB(32)
+    f_sub = F(20)
+    f_layer = FB(24)
 
-    def box(x, y, w, h, title, lines, accent=CYAN, tag=None):
-        rrect(d, [x, y, x + w, y + h], 18, fill=(*PANEL, 255), outline=(*accent, 255), width=3)
-        d.rectangle([x, y, x + w, y + 8], fill=accent)
-        text_centered(d, (x + w / 2, y + 42), title, f_h, WHITE)
-        if tag:
-            tw = f_tag.getlength(tag) + 24
-            rrect(d, [x + w - tw - 16, y + 16, x + w - 16, y + 44], 12, outline=accent, width=2)
-            text_centered(d, (x + w - tw / 2 - 16, y + 30), tag, f_tag, accent)
-        ly = y + 82
-        for ln in lines:
-            text_centered(d, (x + w / 2, ly), ln, f_b, MUTED)
-            ly += 32
-        return (x, y, w, h)
+    engines = [
+        ("Sales\nEngine", CYAN),
+        ("Operations\nEngine", BLUE),
+        ("Portfolio\nEngine", AMBER),
+        ("Collections\nEngine", PURPLE),
+    ]
+    n = len(engines)
+    margin = 130
+    gap = 50
+    box_w = (W - 2 * margin - gap * (n - 1)) / n
+    box_h = 260
+    box_y = 470
 
-    # Frontend
-    fb = box(140, 60, 2120, 220, "Frontend — Next.js + TypeScript + Tailwind",
-              ["109 pages across Sales, Operations, Portfolio, Reports, Audit, Customers, Broker, Admin, System",
-               "Sidebar-driven SPA · role-gated Admin section · localStorage JWT session"],
-              accent=CYAN, tag="app/pages")
+    # Hub
+    cx, cy = W / 2, 190
+    rrect(d, [cx - 220, cy - 100, cx + 220, cy + 100], 26, fill=(*PANEL, 255), outline=(*CYAN, 255), width=4)
+    text_centered(d, (cx, cy - 26), "ORBIC", f_hub, WHITE)
+    text_centered(d, (cx, cy + 28), "Intelligence Layer", f_hub2, CYAN)
 
-    arrow(d, (1200, 280), (1200, 350), BLUE, width=5, head=16)
-    text_centered(d, (1350, 315), "REST / JSON", f_small, MUTED2)
+    # Spokes hub -> engines
+    for i in range(n):
+        x = margin + i * (box_w + gap) + box_w / 2
+        arrow(d, (cx, cy + 100), (x, box_y - 8), BLUE_DIM, width=4, head=14)
 
-    # Backend
-    bb = box(140, 350, 2120, 260, "Backend API — FastAPI (async, SQLAlchemy + aiomysql)",
-              ["45 routers · 39 controllers · registered under /api in main.py",
-               "JWT auth middleware (require_auth) · tenant-aware via TenantMiddleware",
-               "Enrollment · Billing · Portfolio · Hedging · DAM · MTM · Risk · Monitoring · Voice"],
-              accent=BLUE, tag="api/routers")
+    # Engine boxes
+    engine_centers = []
+    for i, (label, accent) in enumerate(engines):
+        x = margin + i * (box_w + gap)
+        rrect(d, [x, box_y, x + box_w, box_y + box_h], 22, fill=(*PANEL, 255), outline=(*accent, 255), width=3)
+        d.rectangle([x, box_y, x + box_w, box_y + 8], fill=accent)
+        ty = box_y + 60
+        for ln in label.split("\n"):
+            text_centered(d, (x + box_w / 2, ty), ln, f_eng, WHITE)
+            ty += 40
+        engine_centers.append((x + box_w / 2, box_y + box_h))
 
-    arrow(d, (1200, 610), (1200, 690), AMBER, width=5, head=16)
-    text_centered(d, (1420, 650), "SQLAlchemy / aiomysql", f_small, MUTED2)
+    # Cross-cutting horizontal layers beneath
+    layers = [
+        ("AI OPERATING LAYER", CYAN, "Orbi agent — 12 live tools grounded in production data"),
+        ("AUDIT & CONTROL LAYER", AMBER, "Enrollment / billing / payment audits + nightly monitoring checkpoints"),
+        ("REPORTING & INTELLIGENCE LAYER", MUTED, "PUC/ERCOT/EIA, settlements, cash, accounting, tax, ad-hoc reports"),
+    ]
+    ly = box_y + box_h + 70
+    lh = 150
+    lgap = 30
+    for title, color, sub in layers:
+        rrect(d, [margin, ly, W - margin, ly + lh], 18, outline=(*color, 255), width=3,
+              fill=(color[0] // 10, color[1] // 10, color[2] // 10))
+        text_centered(d, (W / 2, ly + 48), title, f_layer, color)
+        text_centered(d, (W / 2, ly + 92), sub, f_sub, MUTED)
+        for cx2, cy2 in engine_centers:
+            d.line([(cx2, ly - lgap + 4 if ly == box_y + box_h + 70 else ly - 8), (cx2, ly)],
+                   fill=(*BORDER, 160), width=2)
+        ly += lh + lgap
 
-    # Data layer
-    db = box(140, 690, 1480, 260, "Data Layer — MySQL / MariaDB (DB-per-tenant)",
-              ["38 migrations · one database + one app instance per REP tenant",
-               "contract_renewal · billing_periods · hedge_book · mtm_results ·",
-               "risk_scores · forecast_checkpoints · ercot_load_history"],
-              accent=AMBER, tag="api/migrations")
-
-    # ERCOT ingestion pipeline (side column feeding DB)
-    ib = box(1700, 690, 560, 260, "ERCOT Data Ingestion",
-              ["LFC (hourly) · DAM · RTM", "Market Prices · Weather",
-               "Playwright scrapers, PM2-scheduled"],
-              accent=GREEN, tag="scrapers")
-    arrow(d, (1700, 820), (1620, 820), GREEN, width=5, head=16)
-
-    # AI layer connecting to backend
-    ai = box(140, 1010, 1080, 220, "AI Operating Layer — \u201cOrbi\u201d",
-             ["Tool-calling agent (GPT-4o-mini) · 12 live tools",
-              "Calls the same FastAPI endpoints as the UI \u2014 grounded, not standalone"],
-             accent=CYAN, tag="app/pages/agent.tsx")
-    arrow(d, (680, 1010), (680, 950), CYAN, width=5, head=16)
-
-    # Monitoring layer
-    mon = box(1280, 1010, 980, 220, "Monitoring & Self-Healing",
-              ["4 nightly checkpoints \u2192 forecast_checkpoints",
-               "GREEN / YELLOW / RED grading, PM2-scheduled, dashboarded"],
-              accent=AMBER, tag="api/monitoring")
-    arrow(d, (1770, 1010), (1770, 950), AMBER, width=5, head=16)
-
-    img.save(os.path.join(ASSETS, "architecture_diagram.png"))
+    img.save(os.path.join(ASSETS, "four_engine_architecture.png"))
 
 
-# ── 4. Contract & customer lifecycle pipeline (slide 6) ─────────────────────
-def contract_lifecycle():
-    W, H = 2400, 1250
+# ── 3. Complete REP lifecycle (slide 4) ─────────────────────────────────────
+def lifecycle_pipeline():
+    W, H = 2500, 1150
     img, d = new_canvas(W, H, None)
-    f_h = FB(30)
-    f_b = F(20)
-    f_sub = FB(18)
+    f_h = FB(28)
+    f_b = F(18)
+    f_band = FB(22)
 
     stages = [
-        ("Contract\nConfirmation", ["confirmation_log", "rate, term, broker\ncommission captured"], CYAN),
-        ("Enrollment Engine\n& MasterRoll", ["Plan codes \u2192 XLSX", "New / Renewal / Assignment\nB&E / Addition / Multi-Start"], BLUE),
-        ("Activation", ["contract_renewal", "Active-contract guard\nblocks duplicate ERCOT switch"], AMBER),
-        ("Billing", ["EDI 867 / 810 \u2192", "charges \u2192 tax \u2192 invoice"], GREEN),
-        ("Collections", ["Past-due tracking", "delinquency tiers"], (200, 120, 220)),
+        ("Sales\nEngine", CYAN),
+        ("Contract\nConfirmation", BLUE),
+        ("Enrollment\nEngine", AMBER),
+        ("Billing\nEngine", GREEN),
+        ("Portfolio\nEngine", PURPLE),
+        ("Collections", (230, 140, 140)),
     ]
     n = len(stages)
-    margin = 90
-    gap = 40
+    margin = 80
+    gap = 34
     box_w = (W - 2 * margin - gap * (n - 1)) / n
-    box_h = 420
-    y = 130
+    box_h = 260
+    y = 260
 
-    for i, (title, lines, accent) in enumerate(stages):
+    for i, (title, accent) in enumerate(stages):
         x = margin + i * (box_w + gap)
         rrect(d, [x, y, x + box_w, y + box_h], 20, fill=(*PANEL, 255), outline=(*accent, 255), width=3)
         d.rectangle([x, y, x + box_w, y + 8], fill=accent)
-        ty = y + 50
+        ty = y + box_h / 2 - 20
         for ln in title.split("\n"):
             text_centered(d, (x + box_w / 2, ty), ln, f_h, WHITE)
-            ty += 36
-        ty += 14
-        for block in lines:
-            for ln in block.split("\n"):
-                text_centered(d, (x + box_w / 2, ty), ln, f_b, MUTED)
-                ty += 28
-            ty += 10
+            ty += 34
         if i < n - 1:
             arrow(d, (x + box_w + 4, y + box_h / 2), (x + box_w + gap - 4, y + box_h / 2), CYAN, width=5, head=16)
 
-    # ERCOT 814 branch under Enrollment
-    ex, ey = margin + 1 * (box_w + gap), y + box_h + 40
-    rrect(d, [ex, ey, ex + box_w, ey + 90], 16, outline=AMBER, width=2)
-    text_centered(d, (ex + box_w / 2, ey + 45), "ERCOT 814 switch\n(New / Addition / MVI)", f_sub, AMBER)
-    arrow(d, (ex + box_w / 2, y + box_h), (ex + box_w / 2, ey), AMBER, width=3, head=12)
+    # Cross-cutting band above
+    band_y = 90
+    rrect(d, [margin, band_y, W - margin, band_y + 120], 18, outline=(*MUTED, 255), width=2,
+          fill=(MUTED[0] // 12, MUTED[1] // 12, MUTED[2] // 12))
+    text_centered(d, (W / 2, band_y + 40), "AI  ·  AUDIT  ·  REPORTING  ·  AUTOMATION", f_band, WHITE)
+    text_centered(d, (W / 2, band_y + 78), "operating continuously across every stage of the lifecycle", f_b, MUTED)
+    for i in range(n):
+        x = margin + i * (box_w + gap) + box_w / 2
+        d.line([(x, band_y + 120), (x, y - 6)], fill=(*BORDER, 180), width=2)
 
-    text_centered(d, (W / 2, 60), "Every step writes to contract_renewal \u2014 a new row every time, never an update", FB(24), MUTED2)
+    text_centered(d, (W / 2, H - 40), "Every stage writes to the same underlying data model — a single source of truth end to end", F(20), MUTED2)
 
-    img.save(os.path.join(ASSETS, "contract_lifecycle.png"))
+    img.save(os.path.join(ASSETS, "lifecycle_pipeline.png"))
 
 
-# ── 5. Forecast layer cake + monitoring (slide 9) ───────────────────────────
-def forecast_layers():
-    W, H = 2300, 1500
+# ── 4. Portfolio & risk engine (slide 7) ────────────────────────────────────
+def portfolio_risk_diagram():
+    W, H = 2500, 1500
     img, d = new_canvas(W, H, None)
-    f_h = FB(28)
-    f_b = F(20)
-    f_tag = FB(18)
+    f_h = FB(27)
+    f_b = F(18)
+    f_col = FB(30)
+    f_tag = FB(17)
 
-    layers = [
-        ("Layer 4 \u2014 7-Day ERCOT LFC Override", "ercot_lfc_history, refreshed hourly \u00b7 wired live into get_forecast_data()", "built"),
-        ("Layer 3 \u2014 Seasonal Adjustment", "El Ni\u00f1o / La Ni\u00f1a via NOAA seasonal outlook", "roadmap"),
-        ("Layer 2 \u2014 Growth Factors", "ERCOT-projected growth, 2025 base year \u2192 20-year horizon", "built"),
-        ("Layer 1 \u2014 DNA Baseline", "12-yr typical-year shape from ercot_load_history (2015\u20132026)", "built"),
-    ]
-    x0, x1 = 140, W - 140
-    y = 120
-    lh = 190
-    gap = 22
+    col_w = (W - 4 * 70) / 3
+    col_gap = 70
+    col_y = 130
+    col_h = 1180
 
-    for title, sub, status in layers:
-        color = GREEN if status == "built" else MUTED2
-        rrect(d, [x0, y, x1, y + lh], 18, fill=(*PANEL, 255), outline=(*color, 255), width=3)
-        d.rectangle([x0, y, x0 + 10, y + lh], fill=color)
-        text_centered(d, (x0 + 40 + f_h.getlength(title) / 2, y + 55), title, f_h, WHITE, anchor="mm")
-        text_centered(d, (x0 + 40 + f_b.getlength(sub) / 2, y + 100), sub, f_b, MUTED, anchor="mm")
-        status_chip(d, (x1 - 150, y + lh / 2), "", status, f_tag)
-        y += lh + gap
+    def col_header(x, title, accent):
+        rrect(d, [x, col_y, x + col_w, col_y + col_h], 22, outline=(*accent, 255), width=3,
+              fill=(*PANEL, 255))
+        d.rectangle([x, col_y, x + col_w, col_y + 8], fill=accent)
+        text_centered(d, (x + col_w / 2, col_y + 46), title, f_col, accent)
 
-    y += 20
-    d.line([(x0, y), (x1, y)], fill=BORDER, width=2)
-    y += 50
-    text_centered(d, (W / 2, y), "Nightly Self-Healing Monitoring \u2014 forecast_checkpoints", FB(26), CYAN)
-    y += 60
+    def item(x, y, w, label, status):
+        h = 118
+        color = STATUS_COLOR[status]
+        rrect(d, [x, y, x + w, y + h], 14, fill=(*PANEL_LIGHT, 255), outline=(*color, 200), width=2)
+        wrapped(d, (x + w / 2, y + 38), label, f_h, WHITE, w - 40, line_gap=6)
+        status_chip(d, (x + w / 2, y + h - 22), "", status, f_tag)
+        return y + h + 20
 
-    checks = [
-        "7-Day Mirror Test\n(\u2264 5% GREEN)",
-        "Historical Backtest\n(blind 7-day test)",
-        "Energy Balance Sanity\n(growth-rate bounds)",
-        "Portfolio Ratio Check\n(vs. baseline share)",
-    ]
-    cw = (x1 - x0 - 3 * 30) / 4
-    for i, c in enumerate(checks):
-        cx = x0 + i * (cw + 30)
-        rrect(d, [cx, y, cx + cw, y + 150], 16, fill=(*PANEL_LIGHT, 255), outline=(*GREEN, 255), width=2)
-        ty = y + 55
-        for ln in c.split("\n"):
-            text_centered(d, (cx + cw / 2, ty), ln, F(19), WHITE)
-            ty += 28
-        d.ellipse([cx + cw / 2 - 8, y + 118, cx + cw / 2 + 8, y + 134], fill=GREEN)
+    x1 = 40
+    col_header(x1, "FORECAST STACK", CYAN)
+    y = col_y + 90
+    pad = 24
+    y = item(x1 + pad, y, col_w - 2 * pad, "Layer 1 — DNA Baseline (12-yr ERCOT history)", "built")
+    y = item(x1 + pad, y, col_w - 2 * pad, "Layer 2 — ERCOT Growth Factors", "built")
+    y = item(x1 + pad, y, col_w - 2 * pad, "Layer 3 — Seasonal NOAA Adjustment", "roadmap")
+    y = item(x1 + pad, y, col_w - 2 * pad, "Layer 4 — 7-Day LFC Override (live in Position Screen)", "built")
+    y = item(x1 + pad, y, col_w - 2 * pad, "ERCOT Shape Forecast / DNA Forecast toggle", "built")
 
-    img.save(os.path.join(ASSETS, "forecast_layers.png"))
+    x2 = x1 + col_w + col_gap
+    col_header(x2, "TRADING & EXPOSURE", AMBER)
+    y = col_y + 90
+    y = item(x2 + pad, y, col_w - 2 * pad, "Position Screen — load vs. hedged supply", "built")
+    y = item(x2 + pad, y, col_w - 2 * pad, "Hedge Book — CRUD, zone / instrument filtering", "built")
+    y = item(x2 + pad, y, col_w - 2 * pad, "DAM Purchases — manual entry + XLSX upload", "built")
+    y = item(x2 + pad, y, col_w - 2 * pad, "Manual Mark-to-Market (MTM) by zone / deal", "built")
+    y = item(x2 + pad, y, col_w - 2 * pad, "Live MTM market-price feeds (CME / ICE / Bloomberg)", "roadmap")
+
+    x3 = x2 + col_w + col_gap
+    col_header(x3, "RISK & MONITORING", PURPLE)
+    y = col_y + 90
+    y = item(x3 + pad, y, col_w - 2 * pad, "Risk Dashboard — Position 40% / Price 25% / Customer 20% / Weather 15%", "built")
+    y = item(x3 + pad, y, col_w - 2 * pad, "4 Nightly Checkpoints — Mirror Test, Backtest, Energy Balance, Portfolio Ratio", "built")
+    y = item(x3 + pad, y, col_w - 2 * pad, "Black-swan / anomaly detection", "roadmap")
+
+    img.save(os.path.join(ASSETS, "portfolio_risk_diagram.png"))
 
 
-# ── 6. Risk composite diagram (slide 7) ─────────────────────────────────────
-def risk_composite():
-    W, H = 1500, 1500
+# ── 4b. ERCOT price forecasting pipeline (slide 8) ──────────────────────────
+def price_forecasting_diagram():
+    W, H = 2500, 1350
     img, d = new_canvas(W, H, None)
-    cx, cy, R, r_in = W / 2, H / 2 - 40, 470, 300
+    f_h = FB(23)
+    f_b = F(17)
+    f_tag = FB(16)
+    f_model = FB(29)
 
-    comps = [
-        ("Position", 40, CYAN),
-        ("Price (MTM)", 25, BLUE),
-        ("Customer", 20, AMBER),
-        ("Weather", 15, (200, 120, 220)),
+    inputs = [
+        ("Net Load Forecast", "Load minus wind/solar — existing 4-layer forecast stack", "built"),
+        ("Historical DAM / RTM Prices", "ERCOT settlement price history, scraped directly", "built"),
+        ("8-Zone Weather Forecast", "ERCOT + Open-Meteo, scraped weekly", "built"),
+        ("ERCOT Bid/Offer Stack", "Public offer-curve data — planned input", "roadmap"),
     ]
-    start = -90
-    for label, pct, color in comps:
-        extent = 360 * pct / 100
-        d.pieslice([cx - R, cy - R, cx + R, cy + R], start, start + extent, fill=color)
-        mid = math.radians(start + extent / 2)
-        lx = cx + (R + 70) * math.cos(mid)
-        ly = cy + (R + 70) * math.sin(mid)
-        text_centered(d, (lx, ly - 14), label, FB(26), WHITE)
-        text_centered(d, (lx, ly + 20), f"{pct}%", F(22), MUTED)
-        start += extent
+    ix, iw = 90, 620
+    ih, igap = 250, 40
+    iy0 = 130
 
-    d.ellipse([cx - r_in, cy - r_in, cx + r_in, cy + r_in], fill=BG)
-    d.ellipse([cx - r_in, cy - r_in, cx + r_in, cy + r_in], outline=CYAN, width=3)
-    text_centered(d, (cx, cy - 26), "Daily Composite", FB(30), WHITE)
-    text_centered(d, (cx, cy + 16), "Risk Score", FB(30), WHITE)
-    text_centered(d, (cx, cy + 58), "risk_scores table", F(20), MUTED2)
+    mx, mw = ix + iw + 160, 620
+    mh = 1090
+    my = (H - mh) // 2
 
-    text_centered(d, (W / 2, H - 60), "Weighted GREEN / YELLOW / RED grade, recalculated and persisted daily", F(22), MUTED)
+    ox, ow = mx + mw + 160, 480
+    oh = 420
+    oy = (H - oh) // 2
 
-    img.save(os.path.join(ASSETS, "risk_composite.png"))
+    for i, (t, sub, status) in enumerate(inputs):
+        y = iy0 + i * (ih + igap)
+        color = STATUS_COLOR[status]
+        rrect(d, [ix, y, ix + iw, y + ih], 18, fill=(*PANEL, 255), outline=(*color, 220), width=2)
+        wrapped(d, (ix + iw / 2, y + 68), t, f_h, WHITE, iw - 60, line_gap=6)
+        wrapped(d, (ix + iw / 2, y + 138), sub, f_b, MUTED, iw - 70, line_gap=6)
+        status_chip(d, (ix + iw / 2, y + ih - 32), "", status, f_tag)
+        arrow(d, (ix + iw + 6, y + ih / 2), (mx - 6, my + mh / 2), BLUE, width=2, head=10)
+
+    rrect(d, [mx, my, mx + mw, my + mh], 22, fill=(*PANEL, 255), outline=(*AMBER, 255), width=3)
+    text_centered(d, (mx + mw / 2, my + mh / 2 - 70), "Gradient-Boosted", f_model, WHITE)
+    text_centered(d, (mx + mw / 2, my + mh / 2 - 32), "Quantile Regression", f_model, WHITE)
+    wrapped(d, (mx + mw / 2, my + mh / 2 + 34),
+            "Predicts a full price distribution, not a single point estimate — ERCOT prices are "
+            "heavy-tailed and spike risk matters more than the average", f_b, MUTED, mw - 90, line_gap=8)
+    status_chip(d, (mx + mw / 2, my + mh - 40), "", "roadmap", f_tag)
+
+    arrow(d, (mx + mw + 6, my + mh / 2), (ox - 6, oy + oh / 2), AMBER, width=3, head=13)
+
+    rrect(d, [ox, oy, ox + ow, oy + oh], 20, fill=(*PANEL, 255), outline=(*CYAN, 255), width=3)
+    wrapped(d, (ox + ow / 2, oy + oh / 2 - 40), "DAM Price Distribution Forecast", f_h, WHITE, ow - 60, line_gap=6)
+    wrapped(d, (ox + ow / 2, oy + oh / 2 + 24),
+            "P10 / P50 / P90 + spike probability, feeding the hedge ratio engine", f_b, MUTED, ow - 70, line_gap=6)
+    status_chip(d, (ox + ow / 2, oy + oh - 34), "", "roadmap", f_tag)
+
+    text_centered(d, (W / 2, 55),
+                  "Existing load and weather forecasting infrastructure feeds a new DAM price-distribution model",
+                  F(20), MUTED2)
+
+    img.save(os.path.join(ASSETS, "price_forecasting_diagram.png"))
 
 
-# ── 7. AI agent diagram (slide 8) ───────────────────────────────────────────
+# ── 4c. DAM/RTM hedging framework (slide 9) ─────────────────────────────────
+def hedging_framework_diagram():
+    W, H = 2500, 1150
+    img, d = new_canvas(W, H, None)
+    f_h = FB(23)
+    f_b = F(17)
+    f_tag = FB(16)
+    f_out = FB(22)
+
+    steps = [
+        ("Forecast Inputs", "Net load, price distribution,\nand weather (existing engines)", "built"),
+        ("Spread Forecast +\nRTM Spike-Risk Score", "New analytics layered on the\nDAM price forecast", "roadmap"),
+        ("Hedge Ratio Engine", "Risk gate overrides any\nspread signal in high-risk hours", "roadmap"),
+    ]
+    n = len(steps)
+    margin = 140
+    gap = 70
+    box_w = (W - 2 * margin - gap * (n - 1)) / n
+    box_h = 310
+    y0 = 130
+
+    for i, (t, sub, status) in enumerate(steps):
+        x = margin + i * (box_w + gap)
+        color = STATUS_COLOR[status]
+        rrect(d, [x, y0, x + box_w, y0 + box_h], 20, fill=(*PANEL, 255), outline=(*color, 255), width=3)
+        ty = y0 + 58
+        for ln in t.split("\n"):
+            text_centered(d, (x + box_w / 2, ty), ln, f_h, WHITE)
+            ty += 32
+        ty += 12
+        for ln in sub.split("\n"):
+            text_centered(d, (x + box_w / 2, ty), ln, f_b, MUTED)
+            ty += 24
+        status_chip(d, (x + box_w / 2, y0 + box_h - 34), "", status, f_tag)
+        if i < n - 1:
+            arrow(d, (x + box_w + 6, y0 + box_h / 2), (x + box_w + gap - 6, y0 + box_h / 2), CYAN, width=4, head=14)
+
+    last_cx = margin + (n - 1) * (box_w + gap) + box_w / 2
+    branch_y = y0 + box_h
+    branch_mid = branch_y + 80
+
+    out_w, out_h = 750, 380
+    out_y = branch_mid + 40
+    left_cx = W / 2 - 40 - out_w / 2
+    right_cx = W / 2 + 40 + out_w / 2
+    left_x, right_x = left_cx - out_w / 2, right_cx - out_w / 2
+
+    d.line([(last_cx, branch_y + 6), (last_cx, branch_mid)], fill=AMBER, width=4)
+    d.line([(left_cx, branch_mid), (right_cx, branch_mid)], fill=AMBER, width=4)
+    arrow(d, (left_cx, branch_mid), (left_cx, out_y - 6), AMBER, width=4, head=14)
+    arrow(d, (right_cx, branch_mid), (right_cx, out_y - 6), AMBER, width=4, head=14)
+
+    # High-risk hours -> absolute rule, RTM is never left short
+    rrect(d, [left_x, out_y, left_x + out_w, out_y + out_h], 20,
+          fill=(RED[0] // 8, RED[1] // 8, RED[2] // 8), outline=(*RED, 255), width=3)
+    text_centered(d, (left_cx, out_y + 50), "High-Risk Hours", f_out, RED)
+    wrapped(d, (left_cx, out_y + 108), "Hedge at or above 100% of forecasted load", f_h, WHITE, out_w - 80, line_gap=8)
+    wrapped(d, (left_cx, out_y + 190),
+            "Absolute rule: RTM is never left short, regardless of any spread signal — RTM risk is "
+            "asymmetric and uncapped", f_b, MUTED, out_w - 90, line_gap=8)
+    wrapped(d, (left_cx, out_y + out_h - 40),
+            "Reference: Winter Storm Uri, February 2021", f_b, RED, out_w - 90, line_gap=8)
+
+    # Low-risk hours -> reduced hedge, capture spread
+    rrect(d, [right_x, out_y, right_x + out_w, out_y + out_h], 20,
+          fill=(*PANEL, 255), outline=(*GREEN, 255), width=3)
+    text_centered(d, (right_cx, out_y + 50), "Low-Risk Hours Only", f_out, GREEN)
+    wrapped(d, (right_cx, out_y + 108), "Reduced hedge ratio, captures the historical DAM-RTM spread", f_h, WHITE, out_w - 80, line_gap=8)
+    wrapped(d, (right_cx, out_y + 190),
+            "Gated by low net-load volatility and low spike probability — a risk-managed exception, "
+            "not a standalone strategy", f_b, MUTED, out_w - 90, line_gap=8)
+    status_chip(d, (right_cx, out_y + out_h - 34), "", "roadmap", f_tag)
+
+    text_centered(d, (W / 2, 55),
+                  "REPs procure ~100% of forecasted load in DAM — this framework governs only the residual RTM exposure",
+                  F(20), MUTED2)
+
+    img.save(os.path.join(ASSETS, "hedging_framework_diagram.png"))
+
+
+# ── 5. Shadow settlements workflow (slide 11) ───────────────────────────────
+def shadow_settlements_diagram():
+    W, H = 2400, 900
+    img, d = new_canvas(W, H, None)
+    f_h = FB(25)
+    f_b = F(18)
+    f_tag = FB(17)
+
+    steps = [
+        ("1", "Estimate REP\nSettlement Bill", "From monthly usage, pricing,\nand billing data", "progress"),
+        ("2", "Compare to Actual\nERCOT Settlement", "Against ERCOT DAM / RTM / AS\nsettlement data feeds", "roadmap"),
+        ("3", "Reconcile\nDifferences", "Identify and explain\nvariances line by line", "roadmap"),
+        ("4", "Two-Way\nAudit", "Cross-check REP records\nagainst ERCOT records", "roadmap"),
+    ]
+    n = len(steps)
+    margin = 100
+    gap = 60
+    box_w = (W - 2 * margin - gap * (n - 1)) / n
+    box_h = 420
+    y = 220
+
+    for i, (num, title, sub, status) in enumerate(steps):
+        x = margin + i * (box_w + gap)
+        color = STATUS_COLOR[status]
+        rrect(d, [x, y, x + box_w, y + box_h], 20, fill=(*PANEL, 255), outline=(*color, 255), width=3)
+        text_centered(d, (x + box_w / 2, y + 55), num, FB(50), color)
+        ty = y + 130
+        for ln in title.split("\n"):
+            text_centered(d, (x + box_w / 2, ty), ln, f_h, WHITE)
+            ty += 34
+        ty += 16
+        for ln in sub.split("\n"):
+            text_centered(d, (x + box_w / 2, ty), ln, f_b, MUTED)
+            ty += 26
+        status_chip(d, (x + box_w / 2, y + box_h - 40), "", status, f_tag)
+        if i < n - 1:
+            arrow(d, (x + box_w + 6, y + box_h / 2), (x + box_w + gap - 6, y + box_h / 2), CYAN, width=5, head=16)
+
+    text_centered(d, (W / 2, 90),
+                  "Foundation already in place: ERCOT settlement data ingestion (RTM Initial / Final / True-Up) feeds the Position Screen today",
+                  F(20), MUTED2)
+
+    img.save(os.path.join(ASSETS, "shadow_settlements_diagram.png"))
+
+
+# ── 6. Collections engine lifecycle (slide 9) ───────────────────────────────
+def collections_lifecycle_diagram():
+    W, H = 2500, 1000
+    img, d = new_canvas(W, H, None)
+    f_h = FB(22)
+    f_b = F(16)
+    f_tag = FB(16)
+
+    stages = [
+        ("Initial\nDelinquency", "Auto-scored, 4-tier\n(collections_accounts)", "built"),
+        ("Payment\nFollow-Up", "Reminder / email\noutreach stages", "partial"),
+        ("DNP", "PUC 10-day notice +\nhuman-gated execution", "built"),
+        ("MVO", "Move-out stage\ntracked on account", "partial"),
+        ("Legal\nEscalation", "Demand letter + legal\nstage tracking", "partial"),
+        ("Collections\nAgent", "Autonomous LLM\naction proposals", "roadmap"),
+    ]
+    n = len(stages)
+    margin = 70
+    gap = 34
+    box_w = (W - 2 * margin - gap * (n - 1)) / n
+    box_h = 330
+    y = 260
+
+    for i, (title, sub, status) in enumerate(stages):
+        x = margin + i * (box_w + gap)
+        color = STATUS_COLOR[status]
+        rrect(d, [x, y, x + box_w, y + box_h], 18, fill=(*PANEL, 255), outline=(*color, 255), width=3)
+        ty = y + 46
+        for ln in title.split("\n"):
+            text_centered(d, (x + box_w / 2, ty), ln, f_h, WHITE)
+            ty += 30
+        ty += 14
+        for ln in sub.split("\n"):
+            text_centered(d, (x + box_w / 2, ty), ln, f_b, MUTED)
+            ty += 24
+        status_chip(d, (x + box_w / 2, y + box_h - 34), "", status, f_tag)
+        if i < n - 1:
+            arrow(d, (x + box_w + 4, y + box_h / 2), (x + box_w + gap - 4, y + box_h / 2), CYAN, width=4, head=13)
+
+    rrect(d, [margin, 90, W - margin, 190], 16, outline=(*AMBER, 255), width=2,
+          fill=(AMBER[0] // 10, AMBER[1] // 10, AMBER[2] // 10))
+    text_centered(d, (W / 2, 140), "Every irreversible action (DNP execution, legal filing) routes through a human approval queue — PUC-rule compliant by design", F(19), AMBER)
+
+    img.save(os.path.join(ASSETS, "collections_lifecycle_diagram.png"))
+
+
+# ── 7. Operational email assistant pipeline (slide 11) ──────────────────────
+def email_pipeline_diagram():
+    W, H = 2400, 1250
+    img, d = new_canvas(W, H, None)
+    f_h = FB(26)
+    f_b = F(18)
+    f_tag = FB(17)
+
+    # Incoming emails box
+    ix, iy, iw, ih = 90, 470, 340, 220
+    rrect(d, [ix, iy, ix + iw, iy + ih], 20, fill=(*PANEL, 255), outline=(*CYAN, 255), width=3)
+    text_centered(d, (ix + iw / 2, iy + ih / 2 - 18), "Emails\nIncoming", f_h, WHITE)
+    status_chip(d, (ix + iw / 2, iy + ih - 30), "", "roadmap", f_tag)
+
+    # Classification / routing
+    cx1, cy1, cw1, ch1 = ix + iw + 100, 470, 380, 220
+    rrect(d, [cx1, cy1, cx1 + cw1, cy1 + ch1], 20, fill=(*PANEL, 255), outline=(*BLUE, 255), width=3)
+    wrapped(d, (cx1 + cw1 / 2, cy1 + ch1 / 2 - 30), "Classification & Routing", f_h, WHITE, cw1 - 40)
+    text_centered(d, (cx1 + cw1 / 2, cy1 + ch1 / 2 + 22), "Operations triages by category", f_b, MUTED)
+    arrow(d, (ix + iw + 6, iy + ih / 2), (cx1 - 6, cy1 + ch1 / 2), CYAN, width=4, head=14)
+
+    # Agent boxes
+    agents = ["Billing\nAgent", "Payments\nAgent", "Enrollment\nAgent", "Collections\nAgent", "Other\nOps"]
+    ax0 = cx1 + cw1 + 110
+    aw, ah = 300, 130
+    agap = 26
+    ay0 = 240
+    for i, a in enumerate(agents):
+        ay = ay0 + i * (ah + agap)
+        rrect(d, [ax0, ay, ax0 + aw, ay + ah], 16, fill=(*PANEL_LIGHT, 255), outline=(*AMBER, 255), width=2)
+        ty = ay + ah / 2 - 14
+        for ln in a.split("\n"):
+            text_centered(d, (ax0 + aw / 2, ty), ln, F(20), WHITE)
+            ty += 26
+        arrow(d, (cx1 + cw1 + 6, cy1 + ch1 / 2), (ax0 - 6, ay + ah / 2), BLUE, width=2, head=10)
+
+    # Research / draft box
+    rx, ry, rw, rh = ax0 + aw + 110, 470, 380, 220
+    rrect(d, [rx, ry, rx + rw, ry + rh], 20, fill=(*PANEL, 255), outline=(*GREEN, 255), width=3)
+    wrapped(d, (rx + rw / 2, ry + rh / 2 - 30), "Agent researches & drafts a reply", f_h, WHITE, rw - 40)
+    text_centered(d, (rx + rw / 2, ry + rh / 2 + 22), "sends reply if answer is confident", f_b, MUTED)
+    for i in range(len(agents)):
+        ay = ay0 + i * (ah + agap) + ah / 2
+        arrow(d, (ax0 + aw + 6, ay), (rx - 6, ry + rh / 2), AMBER, width=2, head=10)
+
+    # Human intervention branch
+    hx, hy, hw, hh = rx, ry + rh + 90, rw, 150
+    rrect(d, [hx, hy, hx + hw, hy + hh], 18, outline=(*RED, 255), width=2,
+          fill=(RED[0] // 10, RED[1] // 10, RED[2] // 10))
+    wrapped(d, (hx + hw / 2, hy + hh / 2), "Human intervention when the agent's answer isn't reliable", f_b, RED, hw - 50)
+    arrow(d, (rx + rw / 2, ry + rh + 6), (hx + hw / 2, hy - 6), RED, width=3, head=12)
+
+    # Reply to customer
+    ox, oy, ow, oh = rx + rw + 100, 470, 340, 220
+    rrect(d, [ox, oy, ox + ow, oy + oh], 20, fill=(*PANEL, 255), outline=(*CYAN, 255), width=3)
+    wrapped(d, (ox + ow / 2, oy + oh / 2 - 10), "Operations sends reply to customer", f_h, WHITE, ow - 40)
+    arrow(d, (rx + rw + 6, ry + rh / 2), (ox - 6, oy + oh / 2), GREEN, width=4, head=14)
+
+    text_centered(d, (W / 2, 100),
+                  "Customer service email pipeline — retrieval + drafting core built as a standalone tool; not yet integrated into ORBIC", FB(24), MUTED2)
+    text_centered(d, (W / 2, H - 60),
+                  "Box shapes are a structural reference — the real pipeline drafts replies via local retrieval over historical email, gated by a confidence check", F(19), MUTED2)
+
+    img.save(os.path.join(ASSETS, "email_pipeline_diagram.png"))
+
+
+# ── 8. AI agent diagram (slide 10) ──────────────────────────────────────────
 def ai_agent_diagram():
     W, H = 2300, 1300
     img, d = new_canvas(W, H, None)
@@ -480,11 +715,14 @@ def ai_agent_diagram():
 
 def main():
     hero_graphic()
-    lifecycle_ring()
-    architecture_diagram()
-    contract_lifecycle()
-    forecast_layers()
-    risk_composite()
+    four_engine_architecture()
+    lifecycle_pipeline()
+    portfolio_risk_diagram()
+    price_forecasting_diagram()
+    hedging_framework_diagram()
+    shadow_settlements_diagram()
+    collections_lifecycle_diagram()
+    email_pipeline_diagram()
     ai_agent_diagram()
     print("Diagrams written to", ASSETS)
 

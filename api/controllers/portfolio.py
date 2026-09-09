@@ -249,7 +249,7 @@ async def get_portfolio_forecast(
     Pull forecast patterns for active portfolio zones
     Returns expected load by zone/month based on historical patterns
     """
-    zone_filter = "AND zone = :zone" if zone else ""
+    zone_filter = "AND CONVERT(zone USING utf8mb4) = :zone" if zone else ""
     params = {}
     if zone:
         params["zone"] = zone
@@ -269,8 +269,30 @@ async def get_portfolio_forecast(
     if not active_zones:
         return {"forecast": [], "method": method}
 
-    # Pull patterns for these zones
-    zone_list = "','".join(active_zones)
+    # portfolio_view.zone is a coarse grouping (see its CASE expression):
+    #   NCENT, NORTH, EAST  -> NORTH
+    #   SCENT, SOUTH        -> SOUTH
+    #   FWEST, WEST         -> WEST
+    #   COAST               -> COAST
+    # ercot_load_patterns.zone stores the finer weather zones on the left,
+    # so each portfolio zone must expand to every weather zone that rolls
+    # into it, or e.g. NORTH silently drops its EAST + NCENT customers.
+    LOAD_ZONE_WEATHER_ZONES = {
+        "COAST": ["COAST"],
+        "NORTH": ["NCENT", "NORTH", "EAST"],
+        "SOUTH": ["SCENT", "SOUTH"],
+        "WEST": ["FWEST", "WEST"],
+    }
+    weather_to_portfolio_zone = {
+        wz: lz for lz, wzs in LOAD_ZONE_WEATHER_ZONES.items() for wz in wzs
+    }
+    weather_zones = sorted({
+        wz
+        for lz in active_zones
+        for wz in LOAD_ZONE_WEATHER_ZONES.get(lz, [lz])
+    })
+
+    zone_list = "','".join(weather_zones)
     pattern_result = await db.execute(text(f"""
         SELECT
             zone,
@@ -293,33 +315,58 @@ async def get_portfolio_forecast(
 
     patterns = [dict(row) for row in pattern_result.mappings()]
 
-    # Monthly summary — avg peak hour per zone per month
-    monthly_summary = {}
+    # Step 1: average each weather zone's own weekday pattern rows down to
+    # one (weather_zone, month, hour) figure (each row is already an avg
+    # for one weekday e.g. "Mon" — average Mon..Fri together here).
+    wz_hour_acc: dict[tuple, dict] = {}
     for p in patterns:
-        key = f"{p['zone']}_{p['month_num']}"
+        k = (p["zone"], p["month_num"], p["hour_ending"])
+        acc = wz_hour_acc.setdefault(k, {"avg_sum": 0.0, "p90_sum": 0.0, "n": 0})
+        acc["avg_sum"] += float(p["avg_mw"] or 0)
+        acc["p90_sum"] += float(p["p90_mw"] or 0)
+        acc["n"] += 1
+
+    # Step 2: MW is additive, so combine the weather zones that roll into
+    # each portfolio zone by SUMMING their per-hour figures (not averaging —
+    # NORTH's true load is EAST + NCENT + NORTH combined, not their average).
+    lz_hour: dict[tuple, dict] = {}
+    for (wz, month, hour), acc in wz_hour_acc.items():
+        portfolio_zone = weather_to_portfolio_zone.get(wz, wz)
+        k = (portfolio_zone, month, hour)
+        combined = lz_hour.setdefault(k, {"avg": 0.0, "p90": 0.0})
+        combined["avg"] += acc["avg_sum"] / acc["n"]
+        combined["p90"] += acc["p90_sum"] / acc["n"]
+
+    # Step 3: average across peak hours (HE07-22) and offpeak hours
+    # separately to get one figure per portfolio zone per month.
+    monthly_summary = {}
+    for (portfolio_zone, month, hour), vals in lz_hour.items():
+        key = f"{portfolio_zone}_{month}"
         if key not in monthly_summary:
             monthly_summary[key] = {
-                "zone": p["zone"],
-                "month": p["month_num"],
-                "peak_avg_mw": 0,
-                "offpeak_avg": 0,
-                "p90_mw": 0,
+                "zone": portfolio_zone,
+                "month": month,
+                "peak_avg_mw": 0.0,
+                "offpeak_avg": 0.0,
+                "p90_mw": 0.0,
                 "count": 0,
+                "offpeak_count": 0,
             }
-        # Peak hours HE07-HE22
-        if 7 <= p["hour_ending"] <= 22:
-            monthly_summary[key]["peak_avg_mw"] += float(p["avg_mw"] or 0)
-            monthly_summary[key]["p90_mw"] += float(p["p90_mw"] or 0)
+        if 7 <= hour <= 22:
+            monthly_summary[key]["peak_avg_mw"] += vals["avg"]
+            monthly_summary[key]["p90_mw"] += vals["p90"]
             monthly_summary[key]["count"] += 1
         else:
-            monthly_summary[key]["offpeak_avg"] += float(p["avg_mw"] or 0)
+            monthly_summary[key]["offpeak_avg"] += vals["avg"]
+            monthly_summary[key]["offpeak_count"] += 1
 
-    # Average across hours
     for key, v in monthly_summary.items():
         if v["count"] > 0:
             v["peak_avg_mw"] = round(v["peak_avg_mw"] / v["count"], 2)
             v["p90_mw"] = round(v["p90_mw"] / v["count"], 2)
-            v["offpeak_avg"] = round(v["offpeak_avg"] / max(8, 1), 2)
+        if v["offpeak_count"] > 0:
+            v["offpeak_avg"] = round(v["offpeak_avg"] / v["offpeak_count"], 2)
+        del v["offpeak_count"]
 
     return {
         "method": method,

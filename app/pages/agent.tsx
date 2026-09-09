@@ -37,6 +37,9 @@ const QUICK_ACTIONS = [
       { label: "Monthly open position", query: "What is our current monthly open position?" },
       { label: "ERCOT shape forecast", query: "Get the ERCOT composite load forecast" },
       { label: "Position by zone", query: "Show the open position broken down by ERCOT zone" },
+      { label: "ERCOT 7 day forecast", query: "Show me the ERCOT 7 day load forecast" },
+      { label: "ERCOT recent DAM price", query: "What is the most recent ERCOT DAM price?" },
+      { label: "ERCOT RTM price", query: "What is the most recent ERCOT RTM price?" },
     ],
   },
   {

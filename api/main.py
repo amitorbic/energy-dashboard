@@ -1,3 +1,9 @@
+import asyncio
+import sys
+
+if sys.platform == "win32":
+    asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
+
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -121,6 +127,10 @@ from routers.risk import router as risk_router
 
 app.include_router(risk_router, prefix="/api")
 
+from routers.ercot_market import router as ercot_market_router
+
+app.include_router(ercot_market_router, prefix="/api")
+
 from routers import enrollment
 
 app.include_router(enrollment.router, prefix="/api")
@@ -144,6 +154,10 @@ from routers import admin_billing as admin_billing_router
 app.include_router(admin_addon_types_router.router, prefix="/api")
 app.include_router(admin_test_data_router.router, prefix="/api")
 app.include_router(admin_billing_router.router, prefix="/api")
+
+from routers import ercot_lfc_admin as ercot_lfc_admin_router
+
+app.include_router(ercot_lfc_admin_router.router, prefix="/api")
 
 from routers import consumer as consumer_router
 
@@ -178,3 +192,7 @@ app.include_router(voice_router.router, prefix="/api")
 from routers.monitoring import router as monitoring_router
 
 app.include_router(monitoring_router, prefix="/api")
+
+from routers import email_replies as email_replies_router
+
+app.include_router(email_replies_router.router, prefix="/api")

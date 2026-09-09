@@ -167,6 +167,54 @@ const tools: OpenAI.Chat.Completions.ChatCompletionTool[] = [
   {
     type: "function",
     function: {
+      name: "get_ercot_7day_forecast",
+      description:
+        "Get the latest published ERCOT 7-day Load Forecast by Weather Zone (LFC) -- system-wide ERCOT load, not scaled to the ORBIC portfolio. Returns hourly load for each of the 8 ERCOT weather zones plus system_total.",
+      parameters: {
+        type: "object",
+        properties: {},
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "get_ercot_dam_price",
+      description:
+        "Get the most recent day's ERCOT Day-Ahead Market (DAM) settlement point prices, hourly, in $/MWh. Defaults to the 4 trading hubs (Houston, North, South, West) if no settlement point is given.",
+      parameters: {
+        type: "object",
+        properties: {
+          settlement_point: {
+            type: "string",
+            description:
+              "Specific ERCOT settlement point, e.g. HB_HOUSTON, HB_NORTH, HB_SOUTH, HB_WEST, or a load zone like LZ_HOUSTON. Omit for all 4 trading hubs.",
+          },
+        },
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "get_ercot_rtm_price",
+      description:
+        "Get the most recent day's ERCOT Real-Time Market (RTM) settlement point prices, averaged hourly from 15-min intervals, in $/MWh. Defaults to the 4 trading hubs (Houston, North, South, West) if no settlement point is given.",
+      parameters: {
+        type: "object",
+        properties: {
+          settlement_point: {
+            type: "string",
+            description:
+              "Specific ERCOT settlement point, e.g. HB_HOUSTON, HB_NORTH, HB_SOUTH, HB_WEST, or a load zone like LZ_HOUSTON. Omit for all 4 trading hubs.",
+          },
+        },
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
       name: "get_expiring_contracts",
       description:
         "Get customer contracts expiring within a given number of days. Filters the contract_renewal table by contract_end_date.",
@@ -349,6 +397,23 @@ async function executeTool(
       params.set("method", String(args.method ?? "composite"));
       params.set("horizon", String(args.horizon ?? "monthly"));
       return get(`/api/portfolio/forecast?${params}`);
+    }
+
+    case "get_ercot_7day_forecast":
+      return get(`/api/ercot/forecast/7day`);
+
+    case "get_ercot_dam_price": {
+      const params = new URLSearchParams();
+      if (args.settlement_point) params.set("settlement_point", String(args.settlement_point));
+      const qs = params.toString();
+      return get(`/api/ercot/prices/dam${qs ? `?${qs}` : ""}`);
+    }
+
+    case "get_ercot_rtm_price": {
+      const params = new URLSearchParams();
+      if (args.settlement_point) params.set("settlement_point", String(args.settlement_point));
+      const qs = params.toString();
+      return get(`/api/ercot/prices/rtm${qs ? `?${qs}` : ""}`);
     }
 
     case "get_expiring_contracts": {
