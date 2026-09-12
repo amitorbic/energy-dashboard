@@ -9,6 +9,114 @@ import io
 from fastapi.responses import StreamingResponse
 
 
+# ── Bill-driven pricing (ESI ID -> resi/commercial -> matching rate) ──────────
+#
+# esi_id_master.source_file records which of the 12 TDSP extract files each
+# row was loaded from (see api/scripts/esi_master_common.py FILES) -- that's
+# a reliable per-TDSP split, unlike the ESI ID prefix. Zone names below match
+# the four zones in ref_profile_mappings/calculate_matrix_for_start_date,
+# using the legacy utility codes baked into that table's profile keys:
+# CPL (Central Power & Light) = South, WTU (West Texas Utilities, now AEP
+# Texas North) = West, TXU (now Oncor) = North, Reliant/CenterPoint = Coast.
+_SOURCE_FILE_ZONE = {
+    "AEP_CENTRAL": "South",
+    "AEP_NORTH": "West",
+    "CENTERPOINT": "Coast",
+    "ONCOR": "North",
+}
+# TNMP spans three geographic areas -- resolved by zip, same ranges used in
+# app/pages/api/parse-document.ts's tnmpZoneFromZip.
+def _tnmp_zone_from_zip(zip_code: str) -> str:
+    z = (zip_code or "")[:5]
+    try:
+        zi = int(z)
+    except ValueError:
+        return "North"
+    if 77600 <= zi <= 77899:
+        return "Coast"
+    if 76700 <= zi <= 76899:
+        return "North"
+    if 79100 <= zi <= 79399:
+        return "West"
+    return "North"
+
+
+def _zone_from_esi_row(row) -> str | None:
+    """Returns one of South/Coast/North/West, or None when the ESI's TDSP
+    isn't part of ORBIC's standard 4-zone pricing matrix (co-ops, munis,
+    Entergy, and the small AEP Texas SP extract have no ref_profile_mappings
+    entries to price against)."""
+    source_file = row.get("source_file") or ""
+    for prefix, zone in _SOURCE_FILE_ZONE.items():
+        if prefix in source_file:
+            return zone
+    if "TNMP" in source_file:
+        return _tnmp_zone_from_zip(row.get("zipcode"))
+    return None
+
+
+async def check_bill_pricing(
+    esi_id: str,
+    db,
+    start_month: str | None = None,
+    terms: list[int] | None = None,
+):
+    """
+    Looks up an ESI ID in esi_id_master, determines whether the premise is
+    residential or commercial from polr_customer_class, derives its TDSP
+    pricing zone, and returns ORBIC's matching rate: the Residential column
+    for residential premises, the Low load-factor column for commercial
+    premises (ORBIC's standard low-load commercial pricing).
+    """
+    esi_id = (esi_id or "").strip()
+    row_result = await db.execute(
+        text(
+            "SELECT esi_id, polr_customer_class, source_file, zipcode, city, status "
+            "FROM esi_id_master WHERE esi_id = :esi_id"
+        ),
+        {"esi_id": esi_id},
+    )
+    row = row_result.mappings().fetchone()
+    if not row:
+        return {"error": f"ESI ID {esi_id} was not found in the ESI master database."}
+
+    customer_class = (row["polr_customer_class"] or "").strip()
+    is_residential = customer_class == "Residential"
+    zone = _zone_from_esi_row(row)
+
+    if zone is None:
+        return {
+            "esi_id": esi_id,
+            "customer_class": customer_class or "Unknown",
+            "error": (
+                f"This ESI ID's TDSP (source file: {row['source_file']}) isn't part of "
+                "ORBIC's standard South/Coast/North/West pricing matrix -- it needs to "
+                "be quoted manually."
+            ),
+        }
+
+    price_type = "residential" if is_residential else "commercial"
+    start = start_month or date.today().strftime("%Y-%m")
+    term_list = terms or [12, 24, 36]
+
+    matrix = await calculate_matrix_for_start_date(start, term_list, db, price_type)
+    zone_row = next((r for r in matrix if r.get("zone") == zone), None)
+    if not zone_row:
+        return {"error": f"No pricing matrix row found for zone {zone}."}
+
+    lf_key = "Residential" if is_residential else "Low"
+    prices = {f"{t}mo": zone_row.get(f"{lf_key}_{t}", "N/A") for t in term_list}
+
+    return {
+        "esi_id": esi_id,
+        "customer_class": customer_class or "Unknown",
+        "pricing_segment": "Residential" if is_residential else "Commercial (Low Load Factor)",
+        "tdsp_zone": zone,
+        "start_month": start,
+        "prices_cents_per_kwh": prices,
+    }
+
+
 async def calculate_matrix_for_start_date(
     start_date, terms, db, price_type, prior_day=False
 ):

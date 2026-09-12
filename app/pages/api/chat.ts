@@ -8,6 +8,7 @@ const SYSTEM_PROMPT = `You are Orbi, a helpful AI assistant built into the ORBIC
 ORBIC is a Texas energy retailer operating in ERCOT. You help staff look up customer accounts, check pricing, review broker info, track commissions, check payment balances, view expiring contracts, analyze the open/short position, review past-due accounts, and track the renewal pipeline.
 Be concise, professional, and friendly. Format data as readable tables or bullet points when it helps clarity.
 Never invent data — always call a tool to fetch real information. If a tool returns no results, say so clearly.
+Users can attach a utility bill or competitor contract to the chat; when that happens you'll see a message summarizing the extracted fields, including an ESI ID for bills. When the user then asks to check pricing for an uploaded bill, call check_bill_pricing with that ESI ID — it looks up whether the premise is residential or commercial and returns ORBIC's matching rate. Don't ask the user for the ESI ID if it was already given in an upload summary.
 Today's date is ${new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}.`;
 
 type Message = OpenAI.Chat.Completions.ChatCompletionMessageParam;
@@ -111,6 +112,29 @@ const tools: OpenAI.Chat.Completions.ChatCompletionTool[] = [
           },
         },
         required: ["start_month", "terms"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "check_bill_pricing",
+      description:
+        "Given a customer's ESI ID (usually from a parsed/uploaded utility bill), looks it up in the ESI master database to determine whether the premise is residential or commercial and which TDSP pricing zone it's in, then returns ORBIC's matching rate for that segment: the Residential column for residential premises, or the Low load-factor commercial column for commercial premises (ORBIC's standard low-load commercial pricing). Use this after a bill has been uploaded/parsed and the user asks to check pricing for it.",
+      parameters: {
+        type: "object",
+        properties: {
+          esi_id: { type: "string", description: "17-digit ESI ID, e.g. 10443720002302231" },
+          start_month: {
+            type: "string",
+            description: "Start month in YYYY-MM format. Defaults to the current month if omitted.",
+          },
+          terms: {
+            type: "string",
+            description: "Comma-separated contract lengths in months, e.g. '12,24,36'. Defaults to 12,24,36.",
+          },
+        },
+        required: ["esi_id"],
       },
     },
   },
@@ -379,6 +403,13 @@ async function executeTool(
         price_type: String(args.price_type ?? "commercial"),
       });
       return get(`/api/pricing/daily-matrix?${params}`);
+    }
+
+    case "check_bill_pricing": {
+      const params = new URLSearchParams({ esi_id: String(args.esi_id) });
+      if (args.start_month) params.set("start_month", String(args.start_month));
+      if (args.terms) params.set("terms", String(args.terms));
+      return get(`/api/pricing/bill-check?${params}`);
     }
 
     case "get_commission_summary": {

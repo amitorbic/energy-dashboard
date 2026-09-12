@@ -8,6 +8,7 @@ import {
   ChevronDown,
   ChevronRight,
   Trash2,
+  Paperclip,
 } from "lucide-react";
 import { getToken, getUser } from "../utils/auth";
 
@@ -258,8 +259,10 @@ export default function AgentPage() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState<{ username: string } | null>(null);
+  const [uploading, setUploading] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const u = getUser();
@@ -301,6 +304,73 @@ export default function AgentPage() {
 
   function handleKey(e: React.KeyboardEvent) {
     if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
+  }
+
+  function fileToBase64(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const r = reader.result as string;
+        resolve(r.includes(",") ? r.split(",")[1] : r);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function handleFileUpload(file: File) {
+    setUploading(true);
+    try {
+      const data = await fileToBase64(file);
+      const res = await fetch("/api/parse-document", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          data,
+          filename: file.name,
+          mimeType: file.type || "application/octet-stream",
+          token: getToken() ?? "",
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        await send(`I tried to upload "${file.name}" but parsing failed: ${json.error ?? "Unknown error"}`);
+        return;
+      }
+
+      const fields: Record<string, { value?: string }> = json.fields ?? {};
+      const val = (k: string) => fields[k]?.value?.trim() || "";
+
+      let summary: string;
+      if (json.doc_type === "utility_bill") {
+        summary = [
+          `Uploaded utility bill: ${file.name}`,
+          val("esid") && `ESI ID: ${val("esid")}`,
+          val("provider_name") && `Provider: ${val("provider_name")}`,
+          val("tdsp_name") && `TDSP: ${val("tdsp_name")}`,
+          val("pricing_zone") && `Zone: ${val("pricing_zone")}`,
+          val("usage_kwh") && `Usage: ${val("usage_kwh")} kWh`,
+          val("bill_amount") && `Bill Amount: ${val("bill_amount")}`,
+          val("total_average_rate") && `Current Avg Rate: $${val("total_average_rate")}/kWh`,
+        ].filter(Boolean).join("\n") + "\n\nCheck ORBIC pricing for this account.";
+      } else if (json.doc_type === "contract") {
+        summary = [
+          `Uploaded competitor contract: ${file.name}`,
+          val("competitor_name") && `Competitor: ${val("competitor_name")}`,
+          val("rate") && `Rate: $${val("rate")}/kWh`,
+          val("contract_term_months") && `Term: ${val("contract_term_months")} months`,
+        ].filter(Boolean).join("\n");
+      } else {
+        summary = `Uploaded "${file.name}" but couldn't determine if it's a bill or a contract.`;
+      }
+
+      await send(summary);
+    } catch {
+      await send(`Something went wrong uploading "${file.name}". Please try again.`);
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
   }
 
   if (!user) return null;
@@ -372,7 +442,7 @@ export default function AgentPage() {
                   <Sparkles size={36} style={{ color: "var(--accent-light)" }} />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold tracking-tight" style={{ color: "var(--ct-text-primary)" }}>Hi, I'm Orbi</p>
+                  <p className="text-2xl font-bold tracking-tight" style={{ color: "var(--ct-text-primary)" }}>Hi, I&apos;m Orbi</p>
                   <p className="text-sm mt-1.5 max-w-sm" style={{ color: "var(--ct-text-muted)" }}>
                     Ask me anything about customers, contracts, pricing, portfolio data, or past-due accounts.
                   </p>
@@ -430,13 +500,32 @@ export default function AgentPage() {
           {/* Input bar */}
           <div className="shrink-0 border-t px-8 py-4" style={{ borderColor: "var(--ct-border-default)", background: "var(--ct-surface)" }}>
             <div className="flex gap-3 items-end max-w-4xl">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".pdf,.jpg,.jpeg,.png,.docx"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleFileUpload(file);
+                }}
+              />
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading || loading}
+                title="Upload a bill or contract for Orbi to read"
+                className="px-3 py-3 rounded-[var(--r-md)] border transition-colors shrink-0 disabled:opacity-50 hover:opacity-80"
+                style={{ borderColor: "var(--ct-border-default)", color: "var(--ct-text-muted)" }}
+              >
+                {uploading ? <Loader2 size={16} className="animate-spin" /> : <Paperclip size={16} />}
+              </button>
               <textarea
                 ref={inputRef}
                 rows={2}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKey}
-                placeholder="Ask Orbi anything… (Enter to send, Shift+Enter for new line)"
+                placeholder="Ask Orbi anything, or attach a bill to check pricing… (Enter to send, Shift+Enter for new line)"
                 className="flex-1 resize-none text-sm px-4 py-3 rounded-[var(--r-md)] border outline-none focus:border-[var(--accent-light)] placeholder:text-[var(--ct-text-muted)] transition-colors"
                 style={{ background: "var(--ct-surface)", color: "var(--ct-text-primary)", borderColor: "var(--ct-border-default)" }}
               />

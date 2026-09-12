@@ -10,6 +10,7 @@ from utils.email_routing import get_tenant_display_name, filename_safe
 # Import your controller function
 from controllers.pricing_engine import (
     calculate_matrix_for_start_date,
+    check_bill_pricing,
     generate_excel_matrix,
 )
 
@@ -28,6 +29,17 @@ async def get_daily_matrix(
         start_month, term_list, db, price_type
     )
     return matrix
+
+
+@router.get("/bill-check")
+async def bill_check(
+    esi_id: str,
+    start_month: str = None,
+    terms: str = "12,24,36",
+    db: AsyncSession = Depends(get_db),
+):
+    term_list = [int(t) for t in terms.split(",") if t.strip().isdigit()]
+    return await check_bill_pricing(esi_id, db, start_month=start_month, terms=term_list)
 
 
 # 1. The decorator MUST be on its own line ABOVE the function
