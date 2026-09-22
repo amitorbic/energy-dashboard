@@ -44,7 +44,7 @@ export default function SendLMPConfirmationPage() {
 
   const [form, setForm] = useState<Record<string, any>>({
     contract_no: "",
-    type_of_contract: "new",
+    type_of_contract: "New",
     uid: "",
     customer_name: "",
     broker_code: "",
@@ -282,8 +282,8 @@ export default function SendLMPConfirmationPage() {
                 value={form.type_of_contract}
                 onChange={(e) => set("type_of_contract", e.target.value)}
               >
-                <option value="new">New</option>
-                <option value="renewal">Renewal</option>
+                <option value="New">New</option>
+                <option value="Renewal">Renewal</option>
               </select>,
             )}
 

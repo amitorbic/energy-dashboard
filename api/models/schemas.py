@@ -14,6 +14,7 @@ class LoginResponse(BaseModel):
     email:        Optional[str] = None
     rep_id:       Optional[int] = None
     company_name: Optional[str] = None
+    modules:      Optional[list[str]] = None
     message:      Optional[str] = None
 
 class UserResponse(BaseModel):

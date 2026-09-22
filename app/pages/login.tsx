@@ -24,6 +24,7 @@ export default function LoginPage() {
           role:         String(data.role),
           email:        data.email,
           company_name: data.company_name ?? "",
+          modules:      data.modules ?? undefined,
         });
         router.push('/');
       } else {

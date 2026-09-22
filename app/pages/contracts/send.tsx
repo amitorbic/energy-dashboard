@@ -7,6 +7,7 @@ import { getUser } from "../../utils/auth";
 
 interface RenewalCustomer {
   id: number;
+  cust_id: string;
   company_name: string;
   broker_code: string;
   broker_name: string;
@@ -79,7 +80,7 @@ export default function SendConfirmationPage() {
   const [opts, setOpts] = useState<FormOptions | null>(null);
   const [form, setForm] = useState<Record<string, any>>({
     contract_no: "",
-    type_of_contract: "now",
+    type_of_contract: "New",
     uid: "",
     customer_name: "",
     broker_code: "",
@@ -121,6 +122,8 @@ export default function SendConfirmationPage() {
     billing_zip: "",
     plan_group: "",
     plan_id: "",
+    linked_cust_id: "",
+    billing_choice: "separate",
   });
   const [profiles, setProfiles] = useState<ProfileVolumes>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -137,6 +140,7 @@ export default function SendConfirmationPage() {
 
   const [renewalSearch, setRenewalSearch] = useState("");
   const [renewalResults, setRenewalResults] = useState<RenewalCustomer[]>([]);
+  const [linkedAccount, setLinkedAccount] = useState<RenewalCustomer | null>(null);
   const router = useRouter();
   const [selectedEsids, setSelectedEsids] = useState<
     { esid: string; end_date: string; customer: RenewalCustomer }[]
@@ -190,11 +194,17 @@ export default function SendConfirmationPage() {
         ...f,
         ...d,
         customer_name: revisedName,
-        asap: d.start_date === "ASAP" || !d.start_date,
+        asap: !!d.asap || d.start_date === "ASAP" || !d.start_date,
+        meter_read: !!d.meter_read,
+        prior_day: !!d.prior_day,
+        nodal: !!d.nodal,
         credit_status: !!d.credit_status,
         contract_received: !!d.contract_received,
         executed: !!d.executed,
         forwarded: !!d.forwarded,
+        switch_flag: !!d.switch_flag,
+        pmvi: !!d.pmvi,
+        mvi: !!d.mvi,
         lmp: !!d.lmp,
         paper_bill: !!d.paper_bill,
       }));
@@ -258,6 +268,9 @@ export default function SendConfirmationPage() {
     if (!form.esid_count) e.esid_count = "Number of ESIIDs required";
     if (!form.contract_rate) e.contract_rate = "Contract rate required";
     if (!form.broker_code) e.broker_code = "Select a broker";
+    if (form.type_of_contract === "Addition" && !form.linked_cust_id) {
+      e.linked_cust_id = "Link an existing account for this Addition";
+    }
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -268,6 +281,8 @@ export default function SendConfirmationPage() {
       ? new Date().toISOString().split("T")[0]
       : form.start_date,
     sid: form.sid || router.query.sid || undefined,
+    linked_cust_id: form.type_of_contract === "Addition" ? form.linked_cust_id : "",
+    billing_choice: form.type_of_contract === "Addition" ? form.billing_choice : "",
     volumes: JSON.stringify(profiles),
     total_volume: Object.values(profiles)
       .reduce((s, v) => s + (parseFloat(v) || 0), 0)
@@ -350,6 +365,29 @@ export default function SendConfirmationPage() {
 
     setRenewalResults([]);
     setRenewalSearch("");
+  };
+
+  // Addition: link the new ESI (entered manually below) to an existing
+  // account, instead of selecting ESIDs to renew. Leaves esiid/esid_count/
+  // start_date untouched -- those describe the new meter being added.
+  const linkAccount = (customer: RenewalCustomer) => {
+    set("customer_name", customer.company_name);
+    set("broker_code", customer.broker_code);
+    set("broker_name", customer.broker_name || "");
+    set("send_to_email", customer.confirmation_email || "");
+    set("broker_split", customer.split || "");
+    set("customer_email", customer.contact_email || "");
+    set("linked_cust_id", customer.cust_id);
+    setLinkedAccount(customer);
+
+    setRenewalResults([]);
+    setRenewalSearch("");
+  };
+
+  const unlinkAccount = () => {
+    set("linked_cust_id", "");
+    set("billing_choice", "separate");
+    setLinkedAccount(null);
   };
 
   const row = (label: string, content: React.ReactNode, errKey?: string) => (
@@ -444,12 +482,13 @@ export default function SendConfirmationPage() {
                 value={form.type_of_contract}
                 onChange={(e) => set("type_of_contract", e.target.value)}
               >
-                <option value="new">New</option>
-                <option value="renewal">Renewal</option>
+                <option value="New">New</option>
+                <option value="Renewal">Renewal</option>
+                <option value="Addition">Addition</option>
               </select>,
             )}
 
-            {form.type_of_contract === "renewal" && (
+            {form.type_of_contract === "Renewal" && (
               <div className="grid grid-cols-[220px_1fr] items-start gap-2 py-1.5">
                 <span className={labelCls} style={labelStyle}>Search Customer / ESI ID</span>
                 <div>
@@ -539,6 +578,85 @@ export default function SendConfirmationPage() {
                       >
                         Apply to form →
                       </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {form.type_of_contract === "Addition" && (
+              <div className="grid grid-cols-[220px_1fr] items-start gap-2 py-1.5">
+                <span className={labelCls} style={labelStyle}>Link Existing Account</span>
+                <div>
+                  {!linkedAccount ? (
+                    <>
+                      <input
+                        className={inputCls}
+                        style={inputStyle}
+                        placeholder="Type customer name or ESI ID..."
+                        value={renewalSearch}
+                        onChange={(e) => handleRenewalSearch(e.target.value)}
+                      />
+                      {renewalResults.length > 0 && (
+                        <div
+                          className="rounded-[var(--r-md)] mt-1 shadow-sm max-h-64 overflow-y-auto border"
+                          style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}
+                        >
+                          {renewalResults.map((c) => (
+                            <button
+                              key={c.id}
+                              type="button"
+                              onClick={() => linkAccount(c)}
+                              className="w-full text-left px-3 py-2 text-xs border-b last:border-0 transition-colors hover:bg-[var(--accent-light-tint)]"
+                              style={{ borderColor: "var(--ct-border-subtle)", color: "var(--ct-text-secondary)" }}
+                            >
+                              <span className="font-medium">{c.company_name}</span>
+                              <span className="ml-2" style={{ color: "var(--ct-text-muted)" }}>
+                                ({c.broker_code}) · acct {c.cust_id}
+                              </span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                      {errors.linked_cust_id && (
+                        <p className={errCls} style={errStyle}>{errors.linked_cust_id}</p>
+                      )}
+                    </>
+                  ) : (
+                    <div className="rounded-[var(--r-md)] p-2 border" style={{ background: "var(--accent-light-tint)", borderColor: "var(--accent-light)" }}>
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs font-medium" style={{ color: "var(--accent-light)" }}>
+                          Linked to {linkedAccount.company_name} (acct {linkedAccount.cust_id})
+                        </p>
+                        <button
+                          type="button"
+                          onClick={unlinkAccount}
+                          className="text-xs transition-colors hover:text-[var(--danger-light)]"
+                          style={{ color: "var(--ct-text-muted)" }}
+                        >
+                          Unlink
+                        </button>
+                      </div>
+                      <div className="mt-2 flex items-center gap-4">
+                        <label className="flex items-center gap-1.5 text-xs cursor-pointer" style={{ color: "var(--ct-text-secondary)" }}>
+                          <input
+                            type="radio"
+                            name="billing_choice"
+                            checked={form.billing_choice === "separate"}
+                            onChange={() => set("billing_choice", "separate")}
+                          />
+                          Bill separately
+                        </label>
+                        <label className="flex items-center gap-1.5 text-xs cursor-pointer" style={{ color: "var(--ct-text-secondary)" }}>
+                          <input
+                            type="radio"
+                            name="billing_choice"
+                            checked={form.billing_choice === "consolidated"}
+                            onChange={() => set("billing_choice", "consolidated")}
+                          />
+                          Consolidate onto linked account
+                        </label>
+                      </div>
                     </div>
                   )}
                 </div>

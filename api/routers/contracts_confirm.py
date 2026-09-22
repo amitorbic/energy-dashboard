@@ -2,13 +2,14 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
 from utils.database import get_db
-from datetime import date
+from datetime import date, datetime
 import json
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from utils.database import get_db
 from controllers.custom_pricing import calculate_custom_price
+from utils.renewal_rules import resolve_renewal_start_date, resolve_be_start_date, fetch_active_contract
 import os
 from utils.email_routing import (
     get_tenant_email,
@@ -1116,30 +1117,124 @@ async def preview_html_from_payload(
 # ─── Send Email (save + send) ────────────────────────────────────────────────
 
 
+def _parse_guard_date(d):
+    """Convert MM/DD/YYYY or YYYY-MM-DD (str or date/datetime) to a date, else None."""
+    if not d:
+        return None
+    if isinstance(d, date):
+        return d
+    for fmt in ("%m/%d/%Y", "%Y-%m-%d", "%Y/%m/%d"):
+        try:
+            return datetime.strptime(str(d).strip(), fmt).date()
+        except ValueError:
+            pass
+    return None
+
+
 @router.post("/send-email")
 async def send_confirmation_email(request: Request, db: AsyncSession = Depends(get_db)):
     payload = await request.json()
 
-    # Block new enrollments where any ESI ID already has an active/pending contract
-    _incoming_sid = payload.get("sid")
-    if not _incoming_sid or str(_incoming_sid) in ("undefined", "null", ""):
-        _raw_esiid = (payload.get("esiid") or "").replace("\n", ",").replace(";", ",")
-        _esi_ids = [e.strip() for e in _raw_esiid.split(",") if e.strip()]
-        for _esi_id in _esi_ids:
+    # Active-contract guard, branched by contract type per
+    # docs/ENROLLMENT_RULES.md "Active Contract Guard Rules". Runs on EVERY
+    # call -- including resends/edits of an existing confirmation_log record
+    # (sid present) -- because the whole point is to stop and force human
+    # intervention on any mismatch, not just on first submission:
+    #   New / Addition   -> hard block if ESI active/pending/going_final
+    #   Renewal / B&E    -> no block on active status; validate new start_date
+    #                       aligns with the current active contract's end date
+    #   Assignment       -> allowed unconditionally (internal process, ESI is
+    #                       expected to already be active)
+    # .title() normalizes whatever casing the caller sent ("renewal" ->
+    # "Renewal", "b&e" -> "B&E", etc.) against the canonical capitalized
+    # values used everywhere else (stored data, enrollment/index.tsx's
+    # bucketing) -- the send.tsx dropdown was found to submit lowercase
+    # values that silently failed every check below (see docs/ENROLLMENT_RULES.md,
+    # "type_of_contract casing" note, 2026-09-22).
+    _contract_type = str(payload.get("type_of_contract") or "New").strip().title()
+    _raw_esiid = (payload.get("esiid") or "").replace("\n", ",").replace(";", ",")
+    _esi_ids = [e.strip() for e in _raw_esiid.split(",") if e.strip()]
+    _incoming_broker = payload.get("broker_code") or "unknown"
+    _record_ref = payload.get("sid")
+    _record_ref = f"sid {_record_ref}" if _record_ref not in (None, "", "undefined", "null") else "new record (no sid yet)"
+
+    if _contract_type in ("New", "Addition"):
+        for _pos, _esi_id in enumerate(_esi_ids, start=1):
             _dup = await db.execute(
                 text(
-                    "SELECT cust_id FROM contract_renewal"
+                    "SELECT cust_id, broker_code FROM contract_renewal"
                     " WHERE premise_id = :esi"
                     " AND status IN ('active', 'pending', 'going_final') LIMIT 1"
                 ),
                 {"esi": _esi_id},
             )
-            if _dup.fetchone():
+            _dup_row = _dup.fetchone()
+            if _dup_row:
+                _existing_broker = _dup_row[1] or "unknown"
+                if _existing_broker == _incoming_broker:
+                    _broker_note = "same broker on record"
+                else:
+                    _broker_note = (
+                        f"different broker on record: {_existing_broker} vs."
+                        f" submitted {_incoming_broker} -- possible broker conflict, escalate"
+                    )
                 raise HTTPException(
                     status_code=422,
-                    detail=f"ESI ID {_esi_id} already has an active contract."
+                    detail=f"[{_record_ref}, ESI {_pos} of {len(_esi_ids)}] {_esi_id} already"
+                           f" has an active contract ({_broker_note})."
                            " Cancel the existing contract before enrolling again.",
                 )
+
+    elif _contract_type == "Renewal":
+        # Renewal-only 3-case start-date rule -- docs/ENROLLMENT_RULES.md
+        # Build Plan #6 (decided 2026-09-21). See utils/renewal_rules.py.
+        # Auto-corrects payload["start_date"] (cases 1/2) or blocks (case 3)
+        # instead of just validating the form-submitted date.
+        # NOTE: a multi-ESI Renewal submission still shares one start_date
+        # (Build Plan #10, unresolved) -- if the ESIs' contract_end_dates
+        # differ, the last one processed here wins.
+        _new_start = _parse_guard_date(payload.get("start_date"))
+        _today = date.today()
+        for _pos, _esi_id in enumerate(_esi_ids, start=1):
+            _raw_end, _acct_type = await fetch_active_contract(db, _esi_id)
+            # Ignore the account_type='default' fallback contract's
+            # artificial ~30-years-out end date -- treat it the same as
+            # "no active contract" so it can't force a bogus start date.
+            _end_date = _parse_guard_date(_raw_end) if _acct_type != "default" else None
+            _resolved, _block_reason = resolve_renewal_start_date(_today, _end_date, _new_start)
+            if _block_reason:
+                raise HTTPException(
+                    status_code=422,
+                    detail=f"[{_record_ref}, ESI {_pos} of {len(_esi_ids)}] {_esi_id}: {_block_reason}",
+                )
+            if _resolved:
+                _new_start = _resolved
+        if _new_start:
+            payload["start_date"] = _new_start.strftime("%Y-%m-%d")
+
+    elif _contract_type == "B&E":
+        # B&E-only start-date rule -- docs/ENROLLMENT_RULES.md Build Plan #7
+        # (decided 2026-09-21). See utils/renewal_rules.py. Unlike Renewal,
+        # the submitted start date passes through unchanged (no forcing to
+        # the current contract's end date) -- the only guard is that a real,
+        # non-default active contract must exist to blend against.
+        _new_start = _parse_guard_date(payload.get("start_date"))
+        for _pos, _esi_id in enumerate(_esi_ids, start=1):
+            _raw_end, _acct_type = await fetch_active_contract(db, _esi_id)
+            _end_date = _parse_guard_date(_raw_end) if _raw_end else None
+            _resolved, _block_reason = resolve_be_start_date(_new_start, _end_date, _acct_type)
+            if _block_reason:
+                raise HTTPException(
+                    status_code=422,
+                    detail=f"[{_record_ref}, ESI {_pos} of {len(_esi_ids)}] {_esi_id}: {_block_reason}",
+                )
+            if _resolved:
+                _new_start = _resolved
+        if _new_start:
+            payload["start_date"] = _new_start.strftime("%Y-%m-%d")
+
+    # Assignment (and any other type): no guard here -- ownership change
+    # against an active ESI is expected, not an error.
 
     try:
         fields = {
@@ -1157,6 +1252,18 @@ async def send_confirmation_email(request: Request, db: AsyncSession = Depends(g
             "comment_mail": payload.get("comment_mail", ""),
             "comment_enrollment": payload.get("comment_enrollment", ""),
             "start_date": payload.get("start_date", ""),
+            "asap": 1 if payload.get("asap") else 0,
+            "meter_read": 1 if payload.get("meter_read") else 0,
+            "prior_day": 1 if payload.get("prior_day") else 0,
+            "nodal": 1 if payload.get("nodal") else 0,
+            "credit_status": 1 if payload.get("credit_status") else 0,
+            "contract_received": 1 if payload.get("contract_received") else 0,
+            "executed": 1 if payload.get("executed") else 0,
+            "forwarded": 1 if payload.get("forwarded") else 0,
+            "paper_bill": 1 if payload.get("paper_bill") else 0,
+            "switch_flag": 1 if payload.get("switch_flag") else 0,
+            "pmvi": 1 if payload.get("pmvi") else 0,
+            "mvi": 1 if payload.get("mvi") else 0,
             "ap_quote": payload.get("ap_quote", ""),
             "customer_email": payload.get("customer_email", ""),
             "tax_exempt": payload.get("tax_exempt", ""),
@@ -1178,6 +1285,8 @@ async def send_confirmation_email(request: Request, db: AsyncSession = Depends(g
             "cust_last_name":   payload.get("cust_last_name", ""),
             "custom_sid": payload.get("custom_sid", "0"),
             "bne_sid": payload.get("bne_sid", "0"),
+            "linked_cust_id": payload.get("linked_cust_id") or None,
+            "billing_choice": payload.get("billing_choice") or None,
             "enroll_check": 0,
             "compare_check": 0,
         }
@@ -1298,7 +1407,13 @@ async def list_confirmations(
             f"""
         SELECT sid, contract_no, customer_name, broker_code, broker_name,
                term, start_date, contract_rate, ap_quote, type_of_contract,
-               lmp, sent_by, date_modified
+               lmp, sent_by, date_modified,
+               asap, meter_read, prior_day, nodal, credit_status,
+               contract_received, executed, forwarded, paper_bill,
+               switch_flag, pmvi, mvi,
+               cust_first_name, cust_last_name, billing_address,
+               billing_city, billing_state, billing_zip,
+               plan_group, plan_id
         FROM confirmation_log {where}
         ORDER BY sid DESC
         LIMIT :limit OFFSET :offset
@@ -1354,7 +1469,13 @@ async def get_future_contracts(search: str = "", db: AsyncSession = Depends(get_
             f"""
             SELECT sid, contract_no, customer_name, broker_code, broker_name,
                    term, start_date, contract_rate, ap_quote, type_of_contract,
-                   esid_count, sent_by
+                   esid_count, sent_by,
+                   asap, meter_read, prior_day, nodal, credit_status,
+                   contract_received, executed, forwarded, paper_bill,
+                   switch_flag, pmvi, mvi,
+                   cust_first_name, cust_last_name, billing_address,
+                   billing_city, billing_state, billing_zip,
+                   plan_group, plan_id
             FROM confirmation_log {where}
             ORDER BY start_date ASC
         """
@@ -1369,9 +1490,10 @@ async def renewal_search(q: str = "", db: AsyncSession = Depends(get_db)):
     res = await db.execute(
         text(
             """
-        SELECT 
-            r.serial, 
-            r.company_name, 
+        SELECT
+            r.serial,
+            r.cust_id,
+            r.company_name,
             r.broker_code,
             r.premise_id,
             r.contract_end_date,

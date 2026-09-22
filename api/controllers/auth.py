@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
 from models.schemas import LoginRequest, LoginResponse
 from utils.jwt_util import create_token
+from utils.tenant_module_config import get_configured_modules
 
 
 def md5_hash(password: str) -> str:
@@ -36,13 +37,19 @@ async def login_user(
     if not user:
         return LoginResponse(success=False, message="Invalid login or password")
 
+    # Config-based entitlements for this phase -- see
+    # docs/ORBIC_PRODUCT_MODULARIZATION_SCOPE.md section 15. Missing/empty
+    # TENANT_MODULES, "enterprise", or an all-unknown value all fail open to
+    # every module, never a lockout. See utils/tenant_module_config.py.
+    modules = get_configured_modules()
+
     token = create_token(
         user_id=user.uid,
         username=user.name,
         role=str(user.role),
         email=user.email,
         rep_id=rep_id,
-        extra_claims={"company_name": company_name},
+        extra_claims={"company_name": company_name, "modules": modules},
     )
     return LoginResponse(
         success=True,
@@ -53,4 +60,5 @@ async def login_user(
         email=user.email,
         rep_id=rep_id,
         company_name=company_name,
+        modules=modules,
     )

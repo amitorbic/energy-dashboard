@@ -26,19 +26,33 @@ interface PendingRecord {
   paired_plan: string | null;
   paired_plan_name: string | null;
   type_of_contract: string | null;
+  mvi?: number | boolean | null;
+  pmvi?: number | boolean | null;
+  switch_flag?: number | boolean | null;
+  enrol_type?: string | null;
 }
 
-const ERCOT_TYPES = new Set(["New", "now", "Addition"]);
-const INTERNAL_TYPES = new Set(["Renewal", "Assignment", "B&E", "Blend & Extend"]);
+const ERCOT_BASE_TYPES = new Set(["New", "now", "Addition"]);
+const INTERNAL_ONLY_TYPES = new Set(["Renewal", "B&E", "Blend & Extend"]);
 
-function typeBadge(t: string | null) {
-  const v = t || "New";
+// Assignment is split, not bucketed: MVI/Switch involved -> ERCOT (814
+// required, per docs/ENROLLMENT_RULES.md); plain ownership change with
+// neither ticked -> internal-only. mvi/pmvi/switch_flag come straight off
+// confirmation_log via GET /enrollment-engine/pending.
+function assignmentNeedsErcot(r: PendingRecord) {
+  return !!(r.mvi || r.pmvi || r.switch_flag);
+}
+
+function typeBadge(r: PendingRecord) {
+  const v = r.type_of_contract || "New";
+  const label = v === "now" ? "New" : v;
+  const suffix = v === "Assignment" ? (assignmentNeedsErcot(r) ? " · MVI/Switch" : " · Internal") : "";
   return (
     <span
       className="inline-block px-1.5 py-0.5 rounded-[var(--r-sm)] text-xs font-medium"
       style={{ background: "var(--accent-light-tint)", color: "var(--accent-light)" }}
     >
-      {v === "now" ? "New" : v}
+      {label}{suffix}
     </span>
   );
 }
@@ -157,7 +171,7 @@ function RecordTable({
                   <span className="font-medium">{rec.broker_code}</span>
                   {rec.broker_name && <span className="ml-1" style={{ color: "var(--ct-text-muted)" }}>· {rec.broker_name}</span>}
                 </td>
-                <td className="px-3 py-2 whitespace-nowrap">{typeBadge(rec.type_of_contract)}</td>
+                <td className="px-3 py-2 whitespace-nowrap">{typeBadge(rec)}</td>
                 <td className="px-3 py-2 whitespace-nowrap tabular-nums">{fmtRate(rec.contract_rate)}</td>
                 <td className="px-3 py-2 whitespace-nowrap">{rec.term ? `${rec.term}mo` : "—"}</td>
                 <td className="px-3 py-2 whitespace-nowrap">{rec.start_date || "—"}</td>
@@ -218,12 +232,17 @@ export default function EnrollmentEngine() {
   const selectAllErcotRef = useRef<HTMLInputElement>(null);
   const selectAllInternalRef = useRef<HTMLInputElement>(null);
 
-  const ercotRecords = records.filter(
-    (r) => !r.type_of_contract || ERCOT_TYPES.has(r.type_of_contract)
-  );
-  const internalRecords = records.filter(
-    (r) => r.type_of_contract !== null && INTERNAL_TYPES.has(r.type_of_contract)
-  );
+  const ercotRecords = records.filter((r) => {
+    if (!r.type_of_contract || ERCOT_BASE_TYPES.has(r.type_of_contract)) return true;
+    if (r.type_of_contract === "Assignment") return assignmentNeedsErcot(r);
+    return false;
+  });
+  const internalRecords = records.filter((r) => {
+    if (r.type_of_contract === null) return false;
+    if (INTERNAL_ONLY_TYPES.has(r.type_of_contract)) return true;
+    if (r.type_of_contract === "Assignment") return !assignmentNeedsErcot(r);
+    return false;
+  });
 
   const brokers = Array.from(
     new Map(records.map((r) => [r.broker_code, r.broker_name || r.broker_code])).entries()

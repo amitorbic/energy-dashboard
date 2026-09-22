@@ -1,12 +1,21 @@
 "use client";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { User } from "../utils/auth";
+import { User, hasModule } from "../utils/auth";
+import { ModuleKey } from "../config/products";
 
 export interface NavItem {
   label: string;
   href?: string;
   soon?: boolean;
+  // Which sellable product this item belongs to, for entitlement filtering.
+  // Omitted = shared/platform, always visible (e.g. Admin tools, unbuilt
+  // placeholders). Intentionally independent of which section label the
+  // item is visually grouped under today — see
+  // docs/ORBIC_PRODUCT_MODULARIZATION_SCOPE.md §12 (e.g. Commission and
+  // Contracts are tagged "sales" despite sitting in the "Operations"
+  // section header, to avoid a disruptive nav reshuffle in this pass).
+  product?: ModuleKey;
 }
 
 export interface NavSection {
@@ -19,30 +28,34 @@ export const SECTIONS: NavSection[] = [
   {
     label: "Sales",
     items: [
-      { label: "Pricing", href: "/pricing" },
-      { label: "ESI ID Search", href: "/esi-search" },
-      { label: "Daily Pricing", href: "/daily-pricing" },
-      { label: "Document Parser", href: "/document-parser" },
+      { label: "Pricing", href: "/pricing", product: "sales" },
+      { label: "ESI ID Search", href: "/esi-search", product: "sales" },
+      { label: "Daily Pricing", href: "/daily-pricing", product: "sales" },
+      { label: "Document Parser", href: "/document-parser", product: "sales" },
+      { label: "Contracts", href: "/contracts", product: "sales" },
+      { label: "Commission", href: "/commission", product: "sales" },
+      { label: "Broker", href: "/broker", product: "sales" },
     ],
   },
   {
     label: "Operations",
     items: [
-      { label: "Contracts", href: "/contracts" },
-      { label: "Enrollment", href: "/enrollment" },
-      { label: "Billing", href: "/billing" },
-      { label: "Payments", soon: true },
-      { label: "Commission", href: "/commission" },
-      { label: "Past Due", href: "/past-due" },
+      { label: "Enrollment", href: "/enrollment", product: "operations" },
+      { label: "Billing", href: "/billing", product: "operations" },
+      { label: "Payments", href: "/payments", product: "operations" },
+      { label: "Past Due", href: "/past-due", product: "operations" },
+      { label: "Customers", href: "/customers", product: "operations" },
     ],
   },
   {
     label: "Portfolio",
     items: [
-      { label: "Portfolio", href: "/portfolio" },
-      { label: "Position Screen", href: "/portfolio/position" },
-      { label: "MTM", href: "/portfolio/mtm" },
-      { label: "Risk", href: "/portfolio/risk" },
+      { label: "Portfolio", href: "/portfolio", product: "portfolio" },
+      { label: "Position Screen", href: "/portfolio/position", product: "portfolio" },
+      { label: "Hedging", href: "/portfolio/hedging", product: "portfolio" },
+      { label: "DAM", href: "/portfolio/dam", product: "portfolio" },
+      { label: "MTM", href: "/portfolio/mtm", product: "portfolio" },
+      { label: "Risk", href: "/portfolio/risk", product: "portfolio" },
     ],
   },
   {
@@ -50,29 +63,19 @@ export const SECTIONS: NavSection[] = [
     items: [{ label: "Reports", soon: true }],
   },
   {
-    label: "Audit",
+    label: "Audit & Controls",
     items: [
-      { label: "Enrollment Audit", href: "/enrollment-audit" },
-      { label: "Billing Audit", href: "/billing-audit" },
-      { label: "Payment Audit", href: "/payments" },
+      { label: "Enrollment Audit", href: "/enrollment-audit", product: "audit" },
+      { label: "Billing Audit", href: "/billing-audit", product: "audit" },
+      { label: "Payment Audit", href: "/payments", product: "audit" },
+      { label: "Commission Audit", href: "/commission/exceptions", product: "audit" },
+      { label: "Monitoring", href: "/monitoring/checkpoints", product: "audit" },
     ],
-  },
-  {
-    label: "Customers",
-    items: [{ label: "Customers", href: "/customers" }],
-  },
-  {
-    label: "Broker",
-    items: [{ label: "Broker", href: "/broker" }],
   },
   {
     label: "Admin",
     items: [{ label: "Admin", href: "/admin" }],
     adminOnly: true,
-  },
-  {
-    label: "System",
-    items: [{ label: "Monitoring", href: "/monitoring/checkpoints" }],
   },
 ];
 
@@ -116,6 +119,8 @@ const ICONS: Record<string, React.ReactNode> = {
   "Past Due": <path d="M7.5 1v13M2 6l5.5-5 5.5 5" />,
   Portfolio: <rect x="1.5" y="5" width="12" height="8" rx="1" />,
   "Position Screen": <path d="M2 12.5h11M4.5 12.5V6M7.5 12.5V3M10.5 12.5V8.5" />,
+  Hedging: <path d="M2 7.5h11M7.5 2v11M4 4.5l7 6M11 4.5l-7 6" />,
+  DAM: <path d="M1.5 9 4 4l3.5 3L11 2l2.5 3.5" />,
   MTM: <path d="M1.5 12 5 7l3 3 5.5-6.5M9.5 3.5h4v4" />,
   Risk: (
     <>
@@ -127,6 +132,7 @@ const ICONS: Record<string, React.ReactNode> = {
   "Enrollment Audit": <path d="M7.5 1.5 13 3.5v4c0 3.5-2.3 5.7-5.5 7-3.2-1.3-5.5-3.5-5.5-7v-4z" />,
   "Billing Audit": <path d="M7.5 1.5 13 3.5v4c0 3.5-2.3 5.7-5.5 7-3.2-1.3-5.5-3.5-5.5-7v-4z" />,
   "Payment Audit": <path d="M7.5 1.5 13 3.5v4c0 3.5-2.3 5.7-5.5 7-3.2-1.3-5.5-3.5-5.5-7v-4z" />,
+  "Commission Audit": <path d="M7.5 1.5 13 3.5v4c0 3.5-2.3 5.7-5.5 7-3.2-1.3-5.5-3.5-5.5-7v-4z" />,
   Customers: <circle cx="7.5" cy="4.5" r="2.5" />,
   Broker: (
     <>
@@ -145,6 +151,34 @@ const ICONS: Record<string, React.ReactNode> = {
 function isItemActive(pathname: string, href?: string) {
   if (!href) return false;
   return pathname === href || pathname.startsWith(href + "/");
+}
+
+// Longest-href-match lookup so /portfolio/hedging resolves to the Hedging
+// item (portfolio) rather than the Portfolio summary item, while still
+// falling back correctly for exact matches. Returns every product tied at
+// the longest match — e.g. /payments is reachable from both Operations
+// ("Payments") and Audit & Controls ("Payment Audit"), so either module
+// unlocks it; a caller should block only if the user has none of the
+// returned products. Returns [] for routes not represented in SECTIONS at
+// all (login, admin tools, etc.) — those are shared/platform and
+// unprotected by module entitlements.
+export function findProductsForPath(pathname: string): ModuleKey[] {
+  let bestLen = -1;
+  let bestItems: NavItem[] = [];
+  for (const section of SECTIONS) {
+    for (const item of section.items) {
+      if (item.href && isItemActive(pathname, item.href)) {
+        if (item.href.length > bestLen) {
+          bestLen = item.href.length;
+          bestItems = [item];
+        } else if (item.href.length === bestLen) {
+          bestItems.push(item);
+        }
+      }
+    }
+  }
+  const products = bestItems.map((i) => i.product).filter((p): p is ModuleKey => !!p);
+  return Array.from(new Set(products));
 }
 
 interface Props {
@@ -186,7 +220,13 @@ export default function Sidebar({ user, onLogout }: Props) {
       </Link>
 
       <div className="flex-1">
-        {SECTIONS.filter((s) => !s.adminOnly || isAdmin).map((section) => (
+        {SECTIONS.filter((s) => !s.adminOnly || isAdmin)
+          .map((section) => ({
+            ...section,
+            items: section.items.filter((item) => !item.product || hasModule(item.product)),
+          }))
+          .filter((section) => section.items.length > 0)
+          .map((section) => (
           <div key={section.label} className="mt-2">
             <div
               className="text-[9.5px] font-semibold uppercase tracking-wider px-4 pt-1 pb-1"

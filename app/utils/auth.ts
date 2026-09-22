@@ -4,6 +4,9 @@ export interface User {
   role: string;
   email: string;
   company_name: string;
+  // Enabled product modules for this tenant ('sales' | 'operations' | 'portfolio' | 'audit').
+  // Absent/undefined means "all modules" (fail-open) — see api/utils/tenant_modules.py.
+  modules?: string[];
 }
 
 export function getToken(): string | null {
@@ -38,4 +41,12 @@ export function getRole(): string {
 
 export function isAdmin(): boolean {
   return getRole() === '1';
+}
+
+// Fail-open: no `modules` on the user (legacy token, or entitlements not yet
+// configured for this tenant) means unrestricted/full access.
+export function hasModule(moduleKey: string): boolean {
+  const user = getUser();
+  if (!user || !user.modules) return true;
+  return user.modules.includes(moduleKey);
 }

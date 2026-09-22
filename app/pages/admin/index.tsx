@@ -17,6 +17,13 @@ const ADMIN_PAGES = [
     icon: "🧪",
     path: "/admin/test-data-generator",
   },
+  {
+    title: "TDSP Meter Read Calendar",
+    description:
+      "Upload each TDSP's annual meter-read schedule (Oncor, CenterPoint, TNMP, AEP) so Enrollment can resolve Meter Read Date start dates automatically.",
+    icon: "📅",
+    path: "/admin/tdsp-calendar",
+  },
 ];
 
 export default function AdminIndex() {

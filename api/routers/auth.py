@@ -33,4 +33,5 @@ async def get_me(payload: dict = Depends(require_auth)):
         "email":        payload.get("email"),
         "rep_id":       payload.get("rep_id"),
         "company_name": payload.get("company_name", ""),
+        "modules":      payload.get("modules"),
     }
