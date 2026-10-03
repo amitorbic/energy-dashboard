@@ -7,6 +7,9 @@ export interface User {
   // Enabled product modules for this tenant ('sales' | 'operations' | 'portfolio' | 'audit').
   // Absent/undefined means "all modules" (fail-open) — see api/utils/tenant_modules.py.
   modules?: string[];
+  // Forces the mandatory password-change screen on login — see
+  // api/migrations/045_add_must_change_password_to_users.sql.
+  must_change_password?: boolean;
 }
 
 export function getToken(): string | null {

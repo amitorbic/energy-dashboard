@@ -45,6 +45,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 import ercot_scraper_engine as engine
+from utils.trigger_reference_sync import trigger_incremental_sync
 
 logging.basicConfig(
     level=logging.INFO,
@@ -515,6 +516,8 @@ async def main():
                 inserted,
                 save_reason,
             )
+            if inserted:
+                trigger_incremental_sync(["ercot_lfc_history"])
 
     except Exception:
         log.exception("Pipeline execution failed (processing/save stage):")

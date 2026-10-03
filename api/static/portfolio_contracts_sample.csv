@@ -1,0 +1,4 @@
+esi_id,load_profile,contract_rate,annual_volume,contract_type,contract_start_date,contract_end_date
+10443720000000001,RESL_NORTH_1,0.065,120000,Fix,,12/31/2027
+10443720000000002,RESL_SOUTH_1,0.072,85000,Fix,03/01/2027,03/01/2029
+10443720000000003,RESL_COAST_1,0.058,200000,LMP,,09/30/2028

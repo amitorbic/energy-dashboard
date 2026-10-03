@@ -7,8 +7,9 @@ if sys.platform == "win32":
 from dotenv import load_dotenv
 
 load_dotenv()
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from middleware.auth import require_module
 from routers import auth
 from routers import (
     auth,
@@ -20,6 +21,15 @@ from routers import (
     daily_pricing,
     contracts_confirm,
 )
+
+# Per-router module entitlement, applied below at include_router() as a
+# whole-router dependency -- see docs/ORBIC_PRODUCT_MODULARIZATION_SCOPE.md
+# section 15. Routers with mixed/shared ownership (commission.py) gate
+# per-endpoint instead and are left without a router-level dependency here.
+_sales = [Depends(require_module("sales"))]
+_operations = [Depends(require_module("operations"))]
+_portfolio = [Depends(require_module("portfolio"))]
+_audit = [Depends(require_module("audit"))]
 
 app = FastAPI(title="AmeriPower API", version="1.0.0")
 
@@ -54,55 +64,57 @@ def health():
     return {"status": "ok", "app": "AmeriPower API", "version": "1.0.0"}
 
 
-app.include_router(daily_pricing.router, prefix="/api")
-app.include_router(gas_strip.router, prefix="/api")
-app.include_router(heat_rate.router, prefix="/api")
-app.include_router(consumption.router, prefix="/api")
-app.include_router(margin.router, prefix="/api")
-app.include_router(charges.router, prefix="/api")
+app.include_router(daily_pricing.router, prefix="/api", dependencies=_sales)
+app.include_router(gas_strip.router, prefix="/api", dependencies=_sales)
+app.include_router(heat_rate.router, prefix="/api", dependencies=_sales)
+app.include_router(consumption.router, prefix="/api", dependencies=_sales)
+app.include_router(margin.router, prefix="/api", dependencies=_sales)
+app.include_router(charges.router, prefix="/api", dependencies=_sales)
 from routers.custom_pricing import router as customers_router
 
-app.include_router(customers_router, prefix="/api")
+app.include_router(customers_router, prefix="/api", dependencies=_operations)
 print(app.routes)
 from routers.brokers import router as brokers_router
 
-app.include_router(brokers_router, prefix="/api")
+app.include_router(brokers_router, prefix="/api", dependencies=_sales)
 from routers.email_pricing import router as email_router
 
-app.include_router(email_router, prefix="/api")
+app.include_router(email_router, prefix="/api", dependencies=_sales)
 from routers.commission import router as commission_router
 
+# commission.py is gated per-endpoint (mixed sales/audit ownership) -- no
+# router-level dependency here, see routers/commission.py.
 app.include_router(commission_router, prefix="/api")
 
 from routers.contracts_confirm import router as contracts_router
 
-app.include_router(contracts_router, prefix="/api")
+app.include_router(contracts_router, prefix="/api", dependencies=_sales)
 
 from routers import billing
 
-app.include_router(billing.router, prefix="/api")
+app.include_router(billing.router, prefix="/api", dependencies=_audit)
 
 from routers import contract_renewal
 
-app.include_router(contract_renewal.router, prefix="/api")
+app.include_router(contract_renewal.router, prefix="/api", dependencies=_operations)
 
 from routers import bne
 
-app.include_router(bne.router, prefix="/api")
+app.include_router(bne.router, prefix="/api", dependencies=_sales)
 
 from routers import msp
 
-app.include_router(msp.router, prefix="/api")
+app.include_router(msp.router, prefix="/api", dependencies=_sales)
 
 from routers import sample_bill
 
-app.include_router(sample_bill.router, prefix="/api")
+app.include_router(sample_bill.router, prefix="/api", dependencies=_sales)
 from routers.payment import router as payment_router
 
-app.include_router(payment_router)
+app.include_router(payment_router, dependencies=_audit)
 from routers.collections import router as collections_router
 
-app.include_router(collections_router)
+app.include_router(collections_router, dependencies=_operations)
 
 from routers.imports import router as imports_router
 
@@ -110,52 +122,56 @@ app.include_router(imports_router)
 
 from routers.portfolio import router as portfolio_router
 
-app.include_router(portfolio_router, prefix="/api")
+app.include_router(portfolio_router, prefix="/api", dependencies=_portfolio)
 from routers.hedging import router as hedging_router
 
-app.include_router(hedging_router, prefix="/api")
+app.include_router(hedging_router, prefix="/api", dependencies=_portfolio)
 
 from routers.dam import router as dam_router
 
-app.include_router(dam_router, prefix="/api")
+app.include_router(dam_router, prefix="/api", dependencies=_portfolio)
 
 from routers.mtm import router as mtm_router
 
-app.include_router(mtm_router, prefix="/api")
+app.include_router(mtm_router, prefix="/api", dependencies=_portfolio)
 
 from routers.risk import router as risk_router
 
-app.include_router(risk_router, prefix="/api")
+app.include_router(risk_router, prefix="/api", dependencies=_portfolio)
 
 from routers.ercot_market import router as ercot_market_router
 
-app.include_router(ercot_market_router, prefix="/api")
+app.include_router(ercot_market_router, prefix="/api", dependencies=_portfolio)
 
 from routers import enrollment
 
-app.include_router(enrollment.router, prefix="/api")
+app.include_router(enrollment.router, prefix="/api", dependencies=_audit)
 
 from routers import billing_engine as billing_engine_router
 from routers import enrollment_engine as enrollment_engine_router
 from routers import invoice_engine as invoice_engine_router
 
-app.include_router(billing_engine_router.router, prefix="/api")
-app.include_router(enrollment_engine_router.router, prefix="/api")
-app.include_router(invoice_engine_router.router, prefix="/api")
+app.include_router(billing_engine_router.router, prefix="/api", dependencies=_operations)
+app.include_router(enrollment_engine_router.router, prefix="/api", dependencies=_operations)
+app.include_router(invoice_engine_router.router, prefix="/api", dependencies=_operations)
 
 from routers import esi_master as esi_master_router
 
-app.include_router(esi_master_router.router, prefix="/api")
+app.include_router(esi_master_router.router, prefix="/api", dependencies=_sales)
 
 from routers import admin_addon_types as admin_addon_types_router
 from routers import admin_test_data as admin_test_data_router
 from routers import admin_billing as admin_billing_router
 from routers import tdsp_calendar_admin as tdsp_calendar_admin_router
+from routers import admin_reference_sync as admin_reference_sync_router
+from routers import admin_portfolio_contracts as admin_portfolio_contracts_router
 
 app.include_router(admin_addon_types_router.router, prefix="/api")
 app.include_router(admin_test_data_router.router, prefix="/api")
 app.include_router(admin_billing_router.router, prefix="/api")
 app.include_router(tdsp_calendar_admin_router.router, prefix="/api")
+app.include_router(admin_reference_sync_router.router, prefix="/api")
+app.include_router(admin_portfolio_contracts_router.router, prefix="/api")
 
 from routers import ercot_lfc_admin as ercot_lfc_admin_router
 
@@ -167,7 +183,7 @@ app.include_router(consumer_router.router, prefix="/api")
 
 from routers import document_parser as document_parser_router
 
-app.include_router(document_parser_router.router, prefix="/api")
+app.include_router(document_parser_router.router, prefix="/api", dependencies=_sales)
 
 from routers import broker_auth as broker_auth_router
 from routers import broker_home as broker_home_router
@@ -193,7 +209,7 @@ app.include_router(voice_router.router, prefix="/api")
 
 from routers.monitoring import router as monitoring_router
 
-app.include_router(monitoring_router, prefix="/api")
+app.include_router(monitoring_router, prefix="/api", dependencies=_portfolio)
 
 from routers import email_replies as email_replies_router
 

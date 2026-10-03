@@ -138,6 +138,28 @@ function fmt(n: number, dec = 3) {
     maximumFractionDigits: dec,
   });
 }
+function fmtDateTime(d: string | null | undefined) {
+  if (!d) return "—";
+  return new Date(d).toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+function DataAsOfBadge({ dataAsOf }: { dataAsOf: string | null | undefined }) {
+  return (
+    <div
+      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[var(--r-sm)] border text-xs font-medium"
+      style={{ background: "var(--ct-surface-hover)", borderColor: "var(--ct-border-default)", color: "var(--ct-text-primary)" }}
+      title="When this tenant last successfully received the underlying ERCOT reference data this forecast is based on."
+    >
+      <span aria-hidden="true">🕒</span>
+      Reference data as of: {fmtDateTime(dataAsOf)}
+    </div>
+  );
+}
 function aggregateHourly(intervals: number[], hourIdx: number) {
   const start = hourIdx * 4;
   return intervals.slice(start, start + 4).reduce((a, b) => a + b, 0);
@@ -819,6 +841,7 @@ export default function PositionScreen() {
 
   const [rows, setRows] = useState<PositionRow[]>([]);
   const [hours, setHours] = useState<number[]>([]);
+  const [dataAsOf, setDataAsOf] = useState<string | null>(null);
   const [chartType, setChartType] = useState<"bar" | "line">("bar");
   const [loading, setLoading] = useState(false);
   const [showCriteria, setShowCriteria] = useState(true);
@@ -844,11 +867,13 @@ export default function PositionScreen() {
       });
       setRows(res.data.rows || []);
       setHours(res.data.hours || []);
+      setDataAsOf(res.data.data_as_of ?? null);
     } catch (e) {
       console.error(e);
       const hrs = Array.from({ length: 24 }, (_, i) => i + 1);
       setHours(hrs);
       setRows(buildZeroRows(criteria.zones, hrs));
+      setDataAsOf(null);
     } finally {
       setLoading(false);
     }
@@ -1328,6 +1353,12 @@ export default function PositionScreen() {
                 </button>
               </div>
             </div>
+          </div>
+        )}
+
+        {activeTab === "position" && ran && !loading && (
+          <div className="flex justify-end">
+            <DataAsOfBadge dataAsOf={dataAsOf} />
           </div>
         )}
 

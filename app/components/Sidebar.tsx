@@ -42,7 +42,7 @@ export const SECTIONS: NavSection[] = [
     items: [
       { label: "Enrollment", href: "/enrollment", product: "operations" },
       { label: "Billing", href: "/billing", product: "operations" },
-      { label: "Payments", href: "/payments", product: "operations" },
+      { label: "Payments", href: "/payments", product: "audit" },
       { label: "Past Due", href: "/past-due", product: "operations" },
       { label: "Customers", href: "/customers", product: "operations" },
     ],
@@ -56,6 +56,7 @@ export const SECTIONS: NavSection[] = [
       { label: "DAM", href: "/portfolio/dam", product: "portfolio" },
       { label: "MTM", href: "/portfolio/mtm", product: "portfolio" },
       { label: "Risk", href: "/portfolio/risk", product: "portfolio" },
+      { label: "Monitoring", href: "/monitoring/checkpoints", product: "portfolio" },
     ],
   },
   {
@@ -69,7 +70,6 @@ export const SECTIONS: NavSection[] = [
       { label: "Billing Audit", href: "/billing-audit", product: "audit" },
       { label: "Payment Audit", href: "/payments", product: "audit" },
       { label: "Commission Audit", href: "/commission/exceptions", product: "audit" },
-      { label: "Monitoring", href: "/monitoring/checkpoints", product: "audit" },
     ],
   },
   {

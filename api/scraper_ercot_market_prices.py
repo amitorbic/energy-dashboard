@@ -81,6 +81,7 @@ from patchright.async_api import async_playwright
 load_dotenv()
 
 import ercot_scraper_engine as engine  # read-only: reuse PROXY_*/BRIGHTDATA_* constants only
+from utils.trigger_reference_sync import trigger_incremental_sync
 
 logging.basicConfig(
     level=logging.INFO,
@@ -490,6 +491,13 @@ async def main():
         total += await process_dam_mcpc_date(d, capture_date, capture_time)
 
     log.info("Market-prices scrape run complete. %d total rows committed.", total)
+
+    if total > 0:
+        trigger_incremental_sync([
+            "ercot_rtm_settlement_prices",
+            "ercot_dam_settlement_prices",
+            "ercot_dam_capacity_prices",
+        ])
 
 
 if __name__ == "__main__":

@@ -4,8 +4,8 @@ Master database engine — holds only the `reps` table.
 This is NOT a tenant DB. It's the routing directory: given a subdomain,
 it returns the (rep_id, db_name) pair for that tenant.
 
-Configured via MASTER_DB_NAME env var (default: ameripower_master).
-Run api/migrations/001_create_reps_table.sql before first use.
+Configured via MASTER_DB_NAME env var (default: orbic_master).
+Run api/migrations/046_create_orbic_master.sql before first use.
 """
 
 import os
@@ -21,7 +21,7 @@ _DB_USER     = os.getenv("DB_USER", "root")
 _DB_PASSWORD = os.getenv("DB_PASSWORD", "")
 _DB_HOST     = os.getenv("DB_HOST", "localhost")
 _DB_PORT     = os.getenv("DB_PORT", "3306")
-_MASTER_DB   = os.getenv("MASTER_DB_NAME", "ameripower_master")
+_MASTER_DB   = os.getenv("MASTER_DB_NAME", "orbic_master")
 
 _MASTER_URL = (
     f"mysql+aiomysql://{_DB_USER}:{_DB_PASSWORD}@{_DB_HOST}:{_DB_PORT}"

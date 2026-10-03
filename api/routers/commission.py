@@ -37,8 +37,18 @@ from controllers.commission import (
 )
 from fastapi.responses import StreamingResponse
 import io as _io
+from middleware.auth import require_module, require_any_module
 
 router = APIRouter(prefix="/commission", tags=["Commission"])
+
+# Commission is a mixed-ownership router: most endpoints are Sales, but
+# /exceptions is the Commission Audit view and /data/{sid} is a shared
+# mutation used by both the Sales edit flow and the Audit exception-fix
+# flow. Gated per-endpoint below rather than at the router level -- see
+# docs/ORBIC_PRODUCT_MODULARIZATION_SCOPE.md.
+_sales = Depends(require_module("sales"))
+_audit = Depends(require_module("audit"))
+_sales_or_audit = Depends(require_any_module("sales", "audit"))
 
 
 # ---------------------------------------------------------------------------
@@ -48,12 +58,12 @@ router = APIRouter(prefix="/commission", tags=["Commission"])
 # -- Dropdowns / helpers
 
 
-@router.get("/vendors")
+@router.get("/vendors", dependencies=[_sales])
 async def list_vendors(db: AsyncSession = Depends(get_db)):
     return await get_vendor_dropdown(db)
 
 
-@router.get("/months")
+@router.get("/months", dependencies=[_sales])
 async def list_months(db: AsyncSession = Depends(get_db)):
     return await get_months_dropdown(db)
 
@@ -61,7 +71,7 @@ async def list_months(db: AsyncSession = Depends(get_db)):
 # -- Upload commission file
 
 
-@router.post("/upload")
+@router.post("/upload", dependencies=[_sales])
 async def upload_commission(
     file: UploadFile = File(...),
     start_date: str = Form(...),
@@ -105,7 +115,7 @@ async def upload_commission(
 # -- View data
 
 
-@router.get("/data")
+@router.get("/data", dependencies=[_sales])
 async def view_data(
     vendor: Optional[str] = Query(None),
     vendors: Optional[list[str]] = Query(None),
@@ -124,7 +134,7 @@ async def view_data(
 # -- Delete entire month (step 3 in flow — clear last month before recalc)
 
 
-@router.delete("/data/month")
+@router.delete("/data/month", dependencies=[_sales])
 async def delete_month_data(
     month: str = Query(...),
     uid: int = Query(...),
@@ -137,7 +147,7 @@ async def delete_month_data(
 # -- Upload payment summary
 
 
-@router.post("/payments/upload")
+@router.post("/payments/upload", dependencies=[_sales])
 async def upload_payments(
     file: UploadFile = File(...),
     uid: int = Form(...),
@@ -151,7 +161,7 @@ async def upload_payments(
     )
 
 
-@router.get("/payment-sheet/download")
+@router.get("/payment-sheet/download", dependencies=[_sales])
 async def download_payment_sheet(
     month: str = Query(...),
     db: AsyncSession = Depends(get_db),
@@ -167,12 +177,12 @@ async def download_payment_sheet(
 # -- Adjustments
 
 
-@router.get("/adjustments")
+@router.get("/adjustments", dependencies=[_sales])
 async def list_adjustments(db: AsyncSession = Depends(get_db)):
     return await get_adjustments(db)
 
 
-@router.post("/adjustments")
+@router.post("/adjustments", dependencies=[_sales])
 async def create_adjustment(
     data: dict,
     uid: int = Query(...),
@@ -182,7 +192,7 @@ async def create_adjustment(
     return await add_adjustment(data, uid, user_name, db)
 
 
-@router.get("/exceptions")
+@router.get("/exceptions", dependencies=[_audit])
 async def commission_exceptions(
     month: Optional[str] = Query(None),
     db: AsyncSession = Depends(get_db),
@@ -196,7 +206,7 @@ async def commission_exceptions(
     return await get_commission_exceptions(db, month_pattern)
 
 
-@router.delete("/adjustments/{sid}")
+@router.delete("/adjustments/{sid}", dependencies=[_sales])
 async def remove_adjustment(
     sid: int,
     uid: int = Query(...),
@@ -209,7 +219,7 @@ async def remove_adjustment(
 # -- Calculate commission
 
 
-@router.post("/calculate")
+@router.post("/calculate", dependencies=[_sales])
 async def run_calculate_commission(
     data: dict,
     db: AsyncSession = Depends(get_db),
@@ -223,7 +233,7 @@ async def run_calculate_commission(
 # -- Summary months dropdown
 
 
-@router.get("/summary/months")
+@router.get("/summary/months", dependencies=[_sales])
 async def summary_months(db: AsyncSession = Depends(get_db)):
     from controllers.commission import get_summary_months
 
@@ -233,7 +243,7 @@ async def summary_months(db: AsyncSession = Depends(get_db)):
 # -- Review summary
 
 
-@router.get("/summary")
+@router.get("/summary", dependencies=[_sales])
 async def review_summary(
     vendor: Optional[str] = Query(None),
     month: Optional[str] = Query(None),
@@ -243,7 +253,7 @@ async def review_summary(
     return await get_review_summary(db, vendor, month, full_history)
 
 
-@router.post("/summary/payment")
+@router.post("/summary/payment", dependencies=[_sales])
 async def manual_payment(
     data: dict,
     db: AsyncSession = Depends(get_db),
@@ -259,7 +269,7 @@ async def manual_payment(
     )
 
 
-@router.get("/summary/history/{vendor}")
+@router.get("/summary/history/{vendor}", dependencies=[_sales])
 async def full_history(
     vendor: str,
     db: AsyncSession = Depends(get_db),
@@ -270,7 +280,7 @@ async def full_history(
 # -- User log
 
 
-@router.get("/logs/user")
+@router.get("/logs/user", dependencies=[_sales])
 async def user_log(
     limit: int = Query(500),
     db: AsyncSession = Depends(get_db),
@@ -279,7 +289,7 @@ async def user_log(
 
 
 # -- Email commission files
-@router.post("/email")
+@router.post("/email", dependencies=[_sales])
 async def email_commission(
     data: dict,
     db: AsyncSession = Depends(get_db),
@@ -301,7 +311,7 @@ async def email_commission(
 
 
 # -- Download single broker commission file
-@router.get("/download/{vendor}")
+@router.get("/download/{vendor}", dependencies=[_sales])
 async def download_file(
     vendor: str,
     month: str = Query(None),
@@ -326,7 +336,7 @@ async def download_file(
 
 
 # -- Email log for commission
-@router.get("/logs/email")
+@router.get("/logs/email", dependencies=[_sales])
 async def email_log(
     limit: int = Query(500),
     db: AsyncSession = Depends(get_db),
@@ -344,7 +354,7 @@ async def email_log(
 # -- Dynamic routes LAST
 
 
-@router.put("/data/{sid}")
+@router.put("/data/{sid}", dependencies=[_sales_or_audit])
 async def edit_row(
     sid: int,
     data: dict,
@@ -355,7 +365,7 @@ async def edit_row(
     return await update_commission_row(sid, data, uid, user_name, db)
 
 
-@router.delete("/data/{sid}")
+@router.delete("/data/{sid}", dependencies=[_sales_or_audit])
 async def delete_row(
     sid: int,
     uid: int = Query(...),

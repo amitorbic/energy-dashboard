@@ -2,8 +2,8 @@ import os
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from utils.database import get_db
-from models.schemas import LoginRequest, LoginResponse
-from controllers.auth import login_user
+from models.schemas import LoginRequest, LoginResponse, ChangePasswordRequest
+from controllers.auth import login_user, change_password
 from middleware.auth import require_auth
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -17,6 +17,19 @@ async def login(
     rep_id       = int(os.getenv("TENANT_REP_ID", "0"))
     company_name = os.getenv("TENANT_COMPANY_NAME", "")
     return await login_user(db, data, rep_id, company_name)
+
+
+@router.post("/change-password", response_model=LoginResponse)
+async def change_password_endpoint(
+    data: ChangePasswordRequest,
+    payload: dict = Depends(require_auth),
+    db: AsyncSession = Depends(get_db),
+):
+    rep_id       = int(os.getenv("TENANT_REP_ID", "0"))
+    company_name = os.getenv("TENANT_COMPANY_NAME", "")
+    return await change_password(
+        db, int(payload["user_id"]), data.current_password, data.new_password, rep_id, company_name
+    )
 
 
 @router.post("/logout")

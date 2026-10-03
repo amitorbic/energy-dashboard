@@ -428,7 +428,7 @@ Reasoning, from this pass's inspection:
   fits this exact pattern — no new mechanism invented, per this task's explicit
   "use the existing mechanism" instruction.
 - The DB-backed alternative depends on querying the **master** DB
-  (`ameripower_master`) from each tenant's deployed instance. That pattern
+  (`orbic_master`) from each tenant's deployed instance. That pattern
   (`utils/master_db.py::resolve_tenant`) is real code, but its only intended
   caller, `middleware/tenant.py`'s `TenantMiddleware`, is **never registered** in
   `api/main.py` — confirmed by inspection (no `app.add_middleware(TenantMiddleware...)`

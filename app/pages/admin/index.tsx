@@ -24,6 +24,13 @@ const ADMIN_PAGES = [
     icon: "📅",
     path: "/admin/tdsp-calendar",
   },
+  {
+    title: "Portfolio Contracts",
+    description:
+      "Upload contract data for Portfolio-only tenants, or run the one-time upgrade to full-platform auto-sync from contract_renewal.",
+    icon: "📈",
+    path: "/admin/portfolio-contracts-upload",
+  },
 ];
 
 export default function AdminIndex() {

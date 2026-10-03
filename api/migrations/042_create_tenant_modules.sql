@@ -1,13 +1,14 @@
 -- 042_create_tenant_modules.sql
 --
 -- Product-module entitlements for the ORBIC Sales / Operations / Portfolio /
--- Audit & Controls split. Lives in the MASTER DB (ameripower_master), next to
--- `reps` (001_create_reps_table.sql) — this is tenant-level business state
+-- Audit & Controls split. Lives in the MASTER DB (orbic_master, renamed from
+-- ameripower_master — see 046_create_orbic_master.sql), next to `reps`
+-- (001_create_reps_table.sql) — this is tenant-level business state
 -- ("which products has this REP purchased"), not per-tenant application data.
 --
--- Run this against `ameripower_master`, NOT the per-tenant `energyapp`/
+-- Run this against `orbic_master`, NOT the per-tenant `energyapp`/
 -- `u972964962_orbic` database:
---   mysql -u <db_user> -p ameripower_master < api/migrations/042_create_tenant_modules.sql
+--   mysql -u <db_user> -p orbic_master < api/migrations/042_create_tenant_modules.sql
 --
 -- Absence of rows for a given rep_id is intentional and means "no
 -- restriction configured yet" — api/utils/tenant_modules.py treats a missing

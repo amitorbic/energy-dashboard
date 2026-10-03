@@ -1113,12 +1113,18 @@ async def get_forecast_data(criteria: dict, db: AsyncSession) -> dict:
         ],
     ]
 
+    from utils.reference_freshness import get_freshness
+
+    freshness = await get_freshness(db, ["ercot_shape_loadzone", "ercot_lfc_history"])
+
     return {
         "rows": rows,
         "hours": hours,
         "criteria": criteria,
         "zone_annual_mwh": zone_annual_mwh,  # for debug/display
         "active_contracts": len([r for r in contracts if True]),  # count
+        "data_as_of": freshness["data_as_of"],
+        "reference_data_sources": freshness["sources"],
     }
 
 
@@ -1391,6 +1397,10 @@ async def get_dna_forecast_data(criteria: dict, db: AsyncSession) -> dict:
         ],
     ]
 
+    from utils.reference_freshness import get_freshness
+
+    freshness = await get_freshness(db, ["ercot_load_history"])
+
     return {
         "rows": rows,
         "hours": hours,
@@ -1401,6 +1411,8 @@ async def get_dna_forecast_data(criteria: dict, db: AsyncSession) -> dict:
         "zone_annual_mwh": {
             z: portfolio_annual.get((start.year, z), 0.0) for z in zones
         },
+        "data_as_of": freshness["data_as_of"],
+        "reference_data_sources": freshness["sources"],
     }
 
 

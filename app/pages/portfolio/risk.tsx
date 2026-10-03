@@ -67,6 +67,8 @@ interface OverallRisk {
   customer: CustomerRisk;
   weather: WeatherRisk;
   calculated_at: string;
+  data_as_of?: string | null;
+  reference_data_sources?: Record<string, { last_updated: string | null }>;
 }
 
 interface HistoryRow {
@@ -113,6 +115,19 @@ function fmtDateTime(d: string | null | undefined) {
     hour: "numeric",
     minute: "2-digit",
   });
+}
+
+function DataAsOfBadge({ dataAsOf }: { dataAsOf: string | null | undefined }) {
+  return (
+    <div
+      className="inline-flex items-center gap-1.5 mt-2 px-2.5 py-1 rounded-[var(--r-sm)] border text-xs font-medium"
+      style={{ background: "var(--ct-surface-hover)", borderColor: "var(--ct-border-default)", color: "var(--ct-text-primary)" }}
+      title="When this tenant last successfully received the underlying ERCOT reference data (weather/load history) this score is based on."
+    >
+      <span aria-hidden="true">🕒</span>
+      Reference data as of: {fmtDateTime(dataAsOf)}
+    </div>
+  );
 }
 
 function StatusBadge({ status }: { status: Status }) {
@@ -282,6 +297,7 @@ export default function RiskPage() {
                 <p className="text-xs mt-2" style={{ color: "var(--ct-text-muted)" }}>
                   Last calculated: <span style={{ color: "var(--ct-text-primary)" }}>{fmtDateTime(risk.calculated_at)}</span>
                 </p>
+                <DataAsOfBadge dataAsOf={risk.data_as_of} />
               </div>
               <div className="w-64 hidden sm:block">
                 <TrendChart points={history} />

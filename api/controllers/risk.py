@@ -392,6 +392,10 @@ async def calculate_overall_risk(db: AsyncSession) -> dict:
     )
     await db.commit()
 
+    from utils.reference_freshness import get_freshness
+
+    freshness = await get_freshness(db, ["ercot_lfc_history", "ercot_load_history"])
+
     return {
         "score_date": today.isoformat(),
         "overall_score": overall_score,
@@ -401,6 +405,8 @@ async def calculate_overall_risk(db: AsyncSession) -> dict:
         "customer": customer,
         "weather": weather,
         "calculated_at": calculated_at.isoformat(),
+        "data_as_of": freshness["data_as_of"],
+        "reference_data_sources": freshness["sources"],
     }
 
 
