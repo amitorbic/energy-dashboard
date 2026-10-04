@@ -33,7 +33,8 @@ as it was before the call, not half-migrated.
 """
 import io
 import os
-from datetime import datetime
+from datetime import datetime, date, timedelta
+from decimal import Decimal
 
 import pandas as pd
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
@@ -45,6 +46,7 @@ from middleware.auth import require_admin
 from utils.database import get_db
 from utils.tenant_module_config import get_configured_modules
 from utils.tenant_modules import ALL_MODULES
+from utils.zone_mapping import weather_to_load
 
 router = APIRouter(prefix="/admin/portfolio-contracts", tags=["admin"])
 
@@ -72,6 +74,116 @@ _SYNC_CANDIDATES_SQL = """
 """
 
 _DIFF_FIELDS = ["load_profile", "contract_rate", "annual_volume", "contract_end_date", "contract_type", "company_name", "broker_code"]
+
+
+def _extract_zones(load_profile: str):
+    """Return (weather_zone, load_zone) from a load_profile string, or (None, None)."""
+    if not load_profile:
+        return None, None
+    parts = load_profile.upper().split("_")
+    weather_zone = next((p for p in parts if weather_to_load(p)), None)
+    load_zone = weather_to_load(weather_zone) if weather_zone else None
+    return weather_zone, load_zone
+
+
+def _forecast_end_date(end_date_str: str) -> str:
+    """Return forecast_end_date: future dates as-is, expired/null → today + 15 days."""
+    today = date.today()
+    raw = _parse_date(end_date_str)
+    if raw:
+        d = datetime.strptime(raw, "%Y-%m-%d").date()
+        if d >= today:
+            return raw
+    return (today + timedelta(days=15)).strftime("%Y-%m-%d")
+
+
+async def _sync_forecast_tables(db: AsyncSession, esi_id: str, contract_type: str,
+                                 load_profile: str, annual_volume: str,
+                                 contract_start_date: str | None,
+                                 contract_end_date: str) -> None:
+    """
+    After a portfolio_contracts upload row is saved, keep the two forecast
+    tables in sync:
+
+      contract_type = 'Future'  → future_forecast_dates
+                                  (forecast_start_date = contract_start_date,
+                                   forecast_end_date   = contract_end_date)
+                                  Also remove from customer_forecast_dates if
+                                  a stale active row exists (type was changed).
+
+      any other type            → customer_forecast_dates
+                                  (forecast_end_date per the expiry rule)
+                                  Also remove from future_forecast_dates if
+                                  the contract was previously Future.
+    """
+    weather_zone, load_zone = _extract_zones(load_profile)
+    try:
+        annual_kwh = Decimal(str(annual_volume).replace(",", "")) if annual_volume else None
+    except Exception:
+        annual_kwh = None
+
+    if contract_type == "Future":
+        # Must have a start date to be useful in future_forecast_dates
+        if not contract_start_date:
+            return
+        await db.execute(text("""
+            INSERT INTO future_forecast_dates
+                (esid, forecast_start_date, forecast_end_date,
+                 load_profile, annual_kwh, load_zone, weather_zone, source)
+            VALUES
+                (:esid, :start, :end, :lp, :kwh, :lz, :wz, 'portfolio_upload')
+            ON DUPLICATE KEY UPDATE
+                forecast_start_date = VALUES(forecast_start_date),
+                forecast_end_date   = VALUES(forecast_end_date),
+                load_profile        = VALUES(load_profile),
+                annual_kwh          = VALUES(annual_kwh),
+                load_zone           = VALUES(load_zone),
+                weather_zone        = VALUES(weather_zone),
+                source              = 'portfolio_upload'
+        """), {
+            "esid": esi_id,
+            "start": contract_start_date,
+            "end": contract_end_date,
+            "lp": load_profile,
+            "kwh": annual_kwh,
+            "lz": load_zone,
+            "wz": weather_zone,
+        })
+        # Remove stale active row if this ESI was previously non-Future
+        await db.execute(
+            text("DELETE FROM customer_forecast_dates WHERE esid = :esid"),
+            {"esid": esi_id},
+        )
+    else:
+        fend = _forecast_end_date(contract_end_date)
+        await db.execute(text("""
+            INSERT INTO customer_forecast_dates
+                (esid, contract_end_date, forecast_end_date,
+                 load_profile, annual_kwh, load_zone, weather_zone)
+            VALUES
+                (:esid, :cend, :fend, :lp, :kwh, :lz, :wz)
+            ON DUPLICATE KEY UPDATE
+                contract_end_date = VALUES(contract_end_date),
+                forecast_end_date = VALUES(forecast_end_date),
+                load_profile      = VALUES(load_profile),
+                annual_kwh        = VALUES(annual_kwh),
+                load_zone         = VALUES(load_zone),
+                weather_zone      = VALUES(weather_zone),
+                updated_at        = CURRENT_TIMESTAMP
+        """), {
+            "esid": esi_id,
+            "cend": contract_end_date,
+            "fend": fend,
+            "lp": load_profile,
+            "kwh": annual_kwh,
+            "lz": load_zone,
+            "wz": weather_zone,
+        })
+        # Remove stale future row if this ESI was previously Future
+        await db.execute(
+            text("DELETE FROM future_forecast_dates WHERE esid = :esid"),
+            {"esid": esi_id},
+        )
 
 
 def _parse_date(raw) -> str | None:
@@ -247,6 +359,16 @@ async def upload_portfolio_contracts(
             )
             inserted += 1
             results.append({"line": line_no, "esi_id": params["esi_id"], "status": "inserted"})
+
+        await _sync_forecast_tables(
+            db,
+            esi_id=params["esi_id"],
+            contract_type=params["contract_type"],
+            load_profile=params["load_profile"],
+            annual_volume=params["annual_volume"],
+            contract_start_date=params["contract_start_date"],
+            contract_end_date=params["contract_end_date"],
+        )
 
     await db.commit()
     return {

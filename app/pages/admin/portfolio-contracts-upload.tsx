@@ -262,7 +262,9 @@ export default function PortfolioContractsUploadPage() {
               </label>
               <p className="text-xs mb-2" style={{ color: "var(--ct-text-muted)" }}>
                 Required columns: esi_id, load_profile, contract_rate, annual_volume, contract_type, contract_end_date (MM/DD/YYYY or YYYY-MM-DD).
-                Optional: contract_start_date (blank defaults to today). Re-uploading updates existing rows by esi_id — it does not clear the table first.
+                Optional: contract_start_date (blank defaults to today).
+                Contract types: Fix (fixed $/kWh), LMP (market rate + spread), MTM (month-to-month), Future (signed but not yet active — use with a future contract_start_date; impacts forecasts from that start date forward, not today).
+                Re-uploading updates existing rows by esi_id — it does not clear the table first. Changing a row from Future to Fix/LMP/MTM automatically moves it to the active forecast.
               </p>
               <div className="flex gap-4 mb-3">
                 <button
