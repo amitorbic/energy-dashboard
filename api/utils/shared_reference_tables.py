@@ -91,6 +91,14 @@ SHARED_REFERENCE_TABLES: list[SharedTable] = [
         source_script="scraper_ercot_market_prices.py",
         has_live_trigger=True,
     ),
+    # Master list of valid load profiles; the contract uploads validate against it.
+    # No live writer: maintained by hand in the source DB, so the nightly reconcile is the sync path.
+    SharedTable(
+        name="load_profiles_master",
+        dedup_keys=("full_load_profile",),
+        source_script="manual (no scheduled writer)",
+        has_live_trigger=False,
+    ),
 ]
 
 _BY_NAME = {t.name: t for t in SHARED_REFERENCE_TABLES}

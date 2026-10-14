@@ -9,8 +9,15 @@ interface ZoneSummary {
   customers: number;
   active: number;
   expired: number;
+  future: number;
+  future_customers?: number;
   fixed: number;
+  future_contracts: number;
   lmp: number;
+  mtm: number;
+  mcp: number;
+  mcp2: number;
+  unknown_contracts: number;
   total_usage_kwh: number;
   estimated_mw: number;
   earliest_end: string;
@@ -21,12 +28,28 @@ interface PortfolioSummary {
   total_customers: number;
   active: number;
   expired: number;
+  future: number;
+  future_customers?: number;
   fixed: number;
+  future_contracts: number;
   lmp: number;
   mtm: number;
+  mcp: number;
+  mcp2: number;
+  unknown_contracts: number;
   earliest_end: string;
   latest_end: string;
   zones_count: number;
+  unsynced_contracts?: {
+    available: boolean;
+    total: number;
+    by_reason: {
+      premise_id_null: number;
+      load_profile_null: number;
+      end_date_null: number;
+      end_date_unparseable: number;
+    };
+  };
 }
 
 interface ExpiryRow {
@@ -145,6 +168,40 @@ export default function PortfolioHome() {
           </div>
         </div>
 
+        {/* ── Unknown contract type banner ── */}
+        {summary && (summary.unknown_contracts ?? 0) > 0 && (
+          <div
+            className="rounded-[var(--r-lg)] border px-4 py-3 flex items-center gap-3"
+            style={{ background: "var(--amber-light-tint,#fffbeb)", borderColor: "var(--amber-light,#d97706)" }}
+          >
+            <span className="text-sm font-semibold" style={{ color: "var(--amber-light,#d97706)" }}>
+              {fmt(summary.unknown_contracts)} contract{summary.unknown_contracts !== 1 ? "s" : ""} with unrecognized type
+            </span>
+            <span className="text-sm" style={{ color: "var(--ct-text-secondary)" }}>
+              — shown as Unknown in the mix below. Re-upload or correct in the database to assign a valid type (Fix, Future, LMP, MTM, MCP, MCP2).
+            </span>
+          </div>
+        )}
+
+        {/* ── Unsynced contract_renewal rows banner ── */}
+        {summary?.unsynced_contracts?.available && summary.unsynced_contracts.total > 0 && (
+          <div
+            className="rounded-[var(--r-lg)] border px-4 py-3 flex flex-col gap-1"
+            style={{ background: "var(--amber-light-tint,#fffbeb)", borderColor: "var(--amber-light,#d97706)" }}
+          >
+            <span className="text-sm font-semibold" style={{ color: "var(--amber-light,#d97706)" }}>
+              {fmt(summary.unsynced_contracts.total)} contract record{summary.unsynced_contracts.total !== 1 ? "s" : ""} not shown in Portfolio
+            </span>
+            <span className="text-sm" style={{ color: "var(--ct-text-secondary)" }}>
+              Missing data in the contract list: {fmt(summary.unsynced_contracts.by_reason.premise_id_null)} without an ESI ID,{" "}
+              {fmt(summary.unsynced_contracts.by_reason.load_profile_null)} without a load profile,{" "}
+              {fmt(summary.unsynced_contracts.by_reason.end_date_null)} without an end date,{" "}
+              {fmt(summary.unsynced_contracts.by_reason.end_date_unparseable)} with an end date not in MM/DD/YYYY format.
+              Correct the source records to include them.
+            </span>
+          </div>
+        )}
+
         {/* ── KPI Cards ── */}
         {summary && (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -158,17 +215,32 @@ export default function PortfolioHome() {
               <p className="text-xs mt-1" style={{ color: "var(--ct-text-muted)" }}>
                 {fmt(summary.active)} active · {fmt(summary.expired)} expired
               </p>
+              {(summary.future_customers ?? 0) > 0 && (
+                <p className="text-xs mt-1" style={{ color: "var(--ct-text-muted)" }}>
+                  Future contracts (not yet started): {fmt(summary.future_customers)}
+                </p>
+              )}
             </div>
-            <div className="rounded-[var(--r-lg)] border p-4" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
-              <p className="text-xs uppercase tracking-wide" style={{ color: "var(--ct-text-muted)" }}>
+            <div className="rounded-[var(--r-lg)] border p-4 col-span-1 md:col-span-2" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
+              <p className="text-xs uppercase tracking-wide mb-2" style={{ color: "var(--ct-text-muted)" }}>
                 Contract Mix
               </p>
-              <p className="text-3xl font-bold mt-1" style={{ color: "var(--ct-text-primary)" }}>
-                {fmt(summary.fixed)}
-              </p>
-              <p className="text-xs mt-1" style={{ color: "var(--ct-text-muted)" }}>
-                Fixed · {fmt(summary.lmp)} LMP · {fmt(summary.mtm)} MTM
-              </p>
+              <div className="flex flex-wrap gap-x-4 gap-y-1">
+                {[
+                  { label: "Fix",     val: summary.fixed },
+                  { label: "Future",  val: summary.future_contracts },
+                  { label: "LMP",     val: summary.lmp },
+                  { label: "MTM",     val: summary.mtm },
+                  { label: "MCP",     val: summary.mcp },
+                  { label: "MCP2",    val: summary.mcp2 },
+                  { label: "Unknown", val: summary.unknown_contracts },
+                ].filter(t => (t.val ?? 0) > 0).map(t => (
+                  <span key={t.label} className="text-sm">
+                    <span className="font-bold" style={{ color: "var(--ct-text-primary)" }}>{fmt(t.val)}</span>
+                    <span className="ml-1" style={{ color: "var(--ct-text-muted)" }}>{t.label}</span>
+                  </span>
+                ))}
+              </div>
             </div>
             <div className="rounded-[var(--r-lg)] border p-4" style={{ background: "var(--ct-surface)", borderColor: "var(--ct-border-default)" }}>
               <p className="text-xs uppercase tracking-wide" style={{ color: "var(--ct-text-muted)" }}>
@@ -245,6 +317,14 @@ export default function PortfolioHome() {
                         {fmt(z.active)}
                       </span>
                     </div>
+                    {(z.future_customers ?? 0) > 0 && (
+                      <div className="flex justify-between text-sm">
+                        <span style={{ color: "var(--ct-text-muted)" }}>Future (not yet started)</span>
+                        <span className="font-medium" style={{ color: "var(--ct-text-secondary)" }}>
+                          {fmt(z.future_customers)}
+                        </span>
+                      </div>
+                    )}
                     <div className="flex justify-between text-sm">
                       <span style={{ color: "var(--ct-text-muted)" }}>Fixed</span>
                       <span className="font-medium" style={{ color: "var(--ct-text-secondary)" }}>
@@ -281,7 +361,7 @@ export default function PortfolioHome() {
               </h3>
               <div className="space-y-3">
                 {zones.map((z) => {
-                  const pct = summary
+                  const pct = summary && Number(summary.total_customers) > 0
                     ? Math.round(
                         (z.customers / Number(summary.total_customers)) * 100,
                       )

@@ -1,9 +1,10 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 from typing import Optional
 import sqlalchemy as sa
+from utils.unsynced_contracts import get_unsynced_summary
 from utils.zone_mapping import (
     weather_to_load,
     get_zone_mapping_from_db,
@@ -21,40 +22,60 @@ def extract_zone(load_profile: str) -> str:
 
 
 async def get_portfolio_summary(db: AsyncSession):
+    # status 'future' (type Future, start date after today) is not yet a customer: it is left
+    # out of total_customers, first/last expiry and zones_count and reported separately as
+    # future_customers. The contract-type counts (fixed ... unknown_contracts) feed the
+    # Contract Mix card and deliberately keep counting every row by type.
     result = await db.execute(text("""
     SELECT
-        COUNT(*)                                                        as total_customers,
-        SUM(CASE WHEN CONVERT(status USING utf8mb4)        = 'active'  THEN 1 ELSE 0 END) as active,
-        SUM(CASE WHEN CONVERT(status USING utf8mb4)        = 'expired' THEN 1 ELSE 0 END) as expired,
-        SUM(CASE WHEN CONVERT(status USING utf8mb4)        = 'future'  THEN 1 ELSE 0 END) as future,
+        SUM(CASE WHEN CONVERT(status        USING utf8mb4) <> 'future' THEN 1 ELSE 0 END) as total_customers,
+        SUM(CASE WHEN CONVERT(status        USING utf8mb4) = 'active'  THEN 1 ELSE 0 END) as active,
+        SUM(CASE WHEN CONVERT(status        USING utf8mb4) = 'expired' THEN 1 ELSE 0 END) as expired,
+        SUM(CASE WHEN CONVERT(status        USING utf8mb4) = 'future'  THEN 1 ELSE 0 END) as future,
+        SUM(CASE WHEN CONVERT(status        USING utf8mb4) = 'future'  THEN 1 ELSE 0 END) as future_customers,
         SUM(CASE WHEN CONVERT(contract_type USING utf8mb4) = 'Fix'     THEN 1 ELSE 0 END) as fixed,
+        SUM(CASE WHEN CONVERT(contract_type USING utf8mb4) = 'Future'  THEN 1 ELSE 0 END) as future_contracts,
         SUM(CASE WHEN CONVERT(contract_type USING utf8mb4) = 'LMP'     THEN 1 ELSE 0 END) as lmp,
         SUM(CASE WHEN CONVERT(contract_type USING utf8mb4) = 'MTM'     THEN 1 ELSE 0 END) as mtm,
-        SUM(CASE WHEN CONVERT(contract_type USING utf8mb4) = 'Future'  THEN 1 ELSE 0 END) as future_contracts,
-        MIN(CASE WHEN contract_end_date >= CURDATE() THEN contract_end_date END) as earliest_end,
-        MAX(contract_end_date)                                          as latest_end,
-        COUNT(DISTINCT zone)                                            as zones_count
-       FROM portfolio_view
-     """))
+        SUM(CASE WHEN CONVERT(contract_type USING utf8mb4) = 'MCP'     THEN 1 ELSE 0 END) as mcp,
+        SUM(CASE WHEN CONVERT(contract_type USING utf8mb4) = 'MCP2'    THEN 1 ELSE 0 END) as mcp2,
+        SUM(CASE WHEN CONVERT(contract_type USING utf8mb4) = 'Unknown' THEN 1 ELSE 0 END) as unknown_contracts,
+        MIN(CASE WHEN CONVERT(status USING utf8mb4) <> 'future' AND contract_end_date >= CURDATE()
+                 THEN contract_end_date END)                                               as earliest_end,
+        MAX(CASE WHEN CONVERT(status USING utf8mb4) <> 'future' THEN contract_end_date END) as latest_end,
+        COUNT(DISTINCT CASE WHEN CONVERT(status USING utf8mb4) <> 'future' THEN zone END)  as zones_count
+    FROM portfolio_view
+    """))
     row = result.mappings().fetchone()
-    return dict(row) if row else {}
+    summary = dict(row) if row else {}
+    summary["unsynced_contracts"] = await get_unsynced_summary(db)
+    return summary
 
 
 async def get_portfolio_by_zone(db: AsyncSession):
+    # Same rule as get_portfolio_summary: status 'future' is not counted in customers, usage
+    # or the expiry dates; it is reported as future_customers. The zone row is kept so a zone
+    # that so far only has future contracts still shows its future_customers.
     result = await db.execute(text("""
         SELECT
             zone,
-            COUNT(*)                                               as customers,
-            SUM(CASE WHEN CONVERT(status USING utf8mb4) = 'active'  THEN 1 ELSE 0 END) as active,
-            SUM(CASE WHEN CONVERT(status USING utf8mb4) = 'expired' THEN 1 ELSE 0 END) as expired,
-            SUM(CASE WHEN CONVERT(status USING utf8mb4) = 'future'  THEN 1 ELSE 0 END) as future,
-            SUM(CASE WHEN CONVERT(contract_type USING utf8mb4) = 'Fix'    THEN 1 ELSE 0 END) as fixed,
-            SUM(CASE WHEN CONVERT(contract_type USING utf8mb4) = 'LMP'    THEN 1 ELSE 0 END) as lmp,
-            SUM(CASE WHEN CONVERT(contract_type USING utf8mb4) = 'Future' THEN 1 ELSE 0 END) as future_contracts,
-            SUM(CAST(REPLACE(REPLACE(COALESCE(usage_kwh,'0'),'$',''),',','') 
-                AS DECIMAL(12,4)))                                 as total_usage_kwh,
-            MIN(contract_end_date)                                 as earliest_end,
-            MAX(contract_end_date)                                 as latest_end
+            SUM(CASE WHEN CONVERT(status        USING utf8mb4) <> 'future' THEN 1 ELSE 0 END) as customers,
+            SUM(CASE WHEN CONVERT(status        USING utf8mb4) = 'active'  THEN 1 ELSE 0 END) as active,
+            SUM(CASE WHEN CONVERT(status        USING utf8mb4) = 'expired' THEN 1 ELSE 0 END) as expired,
+            SUM(CASE WHEN CONVERT(status        USING utf8mb4) = 'future'  THEN 1 ELSE 0 END) as future,
+            SUM(CASE WHEN CONVERT(status        USING utf8mb4) = 'future'  THEN 1 ELSE 0 END) as future_customers,
+            SUM(CASE WHEN CONVERT(contract_type USING utf8mb4) = 'Fix'     THEN 1 ELSE 0 END) as fixed,
+            SUM(CASE WHEN CONVERT(contract_type USING utf8mb4) = 'Future'  THEN 1 ELSE 0 END) as future_contracts,
+            SUM(CASE WHEN CONVERT(contract_type USING utf8mb4) = 'LMP'     THEN 1 ELSE 0 END) as lmp,
+            SUM(CASE WHEN CONVERT(contract_type USING utf8mb4) = 'MTM'     THEN 1 ELSE 0 END) as mtm,
+            SUM(CASE WHEN CONVERT(contract_type USING utf8mb4) = 'MCP'     THEN 1 ELSE 0 END) as mcp,
+            SUM(CASE WHEN CONVERT(contract_type USING utf8mb4) = 'MCP2'    THEN 1 ELSE 0 END) as mcp2,
+            SUM(CASE WHEN CONVERT(contract_type USING utf8mb4) = 'Unknown' THEN 1 ELSE 0 END) as unknown_contracts,
+            SUM(CASE WHEN CONVERT(status USING utf8mb4) <> 'future'
+                     THEN CAST(REPLACE(REPLACE(COALESCE(usage_kwh,'0'),'$',''),',','')
+                               AS DECIMAL(12,4)) ELSE 0 END)                  as total_usage_kwh,
+            MIN(CASE WHEN CONVERT(status USING utf8mb4) <> 'future' THEN contract_end_date END) as earliest_end,
+            MAX(CASE WHEN CONVERT(status USING utf8mb4) <> 'future' THEN contract_end_date END) as latest_end
         FROM portfolio_view
         WHERE CONVERT(zone USING utf8mb4) != 'UNKNOWN'
         GROUP BY zone
@@ -764,6 +785,44 @@ def _shape_load_response(oper_date: str, settlement_run: str, rows) -> dict:
     }
 
 
+def _as_date(v):
+    if v is None:
+        return None
+    return v.date() if isinstance(v, datetime) else v
+
+
+def _zone_annual_mwh_by_day(contracts, zones, start, end) -> dict:
+    """
+    contracts: (load_zone, annual_kwh, start_date or None, end_date) per meter.
+    Returns {day: {load_zone: annual MWh of the meters live that day}} for start..end.
+    A meter is live from its start date (no start date: from the first day of the window)
+    through its end date, both inclusive. One sweep over start/end+1 events, so the cost
+    is O(meters + days) however long the window is.
+    """
+    deltas: dict = {}
+    for zone, kwh, s_date, e_date in contracts:
+        if zone not in zones or e_date is None:
+            continue
+        lo = max(s_date, start) if s_date else start
+        hi = min(e_date, end)
+        if lo > hi:
+            continue
+        mwh = kwh / 1000.0
+        deltas.setdefault(lo, {})[zone] = deltas.setdefault(lo, {}).get(zone, 0.0) + mwh
+        nxt = hi + timedelta(days=1)
+        if nxt <= end:
+            deltas.setdefault(nxt, {})[zone] = deltas.setdefault(nxt, {}).get(zone, 0.0) - mwh
+    out: dict = {}
+    running: dict[str, float] = {}
+    d = start
+    while d <= end:
+        for zone, dv in deltas.get(d, {}).items():
+            running[zone] = running.get(zone, 0.0) + dv
+        out[d] = {z: v for z, v in running.items() if v > 1e-9}
+        d += timedelta(days=1)
+    return out
+
+
 async def get_forecast_data(criteria: dict, db: AsyncSession) -> dict:
     """
     ERCOT shape-based forecast for position screen.
@@ -782,49 +841,45 @@ async def get_forecast_data(criteria: dict, db: AsyncSession) -> dict:
     start = date.fromisoformat(from_date)
     end = date.fromisoformat(through_date)
 
-    # ── Step 1: Query active contracts ────────────────────────────────────────
+    # ── Step 1: Query contracts that are live on at least one day of the window ─
+    # Dates are inclusive on both ends: a contract counts on its start date and on its end
+    # date, not the day before the start or the day after the end. customer_forecast_dates
+    # has no start date (counts from the beginning of the window); future_forecast_dates
+    # has one. The per-day test is applied in Step 2.
     result = await db.execute(
         text("""
-       SELECT esid, load_zone, annual_kwh, forecast_end_date, weather_zone
+       SELECT esid, load_zone, annual_kwh, NULL AS start_date, forecast_end_date
        FROM   customer_forecast_dates
        WHERE  load_zone      IS NOT NULL
         AND  annual_kwh     IS NOT NULL
-        AND  forecast_end_date >= :forecast_date
- 
+        AND  forecast_end_date >= :window_start
+
        UNION ALL
- 
-       SELECT esid, load_zone, annual_kwh, forecast_end_date, weather_zone
+
+       SELECT esid, load_zone, annual_kwh, forecast_start_date, forecast_end_date
        FROM   future_forecast_dates
         WHERE  load_zone            IS NOT NULL
       AND  annual_kwh           IS NOT NULL
-      AND  forecast_start_date  <= :forecast_date
-      AND  forecast_end_date    >= :forecast_date
+      AND  forecast_start_date  <= :window_end
+      AND  forecast_end_date    >= :window_start
 """),
-        {"forecast_date": str(start)},
+        {"window_start": str(start), "window_end": str(end)},
     )
     contracts = result.fetchall()
 
-    # ── Step 2: Aggregate annual MWh per load_zone AND weather_zone ──────────
+    # ── Step 2: Annual MWh per load_zone for EACH day of the window ──────────
+    zone_mwh_by_day = _zone_annual_mwh_by_day(
+        [(r[1], float(r[2] or 0), _as_date(r[3]), _as_date(r[4])) for r in contracts],
+        zones, start, end,
+    )
     zone_annual_mwh: dict[str, float] = {
         "HOUSTON": 0.0,
         "NORTH": 0.0,
         "SOUTH": 0.0,
         "WEST": 0.0,
     }
-    weatherzone_annual_mwh: dict[str, float] = {}
-
-    for row in contracts:
-        load_zone = row[1]
-        annual_kwh = float(row[2] or 0)
-        weather_zone = row[4]
-
-        if load_zone in zones:
-            zone_annual_mwh[load_zone] += annual_kwh / 1000.0
-
-        if weather_zone:
-            weatherzone_annual_mwh[weather_zone] = (
-                weatherzone_annual_mwh.get(weather_zone, 0.0) + annual_kwh / 1000.0
-            )
+    for z, v in zone_mwh_by_day.get(start, {}).items():  # first day only (debug/display field)
+        zone_annual_mwh[z] = zone_annual_mwh.get(z, 0.0) + v
 
     # ── Step 3: Build hour labels ─────────────────────────────────────────────
     hours = []
@@ -929,6 +984,23 @@ async def get_forecast_data(criteria: dict, db: AsyncSession) -> dict:
     for row in gf_result.fetchall():
         ercot_zone_annual_mwh[row[0]] = float(row[1] or 0)
 
+    # REP hourly load shape: (zone, month, day_of_week, hour_ending) → avg_share.
+    # If the table is missing or empty, rep_shape stays empty and the flat share is used.
+    rep_shape: dict[tuple, float] = {}
+    try:
+        shape_result = await db.execute(
+            text("""
+            SELECT zone, month, day_of_week, hour_ending, avg_share
+            FROM   rep_load_shape
+            WHERE  rep_id = :rep_id
+        """),
+            {"rep_id": "default"},
+        )
+        for row in shape_result.fetchall():
+            rep_shape[(row[0], int(row[1]), int(row[2]), int(row[3]))] = float(row[4])
+    except Exception:
+        rep_shape = {}
+
     def lfc_load_by_zone(row) -> dict[str, float]:
         """Group ercot_lfc_history weather-zone columns into load zones."""
         grouped = {"HOUSTON": 0.0, "NORTH": 0.0, "SOUTH": 0.0, "WEST": 0.0}
@@ -951,8 +1023,9 @@ async def get_forecast_data(criteria: dict, db: AsyncSession) -> dict:
 
         use_lfc_for_date = d in lfc_override_dates
 
+        day_zone_mwh = zone_mwh_by_day.get(d, {})
         for zone in zones:
-            annual_mwh = zone_annual_mwh.get(zone, 0.0)
+            annual_mwh = day_zone_mwh.get(zone, 0.0)
             if annual_mwh == 0:
                 continue
 
@@ -962,12 +1035,18 @@ async def get_forecast_data(criteria: dict, db: AsyncSession) -> dict:
                 if use_lfc_for_date:
                     lfc_row = lfc_by_date_hour.get((d, he))
                     if lfc_row is not None:
-                        ercot_zone_total = ercot_zone_annual_mwh.get(zone, 0.0)
-                        if ercot_zone_total:
-                            customer_share = annual_mwh / ercot_zone_total
-                            lfc_zone_mw = lfc_load_by_zone(lfc_row).get(zone, 0.0)
-                            hourly_mwh = lfc_zone_mw * customer_share
-                            print(f"DEBUG Layer4 date={d} zone=HOUSTON lfc_zone_mw={lfc_zone_mw} customer_share={customer_share} hourly_mwh={hourly_mwh}")
+                        lfc_zone_mw = lfc_load_by_zone(lfc_row).get(zone, 0.0)
+                        share = rep_shape.get((zone, d.month, d.weekday(), he))
+                        if share is not None:
+                            # Hourly REP load shape (rep_load_shape)
+                            hourly_mwh = lfc_zone_mw * share
+                        else:
+                            # Fallback to flat share if no shape available
+                            ercot_zone_total = ercot_zone_annual_mwh.get(zone, 0.0)
+                            if ercot_zone_total:
+                                customer_share = annual_mwh / ercot_zone_total
+                                hourly_mwh = lfc_zone_mw * customer_share
+                                print(f"DEBUG Layer4 date={d} zone=HOUSTON lfc_zone_mw={lfc_zone_mw} customer_share={customer_share} hourly_mwh={hourly_mwh}")
 
                 if hourly_mwh is None:
                     key = (str(d), he, zone)

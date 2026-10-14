@@ -3,6 +3,10 @@ from fastapi import APIRouter, UploadFile, File, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError
+from utils.contract_type_utils import normalize_upload_type
+from utils.contract_upload_validation import (
+    DATE_FORMATS_MDY, LoadProfileMasterUnavailable, load_valid_profiles, parse_date, validate_contract_row,
+)
 from utils.database import get_db
 from pydantic import BaseModel
 from typing import Optional
@@ -157,6 +161,11 @@ COLUMN_MAP = {
     # contract_rate → add to table or handle separately
 }
 
+_UPLOAD_REQUIRED_COLS = [
+    "premise_id", "load_profile", "contract_rate", "contract_renewal_usage",
+    "contract_type", "contract_end_date",
+]
+
 valid_cols = [
     "cust_id",
     "company_name",
@@ -203,90 +212,144 @@ valid_cols = [
 ]
 
 
+# Tables that reference contract_renewal by serial. contract_addon_charges is a
+# hard FK (fk_cac_contract); the others are soft references. A table that does
+# not exist in this tenant DB is skipped. See docs/PORTFOLIO_CONTRACTS.md.
+_DEPENDENT_TABLES = [
+    ("contract_addon_charges", "contract_serial IS NOT NULL"),
+    ("customer_edit_log", "contract_serial IS NOT NULL"),
+    ("portfolio_contracts", "synced_from_serial IS NOT NULL"),
+]
+
+_UPLOAD_LOCKED_DETAIL = (
+    "Bulk upload is only allowed into an empty contract_renewal table. "
+    "{reason} Nothing was changed. Contact support to arrange a planned reset."
+)
+
+
+async def _upload_block_reason(db: AsyncSession) -> str | None:
+    n = (await db.execute(text("SELECT COUNT(*) FROM contract_renewal"))).scalar() or 0
+    if n:
+        return f"contract_renewal already has {n} row(s)."
+    for table, cond in _DEPENDENT_TABLES:
+        exists = (await db.execute(
+            text("SELECT COUNT(*) FROM information_schema.tables "
+                 "WHERE table_schema = DATABASE() AND table_name = :t"),
+            {"t": table},
+        )).scalar()
+        if not exists:
+            continue
+        cnt = (await db.execute(text(f"SELECT COUNT(*) FROM `{table}` WHERE {cond}"))).scalar() or 0
+        if cnt:
+            return f"Dependent table {table} already has {cnt} row(s) referencing contracts."
+    return None
+
+
+def _cell(v):
+    return None if v is None or (isinstance(v, float) and v != v) else v
+
+
 @router.post("/upload")
 async def upload_contract_renewal(
     file: UploadFile = File(...), db: AsyncSession = Depends(get_db)
 ):
+    reason = await _upload_block_reason(db)
+    if reason:
+        raise HTTPException(status_code=409, detail=_UPLOAD_LOCKED_DETAIL.format(reason=reason))
+
     content = await file.read()
+    raw_text = None
     for encoding in ["utf-8", "latin-1", "cp1252"]:
         try:
             raw_text = content.decode(encoding)
             break
         except UnicodeDecodeError:
             continue
+    if raw_text is None:
+        raise HTTPException(status_code=400, detail="Could not decode file as text (tried utf-8, latin-1, cp1252)")
 
-    df = pd.read_csv(
-        io.StringIO(raw_text),
-        sep=",",
-        dtype={"premise_id": str, "cust_id": str},
-    )
+    try:
+        df = pd.read_csv(
+            io.StringIO(raw_text),
+            sep=",",
+            dtype=str,
+            keep_default_na=False,
+            na_values=[""],
+        )
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=f"Could not parse CSV: {exc}")
 
-    # Rename mismatched columns
     df = df.rename(columns={"usage": "contract_renewal_usage"})
+    if len(df) == 0:
+        raise HTTPException(status_code=400, detail="File has no data rows")
+    missing_cols = [c for c in _UPLOAD_REQUIRED_COLS if c not in df.columns]
+    if missing_cols:
+        raise HTTPException(status_code=400, detail=f"Missing required column(s): {', '.join(missing_cols)}")
 
-    # Fill missing columns with None
     for col in valid_cols:
         if col not in df.columns:
             df[col] = None
-
     df = df[valid_cols]
+    df = df.astype(object).where(df.notna(), None)
 
-    # Replace NaN with None
-    import numpy as np
+    try:
+        valid_profiles = await load_valid_profiles(db)
+    except LoadProfileMasterUnavailable as exc:
+        raise HTTPException(status_code=503, detail=str(exc))
 
-    df = df.replace({np.nan: None})
+    # Pass 1: validate EVERY row with the shared Portfolio validator. Any error
+    # rejects the whole file; nothing is inserted.
+    invalid: list[dict] = []
+    for idx, row in df.iterrows():
+        data = {k: _cell(v) for k, v in row.to_dict().items()}
+        errs, _parsed = validate_contract_row(
+            {
+                "esi_id": data["premise_id"],
+                "load_profile": data["load_profile"],
+                "contract_rate": data["contract_rate"],
+                "annual_volume": data["contract_renewal_usage"],
+                "contract_type": data["contract_type"],
+                "contract_end_date": data["contract_end_date"],
+                "contract_start_date": data["contract_start_date"],
+            },
+            valid_profiles=valid_profiles,
+            date_formats=DATE_FORMATS_MDY,
+            strict_esi=True,
+            default_start_today=False,
+        )
+        if errs:
+            invalid.append({"line": idx + 2, "premise_id": repr(data["premise_id"]) if data["premise_id"] else "", "errors": errs})
+    if invalid:
+        return {
+            "accepted": False,
+            "total_rows": len(df),
+            "error_count": len(invalid),
+            "invalid_rows": invalid,
+        }
 
-    # ── TRUNCATE BEFORE INSERT — always fresh data ──
-    await db.execute(text("TRUNCATE TABLE contract_renewal"))
-    await db.commit()
-
-    inserted = 0
-    skipped = 0
-    for _, row in df.iterrows():
-        data = {k: (None if v != v else v) for k, v in row.to_dict().items()}
-        try:
+    # Pass 2: all rows valid. One transaction -- any DB error rolls back every
+    # row and surfaces as an error instead of a silent skip.
+    try:
+        for _, row in df.iterrows():
+            data = {k: _cell(v) for k, v in row.to_dict().items()}
+            for k in ("contract_end_date", "contract_start_date"):
+                if data[k] is not None:
+                    data[k] = str(data[k]).strip()
+            # Only supplied columns are inserted so absent/blank cells take the
+            # column DEFAULT (several columns are NOT NULL, e.g. grt_tax_exempt).
+            present = [c for c in valid_cols if data[c] is not None]
             await db.execute(
                 text(
-                    """
-                INSERT INTO contract_renewal (
-                    cust_id, company_name, cust_first_name, cust_last_name,
-                    plan_group, billing_address, billing_city, billing_state,
-                    billing_zip, cust_email, cust_fax1, cust_phone1,
-                    premise_id, premise_address2, premise_city, premise_state,
-                    premise_zip, broker_code, broker_name, comm_rate,
-                    contract_end_date, load_profile, contract_renewal_usage,
-                    other_charge, bill_mode, contract_type, cust_type,
-                    bill_date, city_tax_exempt, county_tax_exempt,
-                    mtacda_tax_exempt, spdt_tax_exempt, spdt2_tax_exempt,
-                    state_tax_exempt, auto_pay_type, bill_to_id, attn,
-                    contract_rate, contract_start_date, premise_address,
-                    grt_tax_exempt, puc_tax_exempt
-                ) VALUES (
-                    :cust_id, :company_name, :cust_first_name, :cust_last_name,
-                    :plan_group, :billing_address, :billing_city, :billing_state,
-                    :billing_zip, :cust_email, :cust_fax1, :cust_phone1,
-                    :premise_id, :premise_address2, :premise_city, :premise_state,
-                    :premise_zip, :broker_code, :broker_name, :comm_rate,
-                    :contract_end_date, :load_profile, :contract_renewal_usage,
-                    :other_charge, :bill_mode, :contract_type, :cust_type,
-                    :bill_date, :city_tax_exempt, :county_tax_exempt,
-                    :mtacda_tax_exempt, :spdt_tax_exempt, :spdt2_tax_exempt,
-                    :state_tax_exempt, :auto_pay_type, :bill_to_id, :attn,
-                    :contract_rate, :contract_start_date, :premise_address,
-                    :grt_tax_exempt, :puc_tax_exempt
-                )
-            """
+                    f"INSERT INTO contract_renewal ({', '.join(present)}) "
+                    f"VALUES ({', '.join(':' + c for c in present)})"
                 ),
-                data,
+                {c: data[c] for c in present},
             )
-            inserted += 1
-        except Exception as e:
-            skipped += 1
-            if skipped == 1:
-                print(f"SKIP ERROR: {e}")
-
-    await db.commit()
-    return {"inserted": inserted, "skipped": skipped, "total": len(df)}
+        await db.commit()
+    except Exception as exc:
+        await db.rollback()
+        raise HTTPException(status_code=500, detail=f"Upload failed and was rolled back; nothing was inserted: {exc}")
+    return {"accepted": True, "inserted": len(df), "total": len(df)}
 
 
 @router.get("/list")
@@ -454,6 +517,46 @@ async def update_renewal_contact(
     if not submitted:
         # Nothing to update — return current record
         return _alias_row(old)
+
+    # 3b — Validate contract_type if being updated
+    if "contract_type" in submitted:
+        _canon, _err = normalize_upload_type(submitted.get("contract_type"))
+        if _err:
+            raise HTTPException(status_code=422, detail=_err)
+        submitted["contract_type"] = _canon
+        # Future requires a start date (either already on the record or being set now)
+        if _canon == "Future":
+            new_start = submitted.get("contract_start_date") or old.get("contract_start_date")
+            if not new_start:
+                raise HTTPException(
+                    status_code=422,
+                    detail="Future contract requires a contract_start_date",
+                )
+
+    # 3c — Fields the Portfolio sync needs. Only fields that CHANGE are checked,
+    # so legacy rows with bad data can still have unrelated fields edited.
+    # Required fields cannot be blanked; dates must be strict MM/DD/YYYY
+    # (the sync trigger parses m/d/Y only and silently drops anything else).
+    field_errors: list[str] = []
+    for f, col in (("contract_end_date", "contract_end_date"), ("contract_start_date", "contract_start_date"),
+                   ("load_profile", "load_profile"), ("energy_rate", "contract_rate"),
+                   ("annual_usage_kwh", "contract_renewal_usage")):
+        if f not in submitted:
+            continue
+        new_val = str(submitted[f]).strip()
+        if new_val == str(old.get(col) or "").strip():
+            continue
+        if not new_val:
+            if f != "contract_start_date":
+                field_errors.append(f"{f} is required and cannot be blank")
+            continue
+        if f in ("contract_end_date", "contract_start_date"):
+            if not parse_date(new_val, DATE_FORMATS_MDY):
+                field_errors.append(f"{f} '{new_val}' is not a valid date (expected MM/DD/YYYY)")
+            else:
+                submitted[f] = new_val
+    if field_errors:
+        raise HTTPException(status_code=422, detail="; ".join(field_errors))
 
     # 4 — Build UPDATE dynamically from submitted fields
     set_clauses = ", ".join(

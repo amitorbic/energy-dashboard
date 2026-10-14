@@ -1,0 +1,2108 @@
+2026-10-06 10:42:46,339 ERROR portfolio contract upload failed (ref 34345D16, file 'u.csv')
+Traceback (most recent call last):
+  File "C:\AmeriPower\api\routers\admin_portfolio_contracts.py", line 280, in upload_portfolio_contracts
+    return await _upload_portfolio_contracts(file, db)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\AmeriPower\api\routers\admin_portfolio_contracts.py", line 431, in _upload_portfolio_contracts
+    await _sync_forecast_tables(
+    ...<7 lines>...
+    )
+  File "C:\AmeriPower\api\tests\test_portfolio_upload_validation.py", line 192, in boom
+    raise RuntimeError("secret SQL: INSERT INTO future_forecast_dates ...")
+RuntimeError: secret SQL: INSERT INTO future_forecast_dates ...
+2026-10-06 10:43:04,321 ERROR portfolio contract upload failed (ref FB9CA378, file 'u.csv')
+Traceback (most recent call last):
+  File "C:\AmeriPower\api\routers\admin_portfolio_contracts.py", line 280, in upload_portfolio_contracts
+    return await _upload_portfolio_contracts(file, db)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\AmeriPower\api\routers\admin_portfolio_contracts.py", line 431, in _upload_portfolio_contracts
+    await _sync_forecast_tables(
+    ...<7 lines>...
+    )
+  File "C:\AmeriPower\api\tests\test_portfolio_upload_validation.py", line 192, in boom
+    raise RuntimeError("secret SQL: INSERT INTO future_forecast_dates ...")
+RuntimeError: secret SQL: INSERT INTO future_forecast_dates ...
+2026-10-06 10:43:20,834 ERROR portfolio contract upload failed (ref F0A07EB9, file 'u.csv')
+Traceback (most recent call last):
+  File "C:\AmeriPower\api\routers\admin_portfolio_contracts.py", line 280, in upload_portfolio_contracts
+    return await _upload_portfolio_contracts(file, db)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\AmeriPower\api\routers\admin_portfolio_contracts.py", line 431, in _upload_portfolio_contracts
+    await _sync_forecast_tables(
+    ...<7 lines>...
+    )
+  File "C:\AmeriPower\api\tests\test_portfolio_upload_validation.py", line 192, in boom
+    raise RuntimeError("secret SQL: INSERT INTO future_forecast_dates ...")
+RuntimeError: secret SQL: INSERT INTO future_forecast_dates ...
+2026-10-06 17:42:29,184 ERROR portfolio contract upload failed (ref 4B652D9D, file 'u.csv')
+Traceback (most recent call last):
+  File "C:\AmeriPower\api\routers\admin_portfolio_contracts.py", line 313, in upload_portfolio_contracts
+    return await _upload_portfolio_contracts(file, db)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\AmeriPower\api\routers\admin_portfolio_contracts.py", line 428, in _upload_portfolio_contracts
+    await _sync_forecast_tables_bulk(db, parsed_rows)
+  File "C:\AmeriPower\api\tests\test_portfolio_upload_validation.py", line 192, in boom
+    raise RuntimeError("secret SQL: INSERT INTO future_forecast_dates ...")
+RuntimeError: secret SQL: INSERT INTO future_forecast_dates ...
+2026-10-06 17:44:34,523 ERROR portfolio contract upload failed (ref CCC38F7E, file 'u.csv')
+Traceback (most recent call last):
+  File "C:\AmeriPower\api\routers\admin_portfolio_contracts.py", line 313, in upload_portfolio_contracts
+    return await _upload_portfolio_contracts(file, db)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\AmeriPower\api\routers\admin_portfolio_contracts.py", line 428, in _upload_portfolio_contracts
+    await _sync_forecast_tables_bulk(db, parsed_rows)
+  File "C:\AmeriPower\api\tests\test_portfolio_upload_validation.py", line 192, in boom
+    raise RuntimeError("secret SQL: INSERT INTO future_forecast_dates ...")
+RuntimeError: secret SQL: INSERT INTO future_forecast_dates ...
+2026-10-06 17:58:18,516 ERROR portfolio contract upload failed (ref 61BF5B7C, file 'u.csv')
+Traceback (most recent call last):
+  File "C:\AmeriPower\api\routers\admin_portfolio_contracts.py", line 361, in upload_portfolio_contracts
+    return await _upload_portfolio_contracts(file, db)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\AmeriPower\api\routers\admin_portfolio_contracts.py", line 478, in _upload_portfolio_contracts
+    await _sync_forecast_tables_bulk(db, parsed_rows)
+  File "C:\AmeriPower\api\tests\test_portfolio_upload_validation.py", line 192, in boom
+    raise RuntimeError("secret SQL: INSERT INTO future_forecast_dates ...")
+RuntimeError: secret SQL: INSERT INTO future_forecast_dates ...
+2026-10-06 17:58:22,545 ERROR portfolio contract upload failed (ref 76253438, file 'u.csv')
+Traceback (most recent call last):
+  File "C:\AmeriPower\api\routers\admin_portfolio_contracts.py", line 361, in upload_portfolio_contracts
+    return await _upload_portfolio_contracts(file, db)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\AmeriPower\api\routers\admin_portfolio_contracts.py", line 478, in _upload_portfolio_contracts
+    await _sync_forecast_tables_bulk(db, parsed_rows)
+  File "C:\AmeriPower\api\tests\test_portfolio_upload_validation.py", line 284, in boom
+    raise RuntimeError("boom")
+RuntimeError: boom
+2026-10-06 18:06:33,773 ERROR portfolio contract upload failed (ref F588F1DD, file 'u.csv')
+Traceback (most recent call last):
+  File "C:\AmeriPower\api\routers\admin_portfolio_contracts.py", line 361, in upload_portfolio_contracts
+    return await _upload_portfolio_contracts(file, db)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\AmeriPower\api\routers\admin_portfolio_contracts.py", line 478, in _upload_portfolio_contracts
+    await _sync_forecast_tables_bulk(db, parsed_rows)
+  File "C:\AmeriPower\api\tests\test_portfolio_upload_validation.py", line 192, in boom
+    raise RuntimeError("secret SQL: INSERT INTO future_forecast_dates ...")
+RuntimeError: secret SQL: INSERT INTO future_forecast_dates ...
+2026-10-06 18:06:36,228 ERROR portfolio contract upload failed (ref 13200E05, file 'u.csv')
+Traceback (most recent call last):
+  File "C:\AmeriPower\api\routers\admin_portfolio_contracts.py", line 361, in upload_portfolio_contracts
+    return await _upload_portfolio_contracts(file, db)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\AmeriPower\api\routers\admin_portfolio_contracts.py", line 478, in _upload_portfolio_contracts
+    await _sync_forecast_tables_bulk(db, parsed_rows)
+  File "C:\AmeriPower\api\tests\test_portfolio_upload_validation.py", line 284, in boom
+    raise RuntimeError("boom")
+RuntimeError: boom
+2026-10-06 18:19:50,847 ERROR portfolio contract upload failed (ref 51288DD4, file 'f.csv')
+Traceback (most recent call last):
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        cursor, str_statement, effective_parameters, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\default.py", line 951, in do_execute
+    cursor.execute(statement, parameters)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 230, in execute
+    self._adapt_connection._handle_exception(error)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 368, in _handle_exception
+    raise error.with_traceback(exc_info[2])
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 228, in execute
+    return self.await_(self._execute_async(operation, parameters))
+           ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 132, in await_only
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 196, in greenlet_spawn
+    value = await result
+            ^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 251, in _execute_async
+    result = await self._cursor.execute(operation, parameters)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\cursors.py", line 239, in execute
+    await self._query(query)
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\cursors.py", line 457, in _query
+    await conn.query(q)
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 469, in query
+    await self._read_query_result(unbuffered=unbuffered)
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 683, in _read_query_result
+    await result.read()
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 1164, in read
+    first_packet = await self.connection._read_packet()
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 652, in _read_packet
+    packet.raise_for_error()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\pymysql\protocol.py", line 219, in raise_for_error
+    err.raise_mysql_exception(self._data)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\pymysql\err.py", line 150, in raise_mysql_exception
+    raise errorclass(errno, errval)
+pymysql.err.ProgrammingError: (1064, "You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'SHARE' at line 1")
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\AmeriPower\api\routers\admin_portfolio_contracts.py", line 388, in upload_portfolio_contracts
+    return await _upload_portfolio_contracts(file, db)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\AmeriPower\api\routers\admin_portfolio_contracts.py", line 508, in _upload_portfolio_contracts
+    dups = await _duplicate_upload_esis(db, [r["esi_id"] for r in parsed_rows])
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\AmeriPower\api\routers\admin_portfolio_contracts.py", line 236, in _duplicate_upload_esis
+    res = await db.execute(
+          ^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\ext\asyncio\session.py", line 449, in execute
+    result = await greenlet_spawn(
+             ^^^^^^^^^^^^^^^^^^^^^
+    ...<6 lines>...
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 203, in greenlet_spawn
+    result = context.switch(value)
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\orm\session.py", line 2351, in execute
+    return self._execute_internal(
+           ~~~~~~~~~~~~~~~~~~~~~~^
+        statement,
+        ^^^^^^^^^^
+    ...<4 lines>...
+        _add_event=_add_event,
+        ^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\orm\session.py", line 2258, in _execute_internal
+    result = conn.execute(
+        statement, params or {}, execution_options=execution_options
+    )
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\base.py", line 1419, in execute
+    return meth(
+        self,
+        distilled_parameters,
+        execution_options or NO_OPTIONS,
+    )
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\sql\elements.py", line 526, in _execute_on_connection
+    return connection._execute_clauseelement(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self, distilled_params, execution_options
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\base.py", line 1641, in _execute_clauseelement
+    ret = self._execute_context(
+        dialect,
+    ...<8 lines>...
+        cache_hit=cache_hit,
+    )
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\base.py", line 1846, in _execute_context
+    return self._exec_single_context(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~^
+        dialect, context, statement, parameters
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\base.py", line 1986, in _exec_single_context
+    self._handle_dbapi_exception(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        e, str_statement, effective_parameters, cursor, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\base.py", line 2355, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        cursor, str_statement, effective_parameters, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\default.py", line 951, in do_execute
+    cursor.execute(statement, parameters)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 230, in execute
+    self._adapt_connection._handle_exception(error)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 368, in _handle_exception
+    raise error.with_traceback(exc_info[2])
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 228, in execute
+    return self.await_(self._execute_async(operation, parameters))
+           ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 132, in await_only
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 196, in greenlet_spawn
+    value = await result
+            ^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 251, in _execute_async
+    result = await self._cursor.execute(operation, parameters)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\cursors.py", line 239, in execute
+    await self._query(query)
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\cursors.py", line 457, in _query
+    await conn.query(q)
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 469, in query
+    await self._read_query_result(unbuffered=unbuffered)
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 683, in _read_query_result
+    await result.read()
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 1164, in read
+    first_packet = await self.connection._read_packet()
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 652, in _read_packet
+    packet.raise_for_error()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\pymysql\protocol.py", line 219, in raise_for_error
+    err.raise_mysql_exception(self._data)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\pymysql\err.py", line 150, in raise_mysql_exception
+    raise errorclass(errno, errval)
+sqlalchemy.exc.ProgrammingError: (pymysql.err.ProgrammingError) (1064, "You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'SHARE' at line 1")
+[SQL: SELECT esi_id FROM portfolio_contracts WHERE source = 'upload' AND esi_id IN (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) GROUP BY esi_id HAVING COUNT(*) > 1 FOR SHARE]
+[parameters: ('10032789400185901', '10032789400402418', '10032789400419900', '10032789400709825', '10032789400821060', '10032789401012560', '10032789401012561', '10032789401091791', '10032789401162241', '10032789401181635', '10032789401225241', '10032789401279015', '10032789401343277', '10032789401470290', '10032789401471276', '10032789401490600', '10032789401784071', '10032789401853906', '10032789402050320', '10032789402108595', '10032789402164566', '10032789402693838', '10032789402780158', '10032789402885951', '10032789402889360', '10032789403009139', '10032789403029710', '10032789403295211', '10032789403340111', '10032789403472240', '10032789403500581', '10032789403802654', '10032789403817491', '10032789403880781', '10032789403967995', '10032789404011401', '10032789404217817', '10032789404283316', '10032789404604100', '10032789404625201', '10032789404846920', '10032789405187691', '10032789405229172', '10032789405231091', '10032789405231092', '10032789405231093', '10032789405833570', '10032789405851760', '10032789405855380', '10032789405870371' ... 400 parameters truncated ... '10032789444936791', '10032789445061180', '10032789445123799', '10032789445212921', '10032789445212922', '10032789445212923', '10032789445514455', '10032789445532741', '10032789446000118', '10032789446079810', '10032789446093590', '10032789446274136', '10032789446400337', '10032789446524231', '10032789446568840', '10032789446579690', '10032789446630931', '10032789446640661', '10032789446757980', '10032789446828700', '10032789446830629', '10032789446968370', '10032789446968371', '10032789446975447', '10032789447026939', '10032789447253417', '10032789447324201', '10032789447391318', '10032789447418470', '10032789447475341', '10032789447560411', '10032789447620779', '10032789447697095', '10032789447828824', '10032789447882555', '10032789447888321', '10032789447928961', '10032789448059797', '10032789448219581', '10032789448219582', '10032789448393760', '10032789448415150', '10032789448521560', '10032789448576331', '10032789448618080', '10032789448717281', '10032789448783299', '10032789448873561', '10032789449092652', '10032789449092653')]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2026-10-06 18:20:03,906 ERROR portfolio contract upload failed (ref C6E40A62, file 'f.csv')
+Traceback (most recent call last):
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        cursor, str_statement, effective_parameters, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\default.py", line 951, in do_execute
+    cursor.execute(statement, parameters)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 230, in execute
+    self._adapt_connection._handle_exception(error)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 368, in _handle_exception
+    raise error.with_traceback(exc_info[2])
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 228, in execute
+    return self.await_(self._execute_async(operation, parameters))
+           ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 132, in await_only
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 196, in greenlet_spawn
+    value = await result
+            ^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 251, in _execute_async
+    result = await self._cursor.execute(operation, parameters)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\cursors.py", line 239, in execute
+    await self._query(query)
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\cursors.py", line 457, in _query
+    await conn.query(q)
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 469, in query
+    await self._read_query_result(unbuffered=unbuffered)
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 683, in _read_query_result
+    await result.read()
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 1164, in read
+    first_packet = await self.connection._read_packet()
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 652, in _read_packet
+    packet.raise_for_error()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\pymysql\protocol.py", line 219, in raise_for_error
+    err.raise_mysql_exception(self._data)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\pymysql\err.py", line 150, in raise_mysql_exception
+    raise errorclass(errno, errval)
+pymysql.err.ProgrammingError: (1064, "You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'SHARE' at line 1")
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\AmeriPower\api\routers\admin_portfolio_contracts.py", line 388, in upload_portfolio_contracts
+    return await _upload_portfolio_contracts(file, db)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\AmeriPower\api\routers\admin_portfolio_contracts.py", line 508, in _upload_portfolio_contracts
+    dups = await _duplicate_upload_esis(db, [r["esi_id"] for r in parsed_rows])
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\AmeriPower\api\routers\admin_portfolio_contracts.py", line 236, in _duplicate_upload_esis
+    res = await db.execute(
+          ^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\ext\asyncio\session.py", line 449, in execute
+    result = await greenlet_spawn(
+             ^^^^^^^^^^^^^^^^^^^^^
+    ...<6 lines>...
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 203, in greenlet_spawn
+    result = context.switch(value)
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\orm\session.py", line 2351, in execute
+    return self._execute_internal(
+           ~~~~~~~~~~~~~~~~~~~~~~^
+        statement,
+        ^^^^^^^^^^
+    ...<4 lines>...
+        _add_event=_add_event,
+        ^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\orm\session.py", line 2258, in _execute_internal
+    result = conn.execute(
+        statement, params or {}, execution_options=execution_options
+    )
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\base.py", line 1419, in execute
+    return meth(
+        self,
+        distilled_parameters,
+        execution_options or NO_OPTIONS,
+    )
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\sql\elements.py", line 526, in _execute_on_connection
+    return connection._execute_clauseelement(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self, distilled_params, execution_options
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\base.py", line 1641, in _execute_clauseelement
+    ret = self._execute_context(
+        dialect,
+    ...<8 lines>...
+        cache_hit=cache_hit,
+    )
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\base.py", line 1846, in _execute_context
+    return self._exec_single_context(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~^
+        dialect, context, statement, parameters
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\base.py", line 1986, in _exec_single_context
+    self._handle_dbapi_exception(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        e, str_statement, effective_parameters, cursor, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\base.py", line 2355, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        cursor, str_statement, effective_parameters, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\default.py", line 951, in do_execute
+    cursor.execute(statement, parameters)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 230, in execute
+    self._adapt_connection._handle_exception(error)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 368, in _handle_exception
+    raise error.with_traceback(exc_info[2])
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 228, in execute
+    return self.await_(self._execute_async(operation, parameters))
+           ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 132, in await_only
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 196, in greenlet_spawn
+    value = await result
+            ^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 251, in _execute_async
+    result = await self._cursor.execute(operation, parameters)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\cursors.py", line 239, in execute
+    await self._query(query)
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\cursors.py", line 457, in _query
+    await conn.query(q)
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 469, in query
+    await self._read_query_result(unbuffered=unbuffered)
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 683, in _read_query_result
+    await result.read()
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 1164, in read
+    first_packet = await self.connection._read_packet()
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 652, in _read_packet
+    packet.raise_for_error()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\pymysql\protocol.py", line 219, in raise_for_error
+    err.raise_mysql_exception(self._data)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\pymysql\err.py", line 150, in raise_mysql_exception
+    raise errorclass(errno, errval)
+sqlalchemy.exc.ProgrammingError: (pymysql.err.ProgrammingError) (1064, "You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'SHARE' at line 1")
+[SQL: SELECT esi_id FROM portfolio_contracts WHERE source = 'upload' AND esi_id IN (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) GROUP BY esi_id HAVING COUNT(*) > 1 FOR SHARE]
+[parameters: ('10032789400185901', '10032789400402418', '10032789400419900', '10032789400709825', '10032789400821060', '10032789401012560', '10032789401012561', '10032789401091791', '10032789401162241', '10032789401181635', '10032789401225241', '10032789401279015', '10032789401343277', '10032789401470290', '10032789401471276', '10032789401490600', '10032789401784071', '10032789401853906', '10032789402050320', '10032789402108595', '10032789402164566', '10032789402693838', '10032789402780158', '10032789402885951', '10032789402889360', '10032789403009139', '10032789403029710', '10032789403295211', '10032789403340111', '10032789403472240', '10032789403500581', '10032789403802654', '10032789403817491', '10032789403880781', '10032789403967995', '10032789404011401', '10032789404217817', '10032789404283316', '10032789404604100', '10032789404625201', '10032789404846920', '10032789405187691', '10032789405229172', '10032789405231091', '10032789405231092', '10032789405231093', '10032789405833570', '10032789405851760', '10032789405855380', '10032789405870371' ... 400 parameters truncated ... '10032789444936791', '10032789445061180', '10032789445123799', '10032789445212921', '10032789445212922', '10032789445212923', '10032789445514455', '10032789445532741', '10032789446000118', '10032789446079810', '10032789446093590', '10032789446274136', '10032789446400337', '10032789446524231', '10032789446568840', '10032789446579690', '10032789446630931', '10032789446640661', '10032789446757980', '10032789446828700', '10032789446830629', '10032789446968370', '10032789446968371', '10032789446975447', '10032789447026939', '10032789447253417', '10032789447324201', '10032789447391318', '10032789447418470', '10032789447475341', '10032789447560411', '10032789447620779', '10032789447697095', '10032789447828824', '10032789447882555', '10032789447888321', '10032789447928961', '10032789448059797', '10032789448219581', '10032789448219582', '10032789448393760', '10032789448415150', '10032789448521560', '10032789448576331', '10032789448618080', '10032789448717281', '10032789448783299', '10032789448873561', '10032789449092652', '10032789449092653')]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2026-10-06 18:20:20,527 ERROR portfolio contract upload failed (ref 6E877857, file 'f.csv')
+Traceback (most recent call last):
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        cursor, str_statement, effective_parameters, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\default.py", line 951, in do_execute
+    cursor.execute(statement, parameters)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 230, in execute
+    self._adapt_connection._handle_exception(error)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 368, in _handle_exception
+    raise error.with_traceback(exc_info[2])
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 228, in execute
+    return self.await_(self._execute_async(operation, parameters))
+           ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 132, in await_only
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 196, in greenlet_spawn
+    value = await result
+            ^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 251, in _execute_async
+    result = await self._cursor.execute(operation, parameters)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\cursors.py", line 239, in execute
+    await self._query(query)
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\cursors.py", line 457, in _query
+    await conn.query(q)
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 469, in query
+    await self._read_query_result(unbuffered=unbuffered)
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 683, in _read_query_result
+    await result.read()
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 1164, in read
+    first_packet = await self.connection._read_packet()
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 652, in _read_packet
+    packet.raise_for_error()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\pymysql\protocol.py", line 219, in raise_for_error
+    err.raise_mysql_exception(self._data)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\pymysql\err.py", line 150, in raise_mysql_exception
+    raise errorclass(errno, errval)
+pymysql.err.ProgrammingError: (1064, "You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'SHARE' at line 1")
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\AmeriPower\api\routers\admin_portfolio_contracts.py", line 388, in upload_portfolio_contracts
+    return await _upload_portfolio_contracts(file, db)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\AmeriPower\api\routers\admin_portfolio_contracts.py", line 508, in _upload_portfolio_contracts
+    dups = await _duplicate_upload_esis(db, [r["esi_id"] for r in parsed_rows])
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\AmeriPower\api\routers\admin_portfolio_contracts.py", line 236, in _duplicate_upload_esis
+    res = await db.execute(
+          ^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\ext\asyncio\session.py", line 449, in execute
+    result = await greenlet_spawn(
+             ^^^^^^^^^^^^^^^^^^^^^
+    ...<6 lines>...
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 203, in greenlet_spawn
+    result = context.switch(value)
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\orm\session.py", line 2351, in execute
+    return self._execute_internal(
+           ~~~~~~~~~~~~~~~~~~~~~~^
+        statement,
+        ^^^^^^^^^^
+    ...<4 lines>...
+        _add_event=_add_event,
+        ^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\orm\session.py", line 2258, in _execute_internal
+    result = conn.execute(
+        statement, params or {}, execution_options=execution_options
+    )
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\base.py", line 1419, in execute
+    return meth(
+        self,
+        distilled_parameters,
+        execution_options or NO_OPTIONS,
+    )
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\sql\elements.py", line 526, in _execute_on_connection
+    return connection._execute_clauseelement(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self, distilled_params, execution_options
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\base.py", line 1641, in _execute_clauseelement
+    ret = self._execute_context(
+        dialect,
+    ...<8 lines>...
+        cache_hit=cache_hit,
+    )
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\base.py", line 1846, in _execute_context
+    return self._exec_single_context(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~^
+        dialect, context, statement, parameters
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\base.py", line 1986, in _exec_single_context
+    self._handle_dbapi_exception(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        e, str_statement, effective_parameters, cursor, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\base.py", line 2355, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        cursor, str_statement, effective_parameters, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\default.py", line 951, in do_execute
+    cursor.execute(statement, parameters)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 230, in execute
+    self._adapt_connection._handle_exception(error)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 368, in _handle_exception
+    raise error.with_traceback(exc_info[2])
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 228, in execute
+    return self.await_(self._execute_async(operation, parameters))
+           ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 132, in await_only
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 196, in greenlet_spawn
+    value = await result
+            ^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 251, in _execute_async
+    result = await self._cursor.execute(operation, parameters)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\cursors.py", line 239, in execute
+    await self._query(query)
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\cursors.py", line 457, in _query
+    await conn.query(q)
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 469, in query
+    await self._read_query_result(unbuffered=unbuffered)
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 683, in _read_query_result
+    await result.read()
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 1164, in read
+    first_packet = await self.connection._read_packet()
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 652, in _read_packet
+    packet.raise_for_error()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\pymysql\protocol.py", line 219, in raise_for_error
+    err.raise_mysql_exception(self._data)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\pymysql\err.py", line 150, in raise_mysql_exception
+    raise errorclass(errno, errval)
+sqlalchemy.exc.ProgrammingError: (pymysql.err.ProgrammingError) (1064, "You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'SHARE' at line 1")
+[SQL: SELECT esi_id FROM portfolio_contracts WHERE source = 'upload' AND esi_id IN (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) GROUP BY esi_id HAVING COUNT(*) > 1 FOR SHARE]
+[parameters: ('10032789400185901', '10032789400402418', '10032789400419900', '10032789400709825', '10032789400821060', '10032789401012560', '10032789401012561', '10032789401091791', '10032789401162241', '10032789401181635', '10032789401225241', '10032789401279015', '10032789401343277', '10032789401470290', '10032789401471276', '10032789401490600', '10032789401784071', '10032789401853906', '10032789402050320', '10032789402108595', '10032789402164566', '10032789402693838', '10032789402780158', '10032789402885951', '10032789402889360', '10032789403009139', '10032789403029710', '10032789403295211', '10032789403340111', '10032789403472240', '10032789403500581', '10032789403802654', '10032789403817491', '10032789403880781', '10032789403967995', '10032789404011401', '10032789404217817', '10032789404283316', '10032789404604100', '10032789404625201', '10032789404846920', '10032789405187691', '10032789405229172', '10032789405231091', '10032789405231092', '10032789405231093', '10032789405833570', '10032789405851760', '10032789405855380', '10032789405870371' ... 400 parameters truncated ... '10032789444936791', '10032789445061180', '10032789445123799', '10032789445212921', '10032789445212922', '10032789445212923', '10032789445514455', '10032789445532741', '10032789446000118', '10032789446079810', '10032789446093590', '10032789446274136', '10032789446400337', '10032789446524231', '10032789446568840', '10032789446579690', '10032789446630931', '10032789446640661', '10032789446757980', '10032789446828700', '10032789446830629', '10032789446968370', '10032789446968371', '10032789446975447', '10032789447026939', '10032789447253417', '10032789447324201', '10032789447391318', '10032789447418470', '10032789447475341', '10032789447560411', '10032789447620779', '10032789447697095', '10032789447828824', '10032789447882555', '10032789447888321', '10032789447928961', '10032789448059797', '10032789448219581', '10032789448219582', '10032789448393760', '10032789448415150', '10032789448521560', '10032789448576331', '10032789448618080', '10032789448717281', '10032789448783299', '10032789448873561', '10032789449092652', '10032789449092653')]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2026-10-06 18:20:49,758 ERROR portfolio contract upload failed (ref E8047598, file 'f.csv')
+Traceback (most recent call last):
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        cursor, str_statement, effective_parameters, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\default.py", line 951, in do_execute
+    cursor.execute(statement, parameters)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 230, in execute
+    self._adapt_connection._handle_exception(error)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 368, in _handle_exception
+    raise error.with_traceback(exc_info[2])
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 228, in execute
+    return self.await_(self._execute_async(operation, parameters))
+           ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 132, in await_only
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 196, in greenlet_spawn
+    value = await result
+            ^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 251, in _execute_async
+    result = await self._cursor.execute(operation, parameters)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\cursors.py", line 239, in execute
+    await self._query(query)
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\cursors.py", line 457, in _query
+    await conn.query(q)
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 469, in query
+    await self._read_query_result(unbuffered=unbuffered)
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 683, in _read_query_result
+    await result.read()
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 1164, in read
+    first_packet = await self.connection._read_packet()
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 652, in _read_packet
+    packet.raise_for_error()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\pymysql\protocol.py", line 219, in raise_for_error
+    err.raise_mysql_exception(self._data)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\pymysql\err.py", line 150, in raise_mysql_exception
+    raise errorclass(errno, errval)
+pymysql.err.OperationalError: (1213, 'Deadlock found when trying to get lock; try restarting transaction')
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\AmeriPower\api\routers\admin_portfolio_contracts.py", line 388, in upload_portfolio_contracts
+    return await _upload_portfolio_contracts(file, db)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\AmeriPower\api\routers\admin_portfolio_contracts.py", line 505, in _upload_portfolio_contracts
+    await _sync_forecast_tables_bulk(db, parsed_rows)
+  File "C:\AmeriPower\api\routers\admin_portfolio_contracts.py", line 303, in _sync_forecast_tables_bulk
+    await db.execute(text(
+    ...<7 lines>...
+        _flat("f", chunk, fcols))
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\ext\asyncio\session.py", line 449, in execute
+    result = await greenlet_spawn(
+             ^^^^^^^^^^^^^^^^^^^^^
+    ...<6 lines>...
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 203, in greenlet_spawn
+    result = context.switch(value)
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\orm\session.py", line 2351, in execute
+    return self._execute_internal(
+           ~~~~~~~~~~~~~~~~~~~~~~^
+        statement,
+        ^^^^^^^^^^
+    ...<4 lines>...
+        _add_event=_add_event,
+        ^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\orm\session.py", line 2258, in _execute_internal
+    result = conn.execute(
+        statement, params or {}, execution_options=execution_options
+    )
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\base.py", line 1419, in execute
+    return meth(
+        self,
+        distilled_parameters,
+        execution_options or NO_OPTIONS,
+    )
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\sql\elements.py", line 526, in _execute_on_connection
+    return connection._execute_clauseelement(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self, distilled_params, execution_options
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\base.py", line 1641, in _execute_clauseelement
+    ret = self._execute_context(
+        dialect,
+    ...<8 lines>...
+        cache_hit=cache_hit,
+    )
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\base.py", line 1846, in _execute_context
+    return self._exec_single_context(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~^
+        dialect, context, statement, parameters
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\base.py", line 1986, in _exec_single_context
+    self._handle_dbapi_exception(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        e, str_statement, effective_parameters, cursor, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\base.py", line 2355, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        cursor, str_statement, effective_parameters, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\default.py", line 951, in do_execute
+    cursor.execute(statement, parameters)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 230, in execute
+    self._adapt_connection._handle_exception(error)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 368, in _handle_exception
+    raise error.with_traceback(exc_info[2])
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 228, in execute
+    return self.await_(self._execute_async(operation, parameters))
+           ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 132, in await_only
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 196, in greenlet_spawn
+    value = await result
+            ^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 251, in _execute_async
+    result = await self._cursor.execute(operation, parameters)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\cursors.py", line 239, in execute
+    await self._query(query)
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\cursors.py", line 457, in _query
+    await conn.query(q)
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 469, in query
+    await self._read_query_result(unbuffered=unbuffered)
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 683, in _read_query_result
+    await result.read()
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 1164, in read
+    first_packet = await self.connection._read_packet()
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 652, in _read_packet
+    packet.raise_for_error()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\pymysql\protocol.py", line 219, in raise_for_error
+    err.raise_mysql_exception(self._data)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\pymysql\err.py", line 150, in raise_mysql_exception
+    raise errorclass(errno, errval)
+sqlalchemy.exc.OperationalError: (pymysql.err.OperationalError) (1213, 'Deadlock found when trying to get lock; try restarting transaction')
+[SQL: INSERT INTO future_forecast_dates (esid, forecast_start_date, forecast_end_date, load_profile, annual_kwh, load_zone, weather_zone, source) VALUES (%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload') ON DUPLICATE KEY UPDATE forecast_start_date = VALUES(forecast_start_date), forecast_end_date = VALUES(forecast_end_date), load_profile = VALUES(load_profile), annual_kwh = VALUES(annual_kwh), load_zone = VALUES(load_zone), weather_zone = VALUES(weather_zone), source = 'portfolio_upload']
+[parameters: ('10032789445175910', '2021-02-16', '2029-11-16', 'RESLOWR_SOUTH_IDR_WS_NOTOU', Decimal('15639.43832'), 'SOUTH', 'SOUTH', '1008901001184406610100', '2021-02-28', '2029-03-28', 'BUSMEDLF_COAST_IDR_WS_NOTOU', Decimal('102125.9323'), 'HOUSTON', 'COAST', '1008901001184406702100', '2021-02-28', '2029-03-28', 'BUSNODEM_COAST_IDR_WS_NOTOU', Decimal('5446.094516'), 'HOUSTON', 'COAST', '1008901012411622610100', '2021-02-01', '2028-11-01', 'RESHIWR_COAST_IDR_WS_NOTOU', Decimal('4190.690454'), 'HOUSTON', 'COAST', '1008901012411622615100', '2021-02-01', '2028-11-01', 'BUSLOLF_COAST_IDR_WS_NOTOU', Decimal('4376.447482'), 'HOUSTON', 'COAST', '1008901012411624040100', '2021-02-01', '2028-11-01', 'BUSLOLF_COAST_IDR_WS_NOTOU', Decimal('47733.17542'), 'HOUSTON', 'COAST', '1008901012411624060100', '2021-02-01', '2028-11-01', 'BUSLOLF_COAST_IDR_WS_NOTOU', Decimal('10790.35'), 'HOUSTON', 'COAST', '1008901012411624080100' ... 775 parameters truncated ... 'NORTH', '10443720005091777', '2021-01-13', '2030-10-01', 'BUSNODEM_NCENT_IDR_WS_NOTOU', Decimal('5432.041257'), 'NORTH', 'NCENT', '10443720007212895', '2021-01-02', '2029-03-21', 'RESLOWR_NORTH_IDR_WS_NOTOU', Decimal('4107.397134'), 'NORTH', 'NORTH', '10443720008040440', '2021-01-04', '2029-10-04', 'RESLOWR_EAST_IDR_WS_NOTOU', Decimal('37129.70539'), 'NORTH', 'EAST', '10443720008093023', '2021-01-15', '2028-05-08', 'RESHIWR_NCENT_IDR_WS_NOTOU', Decimal('20000'), 'NORTH', 'NCENT', '10443720008249941', '2021-01-01', '2029-09-28', 'BUSLOLF_NCENT_IDR_WS_NOTOU', Decimal('20000'), 'NORTH', 'NCENT', '10443720009196665', '2021-01-05', '2027-04-05', 'RESHIWR_SCENT_IDR_WS_NOTOU', Decimal('13726.43981'), 'SOUTH', 'SCENT', '10443720009329017', '2021-01-13', '2029-10-13', 'BUSNODEM_NCENT_IDR_WS_NOTOU', Decimal('9529.368718'), 'NORTH', 'NCENT')]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2026-10-06 18:21:21,856 ERROR portfolio contract upload failed (ref 248C3F01, file 'f.csv')
+Traceback (most recent call last):
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        cursor, str_statement, effective_parameters, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\default.py", line 951, in do_execute
+    cursor.execute(statement, parameters)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 230, in execute
+    self._adapt_connection._handle_exception(error)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 368, in _handle_exception
+    raise error.with_traceback(exc_info[2])
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 228, in execute
+    return self.await_(self._execute_async(operation, parameters))
+           ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 132, in await_only
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 196, in greenlet_spawn
+    value = await result
+            ^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 251, in _execute_async
+    result = await self._cursor.execute(operation, parameters)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\cursors.py", line 239, in execute
+    await self._query(query)
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\cursors.py", line 457, in _query
+    await conn.query(q)
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 469, in query
+    await self._read_query_result(unbuffered=unbuffered)
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 683, in _read_query_result
+    await result.read()
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 1164, in read
+    first_packet = await self.connection._read_packet()
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 652, in _read_packet
+    packet.raise_for_error()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\pymysql\protocol.py", line 219, in raise_for_error
+    err.raise_mysql_exception(self._data)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\pymysql\err.py", line 150, in raise_mysql_exception
+    raise errorclass(errno, errval)
+pymysql.err.OperationalError: (1213, 'Deadlock found when trying to get lock; try restarting transaction')
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\AmeriPower\api\routers\admin_portfolio_contracts.py", line 388, in upload_portfolio_contracts
+    return await _upload_portfolio_contracts(file, db)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\AmeriPower\api\routers\admin_portfolio_contracts.py", line 505, in _upload_portfolio_contracts
+    await _sync_forecast_tables_bulk(db, parsed_rows)
+  File "C:\AmeriPower\api\routers\admin_portfolio_contracts.py", line 303, in _sync_forecast_tables_bulk
+    await db.execute(text(
+    ...<7 lines>...
+        _flat("f", chunk, fcols))
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\ext\asyncio\session.py", line 449, in execute
+    result = await greenlet_spawn(
+             ^^^^^^^^^^^^^^^^^^^^^
+    ...<6 lines>...
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 203, in greenlet_spawn
+    result = context.switch(value)
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\orm\session.py", line 2351, in execute
+    return self._execute_internal(
+           ~~~~~~~~~~~~~~~~~~~~~~^
+        statement,
+        ^^^^^^^^^^
+    ...<4 lines>...
+        _add_event=_add_event,
+        ^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\orm\session.py", line 2258, in _execute_internal
+    result = conn.execute(
+        statement, params or {}, execution_options=execution_options
+    )
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\base.py", line 1419, in execute
+    return meth(
+        self,
+        distilled_parameters,
+        execution_options or NO_OPTIONS,
+    )
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\sql\elements.py", line 526, in _execute_on_connection
+    return connection._execute_clauseelement(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self, distilled_params, execution_options
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\base.py", line 1641, in _execute_clauseelement
+    ret = self._execute_context(
+        dialect,
+    ...<8 lines>...
+        cache_hit=cache_hit,
+    )
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\base.py", line 1846, in _execute_context
+    return self._exec_single_context(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~^
+        dialect, context, statement, parameters
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\base.py", line 1986, in _exec_single_context
+    self._handle_dbapi_exception(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        e, str_statement, effective_parameters, cursor, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\base.py", line 2355, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        cursor, str_statement, effective_parameters, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\default.py", line 951, in do_execute
+    cursor.execute(statement, parameters)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 230, in execute
+    self._adapt_connection._handle_exception(error)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 368, in _handle_exception
+    raise error.with_traceback(exc_info[2])
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 228, in execute
+    return self.await_(self._execute_async(operation, parameters))
+           ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 132, in await_only
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 196, in greenlet_spawn
+    value = await result
+            ^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 251, in _execute_async
+    result = await self._cursor.execute(operation, parameters)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\cursors.py", line 239, in execute
+    await self._query(query)
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\cursors.py", line 457, in _query
+    await conn.query(q)
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 469, in query
+    await self._read_query_result(unbuffered=unbuffered)
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 683, in _read_query_result
+    await result.read()
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 1164, in read
+    first_packet = await self.connection._read_packet()
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 652, in _read_packet
+    packet.raise_for_error()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\pymysql\protocol.py", line 219, in raise_for_error
+    err.raise_mysql_exception(self._data)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\pymysql\err.py", line 150, in raise_mysql_exception
+    raise errorclass(errno, errval)
+sqlalchemy.exc.OperationalError: (pymysql.err.OperationalError) (1213, 'Deadlock found when trying to get lock; try restarting transaction')
+[SQL: INSERT INTO future_forecast_dates (esid, forecast_start_date, forecast_end_date, load_profile, annual_kwh, load_zone, weather_zone, source) VALUES (%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload') ON DUPLICATE KEY UPDATE forecast_start_date = VALUES(forecast_start_date), forecast_end_date = VALUES(forecast_end_date), load_profile = VALUES(load_profile), annual_kwh = VALUES(annual_kwh), load_zone = VALUES(load_zone), weather_zone = VALUES(weather_zone), source = 'portfolio_upload']
+[parameters: ('10032789445175910', '2021-02-16', '2029-11-16', 'RESLOWR_SOUTH_IDR_WS_NOTOU', Decimal('15639.43832'), 'SOUTH', 'SOUTH', '1008901001184406610100', '2021-02-28', '2029-03-28', 'BUSMEDLF_COAST_IDR_WS_NOTOU', Decimal('102125.9323'), 'HOUSTON', 'COAST', '1008901001184406702100', '2021-02-28', '2029-03-28', 'BUSNODEM_COAST_IDR_WS_NOTOU', Decimal('5446.094516'), 'HOUSTON', 'COAST', '1008901012411622610100', '2021-02-01', '2028-11-01', 'RESHIWR_COAST_IDR_WS_NOTOU', Decimal('4190.690454'), 'HOUSTON', 'COAST', '1008901012411622615100', '2021-02-01', '2028-11-01', 'BUSLOLF_COAST_IDR_WS_NOTOU', Decimal('4376.447482'), 'HOUSTON', 'COAST', '1008901012411624040100', '2021-02-01', '2028-11-01', 'BUSLOLF_COAST_IDR_WS_NOTOU', Decimal('47733.17542'), 'HOUSTON', 'COAST', '1008901012411624060100', '2021-02-01', '2028-11-01', 'BUSLOLF_COAST_IDR_WS_NOTOU', Decimal('10790.35'), 'HOUSTON', 'COAST', '1008901012411624080100' ... 775 parameters truncated ... 'NORTH', '10443720005091777', '2021-01-13', '2030-10-01', 'BUSNODEM_NCENT_IDR_WS_NOTOU', Decimal('5432.041257'), 'NORTH', 'NCENT', '10443720007212895', '2021-01-02', '2029-03-21', 'RESLOWR_NORTH_IDR_WS_NOTOU', Decimal('4107.397134'), 'NORTH', 'NORTH', '10443720008040440', '2021-01-04', '2029-10-04', 'RESLOWR_EAST_IDR_WS_NOTOU', Decimal('37129.70539'), 'NORTH', 'EAST', '10443720008093023', '2021-01-15', '2028-05-08', 'RESHIWR_NCENT_IDR_WS_NOTOU', Decimal('20000'), 'NORTH', 'NCENT', '10443720008249941', '2021-01-01', '2029-09-28', 'BUSLOLF_NCENT_IDR_WS_NOTOU', Decimal('20000'), 'NORTH', 'NCENT', '10443720009196665', '2021-01-05', '2027-04-05', 'RESHIWR_SCENT_IDR_WS_NOTOU', Decimal('13726.43981'), 'SOUTH', 'SCENT', '10443720009329017', '2021-01-13', '2029-10-13', 'BUSNODEM_NCENT_IDR_WS_NOTOU', Decimal('9529.368718'), 'NORTH', 'NCENT')]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2026-10-06 18:21:25,616 ERROR portfolio contract upload failed (ref 9222F396, file 'f.csv')
+Traceback (most recent call last):
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        cursor, str_statement, effective_parameters, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\default.py", line 951, in do_execute
+    cursor.execute(statement, parameters)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 230, in execute
+    self._adapt_connection._handle_exception(error)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 368, in _handle_exception
+    raise error.with_traceback(exc_info[2])
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 228, in execute
+    return self.await_(self._execute_async(operation, parameters))
+           ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 132, in await_only
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 196, in greenlet_spawn
+    value = await result
+            ^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 251, in _execute_async
+    result = await self._cursor.execute(operation, parameters)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\cursors.py", line 239, in execute
+    await self._query(query)
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\cursors.py", line 457, in _query
+    await conn.query(q)
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 469, in query
+    await self._read_query_result(unbuffered=unbuffered)
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 683, in _read_query_result
+    await result.read()
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 1164, in read
+    first_packet = await self.connection._read_packet()
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 652, in _read_packet
+    packet.raise_for_error()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\pymysql\protocol.py", line 219, in raise_for_error
+    err.raise_mysql_exception(self._data)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\pymysql\err.py", line 150, in raise_mysql_exception
+    raise errorclass(errno, errval)
+pymysql.err.ProgrammingError: (1064, "You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'SHARE' at line 1")
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\AmeriPower\api\routers\admin_portfolio_contracts.py", line 388, in upload_portfolio_contracts
+    return await _upload_portfolio_contracts(file, db)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\AmeriPower\api\routers\admin_portfolio_contracts.py", line 508, in _upload_portfolio_contracts
+    dups = await _duplicate_upload_esis(db, [r["esi_id"] for r in parsed_rows])
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\AmeriPower\api\routers\admin_portfolio_contracts.py", line 236, in _duplicate_upload_esis
+    res = await db.execute(
+          ^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\ext\asyncio\session.py", line 449, in execute
+    result = await greenlet_spawn(
+             ^^^^^^^^^^^^^^^^^^^^^
+    ...<6 lines>...
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 203, in greenlet_spawn
+    result = context.switch(value)
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\orm\session.py", line 2351, in execute
+    return self._execute_internal(
+           ~~~~~~~~~~~~~~~~~~~~~~^
+        statement,
+        ^^^^^^^^^^
+    ...<4 lines>...
+        _add_event=_add_event,
+        ^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\orm\session.py", line 2258, in _execute_internal
+    result = conn.execute(
+        statement, params or {}, execution_options=execution_options
+    )
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\base.py", line 1419, in execute
+    return meth(
+        self,
+        distilled_parameters,
+        execution_options or NO_OPTIONS,
+    )
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\sql\elements.py", line 526, in _execute_on_connection
+    return connection._execute_clauseelement(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self, distilled_params, execution_options
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\base.py", line 1641, in _execute_clauseelement
+    ret = self._execute_context(
+        dialect,
+    ...<8 lines>...
+        cache_hit=cache_hit,
+    )
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\base.py", line 1846, in _execute_context
+    return self._exec_single_context(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~^
+        dialect, context, statement, parameters
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\base.py", line 1986, in _exec_single_context
+    self._handle_dbapi_exception(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        e, str_statement, effective_parameters, cursor, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\base.py", line 2355, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        cursor, str_statement, effective_parameters, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\default.py", line 951, in do_execute
+    cursor.execute(statement, parameters)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 230, in execute
+    self._adapt_connection._handle_exception(error)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 368, in _handle_exception
+    raise error.with_traceback(exc_info[2])
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 228, in execute
+    return self.await_(self._execute_async(operation, parameters))
+           ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 132, in await_only
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 196, in greenlet_spawn
+    value = await result
+            ^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 251, in _execute_async
+    result = await self._cursor.execute(operation, parameters)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\cursors.py", line 239, in execute
+    await self._query(query)
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\cursors.py", line 457, in _query
+    await conn.query(q)
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 469, in query
+    await self._read_query_result(unbuffered=unbuffered)
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 683, in _read_query_result
+    await result.read()
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 1164, in read
+    first_packet = await self.connection._read_packet()
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 652, in _read_packet
+    packet.raise_for_error()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\pymysql\protocol.py", line 219, in raise_for_error
+    err.raise_mysql_exception(self._data)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\pymysql\err.py", line 150, in raise_mysql_exception
+    raise errorclass(errno, errval)
+sqlalchemy.exc.ProgrammingError: (pymysql.err.ProgrammingError) (1064, "You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'SHARE' at line 1")
+[SQL: SELECT esi_id FROM portfolio_contracts WHERE source = 'upload' AND esi_id IN (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s) GROUP BY esi_id HAVING COUNT(*) > 1 FOR SHARE]
+[parameters: ('10032789400185901', '10032789400402418', '10032789400419900', '10032789400709825', '10032789400821060', '10032789401012560', '10032789401012561', '10032789401091791', '10032789401162241', '10032789401181635', '10032789401225241', '10032789401279015', '10032789401343277', '10032789401470290', '10032789401471276', '10032789401490600', '10032789401784071', '10032789401853906', '10032789402050320', '10032789402108595', '10032789402164566', '10032789402693838', '10032789402780158', '10032789402885951', '10032789402889360', '10032789403009139', '10032789403029710', '10032789403295211', '10032789403340111', '10032789403472240', '10032789403500581', '10032789403802654', '10032789403817491', '10032789403880781', '10032789403967995', '10032789404011401', '10032789404217817', '10032789404283316', '10032789404604100', '10032789404625201', '10032789404846920', '10032789405187691', '10032789405229172', '10032789405231091', '10032789405231092', '10032789405231093', '10032789405833570', '10032789405851760', '10032789405855380', '10032789405870371' ... 400 parameters truncated ... '10032789444936791', '10032789445061180', '10032789445123799', '10032789445212921', '10032789445212922', '10032789445212923', '10032789445514455', '10032789445532741', '10032789446000118', '10032789446079810', '10032789446093590', '10032789446274136', '10032789446400337', '10032789446524231', '10032789446568840', '10032789446579690', '10032789446630931', '10032789446640661', '10032789446757980', '10032789446828700', '10032789446830629', '10032789446968370', '10032789446968371', '10032789446975447', '10032789447026939', '10032789447253417', '10032789447324201', '10032789447391318', '10032789447418470', '10032789447475341', '10032789447560411', '10032789447620779', '10032789447697095', '10032789447828824', '10032789447882555', '10032789447888321', '10032789447928961', '10032789448059797', '10032789448219581', '10032789448219582', '10032789448393760', '10032789448415150', '10032789448521560', '10032789448576331', '10032789448618080', '10032789448717281', '10032789448783299', '10032789448873561', '10032789449092652', '10032789449092653')]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2026-10-06 18:23:07,509 ERROR portfolio contract upload failed (ref E4D73E21, file 'f.csv')
+Traceback (most recent call last):
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        cursor, str_statement, effective_parameters, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\default.py", line 951, in do_execute
+    cursor.execute(statement, parameters)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 230, in execute
+    self._adapt_connection._handle_exception(error)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 368, in _handle_exception
+    raise error.with_traceback(exc_info[2])
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 228, in execute
+    return self.await_(self._execute_async(operation, parameters))
+           ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 132, in await_only
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 196, in greenlet_spawn
+    value = await result
+            ^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 251, in _execute_async
+    result = await self._cursor.execute(operation, parameters)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\cursors.py", line 239, in execute
+    await self._query(query)
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\cursors.py", line 457, in _query
+    await conn.query(q)
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 469, in query
+    await self._read_query_result(unbuffered=unbuffered)
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 683, in _read_query_result
+    await result.read()
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 1164, in read
+    first_packet = await self.connection._read_packet()
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 652, in _read_packet
+    packet.raise_for_error()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\pymysql\protocol.py", line 219, in raise_for_error
+    err.raise_mysql_exception(self._data)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\pymysql\err.py", line 150, in raise_mysql_exception
+    raise errorclass(errno, errval)
+pymysql.err.OperationalError: (1213, 'Deadlock found when trying to get lock; try restarting transaction')
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\AmeriPower\api\routers\admin_portfolio_contracts.py", line 388, in upload_portfolio_contracts
+    return await _upload_portfolio_contracts(file, db)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\AmeriPower\api\routers\admin_portfolio_contracts.py", line 505, in _upload_portfolio_contracts
+    await _sync_forecast_tables_bulk(db, parsed_rows)
+  File "C:\AmeriPower\api\routers\admin_portfolio_contracts.py", line 303, in _sync_forecast_tables_bulk
+    await db.execute(text(
+    ...<7 lines>...
+        _flat("f", chunk, fcols))
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\ext\asyncio\session.py", line 449, in execute
+    result = await greenlet_spawn(
+             ^^^^^^^^^^^^^^^^^^^^^
+    ...<6 lines>...
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 203, in greenlet_spawn
+    result = context.switch(value)
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\orm\session.py", line 2351, in execute
+    return self._execute_internal(
+           ~~~~~~~~~~~~~~~~~~~~~~^
+        statement,
+        ^^^^^^^^^^
+    ...<4 lines>...
+        _add_event=_add_event,
+        ^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\orm\session.py", line 2258, in _execute_internal
+    result = conn.execute(
+        statement, params or {}, execution_options=execution_options
+    )
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\base.py", line 1419, in execute
+    return meth(
+        self,
+        distilled_parameters,
+        execution_options or NO_OPTIONS,
+    )
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\sql\elements.py", line 526, in _execute_on_connection
+    return connection._execute_clauseelement(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self, distilled_params, execution_options
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\base.py", line 1641, in _execute_clauseelement
+    ret = self._execute_context(
+        dialect,
+    ...<8 lines>...
+        cache_hit=cache_hit,
+    )
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\base.py", line 1846, in _execute_context
+    return self._exec_single_context(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~^
+        dialect, context, statement, parameters
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\base.py", line 1986, in _exec_single_context
+    self._handle_dbapi_exception(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        e, str_statement, effective_parameters, cursor, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\base.py", line 2355, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        cursor, str_statement, effective_parameters, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\default.py", line 951, in do_execute
+    cursor.execute(statement, parameters)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 230, in execute
+    self._adapt_connection._handle_exception(error)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 368, in _handle_exception
+    raise error.with_traceback(exc_info[2])
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 228, in execute
+    return self.await_(self._execute_async(operation, parameters))
+           ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 132, in await_only
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 196, in greenlet_spawn
+    value = await result
+            ^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 251, in _execute_async
+    result = await self._cursor.execute(operation, parameters)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\cursors.py", line 239, in execute
+    await self._query(query)
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\cursors.py", line 457, in _query
+    await conn.query(q)
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 469, in query
+    await self._read_query_result(unbuffered=unbuffered)
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 683, in _read_query_result
+    await result.read()
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 1164, in read
+    first_packet = await self.connection._read_packet()
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 652, in _read_packet
+    packet.raise_for_error()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\pymysql\protocol.py", line 219, in raise_for_error
+    err.raise_mysql_exception(self._data)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\pymysql\err.py", line 150, in raise_mysql_exception
+    raise errorclass(errno, errval)
+sqlalchemy.exc.OperationalError: (pymysql.err.OperationalError) (1213, 'Deadlock found when trying to get lock; try restarting transaction')
+[SQL: INSERT INTO future_forecast_dates (esid, forecast_start_date, forecast_end_date, load_profile, annual_kwh, load_zone, weather_zone, source) VALUES (%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload') ON DUPLICATE KEY UPDATE forecast_start_date = VALUES(forecast_start_date), forecast_end_date = VALUES(forecast_end_date), load_profile = VALUES(load_profile), annual_kwh = VALUES(annual_kwh), load_zone = VALUES(load_zone), weather_zone = VALUES(weather_zone), source = 'portfolio_upload']
+[parameters: ('10032789445175910', '2021-02-16', '2029-11-16', 'RESLOWR_SOUTH_IDR_WS_NOTOU', Decimal('15639.43832'), 'SOUTH', 'SOUTH', '1008901001184406610100', '2021-02-28', '2029-03-28', 'BUSMEDLF_COAST_IDR_WS_NOTOU', Decimal('102125.9323'), 'HOUSTON', 'COAST', '1008901001184406702100', '2021-02-28', '2029-03-28', 'BUSNODEM_COAST_IDR_WS_NOTOU', Decimal('5446.094516'), 'HOUSTON', 'COAST', '1008901012411622610100', '2021-02-01', '2028-11-01', 'RESHIWR_COAST_IDR_WS_NOTOU', Decimal('4190.690454'), 'HOUSTON', 'COAST', '1008901012411622615100', '2021-02-01', '2028-11-01', 'BUSLOLF_COAST_IDR_WS_NOTOU', Decimal('4376.447482'), 'HOUSTON', 'COAST', '1008901012411624040100', '2021-02-01', '2028-11-01', 'BUSLOLF_COAST_IDR_WS_NOTOU', Decimal('47733.17542'), 'HOUSTON', 'COAST', '1008901012411624060100', '2021-02-01', '2028-11-01', 'BUSLOLF_COAST_IDR_WS_NOTOU', Decimal('10790.35'), 'HOUSTON', 'COAST', '1008901012411624080100' ... 775 parameters truncated ... 'NORTH', '10443720005091777', '2021-01-13', '2030-10-01', 'BUSNODEM_NCENT_IDR_WS_NOTOU', Decimal('5432.041257'), 'NORTH', 'NCENT', '10443720007212895', '2021-01-02', '2029-03-21', 'RESLOWR_NORTH_IDR_WS_NOTOU', Decimal('4107.397134'), 'NORTH', 'NORTH', '10443720008040440', '2021-01-04', '2029-10-04', 'RESLOWR_EAST_IDR_WS_NOTOU', Decimal('37129.70539'), 'NORTH', 'EAST', '10443720008093023', '2021-01-15', '2028-05-08', 'RESHIWR_NCENT_IDR_WS_NOTOU', Decimal('20000'), 'NORTH', 'NCENT', '10443720008249941', '2021-01-01', '2029-09-28', 'BUSLOLF_NCENT_IDR_WS_NOTOU', Decimal('20000'), 'NORTH', 'NCENT', '10443720009196665', '2021-01-05', '2027-04-05', 'RESHIWR_SCENT_IDR_WS_NOTOU', Decimal('13726.43981'), 'SOUTH', 'SCENT', '10443720009329017', '2021-01-13', '2029-10-13', 'BUSNODEM_NCENT_IDR_WS_NOTOU', Decimal('9529.368718'), 'NORTH', 'NCENT')]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2026-10-06 18:23:39,332 ERROR portfolio contract upload failed (ref A4114991, file 'f.csv')
+Traceback (most recent call last):
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        cursor, str_statement, effective_parameters, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\default.py", line 951, in do_execute
+    cursor.execute(statement, parameters)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 230, in execute
+    self._adapt_connection._handle_exception(error)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 368, in _handle_exception
+    raise error.with_traceback(exc_info[2])
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 228, in execute
+    return self.await_(self._execute_async(operation, parameters))
+           ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 132, in await_only
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 196, in greenlet_spawn
+    value = await result
+            ^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 251, in _execute_async
+    result = await self._cursor.execute(operation, parameters)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\cursors.py", line 239, in execute
+    await self._query(query)
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\cursors.py", line 457, in _query
+    await conn.query(q)
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 469, in query
+    await self._read_query_result(unbuffered=unbuffered)
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 683, in _read_query_result
+    await result.read()
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 1164, in read
+    first_packet = await self.connection._read_packet()
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 652, in _read_packet
+    packet.raise_for_error()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\pymysql\protocol.py", line 219, in raise_for_error
+    err.raise_mysql_exception(self._data)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\pymysql\err.py", line 150, in raise_mysql_exception
+    raise errorclass(errno, errval)
+pymysql.err.OperationalError: (1213, 'Deadlock found when trying to get lock; try restarting transaction')
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\AmeriPower\api\routers\admin_portfolio_contracts.py", line 388, in upload_portfolio_contracts
+    return await _upload_portfolio_contracts(file, db)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\AmeriPower\api\routers\admin_portfolio_contracts.py", line 505, in _upload_portfolio_contracts
+    await _sync_forecast_tables_bulk(db, parsed_rows)
+  File "C:\AmeriPower\api\routers\admin_portfolio_contracts.py", line 303, in _sync_forecast_tables_bulk
+    await db.execute(text(
+    ...<7 lines>...
+        _flat("f", chunk, fcols))
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\ext\asyncio\session.py", line 449, in execute
+    result = await greenlet_spawn(
+             ^^^^^^^^^^^^^^^^^^^^^
+    ...<6 lines>...
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 203, in greenlet_spawn
+    result = context.switch(value)
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\orm\session.py", line 2351, in execute
+    return self._execute_internal(
+           ~~~~~~~~~~~~~~~~~~~~~~^
+        statement,
+        ^^^^^^^^^^
+    ...<4 lines>...
+        _add_event=_add_event,
+        ^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\orm\session.py", line 2258, in _execute_internal
+    result = conn.execute(
+        statement, params or {}, execution_options=execution_options
+    )
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\base.py", line 1419, in execute
+    return meth(
+        self,
+        distilled_parameters,
+        execution_options or NO_OPTIONS,
+    )
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\sql\elements.py", line 526, in _execute_on_connection
+    return connection._execute_clauseelement(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self, distilled_params, execution_options
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\base.py", line 1641, in _execute_clauseelement
+    ret = self._execute_context(
+        dialect,
+    ...<8 lines>...
+        cache_hit=cache_hit,
+    )
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\base.py", line 1846, in _execute_context
+    return self._exec_single_context(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~^
+        dialect, context, statement, parameters
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\base.py", line 1986, in _exec_single_context
+    self._handle_dbapi_exception(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        e, str_statement, effective_parameters, cursor, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\base.py", line 2355, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        cursor, str_statement, effective_parameters, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\default.py", line 951, in do_execute
+    cursor.execute(statement, parameters)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 230, in execute
+    self._adapt_connection._handle_exception(error)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 368, in _handle_exception
+    raise error.with_traceback(exc_info[2])
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 228, in execute
+    return self.await_(self._execute_async(operation, parameters))
+           ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 132, in await_only
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 196, in greenlet_spawn
+    value = await result
+            ^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 251, in _execute_async
+    result = await self._cursor.execute(operation, parameters)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\cursors.py", line 239, in execute
+    await self._query(query)
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\cursors.py", line 457, in _query
+    await conn.query(q)
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 469, in query
+    await self._read_query_result(unbuffered=unbuffered)
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 683, in _read_query_result
+    await result.read()
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 1164, in read
+    first_packet = await self.connection._read_packet()
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 652, in _read_packet
+    packet.raise_for_error()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\pymysql\protocol.py", line 219, in raise_for_error
+    err.raise_mysql_exception(self._data)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\pymysql\err.py", line 150, in raise_mysql_exception
+    raise errorclass(errno, errval)
+sqlalchemy.exc.OperationalError: (pymysql.err.OperationalError) (1213, 'Deadlock found when trying to get lock; try restarting transaction')
+[SQL: INSERT INTO future_forecast_dates (esid, forecast_start_date, forecast_end_date, load_profile, annual_kwh, load_zone, weather_zone, source) VALUES (%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload'),(%s,%s,%s,%s,%s,%s,%s, 'portfolio_upload') ON DUPLICATE KEY UPDATE forecast_start_date = VALUES(forecast_start_date), forecast_end_date = VALUES(forecast_end_date), load_profile = VALUES(load_profile), annual_kwh = VALUES(annual_kwh), load_zone = VALUES(load_zone), weather_zone = VALUES(weather_zone), source = 'portfolio_upload']
+[parameters: ('10032789445175910', '2021-02-16', '2029-11-16', 'RESLOWR_SOUTH_IDR_WS_NOTOU', Decimal('15639.43832'), 'SOUTH', 'SOUTH', '1008901001184406610100', '2021-02-28', '2029-03-28', 'BUSMEDLF_COAST_IDR_WS_NOTOU', Decimal('102125.9323'), 'HOUSTON', 'COAST', '1008901001184406702100', '2021-02-28', '2029-03-28', 'BUSNODEM_COAST_IDR_WS_NOTOU', Decimal('5446.094516'), 'HOUSTON', 'COAST', '1008901012411622610100', '2021-02-01', '2028-11-01', 'RESHIWR_COAST_IDR_WS_NOTOU', Decimal('4190.690454'), 'HOUSTON', 'COAST', '1008901012411622615100', '2021-02-01', '2028-11-01', 'BUSLOLF_COAST_IDR_WS_NOTOU', Decimal('4376.447482'), 'HOUSTON', 'COAST', '1008901012411624040100', '2021-02-01', '2028-11-01', 'BUSLOLF_COAST_IDR_WS_NOTOU', Decimal('47733.17542'), 'HOUSTON', 'COAST', '1008901012411624060100', '2021-02-01', '2028-11-01', 'BUSLOLF_COAST_IDR_WS_NOTOU', Decimal('10790.35'), 'HOUSTON', 'COAST', '1008901012411624080100' ... 775 parameters truncated ... 'NORTH', '10443720005091777', '2021-01-13', '2030-10-01', 'BUSNODEM_NCENT_IDR_WS_NOTOU', Decimal('5432.041257'), 'NORTH', 'NCENT', '10443720007212895', '2021-01-02', '2029-03-21', 'RESLOWR_NORTH_IDR_WS_NOTOU', Decimal('4107.397134'), 'NORTH', 'NORTH', '10443720008040440', '2021-01-04', '2029-10-04', 'RESLOWR_EAST_IDR_WS_NOTOU', Decimal('37129.70539'), 'NORTH', 'EAST', '10443720008093023', '2021-01-15', '2028-05-08', 'RESHIWR_NCENT_IDR_WS_NOTOU', Decimal('20000'), 'NORTH', 'NCENT', '10443720008249941', '2021-01-01', '2029-09-28', 'BUSLOLF_NCENT_IDR_WS_NOTOU', Decimal('20000'), 'NORTH', 'NCENT', '10443720009196665', '2021-01-05', '2027-04-05', 'RESHIWR_SCENT_IDR_WS_NOTOU', Decimal('13726.43981'), 'SOUTH', 'SCENT', '10443720009329017', '2021-01-13', '2029-10-13', 'BUSNODEM_NCENT_IDR_WS_NOTOU', Decimal('9529.368718'), 'NORTH', 'NCENT')]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2026-10-06 18:25:25,362 ERROR portfolio contract upload failed (ref 43560B2D, file 'f.csv')
+Traceback (most recent call last):
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        cursor, str_statement, effective_parameters, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\default.py", line 951, in do_execute
+    cursor.execute(statement, parameters)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 230, in execute
+    self._adapt_connection._handle_exception(error)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 368, in _handle_exception
+    raise error.with_traceback(exc_info[2])
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 228, in execute
+    return self.await_(self._execute_async(operation, parameters))
+           ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 132, in await_only
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 196, in greenlet_spawn
+    value = await result
+            ^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 251, in _execute_async
+    result = await self._cursor.execute(operation, parameters)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\cursors.py", line 239, in execute
+    await self._query(query)
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\cursors.py", line 457, in _query
+    await conn.query(q)
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 469, in query
+    await self._read_query_result(unbuffered=unbuffered)
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 683, in _read_query_result
+    await result.read()
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 1164, in read
+    first_packet = await self.connection._read_packet()
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 652, in _read_packet
+    packet.raise_for_error()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\pymysql\protocol.py", line 219, in raise_for_error
+    err.raise_mysql_exception(self._data)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\pymysql\err.py", line 150, in raise_mysql_exception
+    raise errorclass(errno, errval)
+pymysql.err.OperationalError: (1205, 'Lock wait timeout exceeded; try restarting transaction')
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\AmeriPower\api\routers\admin_portfolio_contracts.py", line 388, in upload_portfolio_contracts
+    return await _upload_portfolio_contracts(file, db)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\AmeriPower\api\routers\admin_portfolio_contracts.py", line 504, in _upload_portfolio_contracts
+    inserted, updated, results = await _write_contracts(db, parsed_rows)
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Local\Temp\claude\c--AmeriPower\a1a5a62c-b73d-4282-ac45-af3d40c12fba\scratchpad\repro.py", line 78, in legacy_write
+    await orig_f(db, [r])
+  File "C:\AmeriPower\api\routers\admin_portfolio_contracts.py", line 318, in _sync_forecast_tables_bulk
+    await db.execute(text(
+    ...<7 lines>...
+        _flat("c", chunk, ccols))
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\ext\asyncio\session.py", line 449, in execute
+    result = await greenlet_spawn(
+             ^^^^^^^^^^^^^^^^^^^^^
+    ...<6 lines>...
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 203, in greenlet_spawn
+    result = context.switch(value)
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\orm\session.py", line 2351, in execute
+    return self._execute_internal(
+           ~~~~~~~~~~~~~~~~~~~~~~^
+        statement,
+        ^^^^^^^^^^
+    ...<4 lines>...
+        _add_event=_add_event,
+        ^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\orm\session.py", line 2258, in _execute_internal
+    result = conn.execute(
+        statement, params or {}, execution_options=execution_options
+    )
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\base.py", line 1419, in execute
+    return meth(
+        self,
+        distilled_parameters,
+        execution_options or NO_OPTIONS,
+    )
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\sql\elements.py", line 526, in _execute_on_connection
+    return connection._execute_clauseelement(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self, distilled_params, execution_options
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\base.py", line 1641, in _execute_clauseelement
+    ret = self._execute_context(
+        dialect,
+    ...<8 lines>...
+        cache_hit=cache_hit,
+    )
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\base.py", line 1846, in _execute_context
+    return self._exec_single_context(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~^
+        dialect, context, statement, parameters
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\base.py", line 1986, in _exec_single_context
+    self._handle_dbapi_exception(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        e, str_statement, effective_parameters, cursor, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\base.py", line 2355, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        cursor, str_statement, effective_parameters, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\default.py", line 951, in do_execute
+    cursor.execute(statement, parameters)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 230, in execute
+    self._adapt_connection._handle_exception(error)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 368, in _handle_exception
+    raise error.with_traceback(exc_info[2])
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 228, in execute
+    return self.await_(self._execute_async(operation, parameters))
+           ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 132, in await_only
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 196, in greenlet_spawn
+    value = await result
+            ^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 251, in _execute_async
+    result = await self._cursor.execute(operation, parameters)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\cursors.py", line 239, in execute
+    await self._query(query)
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\cursors.py", line 457, in _query
+    await conn.query(q)
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 469, in query
+    await self._read_query_result(unbuffered=unbuffered)
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 683, in _read_query_result
+    await result.read()
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 1164, in read
+    first_packet = await self.connection._read_packet()
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 652, in _read_packet
+    packet.raise_for_error()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\pymysql\protocol.py", line 219, in raise_for_error
+    err.raise_mysql_exception(self._data)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\pymysql\err.py", line 150, in raise_mysql_exception
+    raise errorclass(errno, errval)
+sqlalchemy.exc.OperationalError: (pymysql.err.OperationalError) (1205, 'Lock wait timeout exceeded; try restarting transaction')
+[SQL: INSERT INTO customer_forecast_dates (esid, contract_end_date, forecast_end_date, load_profile, annual_kwh, load_zone, weather_zone) VALUES (%s,%s,%s,%s,%s,%s,%s) ON DUPLICATE KEY UPDATE contract_end_date = VALUES(contract_end_date), forecast_end_date = VALUES(forecast_end_date), load_profile = VALUES(load_profile), annual_kwh = VALUES(annual_kwh), load_zone = VALUES(load_zone), weather_zone = VALUES(weather_zone), updated_at = CURRENT_TIMESTAMP]
+[parameters: ('10032789400185901', '2029-03-24', '2029-03-24', 'BUSLOLF_COAST_IDR_WS_NOTOU', Decimal('12923.83208'), 'HOUSTON', 'COAST')]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2026-10-06 18:26:39,203 ERROR portfolio contract upload failed (ref 49F17454, file 'f.csv')
+Traceback (most recent call last):
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        cursor, str_statement, effective_parameters, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\default.py", line 951, in do_execute
+    cursor.execute(statement, parameters)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 230, in execute
+    self._adapt_connection._handle_exception(error)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 368, in _handle_exception
+    raise error.with_traceback(exc_info[2])
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 228, in execute
+    return self.await_(self._execute_async(operation, parameters))
+           ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 132, in await_only
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 196, in greenlet_spawn
+    value = await result
+            ^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 251, in _execute_async
+    result = await self._cursor.execute(operation, parameters)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\cursors.py", line 239, in execute
+    await self._query(query)
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\cursors.py", line 457, in _query
+    await conn.query(q)
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 469, in query
+    await self._read_query_result(unbuffered=unbuffered)
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 683, in _read_query_result
+    await result.read()
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 1164, in read
+    first_packet = await self.connection._read_packet()
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 652, in _read_packet
+    packet.raise_for_error()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\pymysql\protocol.py", line 219, in raise_for_error
+    err.raise_mysql_exception(self._data)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\pymysql\err.py", line 150, in raise_mysql_exception
+    raise errorclass(errno, errval)
+pymysql.err.OperationalError: (1205, 'Lock wait timeout exceeded; try restarting transaction')
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\AmeriPower\api\routers\admin_portfolio_contracts.py", line 388, in upload_portfolio_contracts
+    return await _upload_portfolio_contracts(file, db)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\AmeriPower\api\routers\admin_portfolio_contracts.py", line 504, in _upload_portfolio_contracts
+    inserted, updated, results = await _write_contracts(db, parsed_rows)
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Local\Temp\claude\c--AmeriPower\a1a5a62c-b73d-4282-ac45-af3d40c12fba\scratchpad\repro.py", line 78, in legacy_write
+    await orig_f(db, [r])
+  File "C:\AmeriPower\api\routers\admin_portfolio_contracts.py", line 318, in _sync_forecast_tables_bulk
+    await db.execute(text(
+    ...<7 lines>...
+        _flat("c", chunk, ccols))
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\ext\asyncio\session.py", line 449, in execute
+    result = await greenlet_spawn(
+             ^^^^^^^^^^^^^^^^^^^^^
+    ...<6 lines>...
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 203, in greenlet_spawn
+    result = context.switch(value)
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\orm\session.py", line 2351, in execute
+    return self._execute_internal(
+           ~~~~~~~~~~~~~~~~~~~~~~^
+        statement,
+        ^^^^^^^^^^
+    ...<4 lines>...
+        _add_event=_add_event,
+        ^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\orm\session.py", line 2258, in _execute_internal
+    result = conn.execute(
+        statement, params or {}, execution_options=execution_options
+    )
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\base.py", line 1419, in execute
+    return meth(
+        self,
+        distilled_parameters,
+        execution_options or NO_OPTIONS,
+    )
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\sql\elements.py", line 526, in _execute_on_connection
+    return connection._execute_clauseelement(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self, distilled_params, execution_options
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\base.py", line 1641, in _execute_clauseelement
+    ret = self._execute_context(
+        dialect,
+    ...<8 lines>...
+        cache_hit=cache_hit,
+    )
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\base.py", line 1846, in _execute_context
+    return self._exec_single_context(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~^
+        dialect, context, statement, parameters
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\base.py", line 1986, in _exec_single_context
+    self._handle_dbapi_exception(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        e, str_statement, effective_parameters, cursor, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\base.py", line 2355, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        cursor, str_statement, effective_parameters, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\default.py", line 951, in do_execute
+    cursor.execute(statement, parameters)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 230, in execute
+    self._adapt_connection._handle_exception(error)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 368, in _handle_exception
+    raise error.with_traceback(exc_info[2])
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 228, in execute
+    return self.await_(self._execute_async(operation, parameters))
+           ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 132, in await_only
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 196, in greenlet_spawn
+    value = await result
+            ^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 251, in _execute_async
+    result = await self._cursor.execute(operation, parameters)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\cursors.py", line 239, in execute
+    await self._query(query)
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\cursors.py", line 457, in _query
+    await conn.query(q)
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 469, in query
+    await self._read_query_result(unbuffered=unbuffered)
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 683, in _read_query_result
+    await result.read()
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 1164, in read
+    first_packet = await self.connection._read_packet()
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 652, in _read_packet
+    packet.raise_for_error()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\pymysql\protocol.py", line 219, in raise_for_error
+    err.raise_mysql_exception(self._data)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\pymysql\err.py", line 150, in raise_mysql_exception
+    raise errorclass(errno, errval)
+sqlalchemy.exc.OperationalError: (pymysql.err.OperationalError) (1205, 'Lock wait timeout exceeded; try restarting transaction')
+[SQL: INSERT INTO customer_forecast_dates (esid, contract_end_date, forecast_end_date, load_profile, annual_kwh, load_zone, weather_zone) VALUES (%s,%s,%s,%s,%s,%s,%s) ON DUPLICATE KEY UPDATE contract_end_date = VALUES(contract_end_date), forecast_end_date = VALUES(forecast_end_date), load_profile = VALUES(load_profile), annual_kwh = VALUES(annual_kwh), load_zone = VALUES(load_zone), weather_zone = VALUES(weather_zone), updated_at = CURRENT_TIMESTAMP]
+[parameters: ('10032789400185901', '2029-03-24', '2029-03-24', 'BUSLOLF_COAST_IDR_WS_NOTOU', Decimal('12923.83208'), 'HOUSTON', 'COAST')]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2026-10-06 18:30:19,119 ERROR portfolio contract upload failed (ref 451F2ED1, file 'f.csv')
+Traceback (most recent call last):
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        cursor, str_statement, effective_parameters, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\default.py", line 951, in do_execute
+    cursor.execute(statement, parameters)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 230, in execute
+    self._adapt_connection._handle_exception(error)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 368, in _handle_exception
+    raise error.with_traceback(exc_info[2])
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 228, in execute
+    return self.await_(self._execute_async(operation, parameters))
+           ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 132, in await_only
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 196, in greenlet_spawn
+    value = await result
+            ^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 251, in _execute_async
+    result = await self._cursor.execute(operation, parameters)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\cursors.py", line 239, in execute
+    await self._query(query)
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\cursors.py", line 457, in _query
+    await conn.query(q)
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 469, in query
+    await self._read_query_result(unbuffered=unbuffered)
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 683, in _read_query_result
+    await result.read()
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 1164, in read
+    first_packet = await self.connection._read_packet()
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 652, in _read_packet
+    packet.raise_for_error()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\pymysql\protocol.py", line 219, in raise_for_error
+    err.raise_mysql_exception(self._data)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\pymysql\err.py", line 150, in raise_mysql_exception
+    raise errorclass(errno, errval)
+pymysql.err.OperationalError: (1205, 'Lock wait timeout exceeded; try restarting transaction')
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\AmeriPower\api\routers\admin_portfolio_contracts.py", line 388, in upload_portfolio_contracts
+    return await _upload_portfolio_contracts(file, db)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\AmeriPower\api\routers\admin_portfolio_contracts.py", line 504, in _upload_portfolio_contracts
+    inserted, updated, results = await _write_contracts(db, parsed_rows)
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Local\Temp\claude\c--AmeriPower\a1a5a62c-b73d-4282-ac45-af3d40c12fba\scratchpad\repro.py", line 81, in legacy_write
+    await orig_f(db, [r])
+  File "C:\AmeriPower\api\routers\admin_portfolio_contracts.py", line 318, in _sync_forecast_tables_bulk
+    await db.execute(text(
+    ...<7 lines>...
+        _flat("c", chunk, ccols))
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\ext\asyncio\session.py", line 449, in execute
+    result = await greenlet_spawn(
+             ^^^^^^^^^^^^^^^^^^^^^
+    ...<6 lines>...
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 203, in greenlet_spawn
+    result = context.switch(value)
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\orm\session.py", line 2351, in execute
+    return self._execute_internal(
+           ~~~~~~~~~~~~~~~~~~~~~~^
+        statement,
+        ^^^^^^^^^^
+    ...<4 lines>...
+        _add_event=_add_event,
+        ^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\orm\session.py", line 2258, in _execute_internal
+    result = conn.execute(
+        statement, params or {}, execution_options=execution_options
+    )
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\base.py", line 1419, in execute
+    return meth(
+        self,
+        distilled_parameters,
+        execution_options or NO_OPTIONS,
+    )
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\sql\elements.py", line 526, in _execute_on_connection
+    return connection._execute_clauseelement(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self, distilled_params, execution_options
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\base.py", line 1641, in _execute_clauseelement
+    ret = self._execute_context(
+        dialect,
+    ...<8 lines>...
+        cache_hit=cache_hit,
+    )
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\base.py", line 1846, in _execute_context
+    return self._exec_single_context(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~^
+        dialect, context, statement, parameters
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\base.py", line 1986, in _exec_single_context
+    self._handle_dbapi_exception(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        e, str_statement, effective_parameters, cursor, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\base.py", line 2355, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        cursor, str_statement, effective_parameters, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\engine\default.py", line 951, in do_execute
+    cursor.execute(statement, parameters)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 230, in execute
+    self._adapt_connection._handle_exception(error)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 368, in _handle_exception
+    raise error.with_traceback(exc_info[2])
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 228, in execute
+    return self.await_(self._execute_async(operation, parameters))
+           ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 132, in await_only
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\util\_concurrency_py3k.py", line 196, in greenlet_spawn
+    value = await result
+            ^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\sqlalchemy\connectors\asyncio.py", line 251, in _execute_async
+    result = await self._cursor.execute(operation, parameters)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\cursors.py", line 239, in execute
+    await self._query(query)
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\cursors.py", line 457, in _query
+    await conn.query(q)
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 469, in query
+    await self._read_query_result(unbuffered=unbuffered)
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 683, in _read_query_result
+    await result.read()
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 1164, in read
+    first_packet = await self.connection._read_packet()
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\aiomysql\connection.py", line 652, in _read_packet
+    packet.raise_for_error()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\pymysql\protocol.py", line 219, in raise_for_error
+    err.raise_mysql_exception(self._data)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "C:\Users\Amit\AppData\Roaming\Python\Python313\site-packages\pymysql\err.py", line 150, in raise_mysql_exception
+    raise errorclass(errno, errval)
+sqlalchemy.exc.OperationalError: (pymysql.err.OperationalError) (1205, 'Lock wait timeout exceeded; try restarting transaction')
+[SQL: INSERT INTO customer_forecast_dates (esid, contract_end_date, forecast_end_date, load_profile, annual_kwh, load_zone, weather_zone) VALUES (%s,%s,%s,%s,%s,%s,%s) ON DUPLICATE KEY UPDATE contract_end_date = VALUES(contract_end_date), forecast_end_date = VALUES(forecast_end_date), load_profile = VALUES(load_profile), annual_kwh = VALUES(annual_kwh), load_zone = VALUES(load_zone), weather_zone = VALUES(weather_zone), updated_at = CURRENT_TIMESTAMP]
+[parameters: ('10032789400185901', '2029-03-24', '2029-03-24', 'BUSLOLF_COAST_IDR_WS_NOTOU', Decimal('12923.83208'), 'HOUSTON', 'COAST')]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2026-10-06 18:31:18,145 ERROR portfolio contract upload failed (ref 660A7C2C, file 'u.csv')
+Traceback (most recent call last):
+  File "C:\AmeriPower\api\routers\admin_portfolio_contracts.py", line 388, in upload_portfolio_contracts
+    return await _upload_portfolio_contracts(file, db)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\AmeriPower\api\routers\admin_portfolio_contracts.py", line 505, in _upload_portfolio_contracts
+    await _sync_forecast_tables_bulk(db, parsed_rows)
+  File "C:\AmeriPower\api\tests\test_portfolio_upload_validation.py", line 192, in boom
+    raise RuntimeError("secret SQL: INSERT INTO future_forecast_dates ...")
+RuntimeError: secret SQL: INSERT INTO future_forecast_dates ...
+2026-10-06 18:31:23,427 ERROR portfolio contract upload failed (ref 954FD027, file 'u.csv')
+Traceback (most recent call last):
+  File "C:\AmeriPower\api\routers\admin_portfolio_contracts.py", line 388, in upload_portfolio_contracts
+    return await _upload_portfolio_contracts(file, db)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\AmeriPower\api\routers\admin_portfolio_contracts.py", line 505, in _upload_portfolio_contracts
+    await _sync_forecast_tables_bulk(db, parsed_rows)
+  File "C:\AmeriPower\api\tests\test_portfolio_upload_validation.py", line 284, in boom
+    raise RuntimeError("boom")
+RuntimeError: boom
+2026-10-06 18:31:23,965 ERROR portfolio contract upload rolled back: 1 ESI(s) would have duplicate upload rows (ref 735017C5, file 'u.csv', first: ['ZZPF0000000091'])
+2026-10-06 18:31:24,041 ERROR portfolio contract upload rolled back: 1 ESI(s) would have duplicate upload rows (ref C1ED145B, file 'u.csv', first: ['ZZPF0000000093'])
+2026-10-06 20:38:58,774 ERROR portfolio contract upload failed (ref 7FBA969F, file 'u.csv')
+Traceback (most recent call last):
+  File "C:\AmeriPower\api\routers\admin_portfolio_contracts.py", line 389, in upload_portfolio_contracts
+    return await _upload_portfolio_contracts(file, db)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\AmeriPower\api\routers\admin_portfolio_contracts.py", line 506, in _upload_portfolio_contracts
+    await _sync_forecast_tables_bulk(db, parsed_rows)
+  File "C:\AmeriPower\api\tests\test_portfolio_upload_validation.py", line 192, in boom
+    raise RuntimeError("secret SQL: INSERT INTO future_forecast_dates ...")
+RuntimeError: secret SQL: INSERT INTO future_forecast_dates ...
+2026-10-06 20:39:03,835 ERROR portfolio contract upload failed (ref D560B363, file 'u.csv')
+Traceback (most recent call last):
+  File "C:\AmeriPower\api\routers\admin_portfolio_contracts.py", line 389, in upload_portfolio_contracts
+    return await _upload_portfolio_contracts(file, db)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\AmeriPower\api\routers\admin_portfolio_contracts.py", line 506, in _upload_portfolio_contracts
+    await _sync_forecast_tables_bulk(db, parsed_rows)
+  File "C:\AmeriPower\api\tests\test_portfolio_upload_validation.py", line 284, in boom
+    raise RuntimeError("boom")
+RuntimeError: boom
+2026-10-06 20:39:04,366 ERROR portfolio contract upload rolled back: 1 ESI(s) would have duplicate upload rows (ref 01E04921, file 'u.csv', first: ['ZZPF0000000091'])
+2026-10-06 20:39:04,522 ERROR portfolio contract upload rolled back: 1 ESI(s) would have duplicate upload rows (ref F7A9F337, file 'u.csv', first: ['ZZPF0000000093'])
+2026-10-06 20:39:46,831 ERROR portfolio contract upload failed (ref 59F0761E, file 'u.csv')
+Traceback (most recent call last):
+  File "C:\AmeriPower\api\routers\admin_portfolio_contracts.py", line 389, in upload_portfolio_contracts
+    return await _upload_portfolio_contracts(file, db)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\AmeriPower\api\routers\admin_portfolio_contracts.py", line 506, in _upload_portfolio_contracts
+    await _sync_forecast_tables_bulk(db, parsed_rows)
+  File "C:\AmeriPower\api\tests\test_portfolio_upload_validation.py", line 192, in boom
+    raise RuntimeError("secret SQL: INSERT INTO future_forecast_dates ...")
+RuntimeError: secret SQL: INSERT INTO future_forecast_dates ...
+2026-10-06 20:39:52,052 ERROR portfolio contract upload failed (ref 5EFB0BAD, file 'u.csv')
+Traceback (most recent call last):
+  File "C:\AmeriPower\api\routers\admin_portfolio_contracts.py", line 389, in upload_portfolio_contracts
+    return await _upload_portfolio_contracts(file, db)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\AmeriPower\api\routers\admin_portfolio_contracts.py", line 506, in _upload_portfolio_contracts
+    await _sync_forecast_tables_bulk(db, parsed_rows)
+  File "C:\AmeriPower\api\tests\test_portfolio_upload_validation.py", line 284, in boom
+    raise RuntimeError("boom")
+RuntimeError: boom
+2026-10-06 20:39:52,421 ERROR portfolio contract upload rolled back: 1 ESI(s) would have duplicate upload rows (ref CE5A9C37, file 'u.csv', first: ['ZZPF0000000091'])
+2026-10-06 20:39:52,498 ERROR portfolio contract upload rolled back: 1 ESI(s) would have duplicate upload rows (ref 5AC0EED3, file 'u.csv', first: ['ZZPF0000000093'])
+2026-10-06 20:42:53,394 ERROR portfolio contract upload failed (ref E9C40447, file 'u.csv')
+Traceback (most recent call last):
+  File "C:\AmeriPower\api\routers\admin_portfolio_contracts.py", line 389, in upload_portfolio_contracts
+    return await _upload_portfolio_contracts(file, db)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\AmeriPower\api\routers\admin_portfolio_contracts.py", line 506, in _upload_portfolio_contracts
+    await _sync_forecast_tables_bulk(db, parsed_rows)
+  File "C:\AmeriPower\api\tests\test_portfolio_upload_validation.py", line 192, in boom
+    raise RuntimeError("secret SQL: INSERT INTO future_forecast_dates ...")
+RuntimeError: secret SQL: INSERT INTO future_forecast_dates ...
+2026-10-06 20:42:58,828 ERROR portfolio contract upload failed (ref 2CD68107, file 'u.csv')
+Traceback (most recent call last):
+  File "C:\AmeriPower\api\routers\admin_portfolio_contracts.py", line 389, in upload_portfolio_contracts
+    return await _upload_portfolio_contracts(file, db)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\AmeriPower\api\routers\admin_portfolio_contracts.py", line 506, in _upload_portfolio_contracts
+    await _sync_forecast_tables_bulk(db, parsed_rows)
+  File "C:\AmeriPower\api\tests\test_portfolio_upload_validation.py", line 284, in boom
+    raise RuntimeError("boom")
+RuntimeError: boom
+2026-10-06 20:42:59,308 ERROR portfolio contract upload rolled back: 1 ESI(s) would have duplicate upload rows (ref 4EF73052, file 'u.csv', first: ['ZZPF0000000091'])
+2026-10-06 20:42:59,383 ERROR portfolio contract upload rolled back: 1 ESI(s) would have duplicate upload rows (ref F76ABE2D, file 'u.csv', first: ['ZZPF0000000093'])
+2026-10-06 21:37:47,948 ERROR portfolio contract upload failed (ref 585B7DAE, file 'u.csv')
+Traceback (most recent call last):
+  File "C:\AmeriPower\api\routers\admin_portfolio_contracts.py", line 390, in upload_portfolio_contracts
+    return await _upload_portfolio_contracts(file, db)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\AmeriPower\api\routers\admin_portfolio_contracts.py", line 507, in _upload_portfolio_contracts
+    await _sync_forecast_tables_bulk(db, parsed_rows)
+  File "C:\AmeriPower\api\tests\test_portfolio_upload_validation.py", line 192, in boom
+    raise RuntimeError("secret SQL: INSERT INTO future_forecast_dates ...")
+RuntimeError: secret SQL: INSERT INTO future_forecast_dates ...
+2026-10-06 21:37:51,086 ERROR portfolio contract upload failed (ref 0F371E00, file 'u.csv')
+Traceback (most recent call last):
+  File "C:\AmeriPower\api\routers\admin_portfolio_contracts.py", line 390, in upload_portfolio_contracts
+    return await _upload_portfolio_contracts(file, db)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\AmeriPower\api\routers\admin_portfolio_contracts.py", line 507, in _upload_portfolio_contracts
+    await _sync_forecast_tables_bulk(db, parsed_rows)
+  File "C:\AmeriPower\api\tests\test_portfolio_upload_validation.py", line 284, in boom
+    raise RuntimeError("boom")
+RuntimeError: boom
+2026-10-06 21:37:51,416 ERROR portfolio contract upload rolled back: 1 ESI(s) would have duplicate upload rows (ref F847AF53, file 'u.csv', first: ['ZZPF0000000091'])
+2026-10-06 21:37:51,499 ERROR portfolio contract upload rolled back: 1 ESI(s) would have duplicate upload rows (ref 7EE0853B, file 'u.csv', first: ['ZZPF0000000093'])
+2026-10-06 21:38:13,592 ERROR portfolio contract upload failed (ref B4952BAE, file 'u.csv')
+Traceback (most recent call last):
+  File "C:\AmeriPower\api\routers\admin_portfolio_contracts.py", line 390, in upload_portfolio_contracts
+    return await _upload_portfolio_contracts(file, db)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\AmeriPower\api\routers\admin_portfolio_contracts.py", line 507, in _upload_portfolio_contracts
+    await _sync_forecast_tables_bulk(db, parsed_rows)
+  File "C:\AmeriPower\api\tests\test_portfolio_upload_validation.py", line 192, in boom
+    raise RuntimeError("secret SQL: INSERT INTO future_forecast_dates ...")
+RuntimeError: secret SQL: INSERT INTO future_forecast_dates ...
+2026-10-06 21:38:16,600 ERROR portfolio contract upload failed (ref 1E548A3B, file 'u.csv')
+Traceback (most recent call last):
+  File "C:\AmeriPower\api\routers\admin_portfolio_contracts.py", line 390, in upload_portfolio_contracts
+    return await _upload_portfolio_contracts(file, db)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\AmeriPower\api\routers\admin_portfolio_contracts.py", line 507, in _upload_portfolio_contracts
+    await _sync_forecast_tables_bulk(db, parsed_rows)
+  File "C:\AmeriPower\api\tests\test_portfolio_upload_validation.py", line 284, in boom
+    raise RuntimeError("boom")
+RuntimeError: boom
+2026-10-06 21:38:16,943 ERROR portfolio contract upload rolled back: 1 ESI(s) would have duplicate upload rows (ref 2749695C, file 'u.csv', first: ['ZZPF0000000091'])
+2026-10-06 21:38:17,045 ERROR portfolio contract upload rolled back: 1 ESI(s) would have duplicate upload rows (ref 8E07EDF2, file 'u.csv', first: ['ZZPF0000000093'])

@@ -32,32 +32,88 @@ exists to separate that from actual pilot-readiness, which requires more.
 
 ## 2. Production sync — migrations verified locally, not yet live
 
-The following migrations were built and verified against local dev today,
-but **none have been run against production**:
+The following migrations were built and verified against local dev but
+**none have been run against production**:
 
 - `032_create_ercot_dam_spp.sql`
 - `033_create_ercot_rtm_spp.sql`
 - `039_create_email_reply_approval_queue.sql`
 - `043_add_addition_billing_link.sql`
-- `044_add_reporting_views.sql` (fixes the view-cloning bug — see §7)
+- `044_add_reporting_views.sql` (fixes the view-cloning bug -- see §7)
 - `045_add_must_change_password_to_users.sql`
-- `046_create_orbic_master.sql` (master-DB rename — local dev only)
+- `046_create_orbic_master.sql` (master-DB rename -- local dev only)
+- `047_create_reference_sync_tables.sql` (reference data sync pipeline)
+- `048_create_portfolio_contracts.sql` (standalone portfolio table + triggers; run
+  against source DB AND every existing tenant DB on live -- same pattern as 045)
+- `049_add_contract_start_date_to_portfolio_contracts.sql` (additive ALTER on
+  portfolio_contracts; run against source DB AND every tenant DB)
+- `051_portfolio_view_full_types.sql` (replaces portfolio_view: full type pass-through,
+  Unknown fallback, future status; run against source DB AND every tenant DB)
+- `052_portfolio_contracts_trigger_sync_normalization.sql` (replaces sync triggers from 048
+  with type-normalizing versions: Default->MTM, NULL+past->MTM, NULL+future->Fix,
+  unrecognized->Unknown; run against source DB AND every tenant DB)
 
-**Explicitly excluded, do not run:** `042_create_tenant_modules.sql` — per
+**Do NOT run** `050_future_contract_type.sql` -- superseded by 051. See
+`docs/DB_MIGRATIONS.md` for details.
+
+**Explicitly excluded, do not run:** `042_create_tenant_modules.sql` -- per
 the modularization brief, this stays preserved but inactive this phase. The
 active entitlement mechanism is environment-based (`TENANT_MODULES`), not
 this table.
 
 **Also pending on production, independent of today's session:** any
 already-provisioned production tenant likely has the same
-`must_change_password` gap that was found and backfilled locally (§7) —
+`must_change_password` gap that was found and backfilled locally (§7) --
 needs the same backfill treatment on production once migration 045 lands
 there.
 
-**Production master-DB rename** (`ameripower_master` → `orbic_master`) is
-explicitly deferred — needs real VPS access to inventory actual tenant
+**Production master-DB rename** (`ameripower_master` -> `orbic_master`) is
+explicitly deferred -- needs real VPS access to inventory actual tenant
 `.env` files and check for any external script/monitoring dependency on the
 old name, neither of which is visible from local dev.
+
+## 2a. Portfolio contracts and reference-data sync work (added 2026-10-05)
+
+These items are complete locally but not yet on live:
+
+**Portfolio contracts upload pipeline** (`docs/PORTFOLIO_CONTRACTS.md` has the full
+design):
+- `portfolio_contracts` table, sync triggers, upgrade endpoint, discrepancy log (048)
+- `contract_start_date` column on `portfolio_contracts` (049)
+- Admin upload page at `/admin/portfolio-contracts-upload` -- template/sample CSV
+  download, two-pass zero-tolerance upload (all rows validated first; if any row fails
+  the whole upload is rejected with a per-row error list)
+- Valid contract types: Fix, Future, LMP, MTM, MCP, MCP2. Normalization is
+  case-insensitive (e.g. "fixed" stores as "Fix"). NULL/'Default'/stray values show as
+  Unknown in the view -- never silently folded into MTM
+- `portfolio_view` updated (migration 051): full type pass-through, Unknown fallback,
+  contract_start_date exposed, Future rows with future start date get status='future'
+  (auto-becomes 'active' when date arrives, no re-upload needed)
+- Contract Mix on /portfolio shows all non-zero types separately; Unknown banner appears
+  when any rows have unrecognized type
+- Migration 051 applied locally to `u972964962_orbic`, `tenant_sync_verify_co`, and
+  `tenant_portfolio_sync_test_co`. Migration 052 (trigger normalization) also applied
+  to all three. `tenant_test_pilot_co` and `tenant_test_rep` do not have 048 yet so
+  051/052 were not applied there. All four still need to be run on live.
+- Pending gap: `app/pages/admin/portfolio-contracts-upload.tsx` may not yet handle the
+  new `{"accepted": false, "invalid_rows": [...]}` response shape (unverified).
+- Pending gap: sample CSV does not yet include MCP/MCP2 example rows.
+
+**Reference-data sync pipeline** (migration 047):
+- `reference_sync_state` (tenant-side) and `reference_sync_source_status` (source-side)
+  tables back `api/scripts/sync_reference_data.py`
+- Verified locally: fleet-wide incremental sync succeeds across all local tenants;
+  `/api/risk/overall` reflects real `data_as_of` timestamps
+- Gap found during verification: `tenant_test_rep` was missing schema from migrations
+  030/034/035/036. Backfilled locally (tables were empty). Same drift may exist on live
+  tenant DBs -- check before running 047 on live (see DB_MIGRATIONS.md row for 047)
+
+**Unverified items (status unknown):**
+- Whether any already-provisioned live tenant DB is missing 030/034/035/036 schema
+  (the drift found on `tenant_test_rep` locally)
+- The exact list of tenant DBs on live and their current schema state
+- Whether the frontend upload page (`portfolio-contracts-upload.tsx`) correctly renders
+  the new two-pass rejection response
 
 ## 3. Real-world reachability — completely untested
 

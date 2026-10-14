@@ -2,19 +2,23 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import api from "../../utils/api";
 import { getUser, isAdmin, isLoggedIn, User } from "../../utils/auth";
+import {
+  describeUploadError,
+  describeUploadResponse,
+  problemsToCsv,
+  shownValue,
+  ProblemGroup,
+  UploadErrorView,
+  UploadProblem,
+  UploadView,
+} from "../../utils/uploadReport";
 
 interface Status {
   is_full_tenant: boolean;
   upgraded_at: string | null;
   upgraded_by: string | null;
   rows_by_source: { upload: number; synced: number };
-}
-
-interface UploadRowResult {
-  line: number;
-  esi_id: string | null;
-  status: "inserted" | "updated" | "error";
-  errors?: string[];
+  duplicate_upload_esis?: number;
 }
 
 interface Discrepancy {
@@ -35,8 +39,8 @@ export default function PortfolioContractsUploadPage() {
 
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [err, setErr] = useState("");
-  const [uploadResult, setUploadResult] = useState<{ inserted: number; updated: number; errors: number; total_rows: number; rows: UploadRowResult[] } | null>(null);
+  const [errBox, setErrBox] = useState<UploadErrorView | null>(null);
+  const [uploadView, setUploadView] = useState<UploadView | null>(null);
 
   const [upgrading, setUpgrading] = useState(false);
   const [upgradeErr, setUpgradeErr] = useState("");
@@ -93,21 +97,25 @@ export default function PortfolioContractsUploadPage() {
 
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!file) return;
+    if (!file || uploading) return; // never start a second upload while one is running
     setUploading(true);
-    setErr("");
-    setUploadResult(null);
+    setErrBox(null);
+    setUploadView(null);
     try {
       const formData = new FormData();
       formData.append("file", file);
       const res = await api.post("/admin/portfolio-contracts/upload", formData, {
         headers: { "Content-Type": "multipart/form-data" },
+        timeout: 600_000, // 10 min; must stay below next.config.ts experimental.proxyTimeout
       });
-      setUploadResult(res.data);
-      setFile(null);
-      await loadStatus();
+      const view = describeUploadResponse(res.data);
+      setUploadView(view);
+      if (view.kind === "accepted") {
+        setFile(null);
+        await loadStatus();
+      }
     } catch (e: any) {
-      setErr(e?.response?.data?.detail ?? "Upload failed.");
+      setErrBox(describeUploadError(e));
     } finally {
       setUploading(false);
     }
@@ -131,6 +139,17 @@ export default function PortfolioContractsUploadPage() {
     } finally {
       setUpgrading(false);
     }
+  };
+
+  const downloadProblems = (problems: UploadProblem[]) => {
+    const url = window.URL.createObjectURL(new Blob([problemsToCsv(problems)], { type: "text/csv;charset=utf-8" }));
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", "portfolio_upload_problems.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
   };
 
   const handleDownload = async (kind: "template" | "sample") => {
@@ -198,6 +217,11 @@ export default function PortfolioContractsUploadPage() {
                 )}
               </p>
             )}
+            {!!status?.duplicate_upload_esis && (
+              <p className="text-xs mt-1 font-semibold" role="alert" style={{ color: "var(--ct-danger, #b91c1c)" }}>
+                {status.duplicate_upload_esis} ESI ID(s) appear more than once in the uploaded contracts. Please contact support before uploading again.
+              </p>
+            )}
           </div>
           <button
             onClick={loadDiscrepancies}
@@ -261,8 +285,8 @@ export default function PortfolioContractsUploadPage() {
                 Contract CSV
               </label>
               <p className="text-xs mb-2" style={{ color: "var(--ct-text-muted)" }}>
-                Required columns: esi_id, load_profile, contract_rate, annual_volume, contract_type, contract_end_date (MM/DD/YYYY or YYYY-MM-DD).
-                Optional: contract_start_date (blank defaults to today).
+                Required columns: esi_id, load_profile, contract_rate, annual_volume, contract_type, contract_end_date (dates as MM/DD/YYYY, for example 12/31/2027; contract_start_date is required for Future contracts).
+                Optional: contract_start_date (blank defaults to today, except Future where it is required).
                 Contract types: Fix (fixed $/kWh), LMP (market rate + spread), MTM (month-to-month), Future (signed but not yet active — use with a future contract_start_date; impacts forecasts from that start date forward, not today).
                 Re-uploading updates existing rows by esi_id — it does not clear the table first. Changing a row from Future to Fix/LMP/MTM automatically moves it to the active forecast.
               </p>
@@ -293,18 +317,48 @@ export default function PortfolioContractsUploadPage() {
               />
             </div>
 
-            {err && <div className="text-sm" style={{ color: "var(--danger-light)" }}>{err}</div>}
+            {errBox && (
+              <div className="rounded-[var(--r-md)] border p-4 text-sm" style={{ borderColor: "var(--danger-light)", background: "var(--ct-canvas)" }}>
+                <p className="font-semibold" style={{ color: "var(--danger-light)" }}>{errBox.title}</p>
+                <p className="mt-1" style={{ color: "var(--ct-text-primary)" }}>{errBox.message}</p>
+                <p className="mt-1 text-xs" style={{ color: "var(--ct-text-muted)" }}>{errBox.advice}</p>
+              </div>
+            )}
 
-            {uploadResult && (
-              <div className="text-sm" style={{ color: "var(--ct-text-secondary)" }}>
-                {uploadResult.inserted} inserted, {uploadResult.updated} updated, {uploadResult.errors} error(s) of {uploadResult.total_rows} row(s).
-                {uploadResult.errors > 0 && (
-                  <ul className="mt-2 list-disc pl-5" style={{ color: "var(--danger-light)" }}>
-                    {uploadResult.rows.filter((r) => r.status === "error").map((r) => (
-                      <li key={r.line}>Line {r.line} ({r.esi_id ?? "no esi_id"}): {r.errors?.join("; ")}</li>
-                    ))}
-                  </ul>
-                )}
+            {uploadView?.kind === "accepted" && (
+              <div className="rounded-[var(--r-md)] border p-4 text-sm" style={{ borderColor: "var(--success-light)", background: "var(--ct-canvas)" }}>
+                <p className="font-semibold" style={{ color: "var(--success-light)" }}>
+                  Upload complete. {uploadView.inserted} new contract{uploadView.inserted === 1 ? "" : "s"} added, {uploadView.updated} updated.
+                </p>
+                <p className="mt-1 text-xs" style={{ color: "var(--ct-text-muted)" }}>Total rows in the file: {uploadView.totalRows}.</p>
+              </div>
+            )}
+
+            {uploadView?.kind === "unknown" && (
+              <div className="rounded-[var(--r-md)] border p-4 text-sm" style={{ borderColor: "var(--danger-light)", background: "var(--ct-canvas)" }}>
+                <p style={{ color: "var(--ct-text-primary)" }}>{uploadView.message}</p>
+              </div>
+            )}
+
+            {uploadView?.kind === "rejected" && (
+              <div className="rounded-[var(--r-md)] border p-4 text-sm" style={{ borderColor: "var(--danger-light)", background: "var(--ct-canvas)" }}>
+                <p className="font-semibold" style={{ color: "var(--danger-light)" }}>Upload rejected. Nothing was imported.</p>
+                <p className="mt-1" style={{ color: "var(--ct-text-primary)" }}>
+                  We found {uploadView.problemCount} problem{uploadView.problemCount === 1 ? "" : "s"} in {uploadView.badRows} of {uploadView.totalRows} rows. Fix them in your file and upload again.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => downloadProblems(uploadView.problems)}
+                  className="mt-3 text-xs font-semibold underline hover:opacity-80"
+                  style={{ color: "var(--accent-light)" }}
+                >
+                  Download problem list (CSV)
+                </button>
+                <div className="mt-4 grid gap-4">
+                  {uploadView.groups.map((g) => (
+                    <ProblemGroupBlock key={g.key} group={g} />
+                  ))}
+                </div>
               </div>
             )}
 
@@ -316,6 +370,11 @@ export default function PortfolioContractsUploadPage() {
             >
               {uploading ? "Uploading…" : "Upload Contracts"}
             </button>
+            {uploading && (
+              <p className="text-sm mt-2" role="status" style={{ color: "var(--text-secondary, inherit)" }}>
+                Uploading... this can take a minute, please do not close or refresh.
+              </p>
+            )}
           </form>
         )}
 
@@ -367,6 +426,47 @@ export default function PortfolioContractsUploadPage() {
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+const GROUP_PREVIEW = 10;
+const GROUP_EXPANDED_MAX = 1000;
+
+function ProblemGroupBlock({ group }: { group: ProblemGroup }) {
+  const [open, setOpen] = useState(false);
+  const total = group.problems.length;
+  const shown = open ? group.problems.slice(0, GROUP_EXPANDED_MAX) : group.problems.slice(0, GROUP_PREVIEW);
+  return (
+    <div>
+      <p className="font-semibold" style={{ color: "var(--ct-text-primary)" }}>
+        {group.title} ({total})
+      </p>
+      {group.fix && (
+        <p className="text-xs mb-1" style={{ color: "var(--ct-text-muted)" }}>How to fix: {group.fix}</p>
+      )}
+      <ul className="font-mono text-xs" style={{ color: "var(--ct-text-secondary)" }}>
+        {shown.map((p, i) => (
+          <li key={i}>
+            Row {p.row} | {p.column || "row"} | &quot;{shownValue(p.value)}&quot;
+          </li>
+        ))}
+      </ul>
+      {total > GROUP_PREVIEW && (
+        <button
+          type="button"
+          onClick={() => setOpen(!open)}
+          className="mt-1 text-xs underline hover:opacity-80"
+          style={{ color: "var(--accent-light)" }}
+        >
+          {open ? "Show fewer" : `Show all ${total}`}
+        </button>
+      )}
+      {open && total > GROUP_EXPANDED_MAX && (
+        <p className="text-xs mt-1" style={{ color: "var(--ct-text-muted)" }}>
+          Showing the first {GROUP_EXPANDED_MAX}. Download the problem list (CSV) for every row.
+        </p>
+      )}
     </div>
   );
 }
