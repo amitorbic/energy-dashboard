@@ -18,6 +18,7 @@ import datetime as dt
 import os
 import re
 import statistics
+import urllib.parse
 from collections import defaultdict
 
 import pymysql
@@ -127,7 +128,7 @@ def main():
 
     conn = pymysql.connect(
         host=_cfg("DB_HOST", "localhost"), port=int(_cfg("DB_PORT", 3306)),
-        user=_cfg("DB_USER"), password=_cfg("DB_PASSWORD", ""), db=_cfg("DB_NAME"),
+        user=_cfg("DB_USER"), password=urllib.parse.unquote(_cfg("DB_PASSWORD", "")), db=_cfg("DB_NAME"),
         autocommit=False,
     )
     try:
